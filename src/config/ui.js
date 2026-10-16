@@ -142,6 +142,10 @@ module.exports = {
     return this.colors[name] || this.colors.primary;
   },
 
+  getBrandColor(type = "primary") {
+    return this.colors[type] || this.colors.primary || "#ffb6c1";
+  },
+
   getBanner(name) {
     return helpers.existingPath(this.banners[name]);
   },

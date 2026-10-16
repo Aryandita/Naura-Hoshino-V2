@@ -234,4 +234,7 @@ async function drawBattle(playerInfo, enemyInfo, roundLog) {
   return canvas.toBuffer("image/png");
 }
 
-module.exports = { drawBattle };
+module.exports = {
+  drawBattle,
+  renderBattle: drawBattle,
+};

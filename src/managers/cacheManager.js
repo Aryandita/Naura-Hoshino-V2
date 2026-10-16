@@ -862,6 +862,93 @@ class CacheManager {
       }
     }
   }
+
+  /**
+   * Alias untuk incrementUserProfile.
+   */
+  async creditUserProfile(userId, fieldOrDeltas, maybeAmount) {
+    return this.incrementUserProfile(userId, fieldOrDeltas, maybeAmount);
+  }
+
+  /**
+   * Alias untuk incrementUserProfile.
+   */
+  async incrementProfile(userId, fieldOrDeltas, maybeAmount) {
+    return this.incrementUserProfile(userId, fieldOrDeltas, maybeAmount);
+  }
+
+  /**
+   * Alias untuk incrementUserSurvival.
+   */
+  async incrementSurvival(userId, fieldOrDeltas, maybeAmount) {
+    return this.incrementUserSurvival(userId, fieldOrDeltas, maybeAmount);
+  }
+
+  /**
+   * Alias untuk updateUserProfile.
+   */
+  async updateProfile(userId, fieldOrData, maybeValue) {
+    return this.updateUserProfile(userId, fieldOrData, maybeValue);
+  }
+
+  /**
+   * Alias untuk mutateUserProfileJson.
+   */
+  async mutateProfileJson(userId, field, mutator) {
+    return this.mutateUserProfileJson(userId, field, mutator);
+  }
+
+  /**
+   * Invalidate UserProfile cache (L1 write-behind flush + Redis purge).
+   * @param {string} userId
+   */
+  async invalidateUserProfile(userId) {
+    if (!userId) return;
+    await this.flushUser(userId).catch(() => {});
+    await redisManager.deleteCache(`user:profile:${userId}`).catch(() => {});
+  }
+
+  /**
+   * Invalidate UserSurvival cache (L1 write-behind flush + Redis purge).
+   * @param {string} userId
+   */
+  async invalidateUserSurvival(userId) {
+    if (!userId) return;
+    await this.flushUser(userId).catch(() => {});
+    await redisManager.deleteCache(`user:survival:${userId}`).catch(() => {});
+  }
+
+  /**
+   * Invalidate Canvas visual cache buffer.
+   * @param {string} userId
+   */
+  async smartInvalidateUserCanvas(userId) {
+    if (!userId) return;
+    try {
+      const canvasRuntime = require("../canvas/canvasRuntime");
+      if (typeof canvasRuntime.smartInvalidateUserCanvas === "function") {
+        await canvasRuntime.smartInvalidateUserCanvas(userId);
+      }
+    } catch (_) {}
+  }
+
+  /**
+   * Tambah item ke inventaris secara atomik via inventoryHelper.
+   * @param {string} userId
+   * @param {Array<object>|object} itemsToAdd
+   */
+  async addItemsAtomic(userId, itemsToAdd) {
+    const { addItemsAtomic } = require("../survival/engines/inventoryHelper");
+    return addItemsAtomic(userId, itemsToAdd);
+  }
+
+  /**
+   * Hapus cache Redis berdasarkan key secara langsung.
+   * @param {string} key
+   */
+  async del(key) {
+    return redisManager.deleteCache(key);
+  }
 }
 
 module.exports = new CacheManager();

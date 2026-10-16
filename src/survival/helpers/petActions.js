@@ -202,6 +202,7 @@ module.exports = {
   evaluateMood,
   evaluateEvolution,
   getBuffs,
+  getPassiveBuffs: getBuffs,
   breedPets,
   PASSIVE_BUFFS,
 };

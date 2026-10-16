@@ -195,7 +195,7 @@ async function awardXpDirect(
   const cooldownKey = `xp_cooldown_${guild.id}_${user.id}`;
 
   // If Redis is ready, use it for cooldown tracking and possible XP buffering
-  if (redisManager.isReady()) {
+  if (redisManager.isReady) {
     await redisManager.setCache(
       cooldownKey,
       true,

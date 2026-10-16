@@ -225,11 +225,25 @@ async function generateGroqFallback({ parts, history = [], config }) {
   return text;
 }
 
+/**
+ * Helper untuk pemanggilan satu teks sederhana dengan instruksi sistem.
+ * @param {string} systemInstruction
+ * @param {string} prompt
+ * @returns {Promise<{ text: string }>}
+ */
+async function generateText(systemInstruction, prompt) {
+  const parts = [{ text: prompt }];
+  const config = systemInstruction ? { systemInstruction } : undefined;
+  const text = await generate({ parts, config });
+  return { text };
+}
+
 module.exports = {
   getClient,
   isAvailable,
   extractText,
   generate,
+  generateText,
   generateGroqFallback,
   DEFAULT_MODEL,
 };

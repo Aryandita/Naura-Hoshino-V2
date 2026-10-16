@@ -213,6 +213,21 @@ class CanvasWorkerPool {
     this.workers = [];
     this.freeWorkers = [];
   }
+
+  getStats() {
+    const totalWorkers = this.workers.length || this.size;
+    const freeWorkers = this.freeWorkers.length;
+    const activeWorkers = Math.max(0, totalWorkers - freeWorkers);
+    const queuedTasks = this.taskQueue.length;
+    return {
+      poolSize: this.size,
+      totalWorkers,
+      freeWorkers,
+      activeWorkers,
+      queuedTasks,
+      queueLength: queuedTasks,
+    };
+  }
 }
 
 const canvasWorkerPool = new CanvasWorkerPool(2);

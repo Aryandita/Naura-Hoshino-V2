@@ -178,6 +178,15 @@ class LavalinkClusterManager {
   }
 
   /**
+   * Catat kegagalan node (alias untuk recordNodeError).
+   * @param {string} nodeName
+   * @param {Error|string} [error]
+   */
+  recordFailure(nodeName, error) {
+    return this.recordNodeError(nodeName, error);
+  }
+
+  /**
    * Catat keberhasilan koneksi / pemutaran pada node (reset circuit breaker).
    * @param {string} nodeName
    */
@@ -705,12 +714,33 @@ class LavalinkClusterManager {
       supportedCodecs: ["FLAC 24-bit", "OPUS 384kbps HD", "PCM Stereo"],
     };
   }
+
+  /**
+   * Mengambil status kluster Lavalink untuk telemetri insiden / health check.
+   * @param {object} [poru]
+   * @returns {object}
+   */
+  getStatus(poru = null) {
+    if (!poru) {
+      try {
+        const musicManager = require("./musicManager");
+        poru = musicManager?.poru || null;
+      } catch (_) {}
+    }
+    const nodes = poru && poru.nodes ? [...poru.nodes.values()] : [];
+    const totalConnected = nodes.filter((n) => n.connected).length;
+    return {
+      totalNodes: nodes.length,
+      connectedNodes: totalConnected,
+      circuitBreakers: Object.fromEntries(this.circuitBreakers),
+      hiFiNodes: this.hiFiNodes.size,
+    };
+  }
 }
 
 // Singleton Instance
 const lavalinkClusterManager = new LavalinkClusterManager();
+lavalinkClusterManager.lavalinkClusterManager = lavalinkClusterManager;
+lavalinkClusterManager.LavalinkClusterManager = LavalinkClusterManager;
 
-module.exports = {
-  lavalinkClusterManager,
-  LavalinkClusterManager,
-};
+module.exports = lavalinkClusterManager;

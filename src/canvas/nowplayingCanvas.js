@@ -265,4 +265,7 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   return canvas.toBuffer("image/png");
 }
 
-module.exports = { drawNowPlayingCard };
+module.exports = {
+  drawNowPlayingCard,
+  renderNowPlayingCard: drawNowPlayingCard,
+};

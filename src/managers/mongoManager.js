@@ -65,6 +65,22 @@ class MongoManager {
   }
 
   /**
+   * Cek apakah koneksi database MongoDB aktif.
+   * @returns {boolean}
+   */
+  isConnected() {
+    return this.isReady;
+  }
+
+  /**
+   * Ambil instance native Db MongoDB dari Mongoose.
+   * @returns {object|null}
+   */
+  getDb() {
+    return mongoose.connection.db || null;
+  }
+
+  /**
    * Menghubungkan ke MongoDB Atlas menggunakan MONGODB_URI dari env.js
    * @returns {Promise<boolean>}
    */

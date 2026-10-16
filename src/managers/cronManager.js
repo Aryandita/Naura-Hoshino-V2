@@ -434,7 +434,10 @@ module.exports = {
         const UserProfile = require("../models/UserProfile");
         const { sendNotification } = require("./notificationManager");
         const cacheManager = require("./cacheManager");
-        const profiles = await UserProfile.findAll();
+        const profiles = await UserProfile.findAll({
+          attributes: ["userId", "notification_prefs"],
+          limit: 500,
+        });
 
         for (const profile of profiles) {
           const prefs = profile.notification_prefs || {};
@@ -791,6 +794,7 @@ module.exports = {
               profile.cooldowns = newCooldowns;
               profile.changed("cooldowns", true);
               await profile.save({ fields: ["cooldowns"] });
+              await cacheManager.invalidateUserProfile(profile.userId);
             }
           }
         }
@@ -820,6 +824,7 @@ module.exports = {
             profile.isPremium = false;
             profile.premiumUntil = null;
             await profile.save({ fields: ["isPremium", "premiumUntil"] });
+            await cacheManager.invalidateUserProfile(profile.userId);
 
             // Kirim DM notifikasi expired
             const user = await client.users
@@ -999,48 +1004,56 @@ module.exports = {
     });
 
     // 8. Prediction Market Auto-Lock Check - Runs every minute
-    cron.schedule("* * * * *", async () => {
-      try {
-        const PredictionMarket = require("../models/PredictionMarket");
-        const expiredMarkets = await PredictionMarket.findAll({
-          where: {
-            status: "OPEN",
-            lockTime: {
-              [Op.lte]: new Date(),
+    cron.schedule(
+      "* * * * *",
+      withMutex(async () => {
+        try {
+          const PredictionMarket = require("../models/PredictionMarket");
+          const expiredMarkets = await PredictionMarket.findAll({
+            where: {
+              status: "OPEN",
+              lockTime: {
+                [Op.lte]: new Date(),
+              },
             },
-          },
-        });
+          });
 
-        for (const market of expiredMarkets) {
-          market.status = "LOCKED";
-          await market.save({ fields: ["status"] });
-          const redisManager = require("./redisManager");
-          if (redisManager.isReady) {
-            await redisManager.deleteCache(
-              `prediction:market:${market.marketId}`,
+          for (const market of expiredMarkets) {
+            market.status = "LOCKED";
+            await market.save({ fields: ["status"] });
+            const redisManager = require("./redisManager");
+            if (redisManager.isReady) {
+              await redisManager.deleteCache(
+                `prediction:market:${market.marketId}`,
+              );
+            }
+            logger.info(
+              `[Cron Prediction] Market ${market.marketId} automatically LOCKED as lockTime passed.`,
             );
           }
-          logger.info(
-            `[Cron Prediction] Market ${market.marketId} automatically LOCKED as lockTime passed.`,
-          );
+        } catch (err) {
+          logger.error("[Cron Prediction Auto-Lock Error]", err);
         }
-      } catch (err) {
-        logger.error("[Cron Prediction Auto-Lock Error]", err);
-      }
-    });
+      }),
+    );
 
     // 9. Daily Morning Newspaper Publication (The Hoshino Times) - Runs every day at 08:00 WIB (01:00 UTC)
-    cron.schedule("0 1 * * *", async () => {
-      try {
-        const ServerChronicleEngine = require("../ai/serverChronicleEngine");
-        logger.info(
-          "[Cron Chronicle] Triggering daily morning newspaper publication (08:00 WIB)...",
-        );
-        await ServerChronicleEngine.publishMorningChronicle(client);
-      } catch (err) {
-        logger.error("[Cron Chronicle Morning Publication Error]", err);
-      }
-    });
+    cron.schedule(
+      "0 1 * * *",
+      withMutex(async () => {
+        try {
+          const ServerChronicleEngine = require("../ai/serverChronicleEngine");
+          logger.info(
+            "[Cron Chronicle] Triggering daily morning newspaper publication (08:00 WIB)...",
+          );
+          if (typeof ServerChronicleEngine.publishMorningChronicle === "function") {
+            await ServerChronicleEngine.publishMorningChronicle(client);
+          }
+        } catch (err) {
+          logger.error("[Cron Chronicle Morning Publication Error]", err);
+        }
+      }),
+    );
 
     // 10. Weekly Clan Territory War Reset - Runs every Monday at 00:00 WIB (Sunday 17:00 UTC)
     cron.schedule("0 17 * * 0", async () => {

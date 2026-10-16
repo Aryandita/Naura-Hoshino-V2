@@ -251,6 +251,45 @@ class CardEngine {
   }
 
   /**
+   * Klaim kartu harian gratis dengan proteksi cooldown harian Redis
+   */
+  static async claimDailyCard(userId) {
+    if (!userId) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const cdKey = `card:daily:${today}:${userId}`;
+
+    if (redisManager.isReady) {
+      const alreadyClaimed = await redisManager.getCache(cdKey);
+      if (alreadyClaimed) return null;
+    }
+
+    const randomChar =
+      CHARACTERS_CATALOG[Math.floor(Math.random() * CHARACTERS_CATALOG.length)];
+    const card = await this.mintCard(randomChar.id, userId);
+
+    if (redisManager.isReady) {
+      await redisManager.setCache(cdKey, "1", 86400);
+    }
+    return card;
+  }
+
+  /**
+   * Alias untuk fuseCards dengan pemetaan alasan kesalahan spesifik untuk command /card awaken.
+   */
+  static async awakenCard(userId, cardCode1, cardCode2, cardCode3) {
+    const res = await this.fuseCards(userId, cardCode1, cardCode2, cardCode3);
+    if (!res.success) {
+      if (res.reason === "DUPLICATE_CODES_SELECTED") {
+        return { ...res, reason: "DUPLICATE_CODES" };
+      }
+      if (res.reason === "CARDS_NOT_FOUND_OR_NOT_OWNED") {
+        return { ...res, reason: "CARD_NOT_FOUND" };
+      }
+    }
+    return res;
+  }
+
+  /**
    * Gabungkan 3 kartu sejenis/duplikat menjadi Kartu Awakened
    */
   static async fuseCards(userId, cardCode1, cardCode2, cardCode3) {
@@ -272,6 +311,12 @@ class CardEngine {
 
     if (cards.length !== 3) {
       return { success: false, reason: "CARDS_NOT_FOUND_OR_NOT_OWNED" };
+    }
+
+    // Pastikan ketiga kartu adalah karakter anime yang sama
+    const firstCharId = cards[0].cardId;
+    if (!cards.every((c) => c.cardId === firstCharId)) {
+      return { success: false, reason: "CHARACTER_MISMATCH" };
     }
 
     // Pastikan kartu target utama adalah cardCode1

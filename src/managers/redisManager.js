@@ -196,6 +196,66 @@ class RedisManager {
     }
   }
 
+  async lpush(key, value) {
+    if (!this.isReady) return 0;
+    try {
+      if (typeof this.client.lPush === "function") {
+        return await this.client.lPush(key, value);
+      }
+      return await this.client.lpush(key, value);
+    } catch (err) {
+      logger.error("[Redis] lpush error:", err.message);
+      return 0;
+    }
+  }
+
+  async ltrim(key, start, stop) {
+    if (!this.isReady) return null;
+    try {
+      if (typeof this.client.lTrim === "function") {
+        return await this.client.lTrim(key, start, stop);
+      }
+      return await this.client.ltrim(key, start, stop);
+    } catch (err) {
+      logger.error("[Redis] ltrim error:", err.message);
+      return null;
+    }
+  }
+
+  async lrange(key, start, stop) {
+    if (!this.isReady) return [];
+    try {
+      if (typeof this.client.lRange === "function") {
+        return await this.client.lRange(key, start, stop);
+      }
+      return await this.client.lrange(key, start, stop);
+    } catch (err) {
+      logger.error("[Redis] lrange error:", err.message);
+      return [];
+    }
+  }
+
+  async get(key) {
+    return this.getCache(key);
+  }
+
+  async set(key, value, ...args) {
+    let ttl = 3600;
+    if (args.length >= 2 && typeof args[0] === "string" && args[0].toUpperCase() === "EX") {
+      ttl = Number(args[1]) || 3600;
+    } else if (typeof args[0] === "number") {
+      ttl = args[0];
+    } else if (args[0] && typeof args[0] === "object") {
+      if (args[0].EX) ttl = Number(args[0].EX) || 3600;
+      else if (args[0].ttl) ttl = Number(args[0].ttl) || 3600;
+    }
+    return this.setCache(key, value, ttl);
+  }
+
+  async del(key) {
+    return this.deleteCache(key);
+  }
+
   // ==========================================
   // 📡 REDIS PUB/SUB SYSTEM (Cross-Shard IPC)
   // ==========================================

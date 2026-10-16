@@ -838,7 +838,7 @@ async function handleDiagnostics(interaction) {
 
   let redisStatus = `${eYellow} Offline (In-Memory Fallback)`;
   try {
-    if (redisManager.isReady && redisManager.isReady()) {
+    if (redisManager.isReady) {
       const start = Date.now();
       await redisManager.ping();
       redisStatus = `${eGreen} Aktif (${Date.now() - start}ms)`;

@@ -263,6 +263,68 @@ async function settle(
   return eloChanges;
 }
 
+/**
+ * Jalankan simulasi duel turn-based otomatis antara dua petualang.
+ * Digunakan oleh fitur seperti /survival bounty untuk perburuan outlaw.
+ *
+ * @param {object} attackerUser - Discord User objek penantang / bounty hunter
+ * @param {object} defenderUser - Discord User objek buronan / target
+ * @returns {Promise<{ success: boolean, reason?: string, winnerId?: string, loserId?: string, rounds?: number, log?: string[] }>}
+ */
+async function runDuel(attackerUser, defenderUser) {
+  if (!attackerUser?.id || !defenderUser?.id) {
+    return { success: false, reason: "Petarung tidak valid." };
+  }
+
+  const UserProfile = require("../../models/UserProfile");
+  const UserSurvival = require("../../models/UserSurvival");
+
+  const [p1Profile] = await UserProfile.findOrCreate({ where: { userId: attackerUser.id } });
+  const [p1Survival] = await UserSurvival.findOrCreate({ where: { userId: attackerUser.id } });
+  const [p2Profile] = await UserProfile.findOrCreate({ where: { userId: defenderUser.id } });
+  const [p2Survival] = await UserSurvival.findOrCreate({ where: { userId: defenderUser.id } });
+
+  if (!p1Survival || !p2Survival) {
+    return { success: false, reason: "Data petarung tidak ditemukan." };
+  }
+
+  const p1 = buildFighter(attackerUser, p1Profile, p1Survival);
+  const p2 = buildFighter(defenderUser, p2Profile, p2Survival);
+
+  const combatLog = [];
+  let round = 1;
+  const maxRounds = 25;
+
+  while (p1.hp > 0 && p2.hp > 0 && round <= maxRounds) {
+    const p1Action = (p1.skill && p1.stamina >= p1.skill.staminaCost)
+      ? useSkill(p1, p2)
+      : basicAttack(p1, p2);
+    combatLog.push(`Ronde ${round} (${p1.username}): ${p1Action.label || "menyerang"} -> ${p1Action.damage || 0} DMG`);
+
+    if (p2.hp <= 0) break;
+
+    const p2Action = (p2.skill && p2.stamina >= p2.skill.staminaCost)
+      ? useSkill(p2, p1)
+      : basicAttack(p2, p1);
+    combatLog.push(`Ronde ${round} (${p2.username}): ${p2Action.label || "menyerang"} -> ${p2Action.damage || 0} DMG`);
+
+    round++;
+  }
+
+  const winnerId = p1.hp > 0 ? attackerUser.id : defenderUser.id;
+  const loserId = p1.hp > 0 ? defenderUser.id : attackerUser.id;
+
+  await settle(p1Survival, p1, p2Survival, p2, false).catch(() => {});
+
+  return {
+    success: true,
+    winnerId,
+    loserId,
+    rounds: round,
+    log: combatLog,
+  };
+}
+
 module.exports = {
   SKILLS,
   BASE_HP,
@@ -277,4 +339,5 @@ module.exports = {
   narrate,
   settle,
   calculateElo,
+  runDuel,
 };

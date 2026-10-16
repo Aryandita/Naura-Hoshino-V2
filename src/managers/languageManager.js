@@ -260,6 +260,13 @@ class LanguageManager {
     return this.translateSync(lang, key, placeholders);
   }
 
+  /**
+   * Alias getString(lang, key, placeholders) untuk kompatibilitas plugin lama.
+   */
+  getString(lang, key, placeholders = {}) {
+    return this.translateSync(lang, key, placeholders);
+  }
+
   /** Cek keberadaan kunci pada sebuah bahasa (dipakai audit paritas). */
   has(lang, key) {
     return this._lookup(this.strings[this.normalize(lang)], key) !== undefined;

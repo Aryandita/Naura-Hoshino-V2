@@ -134,6 +134,26 @@ async function transfer(channelId, newOwnerId) {
   return updated;
 }
 
+/**
+ * Ambil ID pemilik ruangan temp voice.
+ * @param {string} channelId
+ * @returns {Promise<string|null>}
+ */
+async function getOwner(channelId) {
+  const entry = await get(channelId);
+  return entry ? entry.ownerId : null;
+}
+
+/**
+ * Tetapkan ID pemilik baru untuk ruangan temp voice.
+ * @param {string} channelId
+ * @param {string} newOwnerId
+ * @returns {Promise<object|null>}
+ */
+async function setOwner(channelId, newOwnerId) {
+  return transfer(channelId, newOwnerId);
+}
+
 module.exports = {
   register,
   get,
@@ -143,5 +163,7 @@ module.exports = {
   isTracked,
   unregister,
   transfer,
+  getOwner,
+  setOwner,
   TTL_SECONDS,
 };
