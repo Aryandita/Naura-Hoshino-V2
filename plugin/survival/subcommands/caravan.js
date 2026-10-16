@@ -2,6 +2,7 @@
 
 const { MessageFlags } = require("discord.js");
 const tradeEngine = require("../../../src/services/tradeEngine");
+const caravanEngine = require("../../../src/survival/engines/caravanEngine");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -49,11 +50,75 @@ module.exports = {
       });
     }
 
+    if (action === "mercenary") {
+      const roster = caravanEngine.getMercenaryRoster();
+      const modes = caravanEngine.getExpeditionModes();
+
+      const mercLines = Object.values(roster)
+        .map(
+          (m) =>
+            `• **${m.name}**\n  💰 Biaya: \`${m.cost} NSF\` | 🛡️ Def: \`+${m.defenseBonus}\` | 🎯 Mitigasi Risiko: \`-${m.ambushMitigation}%\``,
+        )
+        .join("\n");
+
+      const modeLines = Object.values(modes)
+        .map(
+          (m) =>
+            `• **${m.name}**\n  ⚠️ Risiko Ambush: \`${m.riskPercent}%\` | 📈 Pengganda Hasil: \`${m.profitMultiplier}x\``,
+        )
+        .join("\n");
+
+      const payload = buildContainerV2({
+        accentColorHex: "#38BDF8",
+        authorName: "MERCENARY GUILD & HIGH-RISK EXPEDITIONS",
+        title: "🛡️ Roster Tentara Bayaran & Mode Ekspedisi",
+        description: [
+          `Halo, **${displayName}**! Lindungi karavan dagangmu dari sergapan perompak kosmik dengan menyewa pengawal profesional:`,
+          ``,
+          `⚔️ **Daftar Tentara Bayaran:**`,
+          mercLines,
+          ``,
+          `🗺️ **Mode Ekspedisi High-Risk High-Reward:**`,
+          modeLines,
+          ``,
+          `-# 💡 *Sewa saat dispatch: \`/survival caravan dispatch ... pengawal:<pilihan> mode:<pilihan>\`!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+
     if (action === "dispatch") {
       const routeId = interaction.options.getString("rute") || "tokyo";
       const commodity =
         interaction.options.getString("komoditas") || "GOLDEN_WOOD";
       const amount = interaction.options.getInteger("jumlah") || 10;
+      const modeKey = interaction.options.getString("mode") || "standard";
+      const mercenaryKey = interaction.options.getString("pengawal");
+
+      let hiredMerc = null;
+      if (mercenaryKey) {
+        const hireRes = await caravanEngine.hireMercenary(user.id, mercenaryKey);
+        if (!hireRes.success) {
+          const payload = buildErrorContainerV2({
+            title: "Gagal Menyewa Pengawal",
+            description:
+              hireRes.reason === "INSUFFICIENT_FUNDS"
+                ? `Saldo NSF kamu tidak mencukupi untuk menyewa pengawal ini (Dibutuhkan: \`${hireRes.required} NSF\`, Saldo: \`${hireRes.currentNsf} NSF\`).`
+                : "Pilihan pengawal bayaran tidak valid.",
+            footerText: ui.getFooter("survival"),
+          });
+          return interaction.reply({
+            ...payload,
+            flags: MessageFlags.IsComponentsV2,
+          });
+        }
+        hiredMerc = hireRes.mercenary;
+      }
 
       const res = await tradeEngine.dispatchCaravan(
         user.id,
@@ -89,21 +154,35 @@ module.exports = {
 
       const crv = res.caravan;
       const finishTs = Math.floor(new Date(crv.finishTime).getTime() / 1000);
+      const expeditionMode = caravanEngine.getExpeditionModes()[modeKey] || caravanEngine.getExpeditionModes().standard;
+      const finalRiskData = caravanEngine.calculateCaravanRisk(modeKey, mercenaryKey);
+
+      const descriptionLines = [
+        `Selamat jalan, **${displayName}**! Karavanmu telah memulai perjalanan ekspedisi melintasi rute kosmik.`,
+        ``,
+        `🗺️ **Rute Tujuan:** **${crv.route.name}**`,
+        `⚡ **Mode Ekspedisi:** **${expeditionMode.name}** (Risiko: \`${finalRiskData.finalRisk}%\`)`,
+        `📦 **Muatan Kargo:** \`${crv.amount}x\` **${crv.commodity.name}**`,
+        `💰 **Modal Investasi:** \`${crv.investedCost.toLocaleString("id-ID")}\` Koin`,
+        `📈 **Potensi Hasil Penjualan:** \`${crv.potentialProfit.toLocaleString("id-ID")}\` Koin`,
+      ];
+
+      if (hiredMerc) {
+        descriptionLines.push(
+          `🛡️ **Pengawal:** **${hiredMerc.name}** (Mitigasi Risiko: \`-${hiredMerc.ambushMitigation}%\`)`,
+        );
+      }
+
+      descriptionLines.push(
+        `⏳ **Estimasi Tiba:** <t:${finishTs}:R> (<t:${finishTs}:t>)`,
+        ``,
+        `-# 💡 *Setelah karavan tiba, gunakan \`/survival caravan claim\` untuk mencairkan seluruh laba perdaganganmu!*`,
+      );
 
       const payload = buildContainerV2({
         authorName: "GALACTIC MERCHANT CARTEL",
         title: "🐫 Karavan Dagang Berhasil Diberangkatkan!",
-        description: [
-          `Selamat jalan, **${displayName}**! Karavanmu telah memulai perjalanan ekspedisi melintasi rute kosmik.`,
-          ``,
-          `🗺️ **Rute Tujuan:** **${crv.route.name}**`,
-          `📦 **Muatan Kargo:** \`${crv.amount}x\` **${crv.commodity.name}**`,
-          `💰 **Modal Investasi:** \`${crv.investedCost.toLocaleString("id-ID")}\` Koin`,
-          `📈 **Potensi Hasil Penjualan:** \`${crv.potentialProfit.toLocaleString("id-ID")}\` Koin`,
-          `⏳ **Estimasi Tiba:** <t:${finishTs}:R> (<t:${finishTs}:t>)`,
-          ``,
-          `-# 💡 *Setelah karavan tiba, gunakan \`/survival caravan claim\` untuk mencairkan seluruh laba perdaganganmu!*`,
-        ].join("\n"),
+        description: descriptionLines.join("\n"),
         footerText: ui.getFooter("survival"),
       });
 

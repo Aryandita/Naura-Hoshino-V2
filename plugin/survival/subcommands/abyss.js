@@ -21,6 +21,7 @@ module.exports = {
 
   async execute(interaction) {
     const action = interaction.options.getString("aksi") || "start";
+    const wager = interaction.options.getInteger("taruhan") || 0;
     const userId = interaction.user.id;
 
     // 1. KELUAR & KLAIM HADIAH (LEAVE)
@@ -37,17 +38,25 @@ module.exports = {
         });
       }
 
+      const wagerNote =
+        leaveRes.wagerPayout > 0
+          ? `🔥 **Hasil Taruhan Wager (${leaveRes.wagerMultiplier}x):** \`+${leaveRes.wagerPayout.toLocaleString("id-ID")} NSF\` (Modal: ${leaveRes.wager.toLocaleString("id-ID")} NSF)`
+          : "";
+
+      const descriptionLines = [
+        `Kamu telah memutuskan untuk keluar dan mengamankan seluruh jarahanmu!`,
+        ``,
+        `🏰 **Lantai Tertinggi Ditaklukkan:** \`Lantai ${leaveRes.floorsCleared}\``,
+        `🎁 **Total Relic Dikumpulkan:** \`${leaveRes.relicsGained} Relic\``,
+        `💰 **Total Koin Diamankan:** \`+${leaveRes.totalCoins.toLocaleString("id-ID")} Star Fragments\``,
+      ];
+      if (wagerNote) descriptionLines.push(wagerNote);
+
       const payload = buildContainerV2({
         accentColorHex: "#86EFAC",
         authorName: "🏁 Pintu Keluar The Neo-Abyss",
         title: "✨ Ekspedisi Berhasil Diselesaikan!",
-        description: [
-          `Kamu telah memutuskan untuk keluar dan mengamankan seluruh jarahanmu!`,
-          ``,
-          `🏰 **Lantai Tertinggi Ditaklukkan:** \`Lantai ${leaveRes.floorsCleared}\``,
-          `🎁 **Total Relic Dikumpulkan:** \`${leaveRes.relicsGained} Relic\``,
-          `💰 **Total Koin Diamankan:** \`+${leaveRes.totalCoins.toLocaleString("id-ID")} Star Fragments\``,
-        ].join("\n"),
+        description: descriptionLines.join("\n"),
         buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
         footerText: ui.getFooter("survival"),
       });
@@ -60,9 +69,25 @@ module.exports = {
     let outcomeText = "";
 
     if (!run || run.status === "DEFEATED" || run.status === "VICTORY") {
-      run = await abyssEngine.startRun(userId);
+      const startRes = await abyssEngine.startRun(userId, {}, wager);
+      if (
+        startRes &&
+        startRes.success === false &&
+        startRes.reason === "INSUFFICIENT_FUNDS"
+      ) {
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Saldo NSF Tidak Mencukupi",
+            description: `Kamu membutuhkan minimal **${wager.toLocaleString("id-ID")} NSF** untuk memasang taruhan ekspedisi ini (Saldo saat ini: ${startRes.currentNsf.toLocaleString("id-ID")} NSF).`,
+            footerText: ui.getFooter("survival"),
+          }),
+        });
+      }
+      run = startRes;
       outcomeText =
-        "🚀 *Kamu melangkah masuk ke dalam gerbang dimensi The Neo-Abyss Lantai 1!*";
+        wager > 0
+          ? `🔥 *Kamu memasang taruhan High-Risk sebesar **${wager.toLocaleString("id-ID")} NSF** dan melangkah masuk ke gerbang The Neo-Abyss Lantai 1!*`
+          : "🚀 *Kamu melangkah masuk ke dalam gerbang dimensi The Neo-Abyss Lantai 1!*";
     } else if (action.startsWith("room_")) {
       const choiceIdx = parseInt(action.replace("room_", ""), 10) - 1;
       const processRes = await abyssEngine.chooseRoom(userId, choiceIdx);
@@ -137,12 +162,24 @@ module.exports = {
         .setStyle(ButtonStyle.Danger),
     );
 
+    const wagerMultiplier = abyssEngine.calculateWagerMultiplier(
+      Math.max(0, run.currentFloor - 1),
+    );
+    const wagerDesc =
+      run.wager > 0
+        ? `🔥 **Taruhan Wager:** \`${run.wager.toLocaleString("id-ID")} NSF\` (Multiplier: \`${wagerMultiplier}x\`)\n`
+        : "";
+
     const payload = buildContainerV2({
       accentColorHex: "#A855F7",
-      authorName: `🌀 The Neo-Abyss, Lantai ${run.currentFloor} / 50`,
+      authorName:
+        run.wager > 0
+          ? `🌀 The Neo-Abyss · Lantai ${run.currentFloor} / 50 (Taruhan: ${run.wager.toLocaleString("id-ID")} NSF)`
+          : `🌀 The Neo-Abyss · Lantai ${run.currentFloor} / 50`,
       title: `❤️ HP: ${run.currentHp}/${run.maxHp}  |  ⚔️ ATK: ${run.attackPower}  |  💰 ${run.fragmentsCollected} ⭐`,
       description: [
         outcomeText ? `${outcomeText}\n` : "",
+        wagerDesc,
         `🧭 **PILIH JALUR RUANGAN BERIKUTNYA:**`,
         choicesDesc,
         ``,
@@ -174,11 +211,15 @@ module.exports = {
 
       if (btnInteraction.customId === "abyss_btn_leave") {
         const leaveRes = await abyssEngine.finishRun(userId);
+        const wagerBonusText =
+          leaveRes.wagerPayout > 0
+            ? `\n🔥 **Hasil Taruhan Wager (${leaveRes.wagerMultiplier}x):** +${leaveRes.wagerPayout.toLocaleString("id-ID")} NSF!`
+            : "";
         return interaction.followUp({
           ...buildContainerV2({
             accentColorHex: "#86EFAC",
             title: "✨ Ekspedisi Berhasil Diselesaikan!",
-            description: `Kamu berhasil mengamankan **+${leaveRes.totalCoins.toLocaleString("id-ID")} Star Fragments**!`,
+            description: `Kamu berhasil mengamankan **+${leaveRes.totalCoins.toLocaleString("id-ID")} Star Fragments**!${wagerBonusText}`,
             footerText: ui.getFooter("survival"),
           }),
           flags: 64,

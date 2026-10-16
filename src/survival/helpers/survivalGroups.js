@@ -225,6 +225,7 @@ function addEconomyGroup(builder) {
                 { name: "Claim (Cairkan Laba)", value: "claim" },
                 { name: "Escort (Gabung Pengawal)", value: "escort" },
                 { name: "Ambush (Penyergapan Karavan PvP)", value: "ambush" },
+                { name: "Mercenary (Katalog Pengawal Bayaran)", value: "mercenary" },
               ),
           )
           .addStringOption((opt) =>
@@ -247,6 +248,46 @@ function addEconomyGroup(builder) {
                 {
                   name: "Galactic Core Nexus (120m · +150% Laba)",
                   value: "nexus",
+                },
+              ),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("mode")
+              .setDescription("Mode risiko perjalanan ekspedisi")
+              .setRequired(false)
+              .addChoices(
+                {
+                  name: "Standar Orbit (15% Risiko · 1.35x Hasil)",
+                  value: "standard",
+                },
+                {
+                  name: "Smuggler Run Heist (50% Risiko · 2.5x Hasil)",
+                  value: "high_risk_heist",
+                },
+                {
+                  name: "Void Chasm Extreme (75% Risiko · 4.2x Hasil)",
+                  value: "void_chasm",
+                },
+              ),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("pengawal")
+              .setDescription("Sewa tentara bayaran pengawal karavan")
+              .setRequired(false)
+              .addChoices(
+                {
+                  name: "Penjaga Pemula (150 NSF · -12% Risiko)",
+                  value: "rookie",
+                },
+                {
+                  name: "Tentara Veteran (400 NSF · -25% Risiko)",
+                  value: "veteran",
+                },
+                {
+                  name: "Pengawal Elit Cyber (900 NSF · -45% Risiko)",
+                  value: "elite_cyber",
                 },
               ),
           )

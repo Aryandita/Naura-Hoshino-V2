@@ -6,6 +6,7 @@ const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
 
 const ABYSS_PREFIX = "abyss:run:";
+const memoryRuns = new Map();
 
 const RELICS_CATALOG = [
   {
@@ -52,12 +53,45 @@ const RELICS_CATALOG = [
 
 class AbyssEngine {
   /**
-   * Mulai ekspedisi Rogue-lite Abyss baru
+   * Hitung pengganda taruhan berdasarkan jumlah lantai yang berhasil dibersihkan
+   * @param {number} floorsCleared
+   * @returns {number}
    */
-  static async startRun(userId, userStats = {}) {
+  static calculateWagerMultiplier(floorsCleared) {
+    if (floorsCleared >= 50) return 5.0;
+    if (floorsCleared >= 40) return 4.2;
+    if (floorsCleared >= 30) return 3.2;
+    if (floorsCleared >= 20) return 2.2;
+    if (floorsCleared >= 10) return 1.5;
+    return 1.0;
+  }
+
+  /**
+   * Mulai ekspedisi Rogue-lite Abyss baru dengan opsi High-Risk Wager
+   */
+  static async startRun(userId, userStats = {}, wager = 0) {
     const existing = await this.getRun(userId);
     if (existing && existing.status === "EXPLORING") {
       return { success: false, reason: "ALREADY_IN_RUN", run: existing };
+    }
+
+    const wagerAmount = Math.max(0, Math.floor(Number(wager) || 0));
+    if (wagerAmount > 0) {
+      const surv = await cacheManager.getUserSurvival(userId);
+      const curNsf = surv ? Number(surv.starFragments || 0) : 0;
+      if (curNsf < wagerAmount) {
+        return {
+          success: false,
+          reason: "INSUFFICIENT_FUNDS",
+          currentNsf: curNsf,
+          wager: wagerAmount,
+        };
+      }
+      await cacheManager.debitUserSurvival(
+        userId,
+        "starFragments",
+        wagerAmount,
+      );
     }
 
     const maxHp = Math.max(300, 100 + (userStats.level || 1) * 10);
@@ -70,21 +104,16 @@ class AbyssEngine {
       shield: 0,
       relics: [],
       fragmentsCollected: 0,
-      status: "EXPLORING", // EXPLORING, RELIC_SELECT, VICTORY, DEFEATED
+      wager: wagerAmount,
+      status: "EXPLORING",
       availableChoices: this._generateChoices(1),
       startedAt: Date.now(),
     };
 
-    if (redisManager.isReady) {
-      await redisManager.setCache(
-        `${ABYSS_PREFIX}${userId}`,
-        JSON.stringify(runData),
-        3600,
-      );
-    }
+    await this._saveRun(userId, runData);
 
     logger.info(
-      `[AbyssEngine] User ${userId} memulai ekspedisi The Neo-Abyss.`,
+      `[AbyssEngine] User ${userId} memulai ekspedisi The Neo-Abyss (Taruhan: ${wagerAmount} NSF).`,
     );
     return runData;
   }
@@ -93,10 +122,11 @@ class AbyssEngine {
    * Ambil sesi run aktif
    */
   static async getRun(userId) {
-    if (!redisManager.isReady) return null;
-    const raw = await redisManager.getCache(`${ABYSS_PREFIX}${userId}`);
-    if (!raw) return null;
-    return typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (redisManager.isReady) {
+      const raw = await redisManager.getCache(`${ABYSS_PREFIX}${userId}`);
+      if (raw) return typeof raw === "string" ? JSON.parse(raw) : raw;
+    }
+    return memoryRuns.get(userId) || null;
   }
 
   /**
@@ -188,6 +218,9 @@ class AbyssEngine {
       if (run.currentHp <= 0) {
         run.status = "DEFEATED";
         outcome.log = `${ui.getEmoji("skull") || "☠️"} Kamu gugur di tangan **${choice.monsterName}** di Lantai ${run.currentFloor}!`;
+        if (run.wager > 0) {
+          outcome.log += `\n${ui.getEmoji("skull") || "☠️"} Taruhan Abyss sebesar **${run.wager.toLocaleString("id-ID")} NSF** hangus!`;
+        }
         await this._saveRun(userId, run);
         return { success: true, run, outcome, isFinished: true };
       }
@@ -226,11 +259,15 @@ class AbyssEngine {
     run.currentFloor += 1;
     if (run.currentFloor > 50) {
       run.status = "VICTORY";
+      const wagerBonus = run.wager > 0 ? Math.floor(run.wager * 5.0) : 0;
       outcome.log += `\n\n${ui.getEmoji("celebrate") || "🎉"} **SELAMAT! KAMU TELAH MENAKLUKKAN SELURUH 50 LANTAI THE NEO-ABYSS!**`;
+      if (wagerBonus > 0) {
+        outcome.log += `\n🏆 **Kemenangan Taruhan Wager (5.0x):** +${wagerBonus.toLocaleString("id-ID")} NSF!`;
+      }
       await cacheManager.incrementUserSurvival(
         userId,
         "starFragments",
-        run.fragmentsCollected + 1000,
+        run.fragmentsCollected + 1000 + wagerBonus,
       );
       await this._saveRun(userId, run);
       return { success: true, run, outcome, isFinished: true };
@@ -254,7 +291,11 @@ class AbyssEngine {
     const run = await this.getRun(userId);
     if (!run) return { success: false, reason: "NO_ACTIVE_RUN" };
 
-    const totalCoins = run.fragmentsCollected;
+    const floorsCleared = Math.max(0, run.currentFloor - 1);
+    const multiplier = this.calculateWagerMultiplier(floorsCleared);
+    const wagerPayout = run.wager > 0 ? Math.floor(run.wager * multiplier) : 0;
+    const totalCoins = run.fragmentsCollected + wagerPayout;
+
     if (totalCoins > 0) {
       await cacheManager.incrementUserSurvival(
         userId,
@@ -263,19 +304,25 @@ class AbyssEngine {
       );
     }
 
+    memoryRuns.delete(userId);
     if (redisManager.isReady) {
       await redisManager.deleteCache(`${ABYSS_PREFIX}${userId}`);
     }
 
     return {
       success: true,
-      floorsCleared: run.currentFloor - 1,
+      floorsCleared,
+      fragmentsCollected: run.fragmentsCollected,
+      wager: run.wager || 0,
+      wagerMultiplier: multiplier,
+      wagerPayout,
       totalCoins,
       relicsGained: run.relics.length,
     };
   }
 
   static async _saveRun(userId, run) {
+    memoryRuns.set(userId, run);
     if (redisManager.isReady) {
       await redisManager.setCache(
         `${ABYSS_PREFIX}${userId}`,

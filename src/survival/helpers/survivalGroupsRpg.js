@@ -361,6 +361,14 @@ function addRpgSubcommands(builder) {
                 { name: "🏁 Selesaikan & Klaim Hadiah", value: "leave" },
               )
               .setRequired(false),
+          )
+          .addIntegerOption((opt) =>
+            opt
+              .setName("taruhan")
+              .setDescription("Jumlah Star Fragments (NSF) yang dipertaruhkan")
+              .setRequired(false)
+              .setMinValue(50)
+              .setMaxValue(100000),
           ),
       )
       .addSubcommand((sub) =>
