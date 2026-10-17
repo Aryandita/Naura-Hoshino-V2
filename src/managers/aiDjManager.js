@@ -22,6 +22,8 @@ class AiDjManager {
     this.guildDjStates = new Map();
     // Melacak counter lagu per-guild untuk frekuensi pengumuman
     this.trackCounters = new Map();
+    // Melacak preferensi greeting per-user
+    this.userGreetingStates = new Map();
   }
 
   /**
@@ -44,6 +46,76 @@ class AiDjManager {
    */
   setDjEnabled(guildId, enabled) {
     this.guildDjStates.set(guildId, Boolean(enabled));
+  }
+
+  /**
+   * Cek apakah user mengaktifkan Signature Audio Greeting VIP.
+   * @param {string} userId
+   * @returns {Promise<boolean>}
+   */
+  async isGreetingEnabled(userId) {
+    if (!userId) return false;
+    const uid = String(userId);
+    if (this.userGreetingStates.has(uid)) {
+      return this.userGreetingStates.get(uid);
+    }
+    try {
+      const cacheManager = require("./cacheManager");
+      if (typeof cacheManager.getUserProfile === "function") {
+        const profile = await cacheManager.getUserProfile(uid);
+        if (profile?.notification_prefs?.ai_dj_greeting !== undefined) {
+          const val = Boolean(profile.notification_prefs.ai_dj_greeting);
+          this.userGreetingStates.set(uid, val);
+          return val;
+        }
+      }
+    } catch (_) {}
+    return true; // Default aktif untuk member VIP
+  }
+
+  /**
+   * Mengatur status Signature Audio Greeting VIP untuk user.
+   * @param {string} userId
+   * @param {boolean} enabled
+   * @returns {Promise<boolean>}
+   */
+  async setGreetingEnabled(userId, enabled) {
+    if (!userId) return false;
+    const uid = String(userId);
+    const val = Boolean(enabled);
+    this.userGreetingStates.set(uid, val);
+    try {
+      const cacheManager = require("./cacheManager");
+      if (typeof cacheManager.getUserProfile === "function") {
+        const profile = await cacheManager.getUserProfile(uid);
+        const prefs = { ...(profile?.notification_prefs || {}), ai_dj_greeting: val };
+        await cacheManager.updateUserProfile(uid, { notification_prefs: prefs });
+      }
+    } catch (_) {}
+    return val;
+  }
+
+  /**
+   * Menghasilkan teks sapaan dan buffer audio greeting khas VIP.
+   * @param {Object} params
+   * @param {string} params.userId
+   * @param {string} params.displayName
+   * @param {string} params.trackTitle
+   * @param {string} [params.lang='id']
+   * @returns {Promise<{ script: string, audioBuffer: Buffer | null, isSignature: boolean }>}
+   */
+  async generateSignatureGreeting({ userId, displayName, trackTitle, lang = "id" }) {
+    const isEnabled = await this.isGreetingEnabled(userId);
+    if (!isEnabled) {
+      return { script: "", audioBuffer: null, isSignature: false };
+    }
+
+    const res = await fishAudioService.generateSignatureGreeting(displayName, trackTitle, { lang });
+    return {
+      script: res.text,
+      audioBuffer: res.audioBuffer,
+      isSignature: true,
+    };
   }
 
   async detectVoiceLanguage(manager, guildId, voiceChannelId) {
@@ -241,12 +313,51 @@ class AiDjManager {
       logger.debug("[aiDjManager:handleTrackStart] Operasi audio/voice gagal: " + (err?.message || err));
     }
 
-    const { script, classification } = this.generateDjScript(
+    let isVipRequester = false;
+    const requesterId = requester?.id;
+    if (requesterId) {
+      try {
+        const cacheManager = require("./cacheManager");
+        const profile = await cacheManager.getUserProfile(requesterId);
+        if (
+          profile &&
+          profile.isPremium &&
+          profile.premiumUntil &&
+          new Date(profile.premiumUntil) > new Date() &&
+          ["tier2", "friends", "tier3", "vip"].includes(profile.premium_tier)
+        ) {
+          isVipRequester = true;
+        } else if (env.OWNER_IDS && env.OWNER_IDS.includes(String(requesterId))) {
+          isVipRequester = true;
+        }
+      } catch (_) {}
+    }
+
+    let signatureGreeting = null;
+    if (isVipRequester && (await this.isGreetingEnabled(requesterId))) {
+      try {
+        signatureGreeting = await this.generateSignatureGreeting({
+          userId: requesterId,
+          displayName: requesterName,
+          trackTitle: track.info.title || "lagu pilihanmu",
+          lang,
+        });
+      } catch (err) {
+        logger.debug("[aiDjManager:handleTrackStart] Signature greeting gagal: " + (err?.message || err));
+      }
+    }
+
+    const { script: djScript, classification } = this.generateDjScript(
       track.info,
       requesterName,
       listenerNames,
       lang
     );
+
+    let script = djScript;
+    if (signatureGreeting && signatureGreeting.script) {
+      script = `[⭐ VIP Greeting] ${signatureGreeting.script}\n${script}`;
+    }
 
     // Sematkan naskah dan tag genre di player agar MusicUIManager menampilkannya di kartu Now Playing
     player.currentDjSpeech = script;
@@ -254,7 +365,7 @@ class AiDjManager {
     player.currentDjEmoji = classification.emoji;
 
     let audioAttachment = null;
-    let audioBuffer = null;
+    let audioBuffer = signatureGreeting?.audioBuffer || null;
 
     // Coba sintesis suara melalui Fish Audio jika terkonfigurasi & kuota aman
     if (fishAudioService.isConfigured()) {

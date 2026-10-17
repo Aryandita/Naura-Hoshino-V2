@@ -41,6 +41,39 @@ const DEFAULT_ROUTING_MAP = {
   [TASK_TYPES.OFFLINE_FALLBACK]: ["ollama", "groq", "gemini"],
 };
 
+const PERSONAS = Object.freeze({
+  default: {
+    key: "default",
+    name: "Naura Standar",
+    description: "Karakter asli Naura Hoshino yang ramah, enerjik, dan ceria.",
+    promptModifier: "Gunakan persona standar Naura Hoshino: gadis anime ceria, ramah, dan selalu siap membantu.",
+  },
+  tsundere: {
+    key: "tsundere",
+    name: "Tsundere Naura",
+    description: "Pura-pura jutek dan ketus, padahal sangat perhatian dan peduli.",
+    promptModifier: "Gaya bicara Tsundere: pura-pura kesal, ketus, suka bilang 'B-Bukan karena aku peduli padamu ya!' atau 'Hmph!', tapi di balik itu sebenarnya sangat perhatian.",
+  },
+  kuudere: {
+    key: "kuudere",
+    name: "Kuudere Naura",
+    description: "Tenang, dingin, logis, minim ekspresi namun setia mendampingi.",
+    promptModifier: "Gaya bicara Kuudere: tenang, datar, minim kata-kata berbunga, efisien, logis, namun menunjukkan kepedulian yang halus dan setia.",
+  },
+  gamer: {
+    key: "gamer",
+    name: "Gamer Naura",
+    description: "Penuh semangat gaming, istilah GG, grinding, meta, dan kompetitif.",
+    promptModifier: "Gaya bicara Pro Gamer: penuh semangat kompetitif, gunakan istilah gaming (GG, clutch, noob, meta, grinding, nerf/buff, carry) secara alami.",
+  },
+  butler: {
+    key: "butler",
+    name: "Royal Butler Naura",
+    description: "Sopan, formal, elegan, dan melayani dengan dedikasi tinggi ala pelayan istana.",
+    promptModifier: "Gaya bicara Pelayan Kerajaan (Butler): sopan, sangat formal, panggil lawan bicara dengan 'Tuan' atau 'Nyonya', tulus dan mengutamakan kenyamanan pengguna.",
+  },
+});
+
 class CircuitBreaker {
   constructor(name, options = {}) {
     this.name = name;
@@ -501,11 +534,149 @@ class AiEnsembleRouter {
       breaker.reset();
     }
   }
+
+  /**
+   * Mengambil daftar seluruh persona AI yang tersedia
+   * @returns {Object}
+   */
+  getAvailablePersonas() {
+    return PERSONAS;
+  }
+
+  /**
+   * Menyusun prompt konteks dengan persona kustom
+   * @param {string} personaKey - Kunci persona ('tsundere', 'kuudere', 'gamer', 'butler', 'default')
+   * @param {string} [basePrompt=''] - Prompt dasar atau konteks sebelumnya
+   * @returns {string} Prompt yang telah disuntikkan persona
+   */
+  formatPersonaPrompt(personaKey, basePrompt = "") {
+    const persona = PERSONAS[personaKey] || PERSONAS.default;
+    const modifier = `[Instruksi Persona: ${persona.name}]\n${persona.promptModifier}\n\n`;
+    return `${modifier}${basePrompt}`.trim();
+  }
+
+  /**
+   * Memeriksa kuota harian turn chat AI pengguna.
+   * Memberikan akses UNLIMITED untuk Owner dan VIP Tier 2 ke atas.
+   *
+   * @param {string} userId - Snowflake Discord user ID
+   * @returns {Promise<{allowed: boolean, remaining: number, isUnlimited: boolean, used?: number, limit?: number, tier?: string}>}
+   */
+  async checkUserQuota(userId) {
+    if (!userId) {
+      return { allowed: false, remaining: 0, isUnlimited: false, tier: "none" };
+    }
+
+    const uid = String(userId);
+    const isOwner = Array.isArray(env.OWNER_IDS) && env.OWNER_IDS.includes(uid);
+    if (isOwner) {
+      return { allowed: true, remaining: Infinity, isUnlimited: true, tier: "owner" };
+    }
+
+    let profile = null;
+    try {
+      const cacheManager = require("../managers/cacheManager");
+      if (typeof cacheManager.getUserProfile === "function") {
+        profile = await cacheManager.getUserProfile(uid);
+      }
+    } catch (_) {}
+
+    const isVipTier2Plus = Boolean(
+      profile &&
+      profile.isPremium &&
+      profile.premiumUntil &&
+      new Date(profile.premiumUntil) > new Date() &&
+      ["tier2", "friends", "tier3", "vip"].includes(profile.premium_tier),
+    );
+
+    if (isVipTier2Plus) {
+      return {
+        allowed: true,
+        remaining: Infinity,
+        isUnlimited: true,
+        tier: profile.premium_tier,
+      };
+    }
+
+    const isTier1 = Boolean(
+      profile &&
+      profile.isPremium &&
+      profile.premiumUntil &&
+      new Date(profile.premiumUntil) > new Date(),
+    );
+
+    const limit = isTier1 ? 100 : 25;
+    const dateKey = new Date().toISOString().slice(0, 10);
+    const quotaKey = `ai_chat_quota:${uid}:${dateKey}`;
+
+    let used = 0;
+    try {
+      const redisManager = require("../managers/redisManager");
+      if (redisManager && redisManager.isReady) {
+        const val = await redisManager.getCache(quotaKey);
+        used = parseInt(val || "0", 10);
+      } else if (this._inMemoryQuota && this._inMemoryQuota.has(quotaKey)) {
+        used = this._inMemoryQuota.get(quotaKey);
+      }
+    } catch (_) {}
+
+    const remaining = Math.max(0, limit - used);
+    return {
+      allowed: remaining > 0,
+      remaining,
+      isUnlimited: false,
+      used,
+      limit,
+      tier: profile?.premium_tier || (isTier1 ? "tier1" : "free"),
+    };
+  }
+
+  /**
+   * Mengonsumsi kuota chat harian pengguna jika bukan unlimited.
+   *
+   * @param {string} userId
+   * @returns {Promise<{allowed: boolean, remaining: number, isUnlimited: boolean}>}
+   */
+  async consumeUserQuota(userId) {
+    const quotaStatus = await this.checkUserQuota(userId);
+    if (!quotaStatus.allowed) {
+      return { allowed: false, remaining: 0, isUnlimited: false };
+    }
+    if (quotaStatus.isUnlimited) {
+      return { allowed: true, remaining: Infinity, isUnlimited: true };
+    }
+
+    const uid = String(userId);
+    const dateKey = new Date().toISOString().slice(0, 10);
+    const quotaKey = `ai_chat_quota:${uid}:${dateKey}`;
+    const newUsed = (quotaStatus.used || 0) + 1;
+
+    try {
+      const redisManager = require("../managers/redisManager");
+      if (redisManager && redisManager.isReady) {
+        await redisManager.setCache(quotaKey, newUsed, 86400);
+      } else {
+        if (!this._inMemoryQuota) this._inMemoryQuota = new Map();
+        this._inMemoryQuota.set(quotaKey, newUsed);
+      }
+    } catch (_) {}
+
+    const newRemaining = Math.max(0, (quotaStatus.limit || 25) - newUsed);
+    return {
+      allowed: true,
+      remaining: newRemaining,
+      isUnlimited: false,
+      used: newUsed,
+      limit: quotaStatus.limit,
+    };
+  }
 }
 
 const ensembleRouter = new AiEnsembleRouter();
 ensembleRouter.TASK_TYPES = TASK_TYPES;
+ensembleRouter.PERSONAS = PERSONAS;
 ensembleRouter.AiEnsembleRouter = AiEnsembleRouter;
 ensembleRouter.CircuitBreaker = CircuitBreaker;
 
 module.exports = ensembleRouter;
+

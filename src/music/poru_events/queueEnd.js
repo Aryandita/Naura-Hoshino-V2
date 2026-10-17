@@ -349,9 +349,30 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
         }
       }
 
+      // Cek apakah server mengaktifkan mode standby 24/7 (Guild Patron Tier 3)
+      const isStay24_7 = Boolean(
+        player.is24_7 ||
+        (typeof manager.isStay24_7 === "function" && manager.isStay24_7(player.guildId))
+      );
+
+      if (isStay24_7) {
+        logger.info(
+          `[Music] Guild ${player.guildId} berada dalam mode standby 24/7 (Guild Patron). Bot tetap standby di Voice Channel.`,
+        );
+        return;
+      }
+
       player.standbyTimeout = setTimeout(async () => {
         // Cek jika player masih aktif atau sedang memutar lagu (selain TTS)
-        if (!player || player.destroyed || (player.isPlaying && !player.currentTrack?.isTTS)) return;
+        if (
+          !player ||
+          player.destroyed ||
+          (player.isPlaying && !player.currentTrack?.isTTS) ||
+          player.is24_7 ||
+          manager.isStay24_7?.(player.guildId)
+        ) {
+          return;
+        }
         
         if (standbyMsg) standbyMsg.delete().catch(() => {});
         

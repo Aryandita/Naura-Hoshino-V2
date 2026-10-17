@@ -100,6 +100,7 @@ async function run() {
       "dashboard/**/*.test.js",
       "plugin/**/*.test.js",
       "test/**/*.test.js",
+      "tests/**/*.test.js",
     ]),
   );
 

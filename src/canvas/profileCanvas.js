@@ -147,11 +147,86 @@ async function generateProfileCard(arg1, arg2, arg3, arg4) {
     ctx.fill();
     ctx.restore();
 
-    ctx.strokeStyle = borderColor;
-    ctx.lineWidth = tier !== "none" ? 2.0 : 1.5;
+    // 2b. Bingkai Luar (Hologram Neon untuk Member VIP)
+    if (tier !== "none" || userProfile.isPremium) {
+      const holoGrad = ctx.createLinearGradient(20, 20, 780, 280);
+      if (tier === "vip" || tier === "tier3") {
+        holoGrad.addColorStop(0, "#FFD700");
+        holoGrad.addColorStop(0.35, "#FFA500");
+        holoGrad.addColorStop(0.7, "#FF69B4");
+        holoGrad.addColorStop(1, "#00FFFF");
+      } else if (tier === "friends" || tier === "tier2") {
+        holoGrad.addColorStop(0, "#C084FC");
+        holoGrad.addColorStop(0.5, "#E879F9");
+        holoGrad.addColorStop(1, "#38BDF8");
+      } else {
+        holoGrad.addColorStop(0, "#38BDF8");
+        holoGrad.addColorStop(0.5, "#818CF8");
+        holoGrad.addColorStop(1, "#F472B6");
+      }
+      ctx.strokeStyle = holoGrad;
+      ctx.lineWidth = 2.8;
+    } else {
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 1.5;
+    }
     ctx.beginPath();
     ctx.roundRect(20, 20, 760, 260, 18);
     ctx.stroke();
+
+    // 2c. Efek Kilau Bintang (Star Sparkles) & Stempel VIP Emas
+    if (tier !== "none" || userProfile.isPremium) {
+      // Helper untuk menggambar kilau bintang 4-sudut
+      const drawSparkle = (cx, cy, radius, color) => {
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        for (let i = 0; i < 4; i++) {
+          const rot = (i * Math.PI) / 2;
+          ctx.ellipse(cx, cy, radius, radius * 0.22, rot, 0, Math.PI * 2);
+        }
+        ctx.fill();
+        ctx.restore();
+      };
+
+      // Taburan kilau bintang di sudut kartu
+      const sparkleColor = tier === "vip" || tier === "tier3" ? "#FDE047" : "#67E8F9";
+      drawSparkle(35, 35, 7, sparkleColor);
+      drawSparkle(765, 265, 8, sparkleColor);
+      drawSparkle(200, 38, 5, "#FFFFFF");
+      drawSparkle(760, 40, 6, sparkleColor);
+
+      // Stempel VIP Emas di sudut kanan atas
+      const stampX = 635;
+      const stampY = 32;
+      const stampWidth = 125;
+      const stampHeight = 26;
+
+      ctx.save();
+      const goldGrad = ctx.createLinearGradient(stampX, stampY, stampX + stampWidth, stampY + stampHeight);
+      goldGrad.addColorStop(0, "rgba(255, 215, 0, 0.22)");
+      goldGrad.addColorStop(1, "rgba(255, 165, 0, 0.32)");
+
+      ctx.fillStyle = goldGrad;
+      ctx.strokeStyle = "#FFD700";
+      ctx.lineWidth = 1.4;
+      ctx.shadowColor = "rgba(255, 215, 0, 0.6)";
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.roundRect(stampX, stampY, stampWidth, stampHeight, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = 'bold 11px "MontserratBold", "Segoe UI", sans-serif';
+      ctx.fillStyle = "#FFFBEB";
+      ctx.textAlign = "center";
+      const stampText = tier === "vip" || tier === "tier3" ? "✦ VIP ELITE ✦" : "★ VIP MEMBER ★";
+      ctx.fillText(stampText, stampX + stampWidth / 2, stampY + 17);
+      ctx.restore();
+    }
+
 
     // 3. Avatar Pengguna
     const avatarSize = 140;

@@ -36,8 +36,9 @@
 | **Domain Contracts**    | Acyclic contracts (`economyContract`, `survivalContract`, `musicContract`), return frozen | Bagian 1.14        |
 | **Interaction Pipeline**| Managed collector & pagination (`interactionPipeline.js`), atomic rollback (`transactionHelper.js`) | Bagian 1.15 |
 | **SSOT Design Tokens**  | Unified tokens (`src/config/tokens/designTokens.js`) untuk Discord Int, Hex, RGB, dan CSS Var | Bagian 1.16 |
+| **Fitur Premium Non-P2W** | Ingestion Dual-Rail (Saweria/Trakteer QRIS + Discord Native), constant-time HMAC, etika non-P2W | Bagian 1.17 |
 | **Polyglot DB**         | Supabase (PostgreSQL relasional), MongoDB (dokumen/log), Redis (cache), SQLite (fallback) | Bagian 1.7         |
-| **Migrasi Skema**       | Eksklusif di `dbMigrator.js` bernomor (45 migrasi) + ledger; DILARANG ALTER TABLE manual | Bagian 1.7.1 & 3.2 |
+| **Migrasi Skema**       | Eksklusif di `dbMigrator.js` bernomor (46 migrasi) + ledger; DILARANG ALTER TABLE manual | Bagian 1.7.1 & 3.2 |
 | **Pterodactyl Panel**   | `CMD_RUN` tetap `npm start`, migrasi via `prestart` di `package.json`                     | Bagian 3.1         |
 | **Senior Laws**         | 7 Coding Laws of Senior Developer (Clean Architecture & Flat Flow)                        | Bagian 2.1         |
 
@@ -375,6 +376,23 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
   - Menghilangkan color drift antara Discord (`#FFC0CB`) dan Web Dashboard CSS.
   - Dilengkapi helper `buildDashboardLinkButton(path, label)` pada `src/utils/NauraContainerBuilder.js` untuk menyediakan tautan navigasi silang instan `[ 🌐 Buka di Dashboard ]` pada ringkasan fitur utama bot.
 
+## 1.17 Arsitektur Fitur Premium & Ingestion Dual-Rail (Non-P2W)
+
+- **Etika & Kepatuhan Non-Pay-To-Win (Non-P2W)**:
+  - Seluruh keuntungan premium (VIP Tier 1 Starter, Tier 2 Supporter, Tier 3 Guild Patron) DILARANG memberikan keunggulan statistik in-game (HP, Damage, Speed), bypass regulasi ekonomi, atau merusak keseimbangan permainan survival/RPG.
+  - Keuntungan premium dibatasi secara eksklusif pada estetika (neon hologram frame, sparkle canvas, gold badge), kenyamanan sensorik (living AI persona, kuota chat unlimited, fish audio voice greeting), dan utilitas komunitas (24/7 standby voice channel, ekspansi slot custom soundboard hingga 50).
+- **Dual-Rail Ingestion & Verifikasi Webhook**:
+  - *Rail 1 (Lokal QRIS):* Saweria & Trakteer webhook di `dashboard/routes/donationWebhooks.js`.
+  - *Rail 2 (Global Discord):* Discord Native App Subscriptions SKU sync di `src/services/entitlementService.js`.
+  - Verifikasi signature wajib menggunakan `crypto.timingSafeEqual` untuk mencegah serangan timing side-channel.
+  - Parsing Discord ID wajib mematuhi format Snowflake numerik 17-20 digit (`\b\d{17,20}\b`).
+- **Idempotensi & Atomisitas Transaksi**:
+  - Setiap event donasi wajib memiliki idempotency key (`claimOnce`) berbasis reference/order ID unik guna mencegah duplikasi klaim durasi VIP saat terjadi webhook ganda.
+  - Perpanjangan masa aktif premium (`extendUserPremium`) bersifat non-downgrade (mempertahankan tier yang lebih tinggi jika user membeli tier lebih rendah saat tier tinggi masih aktif).
+- **Taste of Premium & Habituation Loop**:
+  - Vote reward di Top.gg memberikan akses VIP Starter 12 jam secara gratis tanpa diskriminasi.
+  - Notifikasi perpanjangan 24 jam sebelum kedaluwarsa via DM ramah Discord Components V2 dengan tombol perpanjang 1-klik, dilindungi deduplikasi anti-spam (`last_expiring_reminder_sent`).
+
 ---
 
 # 📐 BAGIAN 2, Standar Clean Architecture
@@ -425,7 +443,7 @@ Semua penulisan kode baru dan refaktorisasi wajib menerapkan 7 hukum arsitektur 
   ```
 - Dilarang memindahkan script migrasi ke kolom panel. Jika migrasi gagal, proses berhenti sebelum bot online demi integritas database.
 
-## 3.2 Daftar Migrasi Skema Bernomor (Ledger 45 Migrasi)
+## 3.2 Daftar Migrasi Skema Bernomor (Ledger 46 Migrasi)
 
 | ID Migrasi | Deskripsi & Fungsi |
 | :--- | :--- |
@@ -474,6 +492,7 @@ Semua penulisan kode baru dan refaktorisasi wajib menerapkan 7 hukum arsitektur 
 | `v43_add_buyout_to_market_auctions` | Tambah kolom buyoutPrice ke market_auctions untuk fitur beli instan di bursa lelang |
 | `v44_add_paranoid_deleted_at_to_critical_tables` | Tambah kolom deletedAt untuk Sequelize paranoid soft-delete architecture pada tabel-tabel krusial (UserProfile, GuildSettings, UserSurvival, TradeCaravan, MarketAuction) |
 | `v45_repair_corrupt_vitals_dead_end` | Perbaiki dan pulihkan data vitals (HP, hunger, thirst, stamina) pemain yang korup atau bernilai 0 ke kondisi aman (100) |
+| `v46_add_premium_tier_to_user_profiles` | Tambah kolom premium_tier ke user_profiles untuk sinkronisasi tingkatan VIP/Patron |
 
 ---
 

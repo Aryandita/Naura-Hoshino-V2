@@ -262,8 +262,24 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
   }
 }
 
+const DEFAULT_MAX_CUSTOM_SOUNDS = 20;
+const VIP_MAX_CUSTOM_SOUNDS = 50;
+
+/**
+ * Mendapatkan batas slot soundboard kustom berdasarkan status VIP / Patron.
+ * @param {boolean} [isVipOrPatron=false]
+ * @returns {number} 50 untuk VIP / Patron, 20 untuk server standar
+ */
+function getMaxCustomSounds(isVipOrPatron = false) {
+  return isVipOrPatron ? VIP_MAX_CUSTOM_SOUNDS : DEFAULT_MAX_CUSTOM_SOUNDS;
+}
+
 module.exports = {
   PRESET_SOUNDS,
+  DEFAULT_MAX_CUSTOM_SOUNDS,
+  VIP_MAX_CUSTOM_SOUNDS,
+  getMaxCustomSounds,
   getAvailableSounds,
   playSound,
 };
+

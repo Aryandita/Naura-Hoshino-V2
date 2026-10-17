@@ -27,34 +27,9 @@ const env = require("../../src/config/env");
 const { logger } = require("../../src/managers/logger");
 const UserProfile = require("../../src/models/UserProfile");
 const ui = require("../../src/config/ui");
-const { grantVoteRewards, extendPremium } = require("../utils/voteRewards");
-const {
-  verifyToken,
-  createRateLimiter,
-  claimOnce,
-  fingerprint,
-} = require("../utils/httpGuard");
-
-// Tangga donasi: nominal minimal -> lama premium.
-const DONATION_TIERS = [
-  { min: 75000, days: 365, name: "Naura Bestie (1 Tahun)" },
-  { min: 50000, days: 180, name: "Naura Friends (6 Bulan)" },
-  { min: 35000, days: 30, name: "Naura Supporter (1 Bulan)" },
-];
-
-// ID transaksi asli aman disimpan lama. Sidik jari isi permintaan hanya berlaku
-// sebentar, supaya dua donasi sah yang kebetulan identik tidak ikut tertolak.
-const CLAIM_TTL_WITH_ID = 7 * 24 * 60 * 60;
-const CLAIM_TTL_FINGERPRINT = 10 * 60;
-
-function resolveTier(amount) {
-  return DONATION_TIERS.find((tier) => amount >= tier.min) || null;
-}
-
-function extractDiscordId(text) {
-  const match = String(text || "").match(/\b\d{17,19}\b/);
-  return match ? match[0] : null;
-}
+const { grantVoteRewards } = require("../utils/voteRewards");
+const { verifyToken, createRateLimiter } = require("../utils/httpGuard");
+const donationWebhooks = require("./donationWebhooks");
 
 /** Kirim DM. Gagal DM tidak boleh menggagalkan webhook. */
 async function notifyUser(client, userId, embed, tag) {
@@ -95,9 +70,14 @@ function passesToken(req, res, { tag, envKey, headerNames }) {
 module.exports = (client) => {
   const app = express();
 
-  // Penyedia webhook mengirim payload kecil. Batas ini menutup upaya
-  // menghabiskan memori dengan badan permintaan raksasa.
-  app.use(express.json({ limit: "64kb" }));
+  app.use(
+    express.json({
+      limit: "64kb",
+      verify: (req, res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
   app.use(express.urlencoded({ extended: true, limit: "64kb" }));
 
   // Di belakang reverse proxy, req.ip harus membaca X-Forwarded-For agar
@@ -172,108 +152,9 @@ module.exports = (client) => {
     }
   });
 
-  // ================= DONASI =================
-  /** Pabrik handler donasi agar Saweria & Trakteer memakai alur yang sama. */
-  function donationHandler({
-    tag,
-    envKey,
-    headerNames,
-    readAmount,
-    readMessage,
-    readName,
-    readId,
-    label,
-  }) {
-    return async (req, res) => {
-      if (!passesToken(req, res, { tag, envKey, headerNames }))
-        return undefined;
-
-      const body = req.body || {};
-      const amount = Number(readAmount(body)) || 0;
-      const message = readMessage(body) || "";
-      const donatorName = readName(body) || "Seseorang";
-
-      if (!amount || !message)
-        return res.status(400).send("Bad Request: Missing Amount or Message");
-
-      const userId = extractDiscordId(message);
-      if (!userId)
-        return res.status(200).send("OK: No Discord ID found in message");
-
-      const tier = resolveTier(amount);
-      if (!tier) return res.status(200).send("OK: Amount below premium tier");
-
-      // Penyedia pembayaran mengirim ulang bila balasan kita lambat atau
-      // gagal. Tanpa penanda ini, satu donasi bisa menambah masa premium
-      // berkali-kali. ID transaksi dipakai bila ada; kalau tidak, sidik
-      // jari isi permintaan yang berumur pendek.
-      const eventId = readId ? readId(body) : null;
-      const claimKey = eventId
-        ? `webhook:donation:${tag}:${eventId}`
-        : `webhook:donation:${tag}:${fingerprint([userId, String(amount), message])}`;
-      const ttl = eventId ? CLAIM_TTL_WITH_ID : CLAIM_TTL_FINGERPRINT;
-
-      if (!(await claimOnce(claimKey, ttl))) {
-        logger.info(
-          `[WEBHOOK ${tag}] Kiriman ulang untuk ${userId} diabaikan.`,
-        );
-        return res.status(200).send("OK: duplicate ignored");
-      }
-
-      try {
-        const expiry = await extendPremium(
-          userId,
-          tier.days * 24 * 60 * 60 * 1000,
-        );
-        const embed = new EmbedBuilder()
-          .setColor(ui.getColor("economy") || "#FFD700")
-          .setTitle(
-            `${ui.getEmoji("naura_impressed") || "\uD83D\uDC96"} Dukungan ${label} kamu sudah Naura terima!`,
-          )
-          .setDescription(
-            `Terima kasih banyak **${donatorName}** atas dukungannya (Rp ${amount.toLocaleString("id-ID")})!\n\n` +
-              "Status **Premium Naura** kamu langsung Naura aktifkan.\n\n" +
-              `\uD83D\uDCE6 **Paket aktif:** ${tier.name}\n` +
-              `\u23F3 **Berlaku sampai:** <t:${Math.floor(expiry.getTime() / 1000)}:F>`,
-          )
-          .setFooter({ text: ui.getFooter("premium") });
-
-        await notifyUser(client, userId, embed, tag);
-        return res.status(200).send("Donation Processed Successfully");
-      } catch (error) {
-        logger.error(`[WEBHOOK ERROR] ${tag}:`, error);
-        return res.status(500).send("Internal Server Error");
-      }
-    };
-  }
-
-  app.post(
-    "/api/webhook/saweria",
-    donationHandler({
-      tag: "SAWERIA",
-      envKey: "WEBHOOK_AUTH_SAWERIA",
-      headerNames: ["saweria-token", "authorization"],
-      readAmount: (b) => b.amount || b.total_amount,
-      readMessage: (b) => b.message,
-      readName: (b) => b.donator_name || b.donator,
-      readId: (b) => b.id || b.transaction_id || null,
-      label: "Saweria",
-    }),
-  );
-
-  app.post(
-    "/api/webhook/trakteer",
-    donationHandler({
-      tag: "TRAKTEER",
-      envKey: "WEBHOOK_AUTH_TRAKTEER",
-      headerNames: ["x-trakteer-token", "authorization"],
-      readAmount: (b) => b.amount,
-      readMessage: (b) => b.supporter_message,
-      readName: (b) => b.supporter_name,
-      readId: (b) => b.transaction_id || b.id || null,
-      label: "Trakteer",
-    }),
-  );
+  // ================= DONASI (SAWERIA & TRAKTEER) =================
+  // Delegasikan rute donasi ke donationWebhooks
+  app.use(donationWebhooks(client));
 
   // Penanda sehat untuk memastikan port webhook benar-benar terbuka.
   app.get("/api/webhook/health", (req, res) =>
@@ -297,9 +178,9 @@ module.exports = (client) => {
   return app;
 };
 
-module.exports.DONATION_TIERS = DONATION_TIERS;
-module.exports.resolveTier = resolveTier;
-module.exports.extractDiscordId = extractDiscordId;
+module.exports.DONATION_TIERS = donationWebhooks.DONATION_TIERS;
+module.exports.resolveTier = donationWebhooks.resolveTier;
+module.exports.extractDiscordId = donationWebhooks.extractDiscordId;
 
 // UserProfile tetap diekspor untuk pengujian manual di REPL.
 module.exports.UserProfile = UserProfile;

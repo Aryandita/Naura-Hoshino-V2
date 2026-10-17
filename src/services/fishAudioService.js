@@ -427,6 +427,40 @@ class FishAudioService {
       fallbackText,
     };
   }
+
+  /**
+   * Menghasilkan audio sapaan khas (Signature Audio Greeting) VIP berdurasi singkat (~3-5 detik).
+   * @param {string} displayName - Nama pengguna
+   * @param {string} trackTitle - Judul trek yang diputar
+   * @param {Object} [options={}]
+   * @returns {Promise<{ text: string, audioBuffer: Buffer | null }>}
+   */
+  async generateSignatureGreeting(displayName, trackTitle, options = {}) {
+    const lang = options.lang || "id";
+    const name = displayName || "Teman Baik";
+    const title = trackTitle || "lagu pilihanmu";
+
+    const text =
+      lang === "en"
+        ? `Hey ${name}! Playing your exclusive pick, ${title}, now!`
+        : `Halo Kak ${name}! Lagu pilihanmu, ${title}, mengudara spesial untukmu!`;
+
+    let audioBuffer = null;
+    if (this.isConfigured()) {
+      try {
+        audioBuffer = await this.generateSpeech(text, {
+          latency: "low",
+          format: options.format || "mp3",
+          referenceId: options.referenceId,
+        });
+      } catch (err) {
+        logger.warn(`[FishAudio] Gagal menghasilkan Signature Greeting audio: ${err.message}`);
+      }
+    }
+
+    return { text, audioBuffer };
+  }
 }
 
 module.exports = new FishAudioService();
+

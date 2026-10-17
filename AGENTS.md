@@ -23,7 +23,7 @@ Sebagai agen AI, bayangkan Naura Hoshino V2 sebagai platform terintegrasi dengan
 │ • 55+ Slash Command Plugins  │ • Web Soundboard Studio      │ • Fish Audio AI DJ Companion  │
 ├──────────────────────────────┼──────────────────────────────┼───────────────┤
 │ 4. POLYGLOT DATABASE         │ 5. SURVIVAL RPG (Naura Wilds)│ 6. LIVING AI  │
-│ • Supabase PG (45 Migrasi)   │ • Currency V2 Closed-Loop    │ • AI Ensemble (Gemini/Groq)   │
+│ • Supabase PG (46 Migrasi)   │ • Currency V2 Closed-Loop    │ • AI Ensemble (Gemini/Groq)   │
 │ • MongoDB (Dokumen & Log)    │ • ServerTreasury & Vitals    │ • Semantic Vector Memory      │
 │ • Redis (Cache, Mutex Lock)  │ • Durability & Town Square   │ • Server RAG & Voice Agent    │
 └──────────────────────────────┴──────────────────────────────┴───────────────┘
@@ -45,14 +45,14 @@ Gunakan tabel ini untuk menemukan lokasi kode dan memahami batasan modifikasi:
 | [`src/config/`](file:///d:/Naura%20Hoshino%20V2/src/config/)             | Konfigurasi stateless (`env.js`, `ui.js`, `database.js`, `lavalink-fallbacks.json`).                                    | **HANYA** baca via modul ini. Jangan memanggil `process.env` langsung di tempat lain.     |
 | [`src/managers/`](file:///d:/Naura%20Hoshino%20V2/src/managers/)         | Pengendali inti & stateful (`cacheManager.js`, `dbManager.js`, `lavalinkClusterManager.js`, `musicManager.js`).       | Modifikasi di sini jika berhubungan dengan state, caching, atau integrasi service luar.   |
 | [`src/models/`](file:///d:/Naura%20Hoshino%20V2/src/models/)             | Skema Sequelize (`ServerTreasury.js`, `UserProfile.js`) dan Mongoose (`models/mongo/`).                                 | Tambah model di sini. DILARANG `ALTER TABLE` di sini (wajib di `dbMigrator.js`).          |
-| [`src/services/`](file:///d:/Naura%20Hoshino%20V2/src/services/)         | Engine komputasi latar (`soundboardService.js`, `fishAudioService.js`, `economyGuardEngine.js`, `seasonEngine.js`).     | Tempatkan integrasi API pihak ketiga (TTS, webhook, automation) di folder ini.            |
+| [`src/services/`](file:///d:/Naura%20Hoshino%20V2/src/services/)         | Engine komputasi latar (`soundboardService.js`, `fishAudioService.js`, `entitlementService.js`, `voteService.js`, `premiumReminderService.js`). | Tempatkan integrasi API pihak ketiga (TTS, webhook, automation) di folder ini. |
 | [`src/ai/`](file:///d:/Naura%20Hoshino%20V2/src/ai/)                     | Engine kecerdasan AI (`aiEnsembleRouter.js`, `semanticMemoryService.js`, `aiMemory.js`, `tribunalEngine.js`).          | Wajib menyertakan penanganan failover dan circuit breaker rate limit (HTTP 429).          |
 | [`src/survival/`](file:///d:/Naura%20Hoshino%20V2/src/survival/)         | Core logika Naura Wilds (`currency.js`, `recyclingPoolEngine.js`, `durabilityEngine.js`, `townEngine.js`).             | Wajib deterministik dan transaksi saldo terhubung ke `cacheManager` atau `ServerTreasury`.|
-| [`src/canvas/`](file:///d:/Naura%20Hoshino%20V2/src/canvas/)             | Generator gambar kartu profil, item, kartu ulang tahun, & leveling berbasis worker threads.                            | Wajib melalui `canvasWorkerPool.js` agar tidak memblokir event loop Discord.              |
+| [`src/canvas/`](file:///d:/Naura%20Hoshino%20V2/src/canvas/)             | Generator gambar kartu profil (`profileWorker.js`), item, & leveling berbasis worker threads.                          | Wajib melalui `canvasWorkerPool.js` agar tidak memblokir event loop Discord.              |
 | [`src/utils/`](file:///d:/Naura%20Hoshino%20V2/src/utils/)               | Helper murni stateless (`NauraContainerBuilder.js`, `survivalUIHelper.js`, `uxHelper.js`).                              | Dilarang menyimpan state di sini. Helper harus deterministik dan reusable.                |
 | [`src/interactions/`](file:///d:/Naura%20Hoshino%20V2/src/interactions/) | Handler tombol, select menu, modal, autocomplete, dan context menu.                                                     | Wrap selalu dengan `safeExecute` dan tangani interaksi secara defensif.                   |
 | [`plugin/`](file:///d:/Naura%20Hoshino%20V2/plugin/)                     | Subcommand dan router slash command (`core`, `music`, `admin`, `survival`, `naura`).                                    | **HANYA** untuk validasi input dan pemanggilan service/manager. Dilarang query DB mentah. |
-| [`dashboard/`](file:///d:/Naura%20Hoshino%20V2/dashboard/)               | Web Dashboard terintegrasi (Express backend & Vite MPA frontend).                                                       | Komponen 3D Three.js di `src/components/NauraHeroViewer/` dan `NauraViewer/`.             |
+| [`dashboard/`](file:///d:/Naura%20Hoshino%20V2/dashboard/)               | Web Dashboard & Ingestion (`donationWebhooks.js`, Express backend & Vite MPA frontend).                                 | Komponen 3D Three.js di `src/components/NauraHeroViewer/` dan `NauraViewer/`.             |
 | [`scripts/`](file:///d:/Naura%20Hoshino%20V2/scripts/)                   | Script CLI pemeliharaan (`migrate.js`, `validate-locales.js`, `verify_dashboard_3d.js`, `check-em-dash.js`).           | Script uji mandiri & runner migrasi prestart.                                             |
 
 ---
@@ -135,6 +135,21 @@ Seluruh perubahan versi ekosistem wajib mematuhi skema semantik tiga tingkat:
   - Memanggil `stopCollector(message.id, 'navigated')` saat berpindah layar UI.
 - Menguasai pemotongan saldo berisiko via [`src/utils/transactionHelper.js`](file:///d:/Naura%20Hoshino%20V2/src/utils/transactionHelper.js):
   - `executeAtomicPayment({ userId, amount, currency, action })` dengan proteksi rollback otomatis.
+
+### 3.11 Ekosistem Fitur Premium & Ingestion Dual-Rail (Non-P2W)
+
+- **Dual-Rail Ingestion**:
+  - `dashboard/routes/donationWebhooks.js`: Menerima webhook Saweria & Trakteer QRIS dengan verifikasi HMAC SHA-256 constant-time (`crypto.timingSafeEqual`) dan ekstraksi Snowflake regex (`\b\d{17,20}\b`).
+  - `src/services/entitlementService.js`: Sinkronisasi Discord Native App Subscriptions SKU dengan proteksi non-downgrade melalui bobot tier (`TIER_WEIGHTS`).
+- **Taste of Premium & Habituation Loop**:
+  - `src/services/voteService.js`: Memberikan VIP Starter 12 jam otomatis pada Top.gg vote dan Weekend Astral Surge (2x kupon + voucher trial).
+  - `src/services/premiumReminderService.js`: Mengirim pengingat cerdas 24 jam sebelum masa VIP berakhir via DM Components V2 dengan tombol perpanjang 1-klik dan deduplikasi anti-spam.
+- **Living AI Persona & Voice DJ Exclusives**:
+  - Persona suite (`default`, `tsundere`, `kuudere`, `gamer`, `butler`) dengan kuota turn unlimited bagi VIP Tier 2+ dan Owner.
+  - Fish Audio Signature Greeting berdurasi 3-5 detik saat memulai pemutaran lagu via `aiDjManager.js` dengan toggle preferensi pengguna.
+- **Canvas Social Flex & 24/7 Standby**:
+  - Rendering bingkai neon hologram, kilau bintang 4-sudut, dan stempel VIP emas via `src/canvas/workers/profileWorker.js`.
+  - Mode `stay24_7` pada `musicManager.js` dan `lavalinkClusterManager.js` untuk Guild Patron (Tier 3) dan ekspansi slot Soundboard hingga 50 slot.
 
 ---
 

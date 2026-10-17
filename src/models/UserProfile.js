@@ -109,6 +109,11 @@ const UserProfile = sequelize.define(
         return this.getDataValue("premiumUntil");
       }
     },
+    premium_tier: {
+      type: DataTypes.STRING,
+      defaultValue: "none",
+      allowNull: true,
+    },
 
     minecraft_ign: { type: DataTypes.STRING, allowNull: true },
     minecraft_playtime: { type: DataTypes.INTEGER, defaultValue: 0 },

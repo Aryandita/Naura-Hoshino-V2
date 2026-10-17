@@ -308,6 +308,12 @@ const MIGRATIONS = [
     pgSql:
       'UPDATE "UserSurvivals" SET "hp" = 100 WHERE "hp" IS NULL OR "hp" <= 0; UPDATE "UserSurvivals" SET "hunger" = 100 WHERE "hunger" IS NULL OR "hunger" <= 0; UPDATE "UserSurvivals" SET "thirst" = 100 WHERE "thirst" IS NULL OR "thirst" <= 0; UPDATE "UserSurvivals" SET "stamina" = 100 WHERE "stamina" IS NULL OR "stamina" <= 0;',
   },
+  {
+    id: "v46_add_premium_tier_to_user_profiles",
+    description: "Tambah kolom premium_tier ke user_profiles untuk multi-rail VIP tiers",
+    sql: "ALTER TABLE user_profiles ADD COLUMN premium_tier VARCHAR(32) DEFAULT 'none';",
+    pgSql: 'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "premium_tier" VARCHAR(32) DEFAULT \'none\';',
+  },
 ];
 
 /**

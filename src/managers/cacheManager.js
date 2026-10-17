@@ -696,6 +696,27 @@ class CacheManager {
     }
   }
 
+  /**
+   * Menghapus cache UserProfile untuk user tertentu.
+   * @param {string} userId - ID Discord User
+   */
+  async invalidateUserProfile(userId) {
+    if (!userId) return;
+    const cacheKey = `user:profile:${userId}`;
+    try {
+      await redisManager.deleteCache(cacheKey);
+    } catch (error) {
+      logger.error(
+        "[CacheManager] Error invalidateUserProfile:",
+        error.message,
+      );
+    }
+  }
+
+  async invalidateUser(userId) {
+    return this.invalidateUserProfile(userId);
+  }
+
   // ==========================================
   // ⚔️ USER SURVIVAL CACHE
   // ==========================================

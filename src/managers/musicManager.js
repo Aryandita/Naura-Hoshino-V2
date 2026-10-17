@@ -29,6 +29,7 @@ class MusicManager {
     this.savedQueues = new Map();
     this.skipVotes = new Map();
     this.sleepTimers = new Map();
+    this.stay24_7States = new Map();
   }
 
   get poru() {
@@ -563,7 +564,40 @@ class MusicManager {
       initialVolume: entry.initialVolume,
     };
   }
+
+  /**
+   * Cek apakah server mengaktifkan mode standby 24/7 (Guild Patron Tier 3).
+   * @param {string} guildId
+   * @returns {boolean}
+   */
+  isStay24_7(guildId) {
+    if (!guildId) return false;
+    const gid = String(guildId);
+    if (this.stay24_7States.has(gid)) {
+      return this.stay24_7States.get(gid);
+    }
+    return false;
+  }
+
+  /**
+   * Mengatur status mode standby 24/7 untuk server.
+   * @param {string} guildId
+   * @param {boolean} enabled
+   * @returns {boolean}
+   */
+  setStay24_7(guildId, enabled) {
+    if (!guildId) return false;
+    const gid = String(guildId);
+    const val = Boolean(enabled);
+    this.stay24_7States.set(gid, val);
+    const activePlayer = this._poru?.players?.get(gid);
+    if (activePlayer) {
+      activePlayer.is24_7 = val;
+    }
+    return val;
+  }
 }
+
 
 /**
  * Pilih node Lavalink terbaik yang non-fallback.

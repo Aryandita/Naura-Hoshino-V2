@@ -22,8 +22,8 @@ const VOTE_COOLDOWN_MS = 11 * 60 * 60 * 1000;
 
 const entitlementService = require("../../src/services/entitlementService");
 
-async function extendPremium(userId, durationMs) {
-  return entitlementService.extendUserPremium(userId, durationMs);
+async function extendPremium(userId, durationMs, tier = "vip_starter") {
+  return entitlementService.extendUserPremium(userId, durationMs, tier);
 }
 
 /**
@@ -33,7 +33,7 @@ async function extendPremium(userId, durationMs) {
  */
 async function grantVoteRewards(
   userId,
-  { isWeekend = false, force = false } = {},
+  { isWeekend = false, force = false, dropTrialVoucher } = {},
 ) {
   const [survival] = await UserSurvival.findOrCreate({ where: { userId } });
   const state = survival.rpg_state || {};
@@ -70,7 +70,11 @@ async function grantVoteRewards(
   }
 
   // Perpanjang status premium Voter (12 jam per vote)
-  const expiry = await extendPremium(userId, TRIAL_HOURS * 60 * 60 * 1000);
+  const expiry = await extendPremium(
+    userId,
+    TRIAL_HOURS * 60 * 60 * 1000,
+    "vip_starter",
+  );
 
   // Periksa pencapaian 30 hari vote berturut-turut
   let unlockedBiggestFan = false;
@@ -136,6 +140,38 @@ async function grantVoteRewards(
   );
   await currency.reward(currency.COIN, { survival }, 1500);
 
+  // Weekend Astral Surge: Peluang drop acak voucher trial 1-hari saat akhir pekan
+  let trialDropped = false;
+  const shouldDropTrial =
+    dropTrialVoucher !== undefined
+      ? Boolean(dropTrialVoucher)
+      : isWeekend && Math.random() < 0.25;
+
+  if (shouldDropTrial) {
+    try {
+      const cacheManager = require("../../src/managers/cacheManager");
+      await cacheManager.mutateUserProfileJson(userId, "inventory", (inv) => {
+        inv = Array.isArray(inv) ? inv : [];
+        const existing = inv.find((item) => item.id === "trial_voucher_1d");
+        if (existing) {
+          existing.amount = (existing.amount || 1) + 1;
+        } else {
+          inv.push({
+            id: "trial_voucher_1d",
+            name: "Voucher VIP 1 Hari (Astral Surge)",
+            type: "VOUCHER",
+            amount: 1,
+            obtainedAt: new Date().toISOString(),
+          });
+        }
+        return inv;
+      });
+      trialDropped = true;
+    } catch (dropErr) {
+      logger.error("[VoteRewards Voucher Drop Error]", dropErr);
+    }
+  }
+
   try {
     const cacheManager = require("../../src/managers/cacheManager");
     if (typeof cacheManager.smartInvalidateUserCanvas === "function") {
@@ -159,7 +195,7 @@ async function grantVoteRewards(
   } catch {}
 
   logger.info(
-    `[VOTE] ${userId} menerima ${coupons} Naura Coupon (total ${totalCoupons}) + 1.500 Coins, vote ke-${streak} (streak hari: ${daysStreak}).`,
+    `[VOTE] ${userId} menerima ${coupons} Naura Coupon (total ${totalCoupons}) + 1.500 Coins, vote ke-${streak} (streak hari: ${daysStreak}).${trialDropped ? " Drop: Voucher VIP 1 Hari!" : ""}`,
   );
 
   return {
@@ -171,6 +207,7 @@ async function grantVoteRewards(
     streak,
     daysStreak,
     isWeekend,
+    trialDropped,
     unlockedBiggestFan,
   };
 }

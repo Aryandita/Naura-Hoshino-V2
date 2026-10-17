@@ -150,10 +150,21 @@ module.exports = {
         return interaction.editReply(errPayload);
       }
 
-      if (Object.keys(currentSettings.soundboards).length >= 20) {
+      const soundboardService = require("../../src/services/soundboardService");
+      let isVipOrPatron = false;
+      try {
+        const cacheManager = require("../../src/managers/cacheManager");
+        const profile = await cacheManager.getUserProfile(interaction.user.id);
+        if (profile?.isPremium) {
+          isVipOrPatron = true;
+        }
+      } catch (_) {}
+
+      const maxSlots = soundboardService.getMaxCustomSounds(isVipOrPatron);
+      if (Object.keys(currentSettings.soundboards).length >= maxSlots) {
         const errPayload = buildErrorContainerV2({
           title: "Batas Maksimum",
-          description: "❌ Batas maksimal soundboard adalah 20 per server.",
+          description: `❌ Batas maksimal soundboard adalah ${maxSlots} per server.${!isVipOrPatron ? " Tingkatkan ke VIP atau Guild Patron untuk membuka hingga 50 slot!" : ""}`,
           footerText: ui.getFooter("music"),
         });
         return interaction.editReply(errPayload);

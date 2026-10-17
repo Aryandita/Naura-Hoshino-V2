@@ -79,3 +79,37 @@ test("AIMemory - getMemoryContext formats structured context", async () => {
   mongoManager.getAiMemory = originalGetMongo;
   redisManager.getCache = originalGetCache;
 });
+
+test("AIMemory - getUserPersona and setUserPersona", async () => {
+  const originalGetCache = redisManager.getCache;
+  const originalSetCache = redisManager.setCache;
+  const memoryCache = new Map();
+
+  redisManager.getCache = async (key) => memoryCache.get(key) || null;
+  redisManager.setCache = async (key, val) => memoryCache.set(key, val);
+
+  try {
+    const testUserId = "user_persona_tester_777";
+
+    // Default persona should be "default"
+    const initialPersona = await AIMemory.getUserPersona(testUserId);
+    assert.equal(initialPersona, "default");
+
+    // Set persona to tsundere
+    const saved = await AIMemory.setUserPersona(testUserId, "tsundere");
+    assert.equal(saved, true);
+
+    // Retrieve updated persona
+    const updatedPersona = await AIMemory.getUserPersona(testUserId);
+    assert.equal(updatedPersona, "tsundere");
+
+    // Invalid persona falls back to default
+    await AIMemory.setUserPersona(testUserId, "invalid_persona_xyz");
+    const fallbackPersona = await AIMemory.getUserPersona(testUserId);
+    assert.equal(fallbackPersona, "default");
+  } finally {
+    redisManager.getCache = originalGetCache;
+    redisManager.setCache = originalSetCache;
+  }
+});
+

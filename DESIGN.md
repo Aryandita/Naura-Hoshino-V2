@@ -1,5 +1,5 @@
 ---
-version: 2.2.0-naura-os
+version: 2.3.0-naura-os
 name: Naura Hoshino OS
 description: Antarmuka sistem kontrol Naura OS dengan tema cyber-anime yang ditambatkan pada kanvas gelap pekat bernuansa luar angkasa. Brand ini tidak mengandalkan elemen datar tradisional, energinya berasal dari efek glassmorphism (panel kaca transparan), pendaran neon (neon glows) bernuansa pink dan ungu pastel, serta tipografi futuristik Orbitron untuk data real-time. Antarmuka terasa dinamis, sangat responsif, dan mencerminkan presisi sistem bot Discord modern tanpa kehilangan estetika ramah dari karakter Naura. Sejak versi 1.1.0, brand ini memiliki sub-brand resmi bernama Naura Wilds yang membungkus seluruh antarmuka sistem Survival RPG dengan lapisan palet earth-tone (emerald, amber, moss) di atas fondasi glassmorphism yang sama.
 
@@ -596,7 +596,7 @@ Setiap modul di Naura Hoshino memiliki aksen warna terstandarisasi untuk memudah
 
 # 🌿 Survival RPG Design System - Naura Wilds
 
-> **Sub-brand:** Naura Wilds · **Versi:** 2.2.0-wilds · **Sumber kebenaran token:** `src/utils/survivalUIHelper.js`
+> **Sub-brand:** Naura Wilds · **Versi:** 2.3.0-wilds · **Sumber kebenaran token:** `src/utils/survivalUIHelper.js`
 
 Naura Wilds adalah sub-brand resmi untuk seluruh antarmuka sistem Survival RPG (`/survival`, `/gacha`, dungeon, coliseum, clan, pet, farming, crafting, cafe, bank, dan modul terkait di `plugin/survival/` serta `src/survival/`). Pendekatannya adalah **Hybrid Nature-Tech**: fondasi visual tetap Cyber-Anime Glassmorphism (kanvas gelap, panel kaca, tipografi Orbitron/Outfit), tetapi lapisan survival diberi identitas earth-tone tersendiri sehingga pemain langsung mengenali bahwa mereka sedang berada di "dunia liar" Naura tanpa merasa pindah aplikasi.
 
@@ -669,7 +669,7 @@ Semua komponen di bawah tetap tunduk pada struktur 5-lapisan Components V2 dan b
 - Jangan menampilkan log pertarungan lebih dari 5 baris; riwayat lengkap diserahkan ke subcommand khusus atau transcript.
 - Jangan menggunakan emoji yang belum terdaftar di `src/config/ui/`.
 
-## 🌌 3D Interactive Mascot & Canvas Visual Suite (v2.2.0 Standards)
+## 🌌 3D Interactive Mascot & Canvas Visual Suite (v2.3.0 Standards)
 
 ### 1. 3D Model & VRM Avatar Viewer Standards (`portfolio.html`, `world.html`)
 
@@ -729,6 +729,17 @@ Berdasarkan benchmark standar antarmuka premium dari `Leonxlnx/taste-skill` dan 
 - **Dual-Surface Engagement Loop**:
   - Discord Components V2 Container menyediakan tombol link cross-surface `[ 🌐 Buka di Dashboard ]` (`buildDashboardLinkButton()`).
   - Web Dashboard dilengkapi `dashboard/public/js/shared-dashboard.js` yang menghubungkan Live Activity Feed secara real-time via WebSocket Socket.IO tanpa glitch atau layout shift.
+
+### 8. VIP Social Identity & Neon Hologram Canvas Design System (v2.3.0 Standards)
+
+- **Gradien Bingkai Neon Hologram Dinamis (`src/canvas/workers/profileWorker.js`)**:
+  - *Tier 2 VIP & Tier 3 Guild Patron:* Gradien 4-titik mewah berkilau (Gold `#FFD700` -> Amber `#F59E0B` -> Pink `#EC4899` -> Cyan `#06B6D4`) dengan ketebalan garis 3.5px dan drop shadow bercahaya `rgba(255, 215, 0, 0.45)`.
+  - *VIP Friends:* Gradien dua arah ungu-pink (Violet `#8B5CF6` -> Pink `#EC4899`).
+  - *VIP Starter (12 Jam Trial):* Gradien dua arah cyber cyan-indigo (Cyan `#06B6D4` -> Indigo `#6366F1`).
+- **Efek Kilau Bintang 4-Sudut (*Procedural Star Sparkles*)**:
+  - Fungsi prosedural `drawSparkle(ctx, cx, cy, outerRadius, innerRadius, fillStyle, glowColor)` merender berlian 4-sudut elegan dengan halo pendaran lembut di sudut-sudut avatar dan kartu profil.
+- **Stempel Emas Resmi (*Official Gold VIP Stamp*)**:
+  - Badge stempel berputar halus berformat `✦ VIP ELITE ✦` (Tier 2/3) dan `★ VIP MEMBER ★` (Tier 1 Starter) di sudut kanan atas kartu profil dengan pendaran aksen emas `{colors.premium-gold}`.
 
 ---
 

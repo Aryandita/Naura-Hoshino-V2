@@ -131,3 +131,71 @@ test("AiEnsembleRouter - Telemetry Structure", () => {
   assert.ok(telemetry.routingMap, "Routing map harus ada");
   assert.ok(telemetry.timestamp, "Timestamp harus ada");
 });
+
+test("AiEnsembleRouter - Personas Catalog & Format Prompt", () => {
+  const personas = ensembleRouter.getAvailablePersonas();
+  assert.ok(personas.default, "Persona default harus ada");
+  assert.ok(personas.tsundere, "Persona tsundere harus ada");
+  assert.ok(personas.kuudere, "Persona kuudere harus ada");
+  assert.ok(personas.gamer, "Persona gamer harus ada");
+  assert.ok(personas.butler, "Persona butler harus ada");
+
+  const promptTsundere = ensembleRouter.formatPersonaPrompt("tsundere", "Halo Naura!");
+  assert.ok(promptTsundere.includes("[Instruksi Persona: Tsundere Naura]"));
+  assert.ok(promptTsundere.includes("Halo Naura!"));
+
+  const promptFallback = ensembleRouter.formatPersonaPrompt("nonexistent", "Tes prompt");
+  assert.ok(promptFallback.includes("[Instruksi Persona: Naura Standar]"));
+  assert.ok(promptFallback.includes("Tes prompt"));
+});
+
+test("AiEnsembleRouter - User Chat Quota & VIP Unlimited Access", async () => {
+  const router = new AiEnsembleRouter();
+
+  // Test empty/null userId
+  const nullCheck = await router.checkUserQuota(null);
+  assert.equal(nullCheck.allowed, false);
+  assert.equal(nullCheck.isUnlimited, false);
+
+  // Test Owner ID (Unlimited)
+  const env = require("../config/env");
+  const origOwnerIds = env.OWNER_IDS;
+  env.OWNER_IDS = ["111222333444555666"];
+
+  try {
+    const ownerCheck = await router.checkUserQuota("111222333444555666");
+    assert.equal(ownerCheck.allowed, true);
+    assert.equal(ownerCheck.isUnlimited, true);
+    assert.equal(ownerCheck.remaining, Infinity);
+    assert.equal(ownerCheck.tier, "owner");
+
+    // Owner quota consumption returns unlimited without decrementing
+    const ownerConsume = await router.consumeUserQuota("111222333444555666");
+    assert.equal(ownerConsume.allowed, true);
+    assert.equal(ownerConsume.isUnlimited, true);
+    assert.equal(ownerConsume.remaining, Infinity);
+  } finally {
+    env.OWNER_IDS = origOwnerIds;
+  }
+
+  // Test Free User (25 daily limit)
+  const freeUserId = "user_free_tester_001";
+  const freeCheck = await router.checkUserQuota(freeUserId);
+  assert.equal(freeCheck.allowed, true);
+  assert.equal(freeCheck.isUnlimited, false);
+  assert.equal(freeCheck.limit, 25);
+  assert.equal(freeCheck.remaining, 25);
+
+  // Consume free quota
+  const consumeRes = await router.consumeUserQuota(freeUserId);
+  assert.equal(consumeRes.allowed, true);
+  assert.equal(consumeRes.isUnlimited, false);
+  assert.equal(consumeRes.used, 1);
+  assert.equal(consumeRes.remaining, 24);
+
+  // Check quota after consumption
+  const afterConsume = await router.checkUserQuota(freeUserId);
+  assert.equal(afterConsume.used, 1);
+  assert.equal(afterConsume.remaining, 24);
+});
+

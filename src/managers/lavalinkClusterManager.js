@@ -464,9 +464,12 @@ class LavalinkClusterManager {
         return false;
       }
 
-      // Pulihkan status antrean dan volume
+      // Pulihkan status antrean, volume, dan mode standby 24/7
       newPlayer.volume = volume;
       newPlayer.loop = isLoop;
+      if (player.is24_7) {
+        newPlayer.is24_7 = true;
+      }
       if (queueTracks.length > 0) {
         newPlayer.queue.add(queueTracks);
       }
@@ -721,6 +724,25 @@ class LavalinkClusterManager {
 
   setPoru(poru) {
     this._poru = poru;
+  }
+
+  /**
+   * Cek apakah player atau server terdaftar dalam mode standby 24/7.
+   * @param {string} guildId
+   * @returns {boolean}
+   */
+  isStay24_7(guildId) {
+    if (!guildId) return false;
+    try {
+      const container = require("../core/container");
+      if (container && container.has("musicManager")) {
+        const musicManager = container.resolve("musicManager");
+        if (musicManager && typeof musicManager.isStay24_7 === "function") {
+          return musicManager.isStay24_7(guildId);
+        }
+      }
+    } catch (_) {}
+    return false;
   }
 
   /**

@@ -237,7 +237,9 @@ module.exports = (containerOrClient) => {
   );
 
   // --- Webhook Routes Mounting ---
-  // Pasang rute webhook ke webApp utama agar URL https://domain/api/webhook/* langsung aktif
+  // Pasang rute webhook ke webApp utama sebelum sesi agar tidak memicu pembuatan cookie sesi untuk external webhooks
+  const donationWebhooksApp = require("./routes/donationWebhooks")(client);
+  webApp.use(donationWebhooksApp);
   if (webhookApp) {
     webApp.use(webhookApp);
   }

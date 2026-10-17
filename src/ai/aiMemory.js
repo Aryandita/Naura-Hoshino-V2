@@ -310,6 +310,67 @@ class AIMemory {
       return historyArray.slice(-10);
     }
   }
+
+  /**
+   * Mengambil preferensi persona AI aktif untuk user.
+   * @param {string} userId
+   * @returns {Promise<string>} personaKey ('tsundere', 'kuudere', 'gamer', 'butler', 'default')
+   */
+  static async getUserPersona(userId) {
+    if (!userId) return "default";
+    if (redisManager && redisManager.isReady) {
+      try {
+        const cached = await redisManager.getCache(`ai:persona:${userId}`);
+        if (cached && typeof cached === "string") return cached;
+      } catch (e) {
+        logger.debug("[aiMemory:getUserPersona] Cache redis gagal: " + (e?.message || e));
+      }
+    }
+    try {
+      const cacheManager = require("../managers/cacheManager");
+      if (typeof cacheManager.getUserProfile === "function") {
+        const profile = await cacheManager.getUserProfile(userId);
+        if (profile?.aiPersona?.name) {
+          return profile.aiPersona.name;
+        }
+      }
+    } catch (_) {}
+    return "default";
+  }
+
+  /**
+   * Menyimpan preferensi persona AI untuk user VIP.
+   * @param {string} userId
+   * @param {string} personaKey
+   * @returns {Promise<boolean>}
+   */
+  static async setUserPersona(userId, personaKey = "default") {
+    if (!userId) return false;
+    const validPersonas = ["default", "tsundere", "kuudere", "gamer", "butler"];
+    const key = validPersonas.includes(personaKey) ? personaKey : "default";
+
+    if (redisManager && redisManager.isReady) {
+      try {
+        await redisManager.setCache(`ai:persona:${userId}`, key, MEMORY_TTL_SECONDS);
+      } catch (e) {
+        logger.debug("[aiMemory:setUserPersona] Cache redis gagal: " + (e?.message || e));
+      }
+    }
+
+    try {
+      const cacheManager = require("../managers/cacheManager");
+      if (typeof cacheManager.updateUserProfile === "function") {
+        await cacheManager.updateUserProfile(userId, {
+          aiPersona: { name: key },
+        });
+      }
+      return true;
+    } catch (err) {
+      logger.warn(`[AIMemory] Gagal menyimpan persona ke profil user ${userId}:`, err.message);
+      return false;
+    }
+  }
 }
 
 module.exports = AIMemory;
+
