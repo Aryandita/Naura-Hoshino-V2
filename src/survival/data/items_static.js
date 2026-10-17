@@ -752,6 +752,15 @@ const items = [
     category: "special",
     rarity: "Mistis",
   },
+  {
+    id: "trial_voucher_1d",
+    name: "Voucher VIP 1 Hari (Astral Surge)",
+    description: "Voucher khusus hadiah Weekend Astral Surge untuk mengaktifkan status VIP selama 24 jam.",
+    price: 15000,
+    category: "consumable",
+    rarity: "Mistis",
+    effect: "trial_vip_1d",
+  },
 ];
 
 module.exports = items;

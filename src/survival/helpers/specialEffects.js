@@ -150,6 +150,21 @@ async function applyItemEffect(effect, { survival, userId }) {
       return applySimplePerk(survival, "egg_bahamut", { pending: true });
     case "egg_garuda":
       return applySimplePerk(survival, "egg_garuda", { pending: true });
+    case "trial_vip_1d": {
+      const entitlementService = require("../../services/entitlementService");
+      const expiry = await entitlementService.extendUserPremium(
+        userId,
+        24 * 60 * 60 * 1000,
+        "vip_starter",
+      );
+      return {
+        ok: true,
+        effect: "trial_vip_1d",
+        expiry,
+        durationHours: 24,
+        label: "Voucher VIP 1 Hari (Astral Surge)",
+      };
+    }
     default:
       return { ok: false, reason: "unknown_effect" };
   }

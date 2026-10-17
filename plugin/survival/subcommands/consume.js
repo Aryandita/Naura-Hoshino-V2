@@ -38,6 +38,7 @@ const ITEM_EMOJI = {
   memory_album: "\uD83D\uDCD4",
   phoenix_charm: "\uD83E\uDEB6",
   eternal_pet_egg: "\uD83E\uDD5A",
+  trial_voucher_1d: "\uD83C\uDF9F\uFE0F",
 };
 
 function e(name, fallback) {
@@ -290,6 +291,18 @@ module.exports = {
         } else if (conf.effect === "luck_crown") {
           lines.push(
             `${e("impressed", "\uD83D\uDC51")} LUCK kamu naik dari **${result.before}** jadi **${result.after}** (+${result.gained}) selamanya!`,
+          );
+        } else if (conf.effect === "trial_vip_1d") {
+          const expiryTs = result.expiry
+            ? Math.floor(new Date(result.expiry).getTime() / 1000)
+            : null;
+          const expiryStr = expiryTs
+            ? `<t:${expiryTs}:F> (<t:${expiryTs}:R>)`
+            : "24 jam ke depan";
+          lines.push(
+            `${e("cheers", "\u2728")} **Voucher VIP 1 Hari** berhasil diaktifkan!`,
+            `Status **🌱 Naura VIP Starter** kamu aktif hingga **${expiryStr}**.`,
+            `Nikmati kuota obrolan AI tak terbatas, bonus XP obrolan, dan gaji survival bertambah!`,
           );
         } else {
           lines.push(

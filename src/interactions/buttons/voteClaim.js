@@ -1,7 +1,7 @@
 "use strict";
 
 const { MessageFlags } = require("discord.js");
-const { grantVoteRewards } = require("../../../dashboard/utils/voteRewards");
+const voteService = require("../../services/voteService");
 const { checkTopggVote } = require("../../utils/topggApi");
 const {
   buildContainerV2,
@@ -36,11 +36,14 @@ module.exports = [
         });
       }
 
-      // 2. Berikan hadiah vote
-      const isWeekend = [0, 6, 5].includes(new Date().getDay()); // Jum-Min
-      const result = await grantVoteRewards(userId, { isWeekend });
+      // 2. Berikan hadiah vote via voteService
+      const isWeekend = voteService.isWeekend();
+      const result = await voteService.processTopGgVote({ userId, isWeekend });
 
-      if (!result.ok && result.reason === "cooldown") {
+      if (!result.success && result.reason === "cooldown") {
+        const nextTs = result.nextAt
+          ? Math.floor(new Date(result.nextAt).getTime() / 1000)
+          : Math.floor((Date.now() + 11 * 3600 * 1000) / 1000);
         return interaction.editReply({
           ...buildContainerV2({
             accentColorHex: ui.getColor("warning") || "#F59E0B",
@@ -49,9 +52,20 @@ module.exports = [
             iconURL: client.user.displayAvatarURL(),
             description:
               `Halo Kak **${displayName}**! Kamu sudah mengklaim hadiah vote untuk periode ini.\n\n` +
-              `🕒 **Vote Berikutnya Siap:** <t:${Math.floor(result.nextAt.getTime() / 1000)}:R>\n` +
-              `- # *Kamu bisa melakukan vote kembali setiap 12 jam sekali di Top.gg untuk terus memperpanjang status V.I.P!*`,
+              `🕒 **Vote Berikutnya Siap:** <t:${nextTs}:R>\n` +
+              `- # *Kamu bisa melakukan vote kembali setiap 12 jam sekali di Top.gg untuk terus memperpanjang status VIP!*`,
             footerText: ui.getFooter("utility"),
+          }),
+        });
+      }
+
+      if (!result.success) {
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            authorName: "Naura Vote System",
+            title: "Gagal Mengklaim Hadiah",
+            errorMessage: `Maaf Kak **${displayName}**, klaim vote tidak dapat diproses: ${result.reason || "terjadi gangguan teknis"}. Coba beberapa saat lagi ya!`,
+            expression: "sad",
           }),
         });
       }
@@ -59,22 +73,48 @@ module.exports = [
       // 3. Sukses klaim
       const couponEmoji = ui.getEmoji("coupon") || "🎟️";
       const coinEmoji = ui.getEmoji("coin") || "🪙";
+      const expiryTs = result.expiry
+        ? Math.floor(new Date(result.expiry).getTime() / 1000)
+        : Math.floor((Date.now() + 12 * 3600 * 1000) / 1000);
+
+      const descLines = [
+        `Hai Kak **${displayName}**! Terima kasih banyak atas dukungan vote kamu untuk Naura di Top.gg!`,
+        ``,
+        `🎁 **HADIAH YANG KAMU DAPATKAN:**`,
+        `✨ **Trial VIP Starter (12 Jam)**`,
+        `${couponEmoji} **+${result.coupons} Naura Coupon** (Total: ${result.totalCoupons})`,
+        `${coinEmoji} **+1.500 Naura Coins**`,
+      ];
+
+      if (result.isWeekend) {
+        descLines.push(``, `⚡ **Weekend Astral Surge Aktif:** Bonus 2x Naura Coupons didapatkan!`);
+      }
+
+      if (result.trialDropped) {
+        descLines.push(
+          ``,
+          `🎉 **LUCKY DROP ASTRAL SURGE!**`,
+          `Kamu beruntung mendapatkan **🎟️ 1x Voucher VIP 1 Hari (Astral Surge)**!`,
+          `Voucher telah otomatis disimpan ke inventaris. Gunakan lewat \`/survival consume\`!`,
+        );
+      }
+
+      descLines.push(
+        ``,
+        `⏳ **Status VIP Aktif Sampai:** <t:${expiryTs}:F> (<t:${expiryTs}:R>)`,
+        `🔥 **Streak Vote Saat Ini:** Ke-${result.streak || 1} (Hari ke-${result.daysStreak || 1})`,
+        ``,
+        `- # *Tips: Terus kumpulkan Naura Coupon untuk ditukarkan dengan armor & item langka di \`/rpg barter\`!*`,
+      );
 
       return interaction.editReply({
         ...buildContainerV2({
           accentColorHex: ui.getColor("premium_voter") || "#F43F5E",
-          authorName: "🌸 Makasih Sudah Vote Naura!",
+          authorName: "Naura Vote System",
           title: "🎉 Hadiah Vote Berhasil Diklaim!",
           iconURL: client.user.displayAvatarURL(),
-          description:
-            `Hai Kak **${displayName}**! Terima kasih banyak atas dukungan vote kamu untuk Naura di Top.gg!\n\n` +
-            `🎁 **HADIAH YANG KAMU DAPATKAN:**\n` +
-            `✨ **Trial V.I.P Premium (12 Jam)**\n` +
-            `${couponEmoji} **+${result.coupons} Naura Coupon** (Total: ${result.totalCoupons})\n` +
-            `${coinEmoji} **+1.500 Naura Coins**\n\n` +
-            `⏳ **Status V.I.P Aktif Sampai:** <t:${Math.floor(result.expiry.getTime() / 1000)}:R>\n` +
-            `🔥 **Streak Vote Saat Ini:** Ke-${result.streak} (Hari ke-${result.daysStreak || 1})\n\n` +
-            `- # *Tips: Terus kumpulkan Naura Coupon untuk ditukarkan dengan armor & item langka di \`/rpg barter\`!*`,
+          expression: "cheers",
+          description: descLines.join("\n"),
           footerText: ui.getFooter("utility"),
         }),
       });
