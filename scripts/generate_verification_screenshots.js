@@ -155,30 +155,73 @@ async function main() {
       mobile: false,
     });
 
-    const pages = [
-      {
-        name: "Remote Web Player",
-        file: "file:///" + path.resolve(__dirname, "../dashboard/public/player.html").replace(/\\/g, "/"),
-        dest: path.join(TARGET_DIR, "screenshot_player.png"),
-      },
-      {
-        name: "Soundboard Studio",
-        file: "file:///" + path.resolve(__dirname, "../dashboard/public/soundboard.html").replace(/\\/g, "/"),
-        dest: path.join(TARGET_DIR, "screenshot_soundboard.png"),
-      },
-      {
-        name: "Visual Automod Studio",
-        file: "file:///" + path.resolve(__dirname, "../dashboard/public/automod.html").replace(/\\/g, "/"),
-        dest: path.join(TARGET_DIR, "screenshot_automod.png"),
-      },
-    ];
+    let staticServer = null;
+    try {
+      staticServer = http.createServer((req, res) => {
+        let reqPath = decodeURIComponent(req.url.split("?")[0]);
+        if (reqPath === "/") reqPath = "/index.html";
 
-    for (const p of pages) {
-      await captureWebPage(ws, p.file, p.dest, p.name);
+        let filePath;
+        if (reqPath.startsWith("/src/")) {
+          filePath = path.join(__dirname, "../dashboard", reqPath);
+        } else if (reqPath.startsWith("/assets/")) {
+          filePath = path.join(__dirname, "..", reqPath);
+        } else {
+          filePath = path.join(__dirname, "../dashboard/public", reqPath);
+        }
+
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          const ext = path.extname(filePath).toLowerCase();
+          const mimeMap = {
+            ".html": "text/html",
+            ".css": "text/css",
+            ".js": "text/javascript",
+            ".json": "application/json",
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".svg": "image/svg+xml",
+            ".woff2": "font/woff2",
+            ".ttf": "font/ttf",
+          };
+          res.writeHead(200, { "Content-Type": mimeMap[ext] || "application/octet-stream" });
+          fs.createReadStream(filePath).pipe(res);
+        } else {
+          res.writeHead(404);
+          res.end("Not Found");
+        }
+      });
+
+      await new Promise((resolve) => staticServer.listen(9228, "127.0.0.1", resolve));
+
+      const pages = [
+        {
+          name: "Remote Web Player",
+          file: "http://127.0.0.1:9228/player.html",
+          dest: path.join(TARGET_DIR, "screenshot_player.png"),
+        },
+        {
+          name: "Soundboard Studio",
+          file: "http://127.0.0.1:9228/soundboard.html",
+          dest: path.join(TARGET_DIR, "screenshot_soundboard.png"),
+        },
+        {
+          name: "Visual Automod Studio",
+          file: "http://127.0.0.1:9228/automod.html",
+          dest: path.join(TARGET_DIR, "screenshot_automod.png"),
+        },
+      ];
+
+      for (const p of pages) {
+        await captureWebPage(ws, p.file, p.dest, p.name);
+      }
+
+      ws.close();
+      console.log("[Screenshot] Semua 5 visual render & screenshot sukses tersimpan di artifact directory!");
+    } finally {
+      if (staticServer) {
+        try { staticServer.close(); } catch {}
+      }
     }
-
-    ws.close();
-    console.log("[Screenshot] Semua 5 visual render & screenshot sukses tersimpan di artifact directory!");
   } catch (err) {
     console.error("[Screenshot Error]:", err.message);
   } finally {

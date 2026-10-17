@@ -35,13 +35,26 @@ module.exports = [
       }
 
       try {
-        const buffer = await canvasWorkerPool.runTask("renderPollChart", {
-          question: pollData.question,
-          options: pollData.options,
-          votes: pollData.votes,
-          totalVotes: pollData.totalVotes,
-          author: pollData.author,
-        });
+        let buffer = null;
+        const cached = global.__nauraPollChartCache?.get(messageId);
+        if (cached && Date.now() - cached.timestamp < 10000) {
+          buffer = cached.buffer;
+        } else {
+          buffer = await canvasWorkerPool.runTask("renderPollChart", {
+            question: pollData.question,
+            options: pollData.options,
+            votes: pollData.votes,
+            totalVotes: pollData.totalVotes,
+            author: pollData.author,
+          });
+
+          if (global.__nauraPollChartCache) {
+            global.__nauraPollChartCache.set(messageId, {
+              buffer,
+              timestamp: Date.now(),
+            });
+          }
+        }
 
         const attachment = new AttachmentBuilder(buffer, { name: "poll_chart.png" });
 

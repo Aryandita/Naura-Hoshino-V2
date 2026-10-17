@@ -22,6 +22,12 @@ const { logger } = require("../../src/managers/logger");
 if (!global.__nauraPollStore) {
   global.__nauraPollStore = new Map();
 }
+if (!global.__nauraPollChartCache) {
+  global.__nauraPollChartCache = new Map();
+}
+if (!global.__nauraPollDebounceTimers) {
+  global.__nauraPollDebounceTimers = new Map();
+}
 
 /**
  * Membangun ActionRow kumpulan tombol opsi voting dan tombol ekspor grafik
@@ -314,17 +320,30 @@ module.exports = {
             currentTotal += uVotes.size;
           }
 
-          const votesRecord = Object.fromEntries(
-            Array.from(votes.entries()).map(([k, v]) => [k, Array.from(v)]),
-          );
+          let buffer = null;
+          const cached = global.__nauraPollChartCache?.get(messageId);
+          if (cached && Date.now() - cached.timestamp < 10000) {
+            buffer = cached.buffer;
+          } else {
+            const votesRecord = Object.fromEntries(
+              Array.from(votes.entries()).map(([k, v]) => [k, Array.from(v)]),
+            );
 
-          const buffer = await canvasWorkerPool.runTask("renderPollChart", {
-            question,
-            options,
-            votes: votesRecord,
-            totalVotes: currentTotal,
-            author: interaction.user,
-          });
+            buffer = await canvasWorkerPool.runTask("renderPollChart", {
+              question,
+              options,
+              votes: votesRecord,
+              totalVotes: currentTotal,
+              author: interaction.user,
+            });
+
+            if (global.__nauraPollChartCache) {
+              global.__nauraPollChartCache.set(messageId, {
+                buffer,
+                timestamp: Date.now(),
+              });
+            }
+          }
 
           const attachment = new AttachmentBuilder(buffer, {
             name: "poll_chart.png",
@@ -409,10 +428,57 @@ module.exports = {
         await interaction
           .editReply({ ...updatePayload, components: activeRows })
           .catch(() => {});
+
+        // 3. Trailing Reset Debounce (5 Detik): Jika ada klik baru, reset timer.
+        // Hanya render canvas setelah 5 detik tanpa klik suara tambahan.
+        if (global.__nauraPollDebounceTimers) {
+          if (global.__nauraPollDebounceTimers.has(messageId)) {
+            clearTimeout(global.__nauraPollDebounceTimers.get(messageId));
+          }
+
+          const debounceTimer = setTimeout(async () => {
+            try {
+              global.__nauraPollDebounceTimers.delete(messageId);
+
+              const chartBuffer = await canvasWorkerPool.runTask("renderPollChart", {
+                question,
+                options,
+                votes: pollState.votes,
+                totalVotes: pollState.totalVotes,
+                author: interaction.user,
+              });
+
+              if (global.__nauraPollChartCache) {
+                global.__nauraPollChartCache.set(messageId, {
+                  buffer: chartBuffer,
+                  timestamp: Date.now(),
+                });
+              }
+
+              const chartAttachment = new AttachmentBuilder(chartBuffer, {
+                name: "poll_chart.png",
+              });
+
+              await interaction
+                .editReply({
+                  files: [chartAttachment],
+                })
+                .catch(() => {});
+            } catch (err) {
+              logger.error("[Poll] Gagal merender diagram polling debounced:", err);
+            }
+          }, 5000);
+
+          global.__nauraPollDebounceTimers.set(messageId, debounceTimer);
+        }
       }
     });
 
     collector.on("end", async () => {
+      if (global.__nauraPollDebounceTimers?.has(messageId)) {
+        clearTimeout(global.__nauraPollDebounceTimers.get(messageId));
+        global.__nauraPollDebounceTimers.delete(messageId);
+      }
       let totalVotes = 0;
       for (const userVotes of votes.values()) {
         totalVotes += userVotes.size;

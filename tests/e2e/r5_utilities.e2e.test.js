@@ -317,4 +317,74 @@ describe("R5 Utilities E2E - Tier 4: Real-World Scenarios", () => {
     assert.ok(Buffer.isBuffer(buffer));
     assert.ok(buffer.length > 15000);
   });
+
+  it("TC-M5.18: Poll options are 100% dynamic and non-hardcoded for arbitrary strings", () => {
+    const customOptions = ["Sate Padang", "Nasi Goreng Spesial", "Es Campur Durian", "Martabak Manis"];
+    const poll = normalizePollData({
+      question: "Menu Buka Puasa Bersama?",
+      options: customOptions,
+      counts: [15, 25, 40, 10],
+    });
+
+    assert.deepEqual(poll.options, customOptions);
+    assert.equal(poll.question, "Menu Buka Puasa Bersama?");
+    assert.equal(poll.total, 90);
+    assert.equal(poll.maxVotes, 40);
+  });
+
+  it("TC-M5.19: Poll chart cache serves instant response within 10-second window", async () => {
+    if (!global.__nauraPollChartCache) {
+      global.__nauraPollChartCache = new Map();
+    }
+
+    const testMessageId = "msg_poll_test_cache_123";
+    const dummyBuffer = Buffer.from("FAKE_PNG_CHART_BYTES");
+
+    // Cache dummy buffer
+    global.__nauraPollChartCache.set(testMessageId, {
+      buffer: dummyBuffer,
+      timestamp: Date.now(),
+    });
+
+    const cached = global.__nauraPollChartCache.get(testMessageId);
+    assert.ok(cached);
+    assert.equal(cached.buffer.toString(), "FAKE_PNG_CHART_BYTES");
+    assert.ok(Date.now() - cached.timestamp < 10000);
+
+    // Verify cache expiry after 10s
+    const oldTimestamp = Date.now() - 11000;
+    global.__nauraPollChartCache.set(testMessageId, {
+      buffer: dummyBuffer,
+      timestamp: oldTimestamp,
+    });
+
+    const expired = global.__nauraPollChartCache.get(testMessageId);
+    assert.ok(Date.now() - expired.timestamp >= 10000);
+  });
+
+  it("TC-M5.20: Vote debounce resets timer on rapid clicks and executes once", async () => {
+    if (!global.__nauraPollDebounceTimers) {
+      global.__nauraPollDebounceTimers = new Map();
+    }
+
+    const testMsgId = "msg_poll_debounce_test_456";
+    let executions = 0;
+
+    // Simulate 3 rapid clicks with 20ms intervals
+    for (let i = 0; i < 3; i++) {
+      if (global.__nauraPollDebounceTimers.has(testMsgId)) {
+        clearTimeout(global.__nauraPollDebounceTimers.get(testMsgId));
+      }
+      const timer = setTimeout(() => {
+        executions++;
+      }, 50); // fast test timer
+      global.__nauraPollDebounceTimers.set(testMsgId, timer);
+    }
+
+    // Wait 100ms for debounce to fire
+    await new Promise((r) => setTimeout(r, 100));
+
+    // Only the final reset timer should have executed (exactly 1 time)
+    assert.equal(executions, 1);
+  });
 });

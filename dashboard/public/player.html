@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Naura Remote Player | Stellar Cyberpunk Audio</title>
-    <meta name="description" content="Remote Web Player Lavalink v4 Naura Hoshino dengan live seeker, kontrol volume, dan sleep timer presisi." />
+    <title>Pemutar Musik Naura | Kontrol Web</title>
+    <meta name="description" content="Kontrol pemutar musik Discord langsung dari browser: atur durasi lagu, volume, dan pemutus otomatis." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -617,10 +617,10 @@
         <div class="brand">
           <img src="/assets/core/avatar.png" alt="Naura Avatar" class="brand-avatar" onerror="this.src='/naura_3d_closeup.png'" />
           <div>
-            <div class="brand-title">NAURA REMOTE PLAYER</div>
+            <div class="brand-title">PEMUTAR MUSIK NAURA</div>
             <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
-              <span class="brand-badge">HI-FI AUDIO</span>
-              <span style="font-size:11px; color:var(--text-sub);">Lavalink v4 Cluster</span>
+              <span class="brand-badge">KONTROL DISCORD</span>
+              <span style="font-size:11px; color:var(--text-sub);">Voice Channel</span>
             </div>
           </div>
         </div>
@@ -631,7 +631,7 @@
           </select>
           <div id="connPill" class="connection-pill">
             <span class="conn-dot"></span>
-            <span id="connLabel">Connected</span>
+            <span id="connLabel">Terhubung</span>
           </div>
         </div>
       </header>
@@ -667,11 +667,11 @@
 
           <!-- Track Metadata -->
           <div class="track-meta">
-            <h1 id="trackTitle" class="track-title">Cyber Kawaii Lo-Fi Stream</h1>
+            <h1 id="trackTitle" class="track-title">Menunggu Lagu</h1>
             <div class="track-artist">
-              <span id="trackAuthor">Naura Radio FM</span>
+              <span id="trackAuthor">Ketik /music play di Discord untuk mulai</span>
               <span>•</span>
-              <span id="trackSourceBadge" style="font-family:'JetBrains Mono'; font-size:11px; color:var(--neon-cyan);">LAVALINK STREAM</span>
+              <span id="trackSourceBadge" style="font-family:'JetBrains Mono'; font-size:11px; color:var(--neon-cyan);">STANDBY</span>
             </div>
           </div>
 
@@ -715,13 +715,13 @@
             <div class="panel-header">
               <div class="panel-title">
                 <i class="fa-solid fa-moon" style="color:var(--neon-violet);"></i>
-                Sleep Timer (Fade-Out)
+                Pemutus Musik Otomatis
               </div>
             </div>
 
             <div id="sleepStatusBadge" class="sleep-status-badge">
               <i class="fa-regular fa-clock"></i>
-              <span id="sleepStatusText">Timer Tidak Aktif</span>
+              <span id="sleepStatusText">Belum Diatur</span>
             </div>
 
             <div class="sleep-presets">
@@ -738,7 +738,7 @@
                 <i class="fa-solid fa-bed"></i> 60 Menit
               </button>
               <button class="preset-btn cancel-btn" onclick="setSleep(0)">
-                <i class="fa-solid fa-xmark"></i> Matikan Sleep Timer
+                <i class="fa-solid fa-xmark"></i> Batalkan Timer
               </button>
             </div>
           </div>
@@ -850,14 +850,14 @@
 
           if (timer.isFading || remainingSec <= 15) {
             badge.className = 'sleep-status-badge fading';
-            text.textContent = 'Fading Out... Selesai dalam ' + timeStr;
+            text.textContent = 'Memudar... Selesai dalam ' + timeStr;
           } else {
             badge.className = 'sleep-status-badge active';
-            text.textContent = 'Mati dalam ' + timeStr + ' (Fade-out 15s)';
+            text.textContent = 'Berhenti dalam ' + timeStr + ' (fade-out 15s)';
           }
         } else {
           badge.className = 'sleep-status-badge';
-          text.textContent = 'Timer Tidak Aktif';
+          text.textContent = 'Belum Diatur';
         }
       }
 
