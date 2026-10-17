@@ -32,6 +32,10 @@
 | **Render Canvas**       | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (Worker Threads)         | Bagian 1.9         |
 | **AI Ensemble Router**  | Multi-LLM (Gemini 2.5 -> Groq LLaMA 3.3 -> Ollama) dengan Circuit Breaker otomatis       | Bagian 1.11        |
 | **Sistem Bantuan**     | Wajib sinkronkan `src/core/helpView.js` setiap menambah/mengubah fitur atau command        | Bagian 1.12        |
+| **Service Container**   | In-memory registry (`src/core/container.js`), larangan `global.client` / `client.dashboardIo` | Bagian 1.13        |
+| **Domain Contracts**    | Acyclic contracts (`economyContract`, `survivalContract`, `musicContract`), return frozen | Bagian 1.14        |
+| **Interaction Pipeline**| Managed collector & pagination (`interactionPipeline.js`), atomic rollback (`transactionHelper.js`) | Bagian 1.15 |
+| **SSOT Design Tokens**  | Unified tokens (`src/config/tokens/designTokens.js`) untuk Discord Int, Hex, RGB, dan CSS Var | Bagian 1.16 |
 | **Polyglot DB**         | Supabase (PostgreSQL relasional), MongoDB (dokumen/log), Redis (cache), SQLite (fallback) | Bagian 1.7         |
 | **Migrasi Skema**       | Eksklusif di `dbMigrator.js` bernomor (45 migrasi) + ledger; DILARANG ALTER TABLE manual | Bagian 1.7.1 & 3.2 |
 | **Pterodactyl Panel**   | `CMD_RUN` tetap `npm start`, migrasi via `prestart` di `package.json`                     | Bagian 3.1         |
@@ -329,6 +333,47 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 - **Paritas Kategori & Subcommand**: Pastikan setiap entri slash command tercatat pada kategori yang sesuai (`core`, `music`, `admin`, `survival`, `naura`, dll.) lengkap dengan deskripsi fungsional yang ringkas, parameter utama, dan bebas dari AI slop.
 - **Kepatuhan QA Gate**: Kelalaian menyertakan atau memperbarui entri bantuan di `helpView.js` untuk fitur baru dianggap sebagai pekerjaan yang belum selesai (*incomplete task*) dan tidak diperkenankan lolos QA Gate maupun digabungkan (*merge*) ke branch utama.
 
+## 1.13 Tata Kelola Modularisasi, Service Container, & EventBus
+
+- **Service Container (`src/core/container.js`)**:
+  - In-memory Dependency Injection & Service Registry tanpa dependensi pihak ketiga (mengikuti prinsip /ponytail).
+  - Mendukung pendaftaran `value()`, `singleton()`, `transient()`, serta siklus hidup `init()` dan `dispose()`.
+  - Dilengkapi deteksi dini circular dependency saat pemanggilan `resolve()`.
+  - **LARANGAN KERAS**: Dilarang melakukan monkey-patching pada `global.client` maupun menempelkan objek socket sembarangan seperti `client.dashboardIo`. Dependensi antar modul wajib diperoleh via Container atau parameter fungsi.
+- **Two-Tier Mediator EventBus (`src/core/eventBus.js`)**:
+  - Tier 1: In-memory `node:events` EventEmitter lokal untuk komunikasi latensi nol antar-modul di dalam satu proses.
+  - Tier 2: Distributed bridge via Redis Pub/Sub (`naura:events:bridge`) dengan filter origin pelindung echo loop untuk sinkronisasi lintas shard dan antar proses (Bot <-> Dashboard Web).
+  - Penyiaran telemetri, log sistem, dan notifikasi musik wajib memancarkan event domain (`eventBus.emit("system:log", ...)`), bukan memanggil Socket.IO secara langsung.
+
+## 1.14 Public Domain Contracts & Acyclic Dependencies
+
+- **Kontrak Domain Publik (Economy, Survival, Music)**:
+  - Seluruh komunikasi lintas ranah wajib melewati kontrak publik terisolasi:
+    - `src/domain/contracts/economyContract.js`: Saldo wallet/bank NC, transfer, pajak, ServerTreasury.
+    - `src/domain/contracts/survivalContract.js`: Vitals bar, inventaris atomik, Star Fragments (NSF), Naura Coupons.
+    - `src/domain/contracts/musicContract.js`: Kontrol player audio Poru v5, antrean lagu, telemetri status.
+  - **Prinsip Ketergantungan Asiklik (Acyclic Dependencies Principle)**:
+    - Survival boleh memanggil Economy hanya melalui jembatan konversi satu arah (`bridgeFragmentsToCoins`).
+    - Economy dilarang mengimpor atau memanggil Survival maupun Music.
+    - Music dilarang mengimpor atau memanggil Economy maupun Survival.
+  - Seluruh nilai kembalian fungsi kontrak wajib di-freeze (`Object.freeze()`) untuk mencegah mutasi state liar.
+
+## 1.15 Interaksi Terkelola & Transaksi Atomik (/ponytail)
+
+- **Interaction Pipeline (`src/utils/interactionPipeline.js`)**:
+  - Gunakan `createManagedCollector` dan `createPaginationCollector` untuk menangani tombol interaksi dan pagination multi-halaman.
+  - Kolektor otomatis terdaftar di registry `activeCollectors`, memvalidasi author-only check (pesan penolakan otomatis), dan membersihkan tombol (`components: []`) saat timeout.
+  - Setiap pergantian layar (navigasi) WAJIB memanggil `stopCollector(messageId, "navigated")` untuk mencegah tombol layar baru tiba-tiba hilang.
+- **Declarative Transaction Helper (`src/utils/transactionHelper.js`)**:
+  - Gunakan `executeAtomicPayment` saat memotong saldo pengguna untuk pembelian atau aksi berisiko.
+  - Dilengkapi rollback kompensasi otomatis: jika aksi pemrosesan berikutnya gagal atau melempar exception, saldo pengguna otomatis dikembalikan secara aman tanpa risiko exploit saldo ganda.
+
+## 1.16 Single Source of Truth (SSOT) Design Tokens
+
+- **Modul Token Terpadu (`src/config/tokens/designTokens.js`)**:
+  - Menyediakan representasi terpadu nilai warna (Hex `#RRGGBB`, Discord Integer `0xRRGGBB`, RGB string `"R, G, B"`, dan variabel CSS `--naura-*`).
+  - Menghilangkan color drift antara Discord (`#FFC0CB`) dan Web Dashboard CSS.
+  - Dilengkapi helper `buildDashboardLinkButton(path, label)` pada `src/utils/NauraContainerBuilder.js` untuk menyediakan tautan navigasi silang instan `[ 🌐 Buka di Dashboard ]` pada ringkasan fitur utama bot.
 
 ---
 

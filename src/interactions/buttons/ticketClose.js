@@ -33,6 +33,18 @@ module.exports = [
           return interaction.editReply("❌ Tiket ini sudah ditutup.");
         }
 
+        const isTicketOwner = ticket.userId === interaction.user.id;
+        const isStaff =
+          interaction.member?.permissions?.has("ManageChannels") ||
+          interaction.member?.permissions?.has("ManageGuild") ||
+          interaction.member?.permissions?.has("Administrator");
+
+        if (!isTicketOwner && !isStaff) {
+          return interaction.editReply(
+            "❌ Kamu tidak memiliki izin untuk menutup tiket ini (hanya pemilik tiket atau staf).",
+          );
+        }
+
         const discordTranscripts = require("discord-html-transcripts");
 
         // Generate Transcript

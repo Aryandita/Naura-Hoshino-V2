@@ -719,6 +719,10 @@ class LavalinkClusterManager {
     };
   }
 
+  setPoru(poru) {
+    this._poru = poru;
+  }
+
   /**
    * Mengambil status kluster Lavalink untuk telemetri insiden / health check.
    * @param {object} [poru]
@@ -726,11 +730,14 @@ class LavalinkClusterManager {
    */
   getStatus(poru = null) {
     if (!poru) {
-      try {
-        const musicManager = require("./musicManager");
-        poru = musicManager?.poru || null;
-      } catch (err) {
-        logger.debug("[lavalinkClusterManager:getStatus] Operasi audio/voice gagal: " + (err?.message || err));
+      poru = this._poru || null;
+      if (!poru) {
+        try {
+          const container = require("../core/container");
+          if (container && container.has("musicManager")) {
+            poru = container.resolve("musicManager")?.poru || null;
+          }
+        } catch (_) {}
       }
     }
     const nodes = poru && poru.nodes ? [...poru.nodes.values()] : [];

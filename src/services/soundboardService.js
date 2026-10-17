@@ -234,7 +234,15 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
       }
     }
 
-    // Siarkan realtime event jika Socket.IO aktif
+    // Siarkan realtime event ke eventBus & Socket.IO
+    const eventBus = require("../core/eventBus");
+    eventBus.emit("soundboard:played", {
+      guildId: String(guildId),
+      sound: targetSound,
+      requester: requester ? { id: requester.id, username: requester.username } : null,
+      timestamp: Date.now(),
+    });
+
     if (client.dashboardIo) {
       client.dashboardIo.to(String(guildId)).emit("soundboard_played", {
         sound: targetSound,

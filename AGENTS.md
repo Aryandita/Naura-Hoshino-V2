@@ -39,6 +39,9 @@ Gunakan tabel ini untuk menemukan lokasi kode dan memahami batasan modifikasi:
 
 | Direktori                                                                | Tanggung Jawab & Isi                                                                                                    | Batasan Agen (_Do's & Don'ts_)                                                            |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`src/core/`](file:///d:/Naura%20Hoshino%20V2/src/core/)                 | Service Container (`container.js`), EventBus mediator (`eventBus.js`).                                                 | IoC dan decoupling event. Dilarang mengimpor modul plugin/domain di sini.                |
+| [`src/domain/contracts/`](file:///d:/Naura%20Hoshino%20V2/src/domain/contracts/) | Kontrak publik domain (`economyContract.js`, `survivalContract.js`, `musicContract.js`).                              | Akses lintas domain wajib lewat kontrak ini. Seluruh return value wajib di-freeze.        |
+| [`src/config/tokens/`](file:///d:/Naura%20Hoshino%20V2/src/config/tokens/) | Single Source of Truth Design Tokens (`designTokens.js`).                                                              | Sumber tunggal nilai warna (Hex, Int, RGB, CSS Var). Jangan hardcode warna manual.       |
 | [`src/config/`](file:///d:/Naura%20Hoshino%20V2/src/config/)             | Konfigurasi stateless (`env.js`, `ui.js`, `database.js`, `lavalink-fallbacks.json`).                                    | **HANYA** baca via modul ini. Jangan memanggil `process.env` langsung di tempat lain.     |
 | [`src/managers/`](file:///d:/Naura%20Hoshino%20V2/src/managers/)         | Pengendali inti & stateful (`cacheManager.js`, `dbManager.js`, `lavalinkClusterManager.js`, `musicManager.js`).       | Modifikasi di sini jika berhubungan dengan state, caching, atau integrasi service luar.   |
 | [`src/models/`](file:///d:/Naura%20Hoshino%20V2/src/models/)             | Skema Sequelize (`ServerTreasury.js`, `UserProfile.js`) dan Mongoose (`models/mongo/`).                                 | Tambah model di sini. DILARANG `ALTER TABLE` di sini (wajib di `dbMigrator.js`).          |
@@ -114,6 +117,24 @@ Seluruh perubahan versi ekosistem wajib mematuhi skema semantik tiga tingkat:
   - `TACTICAL_REASONING`, `TRIBUNAL_VERDICT` dipetakan ke Groq LLaMA 3.3.
   - `OFFLINE_FALLBACK` dipetakan ke Ollama lokal.
 - Menguasai penanganan status Circuit Breaker (`CLOSED` -> `OPEN` -> `HALF-OPEN`) saat API pihak ketiga mengalami error kuota 429 atau downtime.
+
+### 3.9 Service Container & Event-Driven Decoupling
+
+- Memahami cara menggunakan Service Registry di [`src/core/container.js`](file:///d:/Naura%20Hoshino%20V2/src/core/container.js):
+  - `container.resolve('client')`, `container.resolve('economyContract')`, dll.
+  - Mematuhi larangan keras monkey-patching `global.client` dan `client.dashboardIo`.
+- Memahami cara memancarkan dan mendengarkan event via [`src/core/eventBus.js`](file:///d:/Naura%20Hoshino%20V2/src/core/eventBus.js):
+  - Event lokal: `eventBus.emit('system:log', payload)`.
+  - Event lintas proses/shard: `eventBus.broadcast('event:name', payload)`.
+
+### 3.10 Interaction Pipeline & Declarative Transactions (/ponytail)
+
+- Memahami cara menyusun alur tombol dan pagination menggunakan [`src/utils/interactionPipeline.js`](file:///d:/Naura%20Hoshino%20V2/src/utils/interactionPipeline.js):
+  - `createManagedCollector(message, user, options)` untuk button collector terkelola.
+  - `createPaginationCollector(message, user, options)` untuk multi-halaman.
+  - Memanggil `stopCollector(message.id, 'navigated')` saat berpindah layar UI.
+- Menguasai pemotongan saldo berisiko via [`src/utils/transactionHelper.js`](file:///d:/Naura%20Hoshino%20V2/src/utils/transactionHelper.js):
+  - `executeAtomicPayment({ userId, amount, currency, action })` dengan proteksi rollback otomatis.
 
 ---
 

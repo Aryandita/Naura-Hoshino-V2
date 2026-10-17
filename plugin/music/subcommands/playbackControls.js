@@ -642,6 +642,23 @@ module.exports = {
     await player.seekTo(clampedMs);
     player.position = clampedMs;
 
+    const eventBus = require("../../../src/core/eventBus");
+    eventBus.emit("music:state", {
+      guildId: String(guild.id),
+      currentTrack: {
+        title: track.title,
+        uri: track.uri,
+        duration: track.length,
+        position: clampedMs,
+        isPlaying: player.isPlaying,
+        isPaused: player.isPaused,
+      },
+      queue: player.queue.map((t) => ({
+        title: t.info.title,
+        duration: t.info.length,
+      })),
+    });
+
     if (client.dashboardIo) {
       client.dashboardIo.to(String(guild.id)).emit("music_state", {
         currentTrack: {

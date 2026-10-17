@@ -47,7 +47,20 @@ function parseOrigins() {
     .filter(Boolean);
 }
 
-module.exports = (client) => {
+module.exports = (containerOrClient) => {
+  let client;
+  let container = null;
+  let eventBus;
+
+  if (containerOrClient && typeof containerOrClient.resolve === "function") {
+    container = containerOrClient;
+    client = container.resolve("client");
+    eventBus = container.has("eventBus") ? container.resolve("eventBus") : require("../src/core/eventBus");
+  } else {
+    client = containerOrClient;
+    eventBus = require("../src/core/eventBus");
+  }
+
   // ==================================================================
   // 1. Server webhook (bisa diakses via port webhook tersendiri maupun port web utama)
   // ==================================================================
@@ -699,9 +712,34 @@ module.exports = (client) => {
     cors: { origin: originChecker, credentials: true },
   });
 
-  // Dipakai berkas lain (mis. plugin/core/naura.js) untuk menyiarkan kejadian.
-  client.dashboardIo = io;
-  global.client = client;
+  // Jembatani event dari eventBus sistem ke Socket.IO klien web
+  eventBus.on("system:log", (data) => io.emit("system_log", data));
+  eventBus.on("system:broadcast", (data) => io.emit("system_broadcast", data));
+  eventBus.on("music:analytics", (data) => io.emit("music_analytics_update", data));
+  eventBus.on("music:state", (data) => {
+    if (data && data.guildId) {
+      io.to(String(data.guildId)).emit("music_state", data);
+    } else {
+      io.emit("music_state", data);
+    }
+  });
+  eventBus.on("soundboard:played", (data) => {
+    if (data && data.guildId) {
+      io.to(String(data.guildId)).emit("soundboard_played", data);
+    } else {
+      io.emit("soundboard_played", data);
+    }
+  });
+  eventBus.on("dashboard:feed", (data) => {
+    io.emit("dashboard_feed_activity", data);
+  });
+
+  if (container && typeof container.value === "function") {
+    container.value("dashboardIo", io);
+  }
+  if (client) {
+    client.dashboardIo = io;
+  }
 
   require("./sockets")(client, io, { sessionMiddleware });
 

@@ -96,13 +96,12 @@ function writeErrorToFile({ message, err, context, origin }) {
 // Helper to broadcast log to socket clients dynamically
 function broadcastLog(level, message) {
   try {
-    if (global.client && global.client.dashboardIo) {
-      global.client.dashboardIo.emit("system_log", {
-        timestamp: new Date().toLocaleTimeString("id-ID"),
-        level,
-        message,
-      });
-    }
+    const eventBus = require("../core/eventBus");
+    eventBus.emit("system:log", {
+      timestamp: new Date().toLocaleTimeString("id-ID"),
+      level,
+      message,
+    });
   } catch (e) {
     logger.debug("[logger:broadcastLog] Galat pada rutinitas aplikasi: " + (e?.message || e));
   }

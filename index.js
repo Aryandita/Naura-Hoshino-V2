@@ -82,6 +82,23 @@ client.commands = new Collection();
 client.musicManager = new MusicManager(client);
 client.rssManager = new RssManager(client);
 
+// Inisialisasi ServiceContainer dan EventBus sebagai Composition Root
+const container = require("./src/core/container");
+const eventBus = require("./src/core/eventBus");
+
+container.value("env", env);
+container.value("logger", logger);
+container.value("eventBus", eventBus);
+container.value("redisManager", redisManager);
+container.value("mongoManager", mongoManager);
+container.value("cacheManager", require("./src/managers/cacheManager"));
+container.value("client", client);
+container.value("musicManager", client.musicManager);
+container.value("rssManager", client.rssManager);
+container.singleton("economyContract", () => require("./src/domain/contracts/economyContract"));
+container.singleton("survivalContract", () => require("./src/domain/contracts/survivalContract"));
+container.singleton("musicContract", () => require("./src/domain/contracts/musicContract"));
+
 const { setupErrorHandlers } = require("./src/managers/errorHandler");
 setupErrorHandlers(client);
 
@@ -158,6 +175,9 @@ async function startBot() {
           new Promise((resolve) => setTimeout(() => resolve(false), 4000)),
         ]);
         sysStatus.redis = "\x1b[32m\ud83d\udfe2 CONNECTED \x1b[0m";
+        if (redisManager.isReady) {
+          eventBus.attachRedisBridge(redisManager).catch(() => {});
+        }
       } catch (redisErr) {
         sysStatus.redis = "\x1b[33m\ud83d\udfe1 STANDBY   \x1b[0m";
       }
@@ -188,7 +208,7 @@ async function startBot() {
 
     if (isPrimaryShard) {
       try {
-        require("./dashboard/server.js")(client);
+        require("./dashboard/server.js")(container);
       } catch (err) {
         logger.error(
           "\x1b[41m\x1b[37m 💥 ERROR \x1b[0m \x1b[31mGagal menjalankan Web Dashboard:\x1b[0m",

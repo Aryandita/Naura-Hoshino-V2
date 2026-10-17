@@ -117,6 +117,7 @@ class MusicManager {
     this._poru = new Poru(this.client, this.buildNodes(), options);
     this.loadPoruEvents();
 
+    lavalinkClusterManager.setPoru(this._poru);
     return this._poru;
   }
 

@@ -719,6 +719,17 @@ Berdasarkan benchmark standar antarmuka premium dari `Leonxlnx/taste-skill` dan 
 - **Keamanan Viewport Mobile**: Seluruh container layar penuh pada Web Dashboard wajib menggunakan `min-h-[100dvh]` (bukan `100vh`) guna mencegah lonjakan layout pada browser mobile (iOS Safari / Chrome bar resize).
 - **Skeletal Shimmer Loading**: Status pemuatan data telemetri atau avatar 3D wajib menggunakan skeletal shimmer yang menyerupai dimensi komponen aslinya, dilarang menggunakan spinner lingkaran generik.
 
+### 7. Single Source of Truth (SSOT) Design Tokens & Dual-Surface Engagement Loop
+
+- **Penyelarasan Warna SSOT (`src/config/tokens/designTokens.js`)**:
+  - Warna Brand Utama: `#FFC0CB` (Sakura Pink), Discord Int `16761035`, CSS `--naura-primary: #ffc0cb`.
+  - Warna Aksen: `#00FFFF` (Cyber Cyan), Discord Int `65535`, CSS `--naura-accent: #00ffff`.
+  - Palet Naura Wilds: Emerald (`#86EFAC`), Moss (`#34D399`), Amber (`#FBBF24`), Bark (`#92400E`), River (`#7DD3FC`), Danger (`#F87171`).
+  - Skala Rarity Terpadu: Common (⚪ `#9CA3AF`), Uncommon (🟢 `#86EFAC`), Rare (🔵 `#93C5FD`), Epic (🟣 `#C084FC`), Legendary (🟡 `#FFD700`), Mythic (🔴 `#F9A8D4`).
+- **Dual-Surface Engagement Loop**:
+  - Discord Components V2 Container menyediakan tombol link cross-surface `[ 🌐 Buka di Dashboard ]` (`buildDashboardLinkButton()`).
+  - Web Dashboard dilengkapi `dashboard/public/js/shared-dashboard.js` yang menghubungkan Live Activity Feed secara real-time via WebSocket Socket.IO tanpa glitch atau layout shift.
+
 ---
 
 ## 🔗 Peta Hubungan Dokumen Ekosistem (Pentalogi Dokumentasi)

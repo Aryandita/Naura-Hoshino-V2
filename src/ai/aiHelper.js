@@ -16,24 +16,39 @@ const BAD_WORDS = [
 const PROMPT_INJECTIONS = [
   "abaikan instruksi",
   "ignore previous instructions",
+  "disregard previous instructions",
   "abaikan semua",
   "abaikan prompt",
   "system prompt",
+  "jailbreak",
+  "developer mode",
+  "you are no longer",
+  "forget all rules",
+  "bypass safety",
+  "reveal instructions",
+  "pretend you have no rules",
+  "unfiltered mode",
+  "dan mode",
 ];
 
 async function checkModeration(text) {
+  if (!text || typeof text !== "string") {
+    return { flagged: false };
+  }
+
   const lowerText = text.toLowerCase();
+  const normalized = lowerText.replace(/[\s\-_.]+/g, " ");
 
   // Check bad words
   for (const word of BAD_WORDS) {
-    if (lowerText.includes(word)) {
+    if (lowerText.includes(word) || normalized.includes(word)) {
       return { flagged: true, reason: "Kata kasar terdeteksi" };
     }
   }
 
   // Check prompt injection
   for (const phrase of PROMPT_INJECTIONS) {
-    if (lowerText.includes(phrase)) {
+    if (lowerText.includes(phrase) || normalized.includes(phrase)) {
       return {
         flagged: true,
         reason: "Percobaan manipulasi AI (Prompt Injection) terdeteksi",

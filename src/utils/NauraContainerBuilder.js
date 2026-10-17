@@ -1,7 +1,9 @@
 const { MessageFlags, AttachmentBuilder } = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
-const ui = require("../config/ui");
+const ui = new Proxy({}, {
+  get: (_, prop) => require("../config/ui")[prop],
+});
 const nauraExpression = require("./nauraExpression");
 const nauraText = require("./nauraText");
 const uxHelper = require("./uxHelper");
@@ -131,12 +133,12 @@ function buildContainerV2({
 }) {
   const hasExplicitLang = Boolean(lang || interaction);
   const activeLang = resolveLanguage(lang || interaction);
-  const defaultColor = ui.getColor("primary") || "#FFB6C1";
+  const defaultColor = ui.getColor("primary") || "#FFC0CB";
   const resolvedColorInput = accentColorHex || color || defaultColor;
   const accentColor =
     typeof resolvedColorInput === "number"
       ? resolvedColorInput
-      : parseInt(String(resolvedColorInput).replace("#", ""), 16) || 0xffb6c1;
+      : parseInt(String(resolvedColorInput).replace("#", ""), 16) || 0xffc0cb;
   if (!bannerAttachmentName) {
     bannerAttachmentName = imageAttachment || media || mediaUrl || undefined;
   }
@@ -879,6 +881,24 @@ function sanitizeComponentCustomIds(components) {
   return sanitized;
 }
 
+/**
+ * Membangun tombol tautan navigasi silang ke Web Dashboard.
+ * @param {string} [pagePath=""] - Jalur URL (misal: "dashboard.html", "soundboard.html")
+ * @param {string} [label="🌐 Buka di Dashboard"]
+ * @returns {object} ButtonBuilder
+ */
+function buildDashboardLinkButton(pagePath = "", label = "🌐 Buka di Dashboard") {
+  const { ButtonBuilder, ButtonStyle } = require("discord.js");
+  const env = require("../config/env");
+  const baseUrl = env.DASHBOARD_ORIGIN || `http://localhost:${env.DASHBOARD_PORT || 3000}`;
+  const cleanPath = pagePath ? (pagePath.startsWith("/") ? pagePath : `/${pagePath}`) : "";
+  const url = `${baseUrl.replace(/\/$/, "")}${cleanPath}`;
+  return new ButtonBuilder()
+    .setStyle(ButtonStyle.Link)
+    .setLabel(label)
+    .setURL(url);
+}
+
 module.exports = {
   buildContainerV2,
   buildErrorContainerV2,
@@ -886,6 +906,7 @@ module.exports = {
   buildMaintenanceContainerV2,
   buildSuccessContainerV2,
   buildPersonaContainerV2,
+  buildDashboardLinkButton,
   sanitizeComponentCustomIds,
   textDisplay,
   separatorComp,

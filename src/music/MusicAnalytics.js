@@ -151,7 +151,13 @@ class MusicAnalytics {
         music_topFriend: topOf(buckets.friends, "Belum mabar"),
       });
 
-      // Siarkan pembaruan analitik realtime ke dashboard
+      // Siarkan pembaruan analitik realtime ke eventBus & dashboard
+      const eventBus = require("../core/eventBus");
+      eventBus.emit("music:analytics", {
+        userId,
+        music_trackingData: buckets,
+        timestamp: Date.now(),
+      });
       if (client.dashboardIo) {
         client.dashboardIo.emit("music_analytics_update", {
           userId,

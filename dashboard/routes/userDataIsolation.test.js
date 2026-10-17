@@ -167,17 +167,34 @@ test("Security: requireGuildManager menolak request tanpa parameter guildId (HTT
   assert.equal(getStatus(), 400);
 });
 
+test("Security: requireGuildManager menolak format guildId bukan snowflake 17-20 digit (HTTP 400)", () => {
+  const user = { id: "123", guilds: [] };
+  const { req, res, getStatus, getJson } = createMockReqRes({
+    user,
+    query: { guildId: "bukan_snowflake_123" },
+  });
+  let nextCalled = false;
+
+  requireGuildManager(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, false);
+  assert.equal(getStatus(), 400);
+  assert.match(getJson()?.error, /Format Guild ID tidak valid/i);
+});
+
 test("Security: requireGuildManager menolak pengguna yang tidak memiliki izin MANAGE_GUILD pada server target (HTTP 403)", () => {
   const user = {
     id: "123",
     guilds: [
-      { id: "999888777", permissions: "0", owner: false },
+      { id: "123456789012345678", permissions: "0", owner: false },
     ],
   };
 
   const { req, res, getStatus, getJson } = createMockReqRes({
     user,
-    query: { guildId: "999888777" },
+    query: { guildId: "123456789012345678" },
   });
 
   let nextCalled = false;
@@ -194,13 +211,13 @@ test("Security: requireGuildManager mengizinkan pengguna dengan izin MANAGE_GUIL
   const user = {
     id: "123",
     guilds: [
-      { id: "999888777", permissions: String(MANAGE_GUILD), owner: false },
+      { id: "123456789012345678", permissions: String(MANAGE_GUILD), owner: false },
     ],
   };
 
   const { req, res, getStatus } = createMockReqRes({
     user,
-    query: { guildId: "999888777" },
+    query: { guildId: "123456789012345678" },
   });
 
   let nextCalled = false;
@@ -210,7 +227,7 @@ test("Security: requireGuildManager mengizinkan pengguna dengan izin MANAGE_GUIL
 
   assert.equal(nextCalled, true);
   assert.equal(getStatus(), 200);
-  assert.equal(req.guildId, "999888777");
+  assert.equal(req.guildId, "123456789012345678");
 });
 
 // -----------------------------------------------------------------------------

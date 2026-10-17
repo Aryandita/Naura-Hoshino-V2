@@ -152,6 +152,13 @@ function requireGuildManager(req, res, next) {
     return next();
   }
 
+  if (!SNOWFLAKE_REGEX.test(String(guildId))) {
+    return res.status(400).json({
+      success: false,
+      error: "Format Guild ID tidak valid. ID Discord harus berupa 17-20 digit numerik.",
+    });
+  }
+
   if (!canManageGuild(req.user, guildId)) {
     return res.status(403).json({
       success: false,

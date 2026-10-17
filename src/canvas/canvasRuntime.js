@@ -301,33 +301,7 @@ module.exports = {
    * @returns {Promise<any>}
    */
   renderInWorker: async function (task, payload) {
-    try {
-      const workerPool = require("./canvasWorkerPool");
-      return await workerPool.runTask(task, payload);
-    } catch (err) {
-      logger.warn(
-        `[CanvasRuntime] Worker rendering fallback to main thread for task ${task}: ${err.message}`,
-      );
-      // Fallback to main thread execution if worker failed
-      switch (task) {
-        case "renderProfile":
-          return await require("./profileCanvas").generateProfileCard(payload);
-        case "renderBattle":
-          return await require("./battleCanvas").renderBattle(payload);
-        case "renderNowPlaying":
-          return await require("./nowplayingCanvas").renderNowPlayingCard(
-            payload,
-          );
-        case "renderCard":
-          return await require("./cardCanvas").renderCard(payload);
-        case "renderCarbon":
-        case "renderCodeSnippet":
-          return await require("./codeCanvas").renderCarbonCard(payload);
-        case "renderPollChart":
-          return await require("./pollCanvas").renderPollChart(payload);
-        default:
-          throw err;
-      }
-    }
+    const workerPool = require("./canvasWorkerPool");
+    return workerPool.runTask(task, payload);
   },
 };

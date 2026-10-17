@@ -96,7 +96,14 @@ async function grantVoteRewards(
 
         // Notifikasi DM
         const { sendPremiumDM } = require("../../src/premium/premiumNotify");
-        const client = global.client || null;
+        let client = null;
+        try {
+          const container = require("../../src/core/container");
+          if (container && container.has("client")) {
+            client = container.resolve("client");
+          }
+        } catch (_) {}
+        if (!client) client = global.client || null;
         if (client) {
           await sendPremiumDM(client, userId, "activated", {
             username: profile.username || "Voter Setia",

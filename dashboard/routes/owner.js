@@ -27,7 +27,9 @@ const { formatMemory } = require("../utils/format");
 const EVAL_ENABLED = Boolean(env.OWNER_EVAL_ENABLED);
 
 function broadcast(client, message) {
-  if (client.dashboardIo)
+  const eventBus = require("../../src/core/eventBus");
+  eventBus.emit("system:broadcast", { message });
+  if (client?.dashboardIo)
     client.dashboardIo.emit("system_broadcast", { message });
 }
 
