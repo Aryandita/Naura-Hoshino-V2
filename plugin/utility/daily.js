@@ -3,16 +3,33 @@
 /**
  * @namespace: plugin/utility/daily.js
  * @type: Command
- * @description: Sistem Daily Login Streak & Combo Rewards (Sprint 21 / Retensi P0)
+ * @description: Interactive Daily Hub (Klaim Harian, Misi, & Proteksi Streak)
+ *
+ * Mengintegrasikan kartu status checklist interaktif:
+ * - [🎁 Klaim Hadiah] / [✅ Hadiah Diklaim]
+ * - [📋 Misi Harian] dengan pelacak progres misi aktif
+ * - [🛡️ Pelindung Streak] penyelamat rantai streak via item streak_shield
+ *
+ * Mematuhi prinsip Components V2 dan bebas karakter em-dash (\u2014).
  */
 
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags,
+} = require("discord.js");
+
 const cacheManager = require("../../src/managers/cacheManager");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const {
   safeParseInventory,
+  findItem,
+  takeItemsAtomic,
 } = require("../../src/survival/engines/inventoryHelper");
+const UserQuest = require("../../src/models/UserQuest");
 
 const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 jam
 const GRACE_PERIOD_MS = 48 * 60 * 60 * 1000; // 48 jam sebelum streak putus
@@ -94,12 +111,45 @@ function getStreakCalendarCard(currentDay) {
   ].join("\n");
 }
 
+function buildChecklistSection({ isClaimedToday, currentStreak, questsCompleted, totalQuests, shieldCount }) {
+  const claimIcon = isClaimedToday ? "✅" : "⏳";
+  const claimStatus = isClaimedToday ? "Sudah Diambil" : "Siap Diklaim";
+  const questIcon = questsCompleted >= totalQuests ? "✅" : "📋";
+  const shieldIcon = shieldCount > 0 ? "🛡️" : "⚪";
+
+  return [
+    "📌 **CHECKLIST AKTIVITAS HARIAN:**",
+    `• ${claimIcon} **Hadiah Harian:** \`${claimStatus}\` (Streak: **${currentStreak} Hari**)`,
+    `• ${questIcon} **Misi Harian:** \`${questsCompleted}/${totalQuests} Selesai\` *(Gunakan tombol di bawah)*`,
+    `• ${shieldIcon} **Pelindung Streak:** \`${shieldCount} Tersedia di Tas\` *(Mencegah streak putus)*`,
+  ].join("\n");
+}
+
+function buildDailyHubRow(isClaimedToday, shieldCount) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("daily_btn_claim")
+      .setLabel(isClaimedToday ? "Hadiah Diklaim" : "Klaim Hadiah")
+      .setEmoji(isClaimedToday ? "✅" : "🎁")
+      .setStyle(isClaimedToday ? ButtonStyle.Secondary : ButtonStyle.Success)
+      .setDisabled(isClaimedToday),
+    new ButtonBuilder()
+      .setCustomId("daily_btn_quests")
+      .setLabel("Misi Harian")
+      .setEmoji("📋")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId("daily_btn_shield")
+      .setLabel(`Pelindung Streak (${shieldCount})`)
+      .setEmoji("🛡️")
+      .setStyle(ButtonStyle.Secondary),
+  );
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("daily")
-    .setDescription(
-      "🎁 Klaim hadiah harianmu dan bangun Daily Login Streak! 🔥",
-    ),
+    .setDescription("🎁 Klaim hadiah harian, pantau misi, dan kelola Daily Login Streak! 🔥"),
 
   async execute(interaction) {
     const userId = interaction.user.id;
@@ -111,11 +161,117 @@ module.exports = {
     const cooldowns = profile.cooldowns || {};
     const lastDaily = cooldowns.daily ? new Date(cooldowns.daily).getTime() : 0;
     const currentStreak = cooldowns.daily_streak || 0;
-
     const timeDiff = now - lastDaily;
+    const isClaimedToday = timeDiff < COOLDOWN_MS;
 
-    // ── 1. CEK COOLDOWN (Belum 24 Jam) ───────────────────────────
-    if (timeDiff < COOLDOWN_MS) {
+    const inv = safeParseInventory(profile.inventory);
+    const shieldItem = findItem(inv, "streak_shield");
+    const shieldCount = shieldItem ? (shieldItem.count || 1) : 0;
+
+    // Ambil data misi harian untuk checklist
+    const userQuest = await UserQuest.findByPk(userId).catch(() => null);
+    let questsCompleted = 0;
+    const totalQuests = 3;
+    if (userQuest) {
+      if (userQuest.workCount >= 1) questsCompleted++;
+      if (userQuest.dungeonKills >= 1) questsCompleted++;
+      if (userQuest.collectCount >= 3) questsCompleted++;
+      if (userQuest.isClaimed) questsCompleted = 3;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // FUNGSI EKSEKUSI KLAIM HADIAH HARIAN
+    // ─────────────────────────────────────────────────────────────
+    const executeClaim = async () => {
+      let newStreak = 1;
+      let streakMessage = "";
+
+      if (lastDaily === 0) {
+        newStreak = 1;
+        streakMessage = "Selamat datang di klaim harian pertamamu. Masuk setiap hari untuk bonus bertingkat.";
+      } else if (timeDiff <= GRACE_PERIOD_MS) {
+        newStreak = currentStreak + 1;
+        streakMessage = `Konsistensi luar biasa. Kamu telah login selama **${newStreak} hari berturut-turut**.`;
+      } else {
+        // Cek Jimat Pelindung Streak jika lewat batas 48 jam
+        const shieldIdx = inv.findIndex((i) => i && i.id === "streak_shield");
+        if (shieldIdx !== -1 && currentStreak > 1) {
+          await takeItemsAtomic(userId, [{ id: "streak_shield", amount: 1 }]);
+          newStreak = currentStreak + 1;
+          streakMessage = `🛡️ **Jimat Pelindung Streak Digunakan.** Streak kamu berhasil diselamatkan dan bertambah ke **${newStreak} hari**.`;
+        } else {
+          newStreak = 1;
+          streakMessage = "Streak sebelumnya terhenti karena melewati batas waktu 48 jam. Memulai kembali streak baru.";
+        }
+      }
+
+      const dayInCycle = ((newStreak - 1) % 7) + 1;
+      const reward = REWARD_TABLE[dayInCycle - 1];
+
+      await Promise.all([
+        cacheManager.incrementUserProfile(userId, "economy_wallet", reward.gold),
+        cacheManager.incrementUserProfile(userId, "leveling_xp", reward.xp),
+        cacheManager.incrementUserSurvival(userId, "starFragments", reward.starFragments),
+        reward.coupons > 0
+          ? cacheManager.incrementUserSurvival(userId, "coupons", reward.coupons)
+          : Promise.resolve(),
+        cacheManager.mutateUserProfileJson(userId, "cooldowns", (cd) => {
+          cd.daily = new Date(now).toISOString();
+          cd.daily_streak = newStreak;
+          return cd;
+        }),
+        cacheManager.updateUserProfile(userId, { dailyReminded: false }),
+      ]);
+
+      cacheManager.smartInvalidateUserCanvas(userId);
+
+      const isMilestone = dayInCycle === 7;
+      const titleText = isMilestone
+        ? "Pencapaian Spesial: Hadiah Siklus 7 Hari Selesai"
+        : "Klaim Hadiah Harian Berhasil";
+      const accentColor = isMilestone ? "#FBBF24" : "#34D399";
+
+      const updatedShieldCount = shieldItem ? Math.max(0, (shieldItem.count || 1) - (streakMessage.includes("Jimat Pelindung") ? 1 : 0)) : 0;
+      const checklistText = buildChecklistSection({
+        isClaimedToday: true,
+        currentStreak: newStreak,
+        questsCompleted,
+        totalQuests,
+        shieldCount: updatedShieldCount,
+      });
+
+      const desc = [
+        `Halo **${displayName}**. ${streakMessage}`,
+        ``,
+        checklistText,
+        ``,
+        `${getStreakCalendarCard(newStreak)}`,
+        ``,
+        `**Perolehan Hadiah (Hari ke-${dayInCycle}):**`,
+        `• 💵 **+${reward.gold.toLocaleString("id-ID")} Gold** (Saldo dompet)`,
+        `• ⭐ **+${reward.starFragments.toLocaleString("id-ID")} Star Fragments**`,
+        `• 💬 **+${reward.xp} Chat XP**`,
+        reward.coupons > 0 ? `• 🎟️ **+${reward.coupons} Naura Coupon** (Mata uang langka)` : "",
+        reward.bonus ? `• **Bonus Tambahan:** ${reward.bonus}` : "",
+        ``,
+        `-# Tips: Pasang jimat di toko survival agar streak tetap terlindungi jika berhalangan.`,
+      ].filter(Boolean).join("\n");
+
+      return buildContainerV2({
+        accentColorHex: accentColor,
+        authorName: "Daily Rewards & Streak Hub",
+        title: titleText,
+        description: desc,
+        buttonsRow: buildDailyHubRow(true, updatedShieldCount),
+        expression: isMilestone ? "cheers" : "happy",
+        footerText: ui.getFooter("core"),
+      });
+    };
+
+    // ─────────────────────────────────────────────────────────────
+    // TAMPILAN HUB KETIKA MASIH DALAM WAKTU TUNGGU (COOLDOWN)
+    // ─────────────────────────────────────────────────────────────
+    if (isClaimedToday) {
       const remainingMs = COOLDOWN_MS - timeDiff;
       const remainingHours = Math.floor(remainingMs / (60 * 60 * 1000));
       const remainingMinutes = Math.floor(
@@ -125,123 +281,132 @@ module.exports = {
       const nextDay = (currentStreak % 7) + 1;
       const nextReward = REWARD_TABLE[nextDay - 1];
 
+      const checklistText = buildChecklistSection({
+        isClaimedToday: true,
+        currentStreak,
+        questsCompleted,
+        totalQuests,
+        shieldCount,
+      });
+
+      const desc = [
+        `Halo **${displayName}**. Hadiah harian kamu untuk hari ini telah selesai diambil.`,
+        ``,
+        checklistText,
+        ``,
+        `⏳ **Waktu Tunggu:** \`${remainingHours} jam ${remainingMinutes} menit\` lagi`,
+        ``,
+        `${getStreakCalendarCard(currentStreak)}`,
+        ``,
+        `**Pratinjau Hadiah Berikutnya (Hari ke-${nextDay}):**`,
+        `• 💵 \`+${nextReward.gold.toLocaleString("id-ID")} Gold\``,
+        `• ⭐ \`+${nextReward.starFragments.toLocaleString("id-ID")} Star Fragments\``,
+        `• 💬 \`+${nextReward.xp} XP\``,
+        nextReward.bonus ? `• ${nextReward.bonus}` : "",
+      ].filter(Boolean).join("\n");
+
       const container = buildContainerV2({
         accentColorHex: "#FBBF24",
+        authorName: "Daily Rewards & Streak Hub",
         title: "Klaim Harian Dalam Waktu Tunggu",
-        description:
-          `Halo **${displayName}**. Hadiah harian kamu untuk hari ini telah selesai diambil.\n\n` +
-          `Waktu tunggu berikutnya: \`${remainingHours} jam ${remainingMinutes} menit\`\n` +
-          `Streak Aktif: **${currentStreak} Hari Berturut-turut**\n\n` +
-          `${getStreakCalendarCard(currentStreak)}\n\n` +
-          `**Pratinjau Hadiah Berikutnya (Hari ke-${nextDay}):**\n` +
-          `• 💵 \`+${nextReward.gold.toLocaleString("id-ID")} Gold\`\n` +
-          `• ⭐ \`+${nextReward.starFragments.toLocaleString("id-ID")} Star Fragments\`\n` +
-          `• 💬 \`+${nextReward.xp} XP\`\n` +
-          (nextReward.bonus ? `• ${nextReward.bonus}\n` : ""),
+        description: desc,
+        buttonsRow: buildDailyHubRow(true, shieldCount),
         expression: "sleepy",
         footerText: ui.getFooter("core"),
       });
 
-      return interaction.reply({
+      const reply = await interaction.reply({
         ...container,
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        fetchReply: true,
+      });
+
+      setupDailyCollector(reply, interaction, userId, questsCompleted, totalQuests, shieldCount, currentStreak);
+      return;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // JIKA BELUM KLAIM: JALANKAN KLAIM & TAMPILKAN HUB
+    // ─────────────────────────────────────────────────────────────
+    const claimPayload = await executeClaim();
+    const reply = await interaction.reply({
+      ...claimPayload,
+      fetchReply: true,
+    });
+
+    setupDailyCollector(reply, interaction, userId, questsCompleted, totalQuests, shieldCount, currentStreak + 1);
+  },
+};
+
+/**
+ * Setup collector untuk tombol interaktif Daily Hub
+ */
+function setupDailyCollector(message, interaction, userId, questsCompleted, totalQuests, shieldCount, streak) {
+  if (!message || !message.createMessageComponentCollector) return;
+
+  const collector = message.createMessageComponentCollector({
+    filter: (i) => i.user.id === userId,
+    time: 60000,
+  });
+
+  collector.on("collect", async (i) => {
+    // 1. Tombol Misi Harian
+    if (i.customId === "daily_btn_quests") {
+      const userQuest = await UserQuest.findByPk(userId).catch(() => null);
+      const wCount = userQuest ? userQuest.workCount || 0 : 0;
+      const dCount = userQuest ? userQuest.dungeonKills || 0 : 0;
+      const cCount = userQuest ? userQuest.collectCount || 0 : 0;
+      const claimed = userQuest ? userQuest.isClaimed : false;
+
+      const questLines = [
+        `📋 **STATUS MISI HARIAN NAURA WILDS:**`,
+        ``,
+        `1. **Bekerja di Kota:** \`${wCount}/1 Selesai\` ${wCount >= 1 ? "✅" : "⏳"} *(Gunakan \`/survival work\`)*`,
+        `2. **Taklukkan Monster Dungeon:** \`${dCount}/1 Selesai\` ${dCount >= 1 ? "✅" : "⏳"} *(Gunakan \`/survival dungeon\`)*`,
+        `3. **Kumpulkan Bahan Alam:** \`${cCount}/3 Selesai\` ${cCount >= 3 ? "✅" : "⏳"} *(Gunakan \`/survival collect\`)*`,
+        ``,
+        `🎁 **Hadiah Penyelesaian Semua Misi:** \`+2.500 NSF\`, \`+150 XP\`, \`+1x Mystery Crate\``,
+        claimed ? `\n✅ *Semua hadiah misi harian telah berhasil diklaim hari ini!*` : `\n💡 *Selesaikan ketiga misi di atas lalu jalankan \`/survival quest\` untuk klaim hadiah!*`,
+      ].join("\n");
+
+      const questPayload = buildContainerV2({
+        accentColorHex: "#38BDF8",
+        authorName: "Pusat Misi Harian • Naura Wilds",
+        title: "🎯 Daftar Misi Harian Aktif",
+        description: questLines,
+        footerText: ui.getFooter("survival"),
+      });
+
+      return i.reply({
+        ...questPayload,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
-    // ── 2. HITUNG STREAK BARU ────────────────────────────────────
-    let newStreak = 1;
-    let streakMessage = "";
+    // 2. Tombol Pelindung Streak
+    if (i.customId === "daily_btn_shield") {
+      const shieldDesc = shieldCount > 0
+        ? `🛡️ **Jimat Pelindung Streak Aktif!**\n\n` +
+          `Kamu memiliki **${shieldCount}x Jimat Pelindung Streak** di tas penyimpanan.\n` +
+          `Jika suatu saat kamu berhalangan hadir dan melewatkan login harian (antara 48 s/d 72 jam), jimat ini akan otomatis digunakan untuk menyelamatkan rantai streak milikmu agar tidak tereset ke Hari ke-1.\n\n` +
+          `• **Streak Saat Ini:** **${streak} Hari**\n` +
+          `• **Status Perlindungan:** **AMAN & AKTIF** 🛡️`
+        : `⚪ **Belum Memiliki Pelindung Streak**\n\n` +
+          `Kamu saat ini tidak memiliki Jimat Pelindung Streak di tas.\n` +
+          `Jika kamu melewatkan login lebih dari 48 jam, streak harianmu akan terputus dan kembali ke Hari ke-1.\n\n` +
+          `💡 **Tips:** Dapatkan **Jimat Pelindung Streak** di Toko Survival (\`/survival shop\`) untuk mengamankan streak panjangmu!`;
 
-    if (lastDaily === 0) {
-      // Pertama kali klaim
-      newStreak = 1;
-      streakMessage =
-        "Selamat datang di klaim harian pertamamu. Masuk setiap hari untuk bonus bertingkat.";
-    } else if (timeDiff <= GRACE_PERIOD_MS) {
-      // Dalam batas 48 jam -> Streak Berlanjut
-      newStreak = currentStreak + 1;
-      streakMessage = `Konsistensi luar biasa. Kamu telah login selama **${newStreak} hari berturut-turut**.`;
-    } else {
-      // Lewat 48 jam -> Cek apakah punya Streak Shield di inventory
-      const inv = safeParseInventory(profile.inventory);
-      const shieldIndex = inv.findIndex((i) => i && i.id === "streak_shield");
+      const shieldPayload = buildContainerV2({
+        accentColorHex: shieldCount > 0 ? "#10B981" : "#F59E0B",
+        authorName: "Sistem Proteksi Streak • Naura",
+        title: shieldCount > 0 ? "🛡️ Streak Kamu Dilindungi" : "⚠️ Perhatian Streak Harian",
+        description: shieldDesc,
+        footerText: ui.getFooter("core"),
+      });
 
-      if (shieldIndex !== -1 && currentStreak > 1) {
-        // Gunakan Streak Shield
-        inv.splice(shieldIndex, 1);
-        await cacheManager.updateProfile(userId, { inventory: inv });
-        newStreak = currentStreak + 1;
-        streakMessage = `🛡️ **Streak Shield Digunakan.** Streak kamu berhasil dilindungi dan bertambah ke **${newStreak} hari**.`;
-      } else {
-        // Streak Terputus
-        newStreak = 1;
-        streakMessage =
-          "Streak sebelumnya terhenti karena melewati batas waktu 48 jam. Memulai kembali streak baru.";
-      }
+      return i.reply({
+        ...shieldPayload,
+        flags: MessageFlags.Ephemeral,
+      });
     }
-
-    // ── 3. TENTUKAN REWARD HARI INI ─────────────────────────────
-    const dayInCycle = ((newStreak - 1) % 7) + 1;
-    const reward = REWARD_TABLE[dayInCycle - 1];
-
-    // ── 4. EKSEKUSI REWARD VIA CACHEMANAGER ATOMIK ─────────────────
-    await Promise.all([
-      // Tambah Gold di wallet & XP Chat
-      cacheManager.incrementProfile(userId, "economy_wallet", reward.gold),
-      cacheManager.incrementProfile(userId, "leveling_xp", reward.xp),
-      // Tambah Star Fragments & Naura Coupons di UserSurvival
-      cacheManager.incrementSurvival(
-        userId,
-        "starFragments",
-        reward.starFragments,
-      ),
-      reward.coupons > 0
-        ? cacheManager.incrementSurvival(userId, "coupons", reward.coupons)
-        : Promise.resolve(),
-      // Perbarui cooldowns JSON secara mutasi aman
-      cacheManager.mutateProfileJson(userId, "cooldowns", (cd) => {
-        cd.daily = new Date(now).toISOString();
-        cd.daily_streak = newStreak;
-        return cd;
-      }),
-      // Reset dailyReminded
-      cacheManager.updateProfile(userId, { dailyReminded: false }),
-    ]);
-
-    // Smart Canvas cache invalidation
-    cacheManager.smartInvalidateUserCanvas(userId);
-
-    // ── 5. RENDER CONTAINER V2 ──────────────────────────────────
-    const isMilestone = dayInCycle === 7;
-    const titleText = isMilestone
-      ? "Pencapaian Spesial: Hadiah Siklus 7 Hari Selesai"
-      : "Klaim Hadiah Harian Berhasil";
-    const accentColor = isMilestone ? "#FBBF24" : "#34D399";
-
-    const desc =
-      `Halo **${displayName}**. ${streakMessage}\n\n` +
-      `${getStreakCalendarCard(newStreak)}\n\n` +
-      `**Perolehan Hadiah (Hari ke-${dayInCycle}):**\n` +
-      `• 💵 **+${reward.gold.toLocaleString("id-ID")} Gold** (Saldo dompet)\n` +
-      `• ⭐ **+${reward.starFragments.toLocaleString("id-ID")} Star Fragments**\n` +
-      `• 💬 **+${reward.xp} Chat XP**\n` +
-      (reward.coupons > 0
-        ? `• 🎟️ **+${reward.coupons} Naura Coupon** (Mata uang langka)\n`
-        : "") +
-      (reward.bonus ? `• **Bonus Tambahan:** ${reward.bonus}\n` : "") +
-      `\n-# Tips: Pasang pengingat di /notifications agar streak tetap terjaga.`;
-
-    const successContainer = buildContainerV2({
-      accentColorHex: accentColor,
-      title: titleText,
-      description: desc,
-      expression: isMilestone ? "cheers" : "happy",
-      footerText: ui.getFooter("core"),
-    });
-
-    return interaction.reply({
-      ...successContainer,
-      flags: MessageFlags.IsComponentsV2,
-    });
-  },
-};
+  });
+}

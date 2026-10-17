@@ -16,12 +16,18 @@ const {
   safeParseInventory,
   findItem,
   takeItemsAtomic,
+  addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const petActions = require("../../../src/survival/helpers/petActions");
+const {
+  getPetRarityInfo,
+  rollPetForaging,
+  REAL_WORLD_SPECIES,
+} = require("../../../src/survival/helpers/petRarity");
 const fs = require("fs");
 const path = require("path");
 const { AttachmentBuilder } = require("discord.js");
@@ -31,9 +37,7 @@ const BREED_FEE = 5000;
 const XP_PER_MEAL = 20;
 const XP_PER_LEVEL = 100;
 
-// ID di bawah ini sudah dicocokkan dengan katalog item. Versi lama mencari
-// 'pet_food' dan 'meat' yang tidak pernah ada, jadi tombol beri makan selalu
-// menolak walaupun tas pemain penuh makanan hewan.
+// ID di bawah ini sudah dicocokkan dengan katalog item.
 const PET_FOODS = [
   { id: "bone", hunger: 20 },
   { id: "small_fish", hunger: 30 },
@@ -54,16 +58,18 @@ function petLabel(pet) {
 }
 
 function statLines(pet) {
+  const { species, tier, displayName } = getPetRarityInfo(pet);
   const buffText =
     pet.passiveSkill && pet.passiveSkill !== "none"
-      ? `\n**Passive Skill:** \`${pet.passiveSkill}\``
+      ? `\n**Bakat Alam:** \`${pet.passiveSkill}\``
       : "";
   return [
-    `**Spesies:** ${String(pet.petType).toUpperCase()}`,
-    `**Level:** ${pet.petLevel || 1} (${pet.petExp || 0}/${XP_PER_LEVEL} XP)`,
-    `**Lapar:** ${pet.hunger || 0}/100`,
-    `**Afeksi:** ${pet.affection || 0}/100`,
-    `**Mood:** ${String(pet.mood || "normal").toUpperCase()}${buffText}`,
+    `**Sahabat Setia:** **${displayName}**`,
+    `**Spesies Alami:** ${species.emoji} **${species.name}** (*${species.latin}*)`,
+    `**Tingkatan Rarity:** \`[Tier ${tier.badge}] ${tier.label}\``,
+    `**Level Pertumbuhan:** Level ${pet.petLevel || 1} (${pet.petExp || 0}/${XP_PER_LEVEL} XP)`,
+    `**Kenyang:** ${pet.hunger || 0}/100 | **Afeksi:** ${pet.affection || 0}/100`,
+    `**Kondisi Mood:** \`${String(pet.mood || "normal").toUpperCase()}\`${buffText}`,
   ].join("\n");
 }
 
@@ -101,7 +107,44 @@ module.exports = {
     await UserSurvival.findOrCreate({ where: { userId: user.id } });
 
     const pets = await UserPet.findAll({ where: { userId: user.id } });
+    const action = interaction.options.getString("aksi");
+    const targetPetIdOption = interaction.options.getInteger("target_pet_id");
+
+    // Tangani kondisi pengguna belum memiliki pet
     if (pets.length === 0) {
+      if (action === "adopt") {
+        const starterType = interaction.options.getString("nama_pet") || "kucing_kampung";
+        const species = REAL_WORLD_SPECIES[starterType] || REAL_WORLD_SPECIES.kucing_kampung;
+        await UserPet.create({
+          userId: user.id,
+          petType: species.id,
+          petName: species.name,
+          isTamed: true,
+          isActive: true,
+          petLevel: 1,
+          petExp: 0,
+          hunger: 100,
+          affection: species.baseAffection || 50,
+          mood: "happy",
+          evolutionStage: 1,
+        });
+
+        const adoptPayload = buildContainerV2({
+          accentColorHex: "#86EFAC",
+          authorName: "Adopsi Sahabat Satwa Naura Wilds",
+          title: `🎉 Selamat Mengadopsi ${species.name}!`,
+          description: [
+            `Kamu telah resmi mengangkat **${species.name}** (*${species.latin}*) sebagai sahabat setia petualanganmu!`,
+            ``,
+            `📖 **Profil Satwa:**`,
+            `*${species.description}*`,
+            ``,
+            `💡 **Satu Sahabat Setia:** Di Naura Wilds, pengembara hanya memiliki 1 sahabat setia yang dirawat bersama. Ajak main, beri makan, dan kirim ke ekspedisi untuk menemukan barang berharga!`,
+          ].join("\n"),
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.editReply(adoptPayload);
+      }
       return ui.sendError(interaction, "err_sys_55", true);
     }
 
@@ -112,8 +155,17 @@ module.exports = {
       if (matchedPet) pet = matchedPet;
     }
 
-    const action = interaction.options.getString("aksi");
-    const targetPetIdOption = interaction.options.getInteger("target_pet_id");
+    // Aturan Wajib: 1 Pet Setia per User
+    if (action === "adopt") {
+      const { displayName, species } = getPetRarityInfo(pet);
+      return interaction.editReply(
+        buildErrorContainerV2({
+          title: "Sudah Memiliki Sahabat Setia",
+          description: `Kamu sudah memiliki sahabat setia **${displayName}** (${species.name}). Di Naura Wilds, setiap pengembara berfokus merawat 1 sahabat sejati untuk membangun ikatan jiwa yang mendalam!`,
+          footerText: ui.getFooter("survival"),
+        }),
+      );
+    }
 
     // 1. KUNJUNGI PET HABITAT (SANCTUARY)
     if (action === "habitat") {
@@ -311,9 +363,14 @@ module.exports = {
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(disabled),
         new ButtonBuilder()
+          .setCustomId("pet_forage")
+          .setLabel("Ekspedisi Alam")
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(disabled),
+        new ButtonBuilder()
           .setCustomId("pet_breed")
           .setLabel("Breeding (Ki Prawiro)")
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Secondary)
           .setDisabled(disabled),
       );
 
@@ -456,12 +513,85 @@ module.exports = {
       else return responder.reply(payload);
     };
 
+    const processForage = async (responder, asFollowUp = true) => {
+      if ((pet.hunger || 0) < 20) {
+        const hungryPayload = ephemeral(
+          `${e("cry", "😿")} **${petLabel(pet)}** tampak lesu dan kelaparan (${pet.hunger || 0}/100). Beri makan terlebih dahulu sebelum berangkat ekspedisi!`,
+        );
+        return asFollowUp
+          ? responder.followUp(hungryPayload)
+          : responder.reply(hungryPayload);
+      }
+
+      const foraged = rollPetForaging(pet);
+      const { getItemFromCatalog } = require("../../../src/survival/data/items_catalog");
+      const foundItem = getItemFromCatalog(foraged.itemId);
+
+      pet.hunger = Math.max(0, (pet.hunger || 0) - 15);
+      pet.petExp = (pet.petExp || 0) + foraged.earnedXp;
+      pet.affection = Math.min(100, (pet.affection || 0) + 5);
+
+      let naikLevel = false;
+      while (pet.petExp >= XP_PER_LEVEL) {
+        pet.petExp -= XP_PER_LEVEL;
+        pet.petLevel = (pet.petLevel || 1) + 1;
+        naikLevel = true;
+      }
+
+      petActions.evaluateMood(pet);
+      await Promise.all([
+        addItemsAtomic(user.id, [
+          { id: foraged.itemId, amount: foraged.qty },
+        ]),
+        cacheManager.incrementUserProfile(user.id, "economy_wallet", foraged.bonusCoins),
+        pet.save({
+          fields: [
+            "hunger",
+            "affection",
+            "petExp",
+            "petLevel",
+            "mood",
+            "evolutionStage",
+            "petType",
+          ],
+        }),
+      ]);
+
+      const questGen = require("../../../src/survival/engines/questGenerator");
+      await questGen
+        .incrementQuestProgress(user.id, "pet_forage", 1)
+        .catch(() => {});
+
+      const foragePayload = buildContainerV2({
+        accentColorHex: foraged.tier.color || "#86EFAC",
+        authorName: `🧭 Ekspedisi Alam: ${foraged.petName}`,
+        title: `🎒 ${foraged.petName} Membawa Temuan Berharga!`,
+        description: [
+          `**${foraged.story}**`,
+          ``,
+          `📦 **Temuan Eksklusif Satwa:**`,
+          `• ${foundItem ? foundItem.emoji : "📦"} **${foundItem ? foundItem.name : foraged.itemId}** x${foraged.qty} (\`Tier ${foraged.tier.badge} - ${foraged.tier.rarity}\`)`,
+          `• 🪙 **Koin Ditemukan:** \`+${foraged.bonusCoins.toLocaleString("id-ID")} Coin\``,
+          `• ⭐ **Pertumbuhan Pet:** \`+${foraged.earnedXp} XP\`, \`+5 Kasih Sayang\`${naikLevel ? `\n• 🎉 **Naik ke Level ${pet.petLevel}!**` : ""}`,
+          `• 🍖 **Kondisi:** \`-15 Kenyang\` (Sisa: ${pet.hunger}/100)`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return asFollowUp
+        ? responder.followUp(foragePayload)
+        : responder.reply(foragePayload);
+    };
+
     let message = null;
     if (action === "feed") {
       const reply = await processFeed(interaction, false);
       if (reply) return;
     } else if (action === "play") {
       const reply = await processPlay(interaction, false);
+      if (reply) return;
+    } else if (action === "forage" || action === "ekspedisi") {
+      const reply = await processForage(interaction, false);
       if (reply) return;
     } else if (action === "tame") {
       const tamePayload = ephemeral(
@@ -494,6 +624,9 @@ module.exports = {
       }
       if (i.customId === "pet_play") {
         await processPlay(i, true);
+      }
+      if (i.customId === "pet_forage") {
+        await processForage(i, true);
       }
 
       if (i.customId === "pet_breed") {

@@ -1488,10 +1488,137 @@ const SPECIALS = [
     iconType: "crest",
     attributes: { usableType: "founder_prestige", titleGranted: "Pelopor Legendaris" },
   }),
+  makeItem({
+    id: "streak_shield",
+    name: "Jimat Pelindung Streak",
+    description: "Jimat pelindung dari kayu cendana wangi berikat tali rami merah. Melindungi rantai streak login harian agar tidak terputus saat kamu berhalangan hadir satu hari.",
+    price: 3500,
+    category: "special",
+    tierKey: "RARE",
+    emoji: "🛡️",
+    iconType: "shield",
+    attributes: { usableType: "streak_protection" },
+  }),
 ];
 
 // =========================================================================
-// MATRIKS GABUNGAN 123 ITEM SEIMBANG RESMI
+// 7. KATEGORI: PET ITEMS (9 Item Eksklusif Temuan Satwa Dunia Nyata)
+// =========================================================================
+const PET_ITEMS = [
+  // --- Tier 1: Common ---
+  makeItem({
+    id: "obsidian_stone",
+    name: "Batu Obsidian Halus",
+    description: "Serpihan kaca vulkanik hitam pekat bertekstur licin hasil pendinginan lahar pegunungan. Tepiannya terasah alami oleh gesekan pasir sungai hutan.",
+    price: 320,
+    category: "material",
+    tierKey: "COMMON",
+    emoji: "🪨",
+    iconType: "ore",
+    attributes: { petExclusive: true, materialType: "mineral" },
+  }),
+  makeItem({
+    id: "damar_resin",
+    name: "Getah Damar Hutan",
+    description: "Gumpalan getah mengkristal dari kulit pohon damar tua di pedalaman rimba tropis. Mengeluarkan aroma wangi pinus saat dihangatkan di dekat tungku.",
+    price: 360,
+    category: "material",
+    tierKey: "COMMON",
+    emoji: "🪵",
+    iconType: "wood",
+    attributes: { petExclusive: true, materialType: "resin" },
+  }),
+
+  // --- Tier 2: Uncommon ---
+  makeItem({
+    id: "wild_honeycomb",
+    name: "Madu Hutan Liar",
+    description: "Patahan sarang lebah pohon sialang berlumur madu kental keemasan. Pet membawanya turun dengan hati-hati tanpa merusak sarang lebah utama.",
+    price: 850,
+    category: "consumable",
+    tierKey: "UNCOMMON",
+    emoji: "🍯",
+    iconType: "food",
+    attributes: { petExclusive: true, hungerRestore: 35, energyRestore: 20 },
+  }),
+  makeItem({
+    id: "petrified_wood",
+    name: "Fosil Kayu Jati",
+    description: "Potongan teras kayu jati purba yang tertimbun endapan sedimen lumpur selama ratusan tahun hingga berubah padat menyerupai batu marmer dingin.",
+    price: 1100,
+    category: "material",
+    tierKey: "UNCOMMON",
+    emoji: "🪵",
+    iconType: "stone",
+    attributes: { petExclusive: true, materialType: "fossil" },
+  }),
+
+  // --- Tier 3: Rare ---
+  makeItem({
+    id: "peacock_feather",
+    name: "Bulu Merak Hijau Alami",
+    description: "Sehelai bulu ekor merak hijau berhiaskan pendaran warna zamrud dan tembaga. Gugur secara alami di dasar lembah hutan basah saat pergantian musim.",
+    price: 2400,
+    category: "material",
+    tierKey: "RARE",
+    emoji: "🪶",
+    iconType: "feather",
+    attributes: { petExclusive: true, materialType: "feather" },
+  }),
+  makeItem({
+    id: "freshwater_pearl",
+    name: "Mutiara Air Tawar",
+    description: "Mutiara alami berbentuk asimetris berkilau keperakan yang ditemukan pet di sela cangkang kerang kijing dasar danau hutan lindung.",
+    price: 3200,
+    category: "material",
+    tierKey: "RARE",
+    emoji: "⚪",
+    iconType: "gem",
+    attributes: { petExclusive: true, materialType: "gem" },
+  }),
+
+  // --- Tier 4: Epic ---
+  makeItem({
+    id: "cat_eye_resin",
+    name: "Damar Mata Kucing",
+    description: "Kristal resin getah bening bermutu tinggi dari rekahan pohon meranti raksasa. Menghasilkan bias pantulan cahaya mirip manik mata kucing saat terpapar sinar fajar.",
+    price: 7500,
+    category: "material",
+    tierKey: "EPIC",
+    emoji: "💎",
+    iconType: "gem",
+    attributes: { petExclusive: true, materialType: "resin" },
+  }),
+
+  // --- Tier 5: Legendary ---
+  makeItem({
+    id: "swallow_nest",
+    name: "Sarang Burung Walet Gua",
+    description: "Rajutan serat liur alami burung walet dari langit-langit gua kapur pesisir selatan. Bersih, padat, dan sangat bernilai tinggi di pasar rempah kota.",
+    price: 22000,
+    category: "consumable",
+    tierKey: "LEGENDARY",
+    emoji: "🥣",
+    iconType: "potion",
+    attributes: { petExclusive: true, healthRestore: 100, energyRestore: 100 },
+  }),
+
+  // --- Tier 6 / Special: Mythic ---
+  makeItem({
+    id: "amber_fossil",
+    name: "Fosil Getah Ambar Purba",
+    description: "Batu ambar jingga madu tembus pandang yang memerangkap jejak dedaunan purba di dalamnya. Ditemukan pet terkubur di lapisan tanah liat lereng tebing tua.",
+    price: 65000,
+    category: "special",
+    tierKey: "LEGENDARY",
+    emoji: "🔶",
+    iconType: "stone",
+    attributes: { petExclusive: true, materialType: "amber", prestigeValue: 100 },
+  }),
+];
+
+// =========================================================================
+// MATRIKS GABUNGAN ITEM SEIMBANG RESMI
 // =========================================================================
 const BALANCED_ITEMS_CATALOG = Object.freeze([
   ...WEAPONS,
@@ -1500,6 +1627,7 @@ const BALANCED_ITEMS_CATALOG = Object.freeze([
   ...CONSUMABLES,
   ...MATERIALS,
   ...SPECIALS,
+  ...PET_ITEMS,
 ]);
 
 // Pemetaan cepat O(1) berdasarkan ID
@@ -1516,6 +1644,7 @@ module.exports = {
   CONSUMABLES,
   MATERIALS,
   SPECIALS,
+  PET_ITEMS,
   BALANCED_ITEMS_CATALOG,
   CATALOG_BY_ID,
   getItemFromCatalog: (id) => CATALOG_BY_ID.get(id) || null,

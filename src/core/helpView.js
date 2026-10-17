@@ -20,6 +20,7 @@ const HELP_CATEGORY_KEYS = [
   "music",
   "survival",
   "minigame",
+  "fun",
   "utility",
   "admin",
 ];
@@ -85,6 +86,12 @@ function buildHelpCategories(langInput) {
       label: lang.HELP_CAT_GAME_LABEL || "Minigame & Arcade",
       desc: lang.HELP_CAT_GAME_DESC || "Permainan santai dan seru.",
       content: formatHelpContent(lang.HELP_CONTENT_GAME),
+    },
+    fun: {
+      emoji: e("help_fun", "🎉"),
+      label: isEn ? "🎉 Fun & Social" : "🎉 Hiburan & Sosial",
+      desc: lang.HELP_CAT_FUN_DESC || "Perintah seru-seruan tanpa risiko saldo.",
+      content: formatHelpContent(lang.HELP_CONTENT_FUN),
     },
     utility: {
       emoji: e("help_utility", "🧰"),

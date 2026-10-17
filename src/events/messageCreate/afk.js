@@ -1,115 +1,157 @@
-const { EmbedBuilder } = require("discord.js");
+"use strict";
+
+/**
+ * afk.js - Event Handler Notifikasi & Rangkuman Mention AFK
+ *
+ * Mengelola status AFK pengguna berbasis Discord Components V2:
+ * 1. Memberi tahu pemanggil saat pengguna yang di-tag sedang AFK dan mencatat pesan (snippet, link, waktu).
+ * 2. Menyambut pengguna saat kembali aktif dan menyajikan Rangkuman Mention (Digest) rapi dan bersih.
+ *
+ * Mematuhi aturan Components V2 dan bebas karakter em-dash (\u2014).
+ */
+
 const ui = require("../../config/ui");
 const env = require("../../config/env");
-const UserProfile = require("../../models/UserProfile");
+const cacheManager = require("../../managers/cacheManager");
+const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const { checkPremiumStatus } = require("../../premium/premiumHelper");
+const { logger } = require("../../managers/logger");
 
-const MAX_STORED_MENTIONS = 15;
+const MAX_STORED_MENTIONS = 10;
 const NOTICE_LIFETIME_MS = 10000;
 
 /**
- * Memberi tahu bahwa seseorang yang di-tag sedang AFK, sekaligus mencatat
- * siapa saja yang mencarinya.
+ * Memberi tahu pemanggil bahwa target sedang AFK dan mencatat riwayat mention.
  */
 async function notifyMentionedAfk(message) {
-  if (message.mentions.users.size === 0) return;
+  if (!message.mentions || message.mentions.users.size === 0) return;
 
   for (const mentioned of message.mentions.users.values()) {
-    if (mentioned.id === message.author.id) continue;
+    if (mentioned.id === message.author.id || mentioned.bot) continue;
 
-    const profile = await UserProfile.findByPk(mentioned.id).catch(() => null);
+    const profile = await cacheManager.getUserProfile(mentioned.id).catch(() => null);
     if (!profile || !profile.afk_reason) continue;
 
-    const mentions = profile.afk_mentions || [];
+    const mentions = Array.isArray(profile.afk_mentions) ? [...profile.afk_mentions] : [];
     if (mentions.length < MAX_STORED_MENTIONS) {
-      mentions.push({
-        author: message.author.username,
-        content: message.content.substring(0, 50),
-        time: Date.now(),
-        link: message.url,
-      });
-      profile.afk_mentions = mentions;
-      profile.changed("afk_mentions", true);
-      await profile.save({ fields: ["afk_mentions"] }).catch(() => {});
+      const snippet = message.cleanContent
+        ? message.cleanContent.substring(0, 80).replace(/\n+/g, " ")
+        : message.content.substring(0, 80).replace(/\n+/g, " ");
+
+      await cacheManager
+        .mutateUserProfileJson(mentioned.id, "afk_mentions", (current) => {
+          const list = Array.isArray(current) ? [...current] : [];
+          if (list.length < MAX_STORED_MENTIONS) {
+            list.push({
+              author: message.author.displayName || message.author.username,
+              authorId: message.author.id,
+              content: snippet,
+              time: Date.now(),
+              link: message.url,
+            });
+          }
+          return list;
+        })
+        .catch(() => {});
     }
 
-    const since = `<t:${Math.floor(new Date(profile.afk_timestamp).getTime() / 1000)}:R>`;
-    const embed = new EmbedBuilder()
-      .setColor(ui.getColor("primary") || "#FFB6C1")
-      .setDescription(
-        `${ui.getEmoji("sleepy") || ui.getEmoji("afk") || "\uD83D\uDCA4"} **${mentioned.username}** lagi AFK sejak ${since}.\n\n` +
-          `> ${ui.getEmoji("read") || "\uD83D\uDCDD"} *${profile.afk_reason}*\n\n` +
-          "Nanti Naura sampaikan pesanmu begitu dia balik, yaa!",
-      )
-      .setFooter({ text: ui.getFooter("core") });
+    const afkTime = profile.afk_timestamp ? new Date(profile.afk_timestamp).getTime() : Date.now();
+    const since = `<t:${Math.floor(afkTime / 1000)}:R>`;
+
+    const afkNoticePayload = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#38BDF8",
+      authorName: "Pemberitahuan Status AFK",
+      title: `💤 ${mentioned.displayName || mentioned.username} Sedang AFK`,
+      description: [
+        `Pengguna yang kamu panggil sedang istirahat sejak ${since}.`,
+        ``,
+        `> 📝 *"${profile.afk_reason}"*`,
+        ``,
+        `Naura telah mencatat panggilanmu dan akan menyajikan rangkumannya begitu dia kembali aktif!`,
+      ].join("\n"),
+      footerText: ui.getFooter("core"),
+    });
 
     message
-      .reply({ embeds: [embed] })
-      .then((sent) =>
-        setTimeout(() => sent?.delete().catch(() => null), NOTICE_LIFETIME_MS),
-      )
-      .catch(() => {});
+      .reply(afkNoticePayload)
+      .then((sent) => setTimeout(() => sent?.delete().catch(() => null), NOTICE_LIFETIME_MS))
+      .catch((err) => {
+        logger.debug("[afk:notify] Gagal mengirim pesan notifikasi: " + (err?.message || err));
+      });
   }
 }
 
-/** Menyambut pengguna yang baru kembali dari AFK. */
+/**
+ * Menyambut pengguna yang baru kembali dari masa AFK dan menyajikan Mention Digest.
+ */
 async function welcomeBack(message) {
-  const profile = await UserProfile.findByPk(message.author.id).catch(
-    () => null,
-  );
+  if (message.author.bot) return;
+
+  const profile = await cacheManager.getUserProfile(message.author.id).catch(() => null);
   if (!profile || !profile.afk_reason) return;
 
-  const isOwner = env.OWNER_IDS.includes(message.author.id);
-  const isPremium = await checkPremiumStatus(message.author.id);
+  const isOwner = env.OWNER_IDS && env.OWNER_IDS.includes(message.author.id);
+  const isPremium = await checkPremiumStatus(message.author.id).catch(() => false);
   const minutes = profile.afk_timestamp
-    ? Math.floor(
-        (Date.now() - new Date(profile.afk_timestamp).getTime()) / 60000,
-      )
-    : 0;
-  const mentions = profile.afk_mentions || [];
+    ? Math.max(1, Math.floor((Date.now() - new Date(profile.afk_timestamp).getTime()) / 60000))
+    : 1;
+  const mentions = Array.isArray(profile.afk_mentions) ? profile.afk_mentions : [];
 
-  profile.afk_reason = null;
-  profile.afk_timestamp = null;
-  profile.afk_mentions = [];
-  await profile
-    .save({ fields: ["afk_reason", "afk_timestamp", "afk_mentions"] })
-    .catch(() => {});
+  // Hapus status AFK secara atomik
+  await Promise.all([
+    cacheManager.updateUserProfile(message.author.id, {
+      afk_reason: null,
+      afk_timestamp: null,
+    }),
+    cacheManager.mutateUserProfileJson(message.author.id, "afk_mentions", () => []),
+  ]).catch(() => {});
 
-  let greeting = `${ui.getEmoji("happy") || "\uD83D\uDC4B"} Selamat datang kembali, <@${message.author.id}>! Naura tungguin dari tadi, lho.`;
+  let greeting = `Selamat datang kembali, <@${message.author.id}>! Naura sudah siap membantumu lagi.`;
   if (isOwner) {
-    greeting = `${ui.getEmoji("blowkiss") || "\uD83E\uDD70"} Akhirnya kamu balik juga, sayang! Naura kangen banget tau... sekarang Naura siap bantu kamu lagi, ya!`;
+    greeting = `Akhirnya kamu kembali, sayang! Naura kangen banget tau... sekarang Naura siap temani petualanganmu lagi!`;
   } else if (isPremium) {
-    greeting = `${ui.getEmoji("cheers") || "\uD83C\uDF1F"} Yeyy, bestie Naura udah pulang! Selamat datang kembali <@${message.author.id}>, semoga istirahatnya nyenyak!`;
+    greeting = `Halo bestie VIP Naura! Selamat datang kembali <@${message.author.id}>, semoga waktu istirahatmu menyenangkan!`;
   }
 
-  const embed = new EmbedBuilder()
-    .setColor(ui.getColor("success") || "#00FF00")
-    .setDescription(`${greeting}\n*(Kamu AFK selama ${minutes} menit)*`)
-    .setFooter({ text: ui.getFooter("core") });
-
+  let digestText = "✨ *Tidak ada yang mencari atau me-mention tokomu selama kamu beristirahat.*";
   if (mentions.length > 0) {
-    const list = mentions
-      .map(
-        (m) =>
-          `- **${m.author}** (<t:${Math.floor(m.time / 1000)}:R>): [*Lihat pesan*](${m.link})`,
-      )
-      .join("\n");
-    embed.addFields({
-      name: `${ui.getEmoji("chirping") || "\uD83D\uDD14"} Ada ${mentions.length} orang yang nyariin kamu:`,
-      value: list,
-    });
+    const list = mentions.slice(-10).map((m, idx) => {
+      const timeStr = m.time ? `<t:${Math.floor(m.time / 1000)}:R>` : "Baru saja";
+      const snippet = m.content ? `> *"${m.content}"*\n` : "";
+      return `**${idx + 1}.** **${m.author}** (${timeStr})\n${snippet}🔗 [Buka Pesan Asli](${m.link})`;
+    }).join("\n\n");
+
+    digestText = `🔔 **RANGKUMAN MENTION (${mentions.length} Panggilan):**\n\n${list}`;
   }
 
-  if (message.member && message.member.displayName.startsWith("[AFK]")) {
-    await message.member
-      .setNickname(message.member.displayName.replace("[AFK] ", ""))
-      .catch(() => {});
+  const welcomePayload = buildContainerV2({
+    accentColorHex: ui.getColor("success") || "#10B981",
+    authorName: `Status AFK Dinonaktifkan`,
+    title: `👋 Selamat Datang Kembali!`,
+    description: [
+      greeting,
+      `*(Kamu beristirahat selama ${minutes} menit)*`,
+      ``,
+      digestText,
+    ].join("\n"),
+    expression: "happy",
+    footerText: ui.getFooter("core"),
+  });
+
+  // Pulihkan nama panggilan jika memiliki prefix [AFK]
+  if (message.member && message.member.displayName && message.member.displayName.startsWith("[AFK]")) {
+    const cleanNick = message.member.displayName.replace(/^\[AFK\]\s*/, "");
+    await message.member.setNickname(cleanNick).catch(() => {});
   }
 
-  message.reply({ embeds: [embed] }).catch(() => {});
+  message.reply(welcomePayload).catch((err) => {
+    logger.debug("[afk:welcomeBack] Gagal mengirim pesan selamat datang: " + (err?.message || err));
+  });
 }
 
-/** Tidak pernah menghentikan alur; AFK hanya menyisipkan pemberitahuan. */
+/**
+ * Handler utama penanganan AFK pada messageCreate
+ */
 module.exports = async function handleAfk(message) {
   await notifyMentionedAfk(message);
   await welcomeBack(message);

@@ -57,8 +57,19 @@ async function runMusicLogic(
     player: poru.players.get(guild.id),
   };
 
+  const isPlaylistManagement =
+    subcommand === "myplaylist" ||
+    subcommand === "delete" ||
+    subcommand === "deleteplaylist" ||
+    (subcommand === "playlist" &&
+      (args?.aksi === "list" ||
+        args?.aksi === "delete" ||
+        (!args?.aksi && !args?.query) ||
+        args?.query?.toLowerCase()?.startsWith("delete ") ||
+        args?.query?.toLowerCase()?.startsWith("hapus ")));
+
   const noVoiceNeeded = ["profile", "aura", "wrapped"];
-  if (!noVoiceNeeded.includes(subcommand)) {
+  if (!noVoiceNeeded.includes(subcommand) && !isPlaylistManagement) {
     if (!memberVoice) {
       const errPayload = buildErrorContainerV2({
         title: "Koneksi Gagal",
@@ -265,12 +276,23 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("playlist")
-        .setDescription("Putar salah satu Cloud Playlist milikmu")
+        .setDescription("Putar atau kelola salah satu Cloud Playlist milikmu")
+        .addStringOption((opt) =>
+          opt
+            .setName("aksi")
+            .setDescription("Aksi: play (putar), list (daftar), delete (hapus)")
+            .setRequired(false)
+            .addChoices(
+              { name: "Putar Playlist (Play)", value: "play" },
+              { name: "Lihat Daftar (List)", value: "list" },
+              { name: "Hapus Playlist (Delete)", value: "delete" },
+            ),
+        )
         .addStringOption((opt) =>
           opt
             .setName("query")
-            .setDescription("Nama playlist yang ingin diputar")
-            .setRequired(true),
+            .setDescription("Nama atau ID playlist yang dituju")
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -524,6 +546,7 @@ module.exports = {
     const subcommand = interaction.options.getSubcommand();
     const args = {
       query: interaction.options.getString("query"),
+      aksi: interaction.options.getString("aksi"),
       url: interaction.options.getString("url"),
       mode: interaction.options.getString("mode"),
       tipe: interaction.options.getString("tipe"),

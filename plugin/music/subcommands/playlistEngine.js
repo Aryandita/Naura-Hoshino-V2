@@ -10,8 +10,9 @@ const {
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const { resolveSpotifyQuery } = require("../../../src/music/spotifyResolver");
+const { formatDuration } = require("../helpers/musicShared");
 
-module.exports = {
+const playlistEngine = {
   async import(ctx) {
     const { poru, user, args, sendReply } = ctx;
     const eError = ui.getEmoji("error") || "❌";
@@ -59,10 +60,22 @@ module.exports = {
         (res.loadType === "PLAYLIST_LOADED" || res.loadType === "playlist")
       ) {
         playlistName = res.playlistInfo?.name || res.name || "Imported Playlist";
-        tracksToSave = res.tracks.map((t) => t.info.uri || t.info.title);
+        tracksToSave = res.tracks.map((t) => ({
+          title: t.info.title || "Track",
+          author: t.info.author || "Artist",
+          uri: t.info.uri || t.info.title,
+          length: t.info.length || 0,
+        }));
       } else if (res && res.tracks && res.tracks.length > 0) {
         playlistName = res.tracks[0].info.title || "Imported Track";
-        tracksToSave = [res.tracks[0].info.uri || res.tracks[0].info.title];
+        tracksToSave = [
+          {
+            title: res.tracks[0].info.title || "Track",
+            author: res.tracks[0].info.author || "Artist",
+            uri: res.tracks[0].info.uri || res.tracks[0].info.title,
+            length: res.tracks[0].info.length || 0,
+          },
+        ];
       }
 
       if (tracksToSave.length === 0) {
@@ -74,16 +87,20 @@ module.exports = {
         return sendReply(errPayload, true);
       }
 
-      await UserPlaylist.create({
+      const created = await UserPlaylist.create({
         userId: user.id,
         name: playlistName,
         tracks: tracksToSave,
         spotifyUrl: url,
       });
+
+      const totalMs = tracksToSave.reduce((acc, t) => acc + (t.length || 0), 0);
+      const durText = totalMs > 0 ? ` (${formatDuration(totalMs)})` : "";
+
       const importedSuccessPayload = buildContainerV2({
         accentColorHex: "#1DB954",
         title: `${ui.getEmoji("success") || "✅"} Berhasil Diimpor`,
-        description: `**Nama:** \`${playlistName}\`\n**Total:** \`${tracksToSave.length} Trek\`\n\nGunakan \`/music playplaylist\` untuk memutar!`,
+        description: `**Nama:** \`${playlistName}\`\n**Total:** \`${tracksToSave.length} Trek\`${durText}\n**ID Playlist:** \`${created.id}\`\n\nGunakan \`/music playlist query:${created.id}\` untuk memutar!`,
         footerText: ui.getFooter("music"),
       });
       return sendReply(importedSuccessPayload);
@@ -97,10 +114,144 @@ module.exports = {
     }
   },
 
+  async save(ctx) {
+    const { player, user, args, sendReply } = ctx;
+    const eError = ui.getEmoji("error") || "❌";
+    const eSuccess = ui.getEmoji("success") || "✅";
+
+    if (!player || (!player.currentTrack && player.queue.length === 0)) {
+      const errPayload = buildErrorContainerV2({
+        title: "Antrean Kosong",
+        description: `${eError} | Tidak ada antrean lagu yang sedang diputar untuk disimpan.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const playlistName = (args.query || args.name || "Antrean Naura").trim();
+    if (playlistName.length > 50) {
+      const errPayload = buildErrorContainerV2({
+        title: "Nama Terlalu Panjang",
+        description: `${eError} | Nama playlist maksimal 50 karakter.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const [profile] = await UserProfile.findOrCreate({
+      where: { userId: user.id },
+    });
+    const isPremium = profile.isPremium && profile.premiumUntil > new Date();
+    const count = await UserPlaylist.count({ where: { userId: user.id } });
+    if (!isPremium && count >= 3) {
+      const errPayload = buildErrorContainerV2({
+        title: "Batas Playlist Tercapai",
+        description: `${eError} | Pengguna standar hanya dapat menyimpan maksimal **3 Playlist**.\nGunakan \`/premium\` untuk mendapatkan akses simpan tanpa batas!`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const tracksToSave = [];
+    let totalDurationMs = 0;
+
+    if (player.currentTrack) {
+      const info = player.currentTrack.info;
+      tracksToSave.push({
+        title: info.title || "Track",
+        author: info.author || "Artist",
+        uri: info.uri || "",
+        length: info.length || 0,
+      });
+      if (typeof info.length === "number") totalDurationMs += info.length;
+    }
+
+    for (const t of player.queue) {
+      const info = t.info;
+      tracksToSave.push({
+        title: info.title || "Track",
+        author: info.author || "Artist",
+        uri: info.uri || "",
+        length: info.length || 0,
+      });
+      if (typeof info.length === "number") totalDurationMs += info.length;
+    }
+
+    const created = await UserPlaylist.create({
+      userId: user.id,
+      name: playlistName,
+      tracks: tracksToSave,
+    });
+
+    const durText = totalDurationMs > 0 ? ` (${formatDuration(totalDurationMs)})` : "";
+    const payload = buildContainerV2({
+      accentColorHex: ui.getColor("success") || "#22c55e",
+      title: `${eSuccess} Antrean Berhasil Disimpan`,
+      description:
+        `Seluruh antrean aktif berhasil disimpan ke Cloud Playlist Naura!\n\n` +
+        `• **Nama:** \`${playlistName}\`\n` +
+        `• **Total Trek:** \`${tracksToSave.length} Lagu\`${durText}\n` +
+        `• **ID Playlist:** \`${created.id}\`\n\n` +
+        `Putar kapan saja dengan perintah \`/music playlist query:${created.id}\``,
+      footerText: ui.getFooter("music"),
+    });
+
+    return sendReply(payload);
+  },
+
+  async save_queue(ctx) {
+    return this.save(ctx);
+  },
+
+  async delete(ctx) {
+    const { user, args, sendReply } = ctx;
+    const eError = ui.getEmoji("error") || "❌";
+    const eSuccess = ui.getEmoji("success") || "✅";
+    const target = args.id || args.query;
+    if (!target) {
+      const errPayload = buildErrorContainerV2({
+        title: "Parameter Kurang",
+        description: `${eError} | Masukkan ID atau nama playlist yang ingin dihapus.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const isNumericId = !isNaN(target);
+    const whereClause = isNumericId
+      ? { userId: user.id, id: parseInt(target, 10) }
+      : { userId: user.id, name: target };
+
+    const playlist = await UserPlaylist.findOne({ where: whereClause });
+    if (!playlist) {
+      const errPayload = buildErrorContainerV2({
+        title: "Tidak Ditemukan",
+        description: `${eError} | Playlist tidak ditemukan dalam daftar koleksimu.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const deletedName = playlist.name;
+    await playlist.destroy();
+
+    const payload = buildContainerV2({
+      accentColorHex: ui.getColor("danger") || "#ef4444",
+      title: `${eSuccess} Playlist Dihapus`,
+      description: `Playlist **${deletedName}** telah berhasil dihapus dari cloud database Naura.`,
+      footerText: ui.getFooter("music"),
+    });
+    return sendReply(payload);
+  },
+
+  async deleteplaylist(ctx) {
+    return this.delete(ctx);
+  },
+
   async share(ctx) {
     const { user, args, sendReply } = ctx;
     const eError = ui.getEmoji("error") || "❌";
-    const pid = args.id;
+    const pid = args.id || parseInt(args.query, 10);
     if (!pid) {
       const errPayload = buildErrorContainerV2({
         title: "ID Diperlukan",
@@ -153,7 +304,7 @@ module.exports = {
         "base64",
       ).toString("ascii");
       const sourcePlaylist = await UserPlaylist.findOne({
-        where: { id: parseInt(decodedId) },
+        where: { id: parseInt(decodedId, 10) },
       });
 
       if (!sourcePlaylist) {
@@ -176,7 +327,7 @@ module.exports = {
       const copyPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",
         title: `${ui.getEmoji("success") || "✅"} Berhasil Menyalin`,
-        description: `**Nama:** \`${newName}\`\n**Total:** \`${sourcePlaylist.tracks.length} Trek\`\n\nGunakan \`/music playplaylist\` untuk memutar!`,
+        description: `**Nama:** \`${newName}\`\n**Total:** \`${sourcePlaylist.tracks.length} Trek\`\n\nGunakan \`/music playlist query:${newName}\` untuk memutar!`,
         footerText: ui.getFooter("music"),
       });
 
@@ -200,7 +351,7 @@ module.exports = {
     if (playlists.length === 0) {
       const errPayload = buildErrorContainerV2({
         title: "Playlist Kosong",
-        description: `${eError} | Kamu belum memiliki playlist tersimpan.`,
+        description: `${eError} | Kamu belum memiliki playlist tersimpan. Simpan antrean dengan \`/music save <nama>\`!`,
         footerText: ui.getFooter("music"),
       });
       return sendReply(errPayload, true);
@@ -208,7 +359,19 @@ module.exports = {
 
     let desc = "";
     playlists.forEach((p, i) => {
-      desc += `**${i + 1}.** ${p.name} (\`${p.tracks.length} Lagu\`)\n*ID Play:* \`${p.id}\`\n\n`;
+      let totalDurationMs = 0;
+      let hasDuration = false;
+      const trackList = Array.isArray(p.tracks) ? p.tracks : [];
+      for (const t of trackList) {
+        if (typeof t === "object" && t !== null && typeof t.length === "number") {
+          totalDurationMs += t.length;
+          hasDuration = true;
+        }
+      }
+      const durText = hasDuration && totalDurationMs > 0
+        ? ` (${formatDuration(totalDurationMs)})`
+        : "";
+      desc += `**${i + 1}.** ${p.name} (\`${trackList.length} Lagu\`${durText})\n*ID:* \`${p.id}\` • Putar: \`/music playlist query:${p.id}\` • Hapus: \`/music playlist aksi:delete query:${p.id}\`\n\n`;
     });
 
     const listPayload = buildContainerV2({
@@ -220,28 +383,68 @@ module.exports = {
     return sendReply(listPayload);
   },
 
+  async playlist(ctx) {
+    const { args } = ctx;
+    const action = (args.aksi || "").toLowerCase();
+    const query = (args.query || "").trim();
+
+    if (
+      action === "delete" ||
+      query.toLowerCase().startsWith("delete ") ||
+      query.toLowerCase().startsWith("hapus ")
+    ) {
+      if (query.toLowerCase().startsWith("delete ")) {
+        ctx.args.query = query.substring(7).trim();
+      } else if (query.toLowerCase().startsWith("hapus ")) {
+        ctx.args.query = query.substring(6).trim();
+      }
+      return this.delete(ctx);
+    }
+
+    if (action === "list" || (!action && !query)) {
+      return this.myplaylist(ctx);
+    }
+
+    // Default: Putar playlist
+    return this.playplaylist(ctx);
+  },
+
   async playplaylist(ctx) {
     let { player } = ctx;
     const { poru, guild, memberVoice, channel, user, args, sendReply } = ctx;
     const eError = ui.getEmoji("error") || "❌";
 
-    const pid = args.id;
-    if (!pid) {
+    const target = args.id || args.query;
+    if (!target) {
       const errPayload = buildErrorContainerV2({
-        title: "ID Diperlukan",
-        description: `${eError} | Harap masukkan ID Playlist.`,
+        title: "ID atau Nama Diperlukan",
+        description: `${eError} | Harap masukkan ID atau nama Playlist yang ingin diputar.`,
         footerText: ui.getFooter("music"),
       });
       return sendReply(errPayload, true);
     }
 
+    const isNumericId = !isNaN(target);
+    const whereClause = isNumericId
+      ? { id: parseInt(target, 10), userId: user.id }
+      : { name: target, userId: user.id };
+
     const playlist = await UserPlaylist.findOne({
-      where: { id: pid, userId: user.id },
+      where: whereClause,
     });
     if (!playlist) {
       const errPayload = buildErrorContainerV2({
         title: "Tidak Ditemukan",
-        description: `${eError} | Playlist tidak ditemukan.`,
+        description: `${eError} | Playlist tidak ditemukan dalam daftar milikmu.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    if (!memberVoice) {
+      const errPayload = buildErrorContainerV2({
+        title: "Koneksi Suara Diperlukan",
+        description: `${eError} | Kamu harus bergabung ke dalam Voice Channel terlebih dahulu untuk memutar playlist.`,
         footerText: ui.getFooter("music"),
       });
       return sendReply(errPayload, true);
@@ -258,10 +461,11 @@ module.exports = {
       ctx.player = player;
     }
 
+    const trackList = Array.isArray(playlist.tracks) ? playlist.tracks : [];
     const loadingPayload = buildContainerV2({
       accentColorHex: "#1DB954",
       title: "Memuat Playlist",
-      description: `⏳ Memuat \`${playlist.tracks.length}\` lagu dari **${playlist.name}**...`,
+      description: `⏳ Memuat \`${trackList.length}\` lagu dari **${playlist.name}** ke antrean...`,
       footerText: ui.getFooter("music"),
     });
     await sendReply(loadingPayload, true);
@@ -270,8 +474,13 @@ module.exports = {
     let firstTrack = null;
 
     (async () => {
-      for (const query of playlist.tracks) {
+      for (const trackItem of trackList) {
         try {
+          const query =
+            typeof trackItem === "object" && trackItem !== null
+              ? trackItem.uri || `${trackItem.title} ${trackItem.author || ""}`.trim()
+              : trackItem;
+
           const defaultSearch = env.MUSIC_DEFAULT_SEARCH || "scsearch";
           const finalQuery = query.match(
             /^(?:https?:\/\/|spsearch:|ytmsearch:|ytsearch:|scsearch:|amsearch:)/,
@@ -295,7 +504,7 @@ module.exports = {
       const syncPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",
         title: `${ui.getEmoji("success") || "✅"} Sinkronisasi Selesai`,
-        description: `**Nama:** \`${playlist.name}\`\n**Berhasil Dimuat:** \`${loaded} / ${playlist.tracks.length} Lagu\``,
+        description: `**Nama:** \`${playlist.name}\`\n**Berhasil Dimuat:** \`${loaded} / ${trackList.length} Lagu\``,
         footerText: ui.getFooter("music"),
       });
       channel
@@ -305,3 +514,5 @@ module.exports = {
     })();
   },
 };
+
+module.exports = playlistEngine;

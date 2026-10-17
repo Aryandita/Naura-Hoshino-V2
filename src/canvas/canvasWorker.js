@@ -198,6 +198,11 @@ if (parentPort) {
           result = await pollCanvas.renderPollChart(payload);
           break;
         }
+        case "renderAffinity": {
+          const affinityCanvas = require("./affinityCanvas");
+          result = await affinityCanvas.renderAffinityCard(payload);
+          break;
+        }
         default:
           throw new SystemError(`Unknown canvas worker task: ${task}`);
       }

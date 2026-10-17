@@ -35,9 +35,8 @@ module.exports = {
     await cacheManager.updateUserProfile(interaction.user.id, updates);
 
     try {
-      await interaction.member.setNickname(
-        `[AFK] ${interaction.member.displayName}`,
-      );
+      const baseName = interaction.member.displayName.replace(/^\[AFK\]\s*/, "");
+      await interaction.member.setNickname(`[AFK] ${baseName}`.substring(0, 32));
     } catch (e) {
       if (e?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(e.code)) {
         // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
