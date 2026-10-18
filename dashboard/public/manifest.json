@@ -1,11 +1,13 @@
 {
+  "id": "/",
   "name": "Naura Hoshino V2 - Stellar Glass OS",
   "short_name": "Naura OS",
   "description": "Next-Gen Discord Bot & Autonomous Living AI Ecosystem Dashboard",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0B0F19",
-  "theme_color": "#7C3AED",
+  "theme_color": "#FFB6C1",
   "orientation": "portrait-primary",
   "icons": [
     {

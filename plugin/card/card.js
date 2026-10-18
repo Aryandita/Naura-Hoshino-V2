@@ -11,6 +11,7 @@ const {
 const crypto = require("crypto");
 const CardEngine = require("../../src/card/cardEngine");
 const CardBattleEngine = require("../../src/card/cardBattleEngine");
+const cardBattleService = require("../../src/services/cardBattleEngine");
 const CardBattleV2Engine = require("../../src/card/cardBattleV2Engine");
 const {
   buildContainerV2,
@@ -63,7 +64,7 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("deck")
-        .setDescription("Kelola 3-kartu deck pertarungan TCG Anda")
+        .setDescription("Kelola susunan deck pertarungan TCG Anda (hingga 5 kartu)")
         .addStringOption((opt) =>
           opt
             .setName("card1")
@@ -80,6 +81,18 @@ module.exports = {
           opt
             .setName("card3")
             .setDescription("Kode kartu ke-3 (misal: nra-cd34)")
+            .setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("card4")
+            .setDescription("Kode kartu ke-4 (misal: nra-ef56)")
+            .setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("card5")
+            .setDescription("Kode kartu ke-5 (misal: nra-gh78)")
             .setRequired(false),
         ),
     )
@@ -402,43 +415,69 @@ module.exports = {
 
     if (subcommand === "deck") {
       await interaction.deferReply();
-      const card1Code = interaction.options.getString("card1");
-      const card2Code = interaction.options.getString("card2");
-      const card3Code = interaction.options.getString("card3");
+      const rawCodes = [
+        interaction.options.getString("card1"),
+        interaction.options.getString("card2"),
+        interaction.options.getString("card3"),
+        interaction.options.getString("card4"),
+        interaction.options.getString("card5"),
+      ];
+      const validCodes = rawCodes.filter(Boolean).map((c) => c.trim());
 
       const [userDeck] = await UserCardDeck.findOrCreate({ where: { userId } });
 
-      if (card1Code && card2Code && card3Code) {
+      if (validCodes.length >= 3) {
         // Validate card ownership
         const cards = await UserCard.findAll({
           where: {
             userId,
-            cardCode: [card1Code.trim(), card2Code.trim(), card3Code.trim()],
+            cardCode: validCodes,
           },
         });
 
-        if (cards.length < 3) {
+        if (cards.length < validCodes.length) {
           return interaction.editReply({
             ...buildErrorContainerV2({
               title: "Kartu Tidak Valid",
               description:
-                "Pastikan Anda memiliki ketiga kartu tersebut di koleksi Anda.",
+                "Pastikan Anda memiliki seluruh kartu yang dimasukkan di koleksi Anda.",
               footerText: ui.getFooter("core"),
             }),
           });
         }
 
-        userDeck.activeDeck = [
-          card1Code.trim(),
-          card2Code.trim(),
-          card3Code.trim(),
-        ];
+        let deckMetaDesc = "";
+        if (validCodes.length === 5) {
+          try {
+            const deckSummary = cardBattleService.validateDeck5(cards);
+            const synergyNames = deckSummary.synergies.map((s) => s.name);
+            const synergyText =
+              synergyNames.length > 0
+                ? synergyNames.join(", ")
+                : "Tidak ada resonansi khusus";
+            deckMetaDesc = `\n\n⭐ **Deck Power:** \`${deckSummary.deckPower}\` | ⚡ **Tim SPD:** \`${deckSummary.teamSpd}\`\n🌌 **Sinergi Elemen:** ${synergyText}`;
+          } catch (valErr) {
+            return interaction.editReply({
+              ...buildErrorContainerV2({
+                title: "Deck 5-Kartu Tidak Memenuhi Syarat",
+                description: valErr.message,
+                footerText: ui.getFooter("core"),
+              }),
+            });
+          }
+        }
+
+        userDeck.activeDeck = validCodes;
         await userDeck.save({ fields: ["activeDeck"] });
+
+        const cardLines = cards
+          .map((c, i) => `${i + 1}. \`${c.characterName}\` (${c.cardCode})`)
+          .join("\n");
 
         const payload = buildContainerV2({
           accentColorHex: "#86EFAC",
           title: "🃏 Active Battle Deck Diperbarui!",
-          description: `Deck 3-Kartu Anda berhasil disimpan:\n1. \`${cards[0].characterName}\` (${cards[0].cardCode})\n2. \`${cards[1].characterName}\` (${cards[1].cardCode})\n3. \`${cards[2].characterName}\` (${cards[2].cardCode})`,
+          description: `Deck ${validCodes.length}-Kartu Anda berhasil disimpan:\n${cardLines}${deckMetaDesc}`,
           footerText: ui.getFooter("core"),
         });
 
@@ -454,6 +493,15 @@ module.exports = {
             })
           : [];
 
+      let synergySummary = "";
+      if (deckCards.length === 5) {
+        try {
+          const deckSummary = cardBattleService.validateDeck5(deckCards);
+          const synergyNames = deckSummary.synergies.map((s) => s.name);
+          synergySummary = `\n⭐ **Deck Power:** \`${deckSummary.deckPower}\` | 🌌 **Sinergi:** ${synergyNames.length > 0 ? synergyNames.join(", ") : "Standar"}`;
+        } catch (_) {}
+      }
+
       const listText =
         deckCards.length > 0
           ? deckCards
@@ -467,7 +515,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#C084FC",
         title: `🎴 Active TCG Deck: ${interaction.user.username}`,
-        description: `🏆 **ELO Rating:** \`${userDeck.eloRating}\` | ⚔️ **W/L:** \`${userDeck.wins}W / ${userDeck.losses}L\`\n🗼 **Tower Lantai:** \`${userDeck.towerFloor}\` (Rekor: \`${userDeck.highestFloor}\`)\n\n${listText}`,
+        description: `🏆 **ELO Rating:** \`${userDeck.eloRating}\` | ⚔️ **W/L:** \`${userDeck.wins}W / ${userDeck.losses}L\`${synergySummary}\n🗼 **Tower Lantai:** \`${userDeck.towerFloor}\` (Rekor: \`${userDeck.highestFloor}\`)\n\n${listText}`,
         footerText: ui.getFooter("core"),
       });
 
@@ -622,10 +670,25 @@ module.exports = {
         }
       }
 
-      const p1Card = CardBattleEngine.computeCardStats(leadCard);
+      const p1Card = cardBattleService.computeCardStats(leadCard);
       let p2Card;
       let p2User;
       let isPvE = false;
+
+      let p1SynergyText = "";
+      if (p1DeckCodes.length === 5) {
+        const fullDeck = await UserCard.findAll({
+          where: { userId, cardCode: p1DeckCodes },
+        });
+        if (fullDeck.length === 5) {
+          try {
+            const summary = cardBattleService.validateDeck5(fullDeck);
+            if (summary.synergies.length > 0) {
+              p1SynergyText = `\n🌌 **Resonansi Deck:** ${summary.synergies.map((s) => s.name).join(", ")}`;
+            }
+          } catch (_) {}
+        }
+      }
 
       if (!opponent || opponent.id === userId || opponent.bot) {
         // AI Opponent Battle
@@ -633,7 +696,7 @@ module.exports = {
         p2User = { username: "Cyber Hologram AI" };
         const catalog = CardEngine.getCatalog();
         const randMeta = catalog[Math.floor(Math.random() * catalog.length)];
-        p2Card = CardBattleEngine.computeCardStats({
+        p2Card = cardBattleService.computeCardStats({
           characterName: randMeta.name,
           seriesName: randMeta.series,
           quality: "GOOD",
@@ -662,7 +725,7 @@ module.exports = {
             }),
           });
         }
-        p2Card = CardBattleEngine.computeCardStats(oppCard);
+        p2Card = cardBattleService.computeCardStats(oppCard);
       }
 
       const sessionId = crypto.randomBytes(6).toString("hex");
@@ -728,7 +791,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#F9A8D4",
         title: `⚔️ Duel Kartu Anime: ${interaction.user.username} vs ${p2User.username}`,
-        description: `Taruhan: **${bet} Star Fragments** 🌟\nGiliran: <@${userId}>\n\nPilih aksi serangan atau pertahanan Anda!`,
+        description: `Taruhan: **${bet} Star Fragments** 🌟\nGiliran: <@${userId}>${p1SynergyText}\n\nPilih aksi serangan atau pertahanan Anda!`,
         footerText: ui.getFooter("core"),
         media: attachment,
         buttonsRow: actionRow,

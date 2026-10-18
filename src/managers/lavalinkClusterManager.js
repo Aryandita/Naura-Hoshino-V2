@@ -43,6 +43,7 @@ class LavalinkClusterManager {
     this.nodeLatencies = new Map(); // nodeName -> { latencyMs, timestamp }
     this.heartbeatFailures = new Map(); // nodeName -> consecutive timeout count
     this.pingInterval = null; // Periodic RTT prober timer
+    this.healthProbeInterval = null; // Self-healing health probe timer
   }
 
   /**
@@ -654,7 +655,7 @@ class LavalinkClusterManager {
           if (poru.players) {
             for (const player of poru.players.values()) {
               if (player && player.node && player.node.name === node.name) {
-                this.migratePlayer(player, poru).catch(() => {});
+                this.migratePlayer(poru, player, node, "Heartbeat timeout (Socket Unresponsive)").catch(() => {});
               }
             }
           }
@@ -666,6 +667,171 @@ class LavalinkClusterManager {
 
     await Promise.allSettled(probePromises);
     return results;
+  }
+
+  /**
+   * Menghitung persentase packet drop (lost frames) pada node Lavalink.
+   * @param {object} node
+   * @returns {number} Persentase packet drop (0.00 - 100.00)
+   */
+  calculatePacketDropRate(node) {
+    if (!node || !node.stats || !node.stats.frameStats) return 0;
+    const { sent = 0, nulled = 0, deficit = 0 } = node.stats.frameStats;
+    const lost = Number(nulled) + Number(deficit);
+    const total = Number(sent) + lost;
+    if (total <= 0) return 0;
+    return Number(((lost / total) * 100).toFixed(2));
+  }
+
+  /**
+   * Deteksi anomali packet drop (> 5%) atau latensi tinggi pada seluruh node,
+   * dan jalankan migrasi failover otomatis (Self-Healing).
+   * @param {object} poru
+   * @param {number} [packetDropThreshold=5.0]
+   * @returns {Promise<{ anomalies: Array<object>, migratedCount: number }>}
+   */
+  async detectPacketDropAnomalies(poru, packetDropThreshold = 5.0) {
+    const anomalies = [];
+    let migratedCount = 0;
+    if (!poru || !poru.nodes) return { anomalies, migratedCount };
+
+    const nodes = [...poru.nodes.values()].filter((n) => n.connected);
+
+    for (const node of nodes) {
+      const dropRate = this.calculatePacketDropRate(node);
+      const latency = this.getNodeLatency(node.name);
+
+      if (dropRate > packetDropThreshold || latency > 450) {
+        const reason =
+          dropRate > packetDropThreshold
+            ? `Packet drop anomali: ${dropRate}% (> ${packetDropThreshold}%)`
+            : `Latensi anomali: ${latency}ms (> 450ms)`;
+
+        logger.warn(
+          `\x1b[41m\x1b[37m 🚨 CLUSTER ANOMALY \x1b[0m Node "${node.name}" mengalami ${reason}. Memulai migrasi mandiri zero-downtime...`,
+        );
+
+        this.recordNodeError(node.name, new ExternalAPIError(reason));
+
+        const affectedPlayers = [];
+        if (poru.players) {
+          for (const player of poru.players.values()) {
+            const playerNodeName = player.node?.name || player.node;
+            if (player && playerNodeName === node.name) {
+              affectedPlayers.push(player);
+            }
+          }
+        }
+
+        for (const player of affectedPlayers) {
+          try {
+            const success = await this.migratePlayer(poru, player, node, reason);
+            if (success) migratedCount++;
+          } catch (migErr) {
+            logger.error(`[LavalinkClusterManager] Gagal self-healing migrasi: ${migErr.message}`);
+          }
+        }
+
+        anomalies.push({
+          nodeName: node.name,
+          dropRate,
+          latency,
+          reason,
+          affectedCount: affectedPlayers.length,
+          migratedCount,
+        });
+      }
+    }
+
+    return { anomalies, migratedCount };
+  }
+
+  /**
+   * Memulai health probe otomatis berkala (Self-Healing Lavalink Cluster).
+   * @param {object} poru
+   * @param {number} [intervalMs=15000]
+   */
+  startHealthProbe(poru, intervalMs = 15000) {
+    if (this.healthProbeInterval) return;
+    this.detectPacketDropAnomalies(poru).catch(() => {});
+    this.healthProbeInterval = setInterval(() => {
+      this.probeNodeLatencies(poru).catch(() => {});
+      this.detectPacketDropAnomalies(poru).catch(() => {});
+    }, intervalMs);
+    if (this.healthProbeInterval.unref) this.healthProbeInterval.unref();
+    logger.info(`[LavalinkClusterManager] Self-Healing Health Probe diaktifkan (${intervalMs}ms).`);
+  }
+
+  /**
+   * Menghentikan health probe otomatis.
+   */
+  stopHealthProbe() {
+    if (this.healthProbeInterval) {
+      clearInterval(this.healthProbeInterval);
+      this.healthProbeInterval = null;
+    }
+  }
+
+  /**
+   * Evaluator Prediktif Shard Autoscaler:
+   * Menganalisis telemetri shard untuk deteksi bottleneck dan rekomendasi penskalaan.
+   * @param {Array<object>} shardsTelemetry - [{ id, status, ping, guilds, memoryUsage }]
+   * @returns {object} Status kesehatan shard dan rekomendasi skala
+   */
+  evaluateShardHealth(shardsTelemetry = []) {
+    if (!Array.isArray(shardsTelemetry) || shardsTelemetry.length === 0) {
+      return {
+        healthy: true,
+        bottleneckDetected: false,
+        recommendedShards: 1,
+        details: [],
+      };
+    }
+
+    let totalGuilds = 0;
+    let highPingCount = 0;
+    let disconnectedCount = 0;
+    const details = [];
+
+    for (const s of shardsTelemetry) {
+      const ping = Number(s.ping) || 0;
+      const guilds = Number(s.guilds) || 0;
+      const status = s.status || "READY";
+      totalGuilds += guilds;
+
+      const isHighPing = ping > 250;
+      const isDisconnected = status === "DISCONNECTED" || status === "RECONNECTING";
+
+      if (isHighPing) highPingCount++;
+      if (isDisconnected) disconnectedCount++;
+
+      details.push({
+        id: s.id,
+        ping,
+        guilds,
+        status,
+        hasBottleneck: isHighPing || isDisconnected || guilds > 1500,
+      });
+    }
+
+    const calculatedShardDemand = Math.max(1, Math.ceil(totalGuilds / 1200));
+    const bottleneckDetected =
+      highPingCount > 0 || disconnectedCount > 0 || details.some((d) => d.guilds > 1500);
+
+    const recommendedShards = bottleneckDetected
+      ? Math.max(shardsTelemetry.length + 1, calculatedShardDemand)
+      : calculatedShardDemand;
+
+    return {
+      healthy: !bottleneckDetected && disconnectedCount === 0,
+      bottleneckDetected,
+      totalGuilds,
+      totalCurrentShards: shardsTelemetry.length,
+      recommendedShards,
+      highPingShards: highPingCount,
+      disconnectedShards: disconnectedCount,
+      details,
+    };
   }
 
   /**

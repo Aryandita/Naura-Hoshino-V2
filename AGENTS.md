@@ -245,6 +245,14 @@ Pilihlah emoji pada judul dan setiap butir pembaruan yang selaras dengan isi per
    _Akibat:_ Kartu bot hilang dari channel. Dilarang memanggil `deleteReply()` pada `ButtonInteraction` jika pesan respons berstatus ephemeral (hanya panggil `deleteReply()` bila `interaction.isChatInputCommand?.()`).
 12. **Tidak menghentikan collector lama dengan alasan `navigated`:**
    _Akibat:_ Tombol pada layar baru tiba-tiba hilang setelah 60 detik karena timeout collector layar lama memanggil `editReply({ components: [] })`. Selalu panggil `stopMessageCollector(messageId, "navigated")` saat berpindah layar.
+13. **Melebihi batas 25 subcommands per root command:**
+   _Akibat:_ Discord API melempar error `ExpectedConstraintError: Expected at most 25 options, received X`. Discord membatasi maksimal 25 opsi/subcommand per root command. Solusi: kelompokkan perintah terkait ke dalam subcommand group terstruktur atau pisahkan ke command independen jika kapasitas perintah sudah mencapai batas.
+14. **Menginspeksi `options` builder sebelum memanggil `.toJSON()`:**
+   _Akibat:_ Properti internal `SlashCommandBuilder.options` belum sepenuhnya ter-resolve dan strukturnya berbeda dengan payload Discord REST API. Selalu lakukan serialisasi `.toJSON()` terlebih dahulu saat memverifikasi atau mengaudit opsi slash command.
+15. **Inkonsistensi konvensi impor konfigurasi environment (`src/config/env.js`):**
+   _Akibat:_ `src/config/env.js` mengekspor objek konfigurasi secara langsung (`module.exports = env`). Meskipun mendukung fallback `env.env = env`, konvensi baku repositori adalah impor objek langsung (`const env = require("../../config/env.js")`) demi kejelasan namespace dan performa.
+16. **Mereset active page state saat collector timeout di Components V2:**
+   _Akibat:_ Tampilan informasi kartu yang sedang dibaca pengguna mendadak hilang atau kembali ke halaman awal saat interaksi collector mencapai batas waktu (timeout). Penanganan timeout (`collector.on("end")`) wajib mempertahankan data kartu dan nomor halaman aktif terakhir, serta cukup menonaktifkan (`disabled: true`) baris tombol aksi tanpa merombak isi payload atau mereset state tampilan.
 
 ---
 

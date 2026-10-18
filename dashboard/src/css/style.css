@@ -40,6 +40,17 @@
   --glass-opacity: 0.03;
 }
 
+html,
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -53,6 +64,28 @@ body {
   position: relative;
   overflow-x: hidden;
   transition: background-color 0.5s ease;
+}
+
+/* Mobile Viewport Anti-Glitch & Safe Area Inset Support */
+.min-h-100dvh,
+.min-h-\[100dvh\] {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.safe-pb {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.safe-pt {
+  padding-top: env(safe-area-inset-top, 16px);
+}
+
+@media (max-width: 768px) {
+  body {
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
 }
 
 /* Background overlays for depth and legibility */

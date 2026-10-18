@@ -318,7 +318,7 @@ class AIMemory {
    */
   static async getUserPersona(userId) {
     if (!userId) return "default";
-    if (redisManager && redisManager.isReady) {
+    if (redisManager && (redisManager.isReady || typeof redisManager.getCache === "function")) {
       try {
         const cached = await redisManager.getCache(`ai:persona:${userId}`);
         if (cached && typeof cached === "string") return cached;
@@ -349,7 +349,7 @@ class AIMemory {
     const validPersonas = ["default", "tsundere", "kuudere", "gamer", "butler"];
     const key = validPersonas.includes(personaKey) ? personaKey : "default";
 
-    if (redisManager && redisManager.isReady) {
+    if (redisManager && (redisManager.isReady || typeof redisManager.setCache === "function")) {
       try {
         await redisManager.setCache(`ai:persona:${userId}`, key, MEMORY_TTL_SECONDS);
       } catch (e) {

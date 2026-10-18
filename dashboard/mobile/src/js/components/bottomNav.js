@@ -80,6 +80,7 @@ export function initBottomNav() {
   initCustomizer();
   _initSoundManager();
   _setupHeaderSfxButton();
+  _initPwaServiceWorker();
 
   // Pastikan tombol Pusat Fitur (Apps Drawer) hadir di header jika header ada
   const headerActions = document.querySelector(".nm-header__actions");
@@ -198,4 +199,39 @@ function _setupHeaderSfxButton() {
 function _normalizePath(path) {
   if (path === "/mobile/" || path === "/mobile") return "/mobile/";
   return path.endsWith("/") ? path.slice(0, -1) : path;
+}
+
+function _initPwaServiceWorker() {
+  if (typeof window === "undefined") return;
+
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const link = document.createElement("link");
+    link.rel = "manifest";
+    link.href = "/manifest.json";
+    document.head.appendChild(link);
+  }
+
+  let themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (!themeMeta) {
+    themeMeta = document.createElement("meta");
+    themeMeta.name = "theme-color";
+    themeMeta.content = "#FFB6C1";
+    document.head.appendChild(themeMeta);
+  } else {
+    themeMeta.content = "#FFB6C1";
+  }
+
+  if ("serviceWorker" in navigator) {
+    const registerSw = () => {
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((err) => {
+        console.debug("[PWA] Mobile Service Worker info:", err.message || err);
+      });
+    };
+
+    if (document.readyState === "complete") {
+      registerSw();
+    } else {
+      window.addEventListener("load", registerSw, { once: true });
+    }
+  }
 }

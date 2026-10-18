@@ -165,6 +165,13 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
   - *MOTION (1-3)*: Responsivitas interaksi (klik maskot, micro-lift tombol, tanpa animasi berulang tak bermakna).
 - **Delivery Gate Mandatori (R-38)**: Setiap pekerjaan UI sebelum dinyatakan selesai WAJIB melewati evaluasi 4 blok: *Honesty*, *Purpose*, *Liveliness*, dan *Accessibility* (WCAG AA/AAA).
 
+### 1.4.4 Batas Keras Struktur Slash Command Discord & Preservasi State Collector
+
+- **Batas Keras 25 Subcommands per Root Command**: Discord REST API menetapkan batas mutlak maksimal 25 subcommands (atau subcommand groups) per slash command utama. Melebihi batas ini memicu error `ExpectedConstraintError: Expected at most 25 options, received X`. Desain command wajib mengelompokkan fitur ke dalam subcommand groups atau memisahkannya ke root command terpisah jika jumlah aksi melampaui batas tersebut.
+- **Serialisasi `.toJSON()` Sebelum Inspeksi Options**: Ketika menginspeksi, menguji, atau mengaudit struktur opsi pada `SlashCommandBuilder`, jangan mengakses properti privat builder secara langsung. Wajib panggil `.toJSON()` terlebih dahulu agar struktur payload dinormalisasi sesuai skema payload Discord REST API.
+- **Konvensi Impor Objek Langsung `src/config/env.js`**: `src/config/env.js` mengekspor objek konfigurasi secara langsung (`module.exports = env`). Seluruh modul diwajibkan menggunakan impor objek langsung: `const env = require("../../config/env.js")` (bukan destructuring `{ env }`) demi standardisasi namespace dan kejelasan referensi.
+- **Preservasi Active Page State pada Collector Timeout**: Ketika collector interaksi Components V2 berakhir karena timeout (`reason === "time"`), sistem dilarang menghapus konten atau mereset active page state ke halaman awal. State tampilan aktif wajib dipertahankan utuh dan hanya komponen tombol yang dinonaktifkan (`disabled: true`) atau dihentikan secara graceful.
+
 ## 1.5 Panduan Desain Survival RPG (Naura Wilds)
 
 > [!IMPORTANT]

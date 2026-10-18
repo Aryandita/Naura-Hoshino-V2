@@ -1508,4 +1508,43 @@
     } else if (window.SoundManager) {
         initAudioIntegration();
     }
+
+    // ── PWA & Service Worker Registration ─────────────────────────────
+    function initPwaServiceWorker() {
+        if (typeof window === 'undefined') return;
+
+        // Ensure PWA manifest link in head
+        if (!document.querySelector('link[rel="manifest"]')) {
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = '/manifest.json';
+            document.head.appendChild(link);
+        }
+
+        // Ensure theme-color meta in head (#FFB6C1)
+        let themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (!themeMeta) {
+            themeMeta = document.createElement('meta');
+            themeMeta.name = 'theme-color';
+            themeMeta.content = '#FFB6C1';
+            document.head.appendChild(themeMeta);
+        }
+
+        // Register Service Worker for offline capability & Push Notifications
+        if ('serviceWorker' in navigator) {
+            const registerSw = () => {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
+                    console.debug('[PWA] Service Worker registration info:', err.message || err);
+                });
+            };
+
+            if (document.readyState === 'complete') {
+                registerSw();
+            } else {
+                window.addEventListener('load', registerSw, { once: true });
+            }
+        }
+    }
+
+    initPwaServiceWorker();
 })();
