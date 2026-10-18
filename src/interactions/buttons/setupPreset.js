@@ -4,6 +4,7 @@ const { MessageFlags } = require("discord.js");
 const { invalidateGuildSettings } = require("../../managers/cacheManager");
 const GuildSettings = require("../../models/GuildSettings");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
+const ui = require("../../config/ui");
 
 module.exports = [
   {
@@ -66,6 +67,7 @@ module.exports = [
           title: `✅ Preset ${preset.toUpperCase()} Berhasil Diterapkan!`,
           description: `${description}\n\nTerima kasih! Naura sudah menyesuaikan fitur server sesuai pilihan kakak:\n\n**Status Fitur:**\n- 🌟 Leveling: **${features.leveling ? "ON" : "OFF"}**\n- 💰 Ekonomi: **${features.economy ? "ON" : "OFF"}**\n- 🎵 Musik: **${features.music ? "ON" : "OFF"}**\n\nUntuk pengaturan lebih detail, kakak bisa gunakan \`/setup\`.`,
           color: "#10B981",
+          footerText: ui.getFooter("admin"),
         });
 
         return interaction.update(container);

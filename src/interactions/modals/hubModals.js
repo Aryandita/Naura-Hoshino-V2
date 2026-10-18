@@ -1,6 +1,7 @@
 "use strict";
 
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
+const ui = require("../../config/ui");
 
 function createMockInteraction(interaction, optionsMap = {}) {
   return new Proxy(interaction, {
@@ -52,6 +53,7 @@ module.exports = [
         ].join("\n"),
         accentColorHex: "#9B59B6",
         lang: interaction.localeLang,
+        footerText: ui.getFooter("utility", interaction.localeLang),
       });
 
       return interaction.reply(payload);
@@ -81,6 +83,7 @@ module.exports = [
         ].join("\n"),
         accentColorHex: "#FF69B4",
         lang: interaction.localeLang,
+        footerText: ui.getFooter("utility", interaction.localeLang),
       });
 
       return interaction.reply(payload);

@@ -16,6 +16,7 @@ const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const { logger } = require("../../src/managers/logger");
 const env = require("../../src/config/env");
+const ui = require("../../src/config/ui");
 
 const PREMIUM_THEMES = ["sakura", "midnight"];
 
@@ -116,6 +117,7 @@ module.exports = {
               title: "Portfolio Belum Tersedia",
               description: `Portfolio ${targetUser.displayName} belum dipublikasikan.\nKalau kamu ingin membuat portfoliomu sendiri, gunakan **/portfolio bio** dan **/portfolio toggle**.`,
               color: 0x1a1a2e,
+              footerText: ui.getFooter("utility"),
             });
             return interaction.reply({
               ...p,
@@ -127,6 +129,7 @@ module.exports = {
             title: `Portfolio Kamu, Draft`,
             description: `Portfolio kamu **belum dipublikasikan**. Gunakan **/portfolio toggle** untuk membuatnya publik.\n\nEdit portfoliomu di dashboard:\n🔗 [${dashboardBase}/portfolio](${dashboardBase}/portfolio)`,
             color: 0x1a1a2e,
+            footerText: ui.getFooter("utility"),
             fields: [
               {
                 name: "Bio",
@@ -157,6 +160,7 @@ module.exports = {
             title: `${isSelf ? "🌐 Portfolio Kamu" : `🌐 Portfolio ${targetUser.displayName}`}`,
             description: `${portfolio.tagline ? `*"${portfolio.tagline}"*\n\n` : ""}Lihat portfolio lengkap di sini:\n🔗 [${portfolioUrl}](${portfolioUrl})\n\n${portfolio.viewCount > 0 ? `👁️ Sudah dilihat **${portfolio.viewCount.toLocaleString("id-ID")}** kali` : ""}`,
             color: 0xffb6c1,
+            footerText: ui.getFooter("utility"),
           }),
         );
       }
@@ -178,6 +182,7 @@ module.exports = {
             ? `Portfolio kamu sekarang bisa dilihat siapa pun!\n🔗 [${dashUrl}](${dashUrl})`
             : `Portfolio kamu sekarang hanya bisa kamu lihat sendiri.`,
           color: portfolio.isPublic ? 0x86efac : 0xff6b6b,
+          footerText: ui.getFooter("utility"),
         });
         return interaction.reply({
           ...p,
@@ -198,6 +203,7 @@ module.exports = {
           title: "✅ Bio Diperbarui",
           description: `Bio portfolio kamu telah diperbarui, ${displayName}!\n\n> ${teks}`,
           color: 0xffb6c1,
+          footerText: ui.getFooter("utility"),
         });
         return interaction.reply({
           ...p,
@@ -218,6 +224,7 @@ module.exports = {
           title: "✅ Tagline Diperbarui",
           description: `Tagline portfolio kamu sekarang: *"${teks}"*`,
           color: 0xffb6c1,
+          footerText: ui.getFooter("utility"),
         });
         return interaction.reply({
           ...p,
@@ -236,6 +243,7 @@ module.exports = {
               title: "💎 Fitur Premium",
               description: `Tema **${tema}** hanya tersedia untuk pengguna Premium.\n\nUpgrade ke Premium untuk membuka semua tema eksklusif, warna aksen kustom, dan lainnya!`,
               color: 0xffd700,
+              footerText: ui.getFooter("premium"),
             });
             return interaction.reply({
               ...p,
@@ -260,6 +268,7 @@ module.exports = {
           title: "✅ Tema Diperbarui",
           description: `Tema portfolio kamu sekarang: ${themeEmoji[tema] || ""} **${tema}**`,
           color: 0xffb6c1,
+          footerText: ui.getFooter("utility"),
         });
         return interaction.reply({
           ...p,
@@ -276,6 +285,7 @@ module.exports = {
           description:
             "Naura tidak bisa memproses portfolio kamu saat ini. Coba lagi nanti ya!",
           color: 0xff6b6b,
+          footerText: ui.getFooter("utility"),
         });
         await interaction[errMethod]({
           ...p,

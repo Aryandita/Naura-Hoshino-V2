@@ -9,6 +9,7 @@ const {
 } = require("discord.js");
 const { validateHubOwner } = require("../../utils/hubMenuHelper");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
+const ui = require("../../config/ui");
 
 module.exports = [
   {
@@ -207,6 +208,7 @@ module.exports = [
               ].join("\n"),
               accentColorHex: "#38BDF8",
               lang: interaction.localeLang,
+              footerText: ui.getFooter("ai", interaction.localeLang),
             }),
             flags: MessageFlags.Ephemeral,
           });

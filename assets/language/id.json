@@ -260,7 +260,7 @@
     "ABOUT_TITLE": "🎀 Kenalan dengan Naura Hoshino!",
     "ABOUT_DESC": "Hai! Aku **Naura Hoshino**, dibuat oleh **Aryandita** untuk server Discord.\n\nIni yang bisa aku lakukan:\n\n**🤖 Chat AI**\nDidukung Google Gemini. Bisa mengingat konteks obrolan antar pesan.\n\n**🎶 Pemutar Musik**\nMemutar audio lewat *Lavalink*. Mendukung YouTube, SoundCloud, dan Spotify.\n\n**💰 Ekonomi RPG**\nToko rotasi, inventaris, memancing, balapan mobil, dan perampokan bank.\n\n**🎙️ Ruang Suara Sementara**\nMembuat channel suara pribadi otomatis dengan panel kontrol (kunci, sembunyi, stage mode).\n\n**🛡️ Moderasi**\nAnti-nuke, automod, dan filter pesan.\n\nKetik `/core help` untuk melihat semua perintah. ✨",
     "HELP_TITLE": "Pusat Bantuan Naura",
-    "HELP_DESC": "Selamat datang di buku panduan Naura! Silakan pilih kategori modul yang ingin kamu pelajari melalui menu *dropdown* di bawah ini.",
+    "HELP_DESC": "Pilih modul di bawah untuk melihat perintah dan kegunaannya.",
     "HELP_FOOTER": "Ketik perintah untuk melihat opsi lebih lanjut.",
     "HELP_PLACEHOLDER": "Buka menu kategori perintah...",
     "HELP_CAT_OVERVIEW_LABEL": "Ringkasan Fitur",

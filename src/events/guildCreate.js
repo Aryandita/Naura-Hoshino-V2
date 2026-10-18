@@ -71,6 +71,7 @@ module.exports = {
         color: "#FFB6C1",
         buttonsRow: row,
         bannerAttachmentName: "naura_onboarding.jpeg",
+        footerText: ui.getFooter("core"),
       });
 
       await channel.send({ ...container, files: [attachment] });

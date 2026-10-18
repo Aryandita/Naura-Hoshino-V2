@@ -68,6 +68,7 @@ module.exports = [
           description: `${interaction.user.username} menyerah! **${winnerName}** memenangkan duel kartu ini!`,
           color: 0xffb6c1,
           authorName: "Naura Card TCG Arena",
+          footerText: ui.getFooter("utility"),
         });
 
         return interaction.editReply({ ...container, components: [] });
@@ -244,6 +245,7 @@ module.exports = [
           color: 0xffd700,
           authorName: "Naura TCG Arena Champion",
           media: attachment,
+          footerText: ui.getFooter("utility"),
         });
 
         return interaction.editReply({
@@ -339,6 +341,7 @@ module.exports = [
             color: 0xff0000,
             authorName: "Tower of Babel",
             media: attachment,
+            footerText: ui.getFooter("utility"),
           });
 
           return interaction.editReply({
@@ -412,6 +415,7 @@ module.exports = [
         authorName: "Naura TCG Card Clash V2",
         media: attachment,
         buttonsRow: actionRow,
+        footerText: ui.getFooter("utility"),
       });
 
       return interaction.editReply({

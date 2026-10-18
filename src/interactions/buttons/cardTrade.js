@@ -55,6 +55,7 @@ module.exports = [
           title: `${ui.getEmoji("flag_white") || "🏳️"} Tawaran Barter Ditolak`,
           description: `<@${trade.targetUserId}> telah menolak tawaran barter dari <@${trade.initiatorId}>.`,
           color: "#64748B",
+          footerText: ui.getFooter("utility"),
         });
         return interaction.update({ ...payload, components: [] });
       }
@@ -148,6 +149,7 @@ module.exports = [
             title: `${ui.getEmoji("celebrate") || "🎉"} Transaksi Barter Kartu Sukses!`,
             description: `Selamat! Barter kartu antara <@${trade.initiatorId}> dan <@${trade.targetUserId}> telah selesai dengan aman!\n\n**Pertukaran:**\n- <@${trade.targetUserId}> menerima: **${cardA.characterName}** (\`${cardA.cardCode}\`)${trade.starFragmentsOffer > 0 ? ` + ${ui.getEmoji("star") || "⭐"} **${trade.starFragmentsOffer.toLocaleString()} NSF**` : ""}\n- <@${trade.initiatorId}> menerima: ${cardB ? `**${cardB.characterName}** (\`${cardB.cardCode}\`)` : "*Tanpa kartu tukar*"}`,
             color: "#10B981",
+            footerText: ui.getFooter("utility"),
           });
 
           return interaction.update({ ...payload, components: [] });

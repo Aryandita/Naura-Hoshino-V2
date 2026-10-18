@@ -28,6 +28,7 @@ module.exports = {
           description: "Kamu belum memiliki profil petualang di Naura Wilds. Ketik `/survival profile info` untuk memulai!",
           expression: "confused",
           buttonsRow: [survivalUI.buildSurvivalActionRow("profile", user.id)],
+          footerText: ui.getFooter("survival"),
         }),
       };
       return interaction.deferred || interaction.replied
@@ -103,6 +104,7 @@ module.exports = {
         accentColorHex: ui.COLOR_SURVIVAL_GOLD || "#F59E0B",
         expression: progress.isMaxTier ? "cheers" : "happy",
         buttonsRow: rows,
+        footerText: ui.getFooter("survival"),
       });
     };
 
