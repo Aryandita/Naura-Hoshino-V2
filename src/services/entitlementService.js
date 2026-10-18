@@ -105,7 +105,7 @@ class EntitlementService {
         const canAttemptDb = Boolean(
             sequelize &&
             typeof sequelize.transaction === "function" &&
-            process.env.NODE_ENV !== "test"
+            env.NODE_ENV !== "test"
         );
 
         if (canAttemptDb) {
@@ -544,7 +544,7 @@ class EntitlementService {
                     }).catch(() => {});
                 }
 
-                if (process.env.NODE_ENV !== "test" && sequelize && typeof sequelize.transaction === "function") {
+                if (env.NODE_ENV !== "test" && sequelize && typeof sequelize.transaction === "function") {
                     try {
                         await sequelize.transaction(async (t) => {
                             const [profile] = await UserProfile.findOrCreate({

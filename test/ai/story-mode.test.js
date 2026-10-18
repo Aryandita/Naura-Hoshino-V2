@@ -2,7 +2,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { calculateTierReward, parseStoryOptions } = require("./story-mode");
+const { calculateTierReward, parseStoryOptions } = require("../../plugin/ai/story-mode");
 
 test("story-mode - calculateTierReward returns progressive rewards", () => {
   // Early chapters 1-3

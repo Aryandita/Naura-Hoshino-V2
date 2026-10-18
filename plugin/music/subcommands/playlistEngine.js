@@ -389,6 +389,19 @@ const playlistEngine = {
     const query = (args.query || "").trim();
 
     if (
+      action === "save" ||
+      query.toLowerCase().startsWith("save ") ||
+      query.toLowerCase().startsWith("simpan ")
+    ) {
+      if (query.toLowerCase().startsWith("save ")) {
+        ctx.args.query = query.substring(5).trim();
+      } else if (query.toLowerCase().startsWith("simpan ")) {
+        ctx.args.query = query.substring(7).trim();
+      }
+      return this.save(ctx);
+    }
+
+    if (
       action === "delete" ||
       query.toLowerCase().startsWith("delete ") ||
       query.toLowerCase().startsWith("hapus ")

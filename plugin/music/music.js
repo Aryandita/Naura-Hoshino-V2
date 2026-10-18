@@ -61,14 +61,25 @@ async function runMusicLogic(
     subcommand === "myplaylist" ||
     subcommand === "delete" ||
     subcommand === "deleteplaylist" ||
+    subcommand === "save" ||
     (subcommand === "playlist" &&
       (args?.aksi === "list" ||
         args?.aksi === "delete" ||
+        args?.aksi === "save" ||
         (!args?.aksi && !args?.query) ||
         args?.query?.toLowerCase()?.startsWith("delete ") ||
-        args?.query?.toLowerCase()?.startsWith("hapus ")));
+        args?.query?.toLowerCase()?.startsWith("hapus ") ||
+        args?.query?.toLowerCase()?.startsWith("save ") ||
+        args?.query?.toLowerCase()?.startsWith("simpan ")));
 
-  const noVoiceNeeded = ["profile", "aura", "wrapped"];
+  const noVoiceNeeded = [
+    "profile",
+    "aura",
+    "wrapped",
+    "audio",
+    "quality",
+    "cluster",
+  ];
   if (!noVoiceNeeded.includes(subcommand) && !isPlaylistManagement) {
     if (!memberVoice) {
       const errPayload = buildErrorContainerV2({
@@ -87,6 +98,11 @@ async function runMusicLogic(
       });
       return sendReply(errPayload, true);
     }
+  }
+
+  if (subcommand === "skip" && args?.vote) {
+    const voteHandler = subcommands.get("voteskip");
+    if (voteHandler) return voteHandler(ctx);
   }
 
   const handler = subcommands.get(subcommand);
@@ -127,13 +143,16 @@ module.exports = {
         .setDescription("Lanjutkan kembali lagu yang dijeda"),
     )
     .addSubcommand((sub) =>
-      sub.setName("skip").setDescription("Lewati lagu yang sedang berputar"),
-    )
-    .addSubcommand((sub) =>
       sub
-        .setName("voteskip")
-        .setDescription(
-          "Voting bersama pendengar di voice channel untuk melewati lagu",
+        .setName("skip")
+        .setDescription("Lewati lagu yang sedang berputar")
+        .addBooleanOption((opt) =>
+          opt
+            .setName("vote")
+            .setDescription(
+              "Voting bersama pendengar di voice channel untuk melewati lagu",
+            )
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -262,29 +281,19 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub
-        .setName("save")
-        .setDescription(
-          "Simpan antrean saat ini menjadi Cloud Playlist pribadi",
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("query")
-            .setDescription("Nama playlist yang ingin disimpan")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
         .setName("playlist")
         .setDescription("Putar atau kelola salah satu Cloud Playlist milikmu")
         .addStringOption((opt) =>
           opt
             .setName("aksi")
-            .setDescription("Aksi: play (putar), list (daftar), delete (hapus)")
+            .setDescription(
+              "Aksi: play (putar), list (daftar), delete (hapus), save (simpan antrean)",
+            )
             .setRequired(false)
             .addChoices(
               { name: "Putar Playlist (Play)", value: "play" },
               { name: "Lihat Daftar (List)", value: "list" },
+              { name: "Simpan Antrean (Save)", value: "save" },
               { name: "Hapus Playlist (Delete)", value: "delete" },
             ),
         )
@@ -383,14 +392,14 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub
-        .setName("quality")
+        .setName("audio")
         .setDescription(
-          "🎚️ Atur kualitas format audio (Standard, HD, Lossless Hi-Fi)",
+          "🎚️ Atur kualitas format audio atau cek status kluster federasi",
         )
         .addStringOption((opt) =>
           opt
-            .setName("mode")
-            .setDescription("Tingkat kualitas audio")
+            .setName("opsi")
+            .setDescription("Pilihan pengaturan audio atau status kluster")
             .setRequired(false)
             .addChoices(
               { name: "Standard (128kbps)", value: "standard" },
@@ -399,14 +408,9 @@ module.exports = {
                 name: "Lossless Hi-Fi (384kbps FLAC/Opus)",
                 value: "lossless",
               },
+              { name: "Status Kualitas Audio (Status)", value: "status" },
+              { name: "Status Kluster Node (Cluster)", value: "cluster" },
             ),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("cluster")
-        .setDescription(
-          "🌐 Lihat status kluster Lavalink dan Lossless Hi-Fi Federation",
         ),
     ),
 
@@ -547,6 +551,8 @@ module.exports = {
     const args = {
       query: interaction.options.getString("query"),
       aksi: interaction.options.getString("aksi"),
+      opsi: interaction.options.getString("opsi"),
+      vote: interaction.options.getBoolean("vote"),
       url: interaction.options.getString("url"),
       mode: interaction.options.getString("mode"),
       tipe: interaction.options.getString("tipe"),

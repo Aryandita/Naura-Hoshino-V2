@@ -271,7 +271,7 @@ class EconomyGuardEngine {
    */
   async sendSecurityStaffAlert(alertData) {
     try {
-      const { env } = require("../config/env");
+      const env = require("../config/env");
       const webhookUrl = env.SECURITY_WEBHOOK_URL || env.ERROR_WEBHOOK_URL;
       if (!webhookUrl) return;
 

@@ -66,6 +66,10 @@ module.exports = [
           modal.addComponents(new ActionRowBuilder().addComponents(qInput));
           return interaction.showModal(modal);
         }
+        if (action === "tod") {
+          const mg = require("../../../plugin/minigames/minigame");
+          return mg.launchSubgame(interaction, "tod");
+        }
       }
 
       // Aksi cepat kategori utility tool

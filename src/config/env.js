@@ -365,4 +365,8 @@ Object.defineProperty(env, "getLavalinkNumberedNodes", {
   enumerable: false,
 });
 
+// Self-referencing agar destructuring const { env } = require("./env") selalu aman
+env.env = env;
+
 module.exports = env;
+

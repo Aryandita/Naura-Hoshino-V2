@@ -101,12 +101,22 @@ class CommandHandler {
         "**/*.js",
       );
       const commandFiles = await glob(searchPattern, {
-        ignore: ["**/subcommands/**"],
+        ignore: [
+          "**/subcommands/**",
+          "**/helpers/**",
+          "**/*.test.js",
+          "**/*.spec.js",
+        ],
       });
 
       for (const filePath of commandFiles) {
         const normalizedPath = filePath.replace(/\\/g, "/");
-        if (normalizedPath.includes("/subcommands/")) {
+        if (
+          normalizedPath.includes("/subcommands/") ||
+          normalizedPath.includes("/helpers/") ||
+          normalizedPath.endsWith(".test.js") ||
+          normalizedPath.endsWith(".spec.js")
+        ) {
           continue;
         }
 
@@ -137,7 +147,7 @@ class CommandHandler {
             // Misalnya plugin/music/subfolder/cmd.js -> kategorinya 'music'
             const relativePath = path.relative(this.commandsPath, filePath);
             const category = relativePath.split(path.sep)[0];
-            command.category = category;
+            command.category = command.category || category;
 
             this.commands.set(cmdName, command);
 
@@ -260,6 +270,15 @@ class CommandHandler {
       logger.info(
         `[COMMANDS] Memuat ${this.commands.size} command dan ${aliasCount} alias.`,
       );
+
+      try {
+        const commandRegistry = require("../services/commandRegistry");
+        commandRegistry.buildRegistry(this.client);
+      } catch (regErr) {
+        logger.warn(
+          `[COMMANDS] Gagal menginisialisasi CommandRegistry: ${regErr.message}`,
+        );
+      }
 
       // ==========================================
       // 🚀 AUTO DEPLOY SLASH COMMANDS

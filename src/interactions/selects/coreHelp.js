@@ -14,9 +14,9 @@ module.exports = [
         selectedValue === "overview"
           ? -1
           : HELP_CATEGORY_KEYS.indexOf(selectedValue);
-      const userLang = await languageManager.getUserLanguage(
-        interaction.user.id,
-      );
+      const userLang =
+        interaction.localeLang ||
+        (await languageManager.getUserLanguage(interaction.user.id));
       const lang = languageManager.getLanguageSync(userLang);
 
       const payload = buildHelpPayload(
@@ -25,23 +25,6 @@ module.exports = [
         false,
         interaction.user,
       );
-
-      if (interaction.deferred || interaction.replied) {
-        return interaction.editReply(payload);
-      }
-      return interaction.update(payload);
-    },
-  },
-  {
-    id: "help_lang_select",
-    label: "help-language-select",
-    defer: "update",
-    async handler(interaction) {
-      const selectedLang = interaction.values[0];
-      await languageManager.setUserLanguage(interaction.user.id, selectedLang);
-      const lang = languageManager.getLanguageSync(selectedLang);
-
-      const payload = buildHelpPayload(lang, -1, false, interaction.user);
 
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply(payload);

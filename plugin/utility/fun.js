@@ -4,9 +4,10 @@ const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
 const { buildInteractiveHubPayload } = require("../../src/utils/hubMenuHelper");
 
 module.exports = {
+  category: "fun",
   data: new SlashCommandBuilder()
     .setName("fun")
-    .setDescription("🎉 Buka Hub Hiburan interaktif Naura: omikuji, bola ajaib, dadu, meme dan kutipan"),
+    .setDescription("🎉 Buka Hub Hiburan interaktif Naura: omikuji, bola ajaib, dadu, meme, ship, dan tod"),
 
   async execute(interaction) {
     const payload = buildInteractiveHubPayload({
@@ -32,6 +33,7 @@ module.exports = {
         { value: "meme", label: "Meme Acak", emoji: "😂", description: "Ambil meme kocak dari internet untuk menghibur harimu" },
         { value: "quote", label: "Kutipan Bijak", emoji: "📖", description: "Kata mutiara dan inspirasi penuh makna" },
         { value: "ship", label: "Kalkulator Cinta", emoji: "💘", description: "Ukur persentase kecocokanmu dengan seseorang" },
+        { value: "tod", label: "Truth or Dare", emoji: "🎭", description: "Tantangan jujur atau berani seru bersama teman" },
       ],
       category: "fun",
       userId: interaction.user.id,

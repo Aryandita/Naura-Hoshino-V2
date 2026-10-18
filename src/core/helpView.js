@@ -12,17 +12,24 @@ const fs = require("node:fs");
 
 const ui = require("../config/ui");
 const languageManager = require("../managers/languageManager");
+const commandRegistry = require("../services/commandRegistry");
+const { findClosestCommand } = require("../utils/levenshteinSuggest");
+const { buildContainerV2, buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
 
 const HELP_CATEGORY_KEYS = [
   "core",
-  "naura",
-  "ai",
   "music",
   "survival",
-  "minigame",
+  "card",
+  "ai",
+  "leveling",
+  "minigames",
   "fun",
   "utility",
+  "premium",
+  "naura",
   "admin",
+  "modmail",
 ];
 
 function e(name, fallback) {
@@ -55,18 +62,6 @@ function buildHelpCategories(langInput) {
       desc: lang.HELP_CAT_CORE_DESC || "Sistem bot, status, dan ping.",
       content: formatHelpContent(lang.HELP_CONTENT_CORE),
     },
-    naura: {
-      emoji: e("help_naura", "🌸"),
-      label: isEn ? "🌸 Naura Companion" : "🌸 Companion Naura",
-      desc: lang.HELP_CAT_NAURA_DESC || "Interaksi personal dan cerita Naura.",
-      content: formatHelpContent(lang.HELP_CONTENT_NAURA),
-    },
-    ai: {
-      emoji: e("help_ai", "🤖"),
-      label: isEn ? "🤖 AI Intelligence" : "🤖 Kecerdasan AI",
-      desc: lang.HELP_CAT_AI_DESC || "AI Ensemble obrolan dan terjemahan.",
-      content: formatHelpContent(lang.HELP_CONTENT_AI),
-    },
     music: {
       emoji: e("help_music", "🎵"),
       label: isEn ? "⭐ Music & Audio (Popular)" : "⭐ Musik & Audio (Populer)",
@@ -81,7 +76,33 @@ function buildHelpCategories(langInput) {
       desc: lang.HELP_CAT_SURVIVAL_DESC || "Naura Wilds dan sistem ekonomi.",
       content: formatHelpContent(lang.HELP_CONTENT_SURVIVAL),
     },
-    minigame: {
+    card: {
+      emoji: "🃏",
+      label: lang.HELP_CAT_CARD_LABEL || (isEn ? "Card Collection" : "Koleksi Kartu"),
+      desc:
+        lang.HELP_CAT_CARD_DESC ||
+        (isEn
+          ? "Card collection, anime decks, and battles."
+          : "Koleksi kartu anime, fusion, gacha, dan duel kartu."),
+      content: formatHelpContent(lang.HELP_CONTENT_CARD),
+    },
+    ai: {
+      emoji: e("help_ai", "🤖"),
+      label: isEn ? "🤖 AI Intelligence" : "🤖 Kecerdasan AI",
+      desc: lang.HELP_CAT_AI_DESC || "AI Ensemble obrolan dan terjemahan.",
+      content: formatHelpContent(lang.HELP_CONTENT_AI),
+    },
+    leveling: {
+      emoji: "⭐",
+      label: lang.HELP_CAT_LEVELING_LABEL || "Leveling & XP",
+      desc:
+        lang.HELP_CAT_LEVELING_DESC ||
+        (isEn
+          ? "Server rankings, leaderboard, and rank cards."
+          : "Peringkat server, leaderboard, dan kartu level."),
+      content: formatHelpContent(lang.HELP_CONTENT_LEVELING),
+    },
+    minigames: {
       emoji: e("help_game", "🎮"),
       label: lang.HELP_CAT_GAME_LABEL || "Minigame & Arcade",
       desc: lang.HELP_CAT_GAME_DESC || "Permainan santai dan seru.",
@@ -89,8 +110,12 @@ function buildHelpCategories(langInput) {
     },
     fun: {
       emoji: e("help_fun", "🎉"),
-      label: isEn ? "🎉 Fun & Social" : "🎉 Hiburan & Sosial",
-      desc: lang.HELP_CAT_FUN_DESC || "Perintah seru-seruan tanpa risiko saldo.",
+      label: lang.HELP_CAT_FUN_LABEL || (isEn ? "🎉 Fun & Social" : "🎉 Hiburan & Sosial"),
+      desc:
+        lang.HELP_CAT_FUN_DESC ||
+        (isEn
+          ? "Casual social entertainment without betting or monetary risks."
+          : "Perintah seru-seruan tanpa risiko saldo."),
       content: formatHelpContent(lang.HELP_CONTENT_FUN),
     },
     utility: {
@@ -99,38 +124,102 @@ function buildHelpCategories(langInput) {
       desc: lang.HELP_CAT_UTILITY_DESC || "Alat bantu dan produktivitas.",
       content: formatHelpContent(lang.HELP_CONTENT_UTILITY),
     },
+    premium: {
+      emoji: "💎",
+      label: lang.HELP_CAT_PREMIUM_LABEL || "Naura VIP Premium",
+      desc:
+        lang.HELP_CAT_PREMIUM_DESC ||
+        (isEn
+          ? "Subscription benefits, voucher redemption, and perks."
+          : "Informasi langganan, aktivasi voucher, dan benefit khusus."),
+      content: formatHelpContent(lang.HELP_CONTENT_PREMIUM),
+    },
+    naura: {
+      emoji: e("help_naura", "🌸"),
+      label: isEn ? "🌸 Naura Companion" : "🌸 Companion Naura",
+      desc: lang.HELP_CAT_NAURA_DESC || "Interaksi personal dan cerita Naura.",
+      content: formatHelpContent(lang.HELP_CONTENT_NAURA),
+    },
     admin: {
       emoji: e("help_admin", "🛠️"),
       label: lang.HELP_CAT_ADMIN_LABEL || "Konfigurasi Admin",
       desc: lang.HELP_CAT_ADMIN_DESC || "Setup dan moderasi server.",
       content: formatHelpContent(lang.HELP_CONTENT_ADMIN),
     },
+    modmail: {
+      emoji: "📬",
+      label: lang.HELP_CAT_MODMAIL_LABEL || (isEn ? "Modmail & Tickets" : "Modmail & Tiket"),
+      desc:
+        lang.HELP_CAT_MODMAIL_DESC ||
+        (isEn
+          ? "Staff support message system and ticket reporting."
+          : "Layanan bantuan staf dan pelaporan tiket server."),
+      content: formatHelpContent(lang.HELP_CONTENT_MODMAIL),
+    },
   };
 }
 
-/**
- * Membangun payload tampilan menu bantuan berbasis Discord Components V2
- * dengan pagination 5-tombol dan dropdown menu terfilter (tanpa menu tempat pengguna berada).
- */
+function buildCategoryBanners() {
+  return {
+    overview:
+      ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg",
+    core: ui.getBanner("about") || "./assets/core/banner_about.png",
+    music: ui.getBanner("music") || "./assets/general/Music Banner.jpeg",
+    survival:
+      ui.getBanner("economy") ||
+      "./assets/general/Economy & Market Banner.jpeg",
+    card:
+      ui.getBanner("minigame") ||
+      "./assets/general/Minigame & Arcade Banner.jpeg",
+    ai: ui.getBanner("about") || "./assets/core/banner_about.png",
+    leveling: ui.getBanner("levelUp") || "./assets/core/levelbg.png",
+    minigames:
+      ui.getBanner("minigame") ||
+      "./assets/general/Minigame & Arcade Banner.jpeg",
+    fun:
+      ui.getBanner("giveaway") ||
+      "./assets/general/Giveaway & Event Banner.jpeg",
+    utility:
+      ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
+    premium:
+      ui.getBanner("economy") ||
+      "./assets/general/Economy & Market Banner.jpeg",
+    naura: ui.getBanner("about") || "./assets/core/avatar.png",
+    admin:
+      ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
+    modmail:
+      ui.getBanner("ticket") || "./assets/general/Support & Ticket Banner.jpeg",
+  };
+}
+
 function buildHelpPayload(
   langInput,
   clientOrIndex,
   maybeIndex,
   maybeDisabled,
   maybeUser,
+  subPage = 0,
 ) {
   let categoryIndex = -1;
   let disabled = false;
   let user = null;
+  let currentSubPage = 0;
 
   if (typeof clientOrIndex === "number") {
     categoryIndex = clientOrIndex;
     disabled = Boolean(maybeIndex);
-    user = maybeDisabled || null;
+    user = typeof maybeDisabled === "object" ? maybeDisabled : null;
+    currentSubPage =
+      typeof maybeUser === "number"
+        ? maybeUser
+        : typeof subPage === "number"
+          ? subPage
+          : 0;
   } else {
     categoryIndex = typeof maybeIndex === "number" ? maybeIndex : -1;
     disabled = Boolean(maybeDisabled);
     user = maybeUser || null;
+    currentSubPage = typeof subPage === "number" ? subPage : 0;
   }
 
   const lang =
@@ -147,21 +236,80 @@ function buildHelpPayload(
   const activeKey = categoryIndex >= 0 ? categoryKeys[categoryIndex] : null;
   const activeCat = activeKey ? categories[activeKey] : null;
 
-  const greeting = isEn
-    ? `Hello **${userName}**! Here are the commands you can use with Naura~ ✨`
-    : `Halo Kak **${userName}**! Berikut adalah daftar perintah yang bisa kamu gunakan~ ✨`;
+  let bodyContent = "";
+  let totalSubPages = 1;
 
-  const bodyContent = activeCat
-    ? `${activeCat.emoji} **${activeCat.label}**\n\n${activeCat.content}`
-    : `${greeting}\n\n${formatHelpContent(lang.HELP_DESC)}`;
+  if (activeKey === "utility") {
+    const utilityData = commandRegistry.getCategory("utility");
+    const cmds = utilityData?.commands || [];
+    const pageSize = 10;
+    totalSubPages = Math.max(1, Math.ceil(cmds.length / pageSize));
+    if (currentSubPage >= totalSubPages) currentSubPage = totalSubPages - 1;
+    if (currentSubPage < 0) currentSubPage = 0;
+
+    const startIdx = currentSubPage * pageSize;
+    const pageCmds = cmds.slice(startIdx, startIdx + pageSize);
+
+    const listLines = pageCmds.map((c) => {
+      const subInfo =
+        c.subcommands.length > 0 ? ` *(${c.subcommands.length} aksi)*` : "";
+      return `• **\`/${c.name}\`**${subInfo} : ${c.description}`;
+    });
+
+    bodyContent = [
+      `${activeCat.emoji} **${activeCat.label}** (${cmds.length} Perintah)`,
+      isEn
+        ? `Page **${currentSubPage + 1}** of **${totalSubPages}**`
+        : `Halaman **${currentSubPage + 1}** dari **${totalSubPages}**`,
+      "",
+      listLines.length > 0
+        ? listLines.join("\n")
+        : formatHelpContent(lang.HELP_CONTENT_UTILITY),
+      "",
+      isEn
+        ? "-# *Tip: Use `/core help command:<name>` for instant syntax lookup.*"
+        : "-# *Tips: Gunakan `/core help command:<nama>` untuk melihat detail sintaks perintah.*",
+    ].join("\n");
+  } else if (activeCat) {
+    bodyContent = `${activeCat.emoji} **${activeCat.label}**\n\n${activeCat.content}`;
+  } else {
+    // Quick-Start Bento untuk Beranda (Overview)
+    bodyContent = [
+      isEn
+        ? `Hello **${userName}**! Welcome to **Naura Hoshino Help Center** ✨`
+        : `Halo Kak **${userName}**! Selamat datang di **Pusat Bantuan Naura Hoshino** ✨`,
+      isEn
+        ? "Here are essential commands to get you started quickly:"
+        : "Berikut adalah panduan perintah esensial untuk memulai:",
+      "",
+      "🚀 **Quick-Start Bento (Perintah Esensial):**",
+      isEn
+        ? "• 🎵 **/music play <query>** : Play your favorite tunes from YouTube, Spotify, or SoundCloud."
+        : "• 🎵 **/music play <query>** : Putar musik favoritmu dari YouTube, Spotify, atau SoundCloud.",
+      isEn
+        ? "• 🏕️ **/survival start** : Begin your Naura Wilds survival RPG adventure & claim starter kit."
+        : "• 🏕️ **/survival start** : Mulai petualangan survival RPG Naura Wilds dan klaim Starter Pack.",
+      isEn
+        ? "• 🤖 **/ai chat <message>** : Interactive conversations with Naura's Multi-Model AI Ensemble."
+        : "• 🤖 **/ai chat <pesan>** : Obrolan interaktif dan cerdas bersama AI Ensemble Naura.",
+      isEn
+        ? "• ⭐ **/rank** : Check your visual XP card, level progress, and server standing."
+        : "• ⭐ **/rank** : Cek kartu profil level, XP, dan progres keaktifanmu di server.",
+      isEn
+        ? "• 🎮 **/minigame** : Open casual arcade games (TicTacToe, RPS, Trivia, Word Guess)."
+        : "• 🎮 **/minigame** : Buka pusat game santai (TicTacToe, RPS, Trivia, Tebak Kata).",
+      "",
+      isEn
+        ? "💡 *Use the dropdown menu below to explore all 13 modules, or look up any command with `/core help command:<name>`.*"
+        : "💡 *Pilih kategori di menu dropdown di bawah untuk menjelajahi 13 modul lengkap, atau cari perintah instan dengan `/core help command:<nama>`.*",
+    ].join("\n");
+  }
 
   const primaryHex = (ui.getColor("primary") || "#FFB6C1").replace("#", "");
   const accentColor = parseInt(primaryHex, 16);
 
-  // 1. Dropdown Menu (Select Menu): Menampilkan SEMUA opsi KECUALI kategori tempat user saat ini berada
+  // 1. Dropdown Menu (Select Menu): Menampilkan seluruh 13 kategori publik
   const selectOptions = [];
-
-  // Jika sedang di kategori tertentu, beri opsi kembali ke Beranda/Overview
   if (activeKey) {
     selectOptions.push({
       label: isEn ? "🏠 Main Overview" : "🏠 Ringkasan Utama",
@@ -173,10 +321,8 @@ function buildHelpPayload(
     });
   }
 
-  // Masukkan kategori-kategori yang BUKAN kategori aktif saat ini
   for (const key of categoryKeys) {
-    if (key === activeKey) continue; // Skip kategori tempat pengguna saat ini berada
-
+    if (key === activeKey) continue;
     const cat = categories[key];
     const option = {
       label: cat.label,
@@ -189,21 +335,38 @@ function buildHelpPayload(
   }
 
   const selectPlaceholder = activeCat
-    ? (isEn ? "Select another category..." : "Pilih menu bantuan lain...")
-    : (isEn ? "Select a help category..." : "Pilih kategori bantuan...");
+    ? isEn
+      ? "Select another category..."
+      : "Pilih menu bantuan lain..."
+    : isEn
+      ? "Select a help category..."
+      : "Pilih kategori bantuan...";
 
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId("help_category_select")
     .setPlaceholder(`📚 ${selectPlaceholder}`)
     .setDisabled(disabled)
-    .addOptions(selectOptions);
+    .addOptions(selectOptions.slice(0, 25));
 
   const selectRow = new ActionRowBuilder().addComponents(selectMenu);
 
-  // 2. Tombol Navigasi Pagination (5 Tombol: First, Prev, Page Indicator, Next, Last)
-  const isFirst = categoryIndex <= 0;
-  const isLast = categoryIndex >= categoryKeys.length - 1;
+  // 2. Tombol Navigasi Pagination 5-Tombol
+  const isFirst = categoryIndex <= 0 && currentSubPage <= 0;
+  const isLast =
+    categoryIndex >= categoryKeys.length - 1 &&
+    currentSubPage >= totalSubPages - 1;
   const isOverview = categoryIndex === -1;
+
+  let indicatorLabel = "";
+  if (isOverview) {
+    indicatorLabel = isEn ? "🏠 Overview" : "🏠 Beranda";
+  } else if (activeKey === "utility" && totalSubPages > 1) {
+    indicatorLabel = isEn
+      ? `📄 ${currentSubPage + 1}/${totalSubPages} (Utility)`
+      : `📄 ${currentSubPage + 1}/${totalSubPages} (Utilitas)`;
+  } else {
+    indicatorLabel = `📄 ${categoryIndex + 1} / ${categoryKeys.length}`;
+  }
 
   const firstBtn = new ButtonBuilder()
     .setCustomId("help_first")
@@ -215,15 +378,11 @@ function buildHelpPayload(
     .setCustomId("help_prev")
     .setLabel(isEn ? "◀️ Prev" : "◀️ Sebelumnya")
     .setStyle(ButtonStyle.Secondary)
-    .setDisabled(disabled || isOverview);
+    .setDisabled(disabled || (isOverview && currentSubPage <= 0));
 
   const pageIndicator = new ButtonBuilder()
     .setCustomId("help_page_indicator")
-    .setLabel(
-      isOverview
-        ? (isEn ? "🏠 Overview" : "🏠 Beranda")
-        : `📄 ${categoryIndex + 1} / ${categoryKeys.length}`,
-    )
+    .setLabel(indicatorLabel)
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(true);
 
@@ -250,28 +409,7 @@ function buildHelpPayload(
   const footerText = ui.stripCustomEmojis(ui.getFooter("core"));
   const eHelp = e("help", "📚");
 
-  const categoryBanners = {
-    overview:
-      ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg",
-    core:
-      ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
-    naura:
-      ui.getBanner("about") || "./assets/general/Utility & Tools Banner.jpeg",
-    ai:
-      ui.getBanner("about") || "./assets/general/Utility & Tools Banner.jpeg",
-    music: ui.getBanner("music") || "./assets/general/Music Banner.jpeg",
-    survival:
-      ui.getBanner("economy") ||
-      "./assets/general/Economy & Market Banner.jpeg",
-    minigame:
-      ui.getBanner("minigame") ||
-      "./assets/general/Minigame & Arcade Banner.jpeg",
-    utility:
-      ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
-    admin:
-      ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
-  };
-
+  const categoryBanners = buildCategoryBanners();
   const activeBannerPath = activeKey
     ? categoryBanners[activeKey]
     : categoryBanners.overview;
@@ -296,7 +434,7 @@ function buildHelpPayload(
   if (files.length > 0) {
     containerComponents.push({ type: 14, divider: true, spacing: 1 });
     containerComponents.push({
-      type: 12, // MEDIA_GALLERY
+      type: 12,
       items: [{ media: { url: `attachment://${bannerFilename}` } }],
     });
   }
@@ -321,7 +459,108 @@ function buildHelpPayload(
     ],
     _categoryKeys: categoryKeys,
     _categories: categories,
+    _subPage: currentSubPage,
+    _totalSubPages: totalSubPages,
   };
+}
+
+function handleCommandDetailHelp(query, langInput) {
+  const lang =
+    typeof langInput === "object" && langInput !== null
+      ? langInput
+      : languageManager.getLanguageSync(langInput);
+  const isEn =
+    lang && (lang.LANG_CODE === "en" || lang.HELP_TITLE?.includes("Help"));
+
+  const detail = commandRegistry.getCommandDetail(query);
+
+  if (!detail) {
+    const allCmds = commandRegistry.getAllCommands().map((c) => c.name);
+    const closest = findClosestCommand(query, allCmds, 3);
+    const hint = closest
+      ? isEn
+        ? `Did you mean **\`/${closest.name}\`**?`
+        : `Mungkin maksudmu **\`/${closest.name}\`**?`
+      : isEn
+        ? "Type `/core help` to browse all available commands."
+        : "Ketik `/core help` untuk melihat seluruh kategori perintah.";
+
+    return buildErrorContainerV2({
+      title: isEn ? "Command Not Found" : "Perintah Tidak Ditemukan",
+      description: isEn
+        ? `The command \`${query}\` was not found in Naura's registry.\n\n${hint}`
+        : `Perintah \`${query}\` tidak ditemukan dalam sistem Naura.\n\n${hint}`,
+      footerText: ui.getFooter("core"),
+    });
+  }
+
+  const categoryName = (detail.category || "utility").toUpperCase();
+  const desc = detail.description || (isEn ? "No description provided." : "Tidak ada deskripsi.");
+
+  const lines = [
+    `**${isEn ? "Description" : "Deskripsi"}:**\n> ${desc}`,
+    "",
+    `**${isEn ? "Syntax" : "Format Sintaks"}:**`,
+    `\`\`\`bash\n${detail.syntax}\n\`\`\``,
+  ];
+
+  if (Array.isArray(detail.options) && detail.options.length > 0) {
+    lines.push(`**${isEn ? "Parameters" : "Parameter / Opsi"}:**`);
+    for (const opt of detail.options) {
+      const req = opt.required
+        ? isEn
+          ? "Required"
+          : "Wajib"
+        : isEn
+          ? "Optional"
+          : "Opsional";
+      const choices =
+        Array.isArray(opt.choices) && opt.choices.length > 0
+          ? ` *[${opt.choices.join(", ")}]*`
+          : "";
+      lines.push(`• \`${opt.name}\` (${req}): ${opt.description || "-"}${choices}`);
+    }
+    lines.push("");
+  }
+
+  if (Array.isArray(detail.subcommands) && detail.subcommands.length > 0) {
+    lines.push(`**${isEn ? "Available Subcommands" : "Subcommand Tersedia"} (${detail.subcommands.length}):**`);
+    for (const sub of detail.subcommands.slice(0, 15)) {
+      const fullCmd = sub.fullName || (sub.group ? `${detail.name} ${sub.group} ${sub.name}` : `${detail.name} ${sub.name}`);
+      lines.push(`• \`/${fullCmd}\` : ${sub.description || "-"}`);
+    }
+    if (detail.subcommands.length > 15) {
+      lines.push(isEn ? `*...and ${detail.subcommands.length - 15} more subcommands.*` : `*...dan ${detail.subcommands.length - 15} subcommand lainnya.*`);
+    }
+    lines.push("");
+  }
+
+  if (Array.isArray(detail.aliases) && detail.aliases.length > 0) {
+    lines.push(`**${isEn ? "Aliases" : "Alias Singkat"}:** ${detail.aliases.map((a) => `\`/${a}\``).join(", ")}`);
+    lines.push("");
+  }
+
+  lines.push(
+    isEn
+      ? "-# *Tip: Use `/core help` to return to the interactive guide.*"
+      : "-# *Tips: Gunakan `/core help` untuk kembali ke panduan interaktif.*",
+  );
+
+  return buildContainerV2({
+    title: `📌 ${isEn ? "Command Guide" : "Panduan Perintah"}: /${detail.name}`,
+    authorName: `NAURA SYSTEM • [${categoryName}]`,
+    description: lines.join("\n"),
+    accentColorHex: ui.getColor("primary") || "#FFB6C1",
+    footerText: ui.getFooter("core"),
+    buttonsRow: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("help_first")
+          .setLabel(isEn ? "🏠 Help Home" : "🏠 Beranda Bantuan")
+          .setStyle(ButtonStyle.Primary),
+      ),
+    ],
+  });
 }
 
 module.exports = {
@@ -329,4 +568,5 @@ module.exports = {
   formatHelpContent,
   buildHelpCategories,
   buildHelpPayload,
+  handleCommandDetailHelp,
 };

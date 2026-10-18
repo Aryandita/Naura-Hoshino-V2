@@ -576,4 +576,19 @@ module.exports = {
     });
     return sendReply(payload);
   },
+
+  async audio(ctx) {
+    const { args } = ctx;
+    const option = (args.opsi || args.mode || "").toLowerCase();
+    if (option === "cluster") {
+      return this.cluster(ctx);
+    }
+    if (["standard", "hd", "lossless"].includes(option)) {
+      return this.quality({
+        ...ctx,
+        args: { ...ctx.args, mode: option },
+      });
+    }
+    return this.quality(ctx);
+  },
 };

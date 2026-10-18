@@ -159,3 +159,28 @@ test("interactionPipeline - createPaginationCollector handles page changes", asy
 
   activeCollectors.delete("msg-page-1");
 });
+
+test("interactionPipeline - createManagedCollector supports componentType: null", () => {
+  let capturedOptions = null;
+  const mockMessage = {
+    id: "msg-all-components",
+    createMessageComponentCollector(options) {
+      capturedOptions = options;
+      return {
+        on() {
+          return this;
+        },
+        stop() {},
+      };
+    },
+  };
+
+  createManagedCollector(mockMessage, { id: "user-123" }, {
+    componentType: null,
+    time: 45000,
+  });
+
+  assert.equal(capturedOptions.time, 45000);
+  assert.equal("componentType" in capturedOptions, false);
+  activeCollectors.delete("msg-all-components");
+});

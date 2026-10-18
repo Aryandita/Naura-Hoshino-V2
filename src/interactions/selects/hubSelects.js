@@ -90,6 +90,10 @@ module.exports = [
           modal.addComponents(new ActionRowBuilder().addComponents(targetInput));
           return interaction.showModal(modal);
         }
+        if (selectedValue === "tod") {
+          const mg = require("../../../plugin/minigames/minigame");
+          return mg.launchSubgame(interaction, "tod");
+        }
       }
 
       // Pilihan dropdown kategori utility tool

@@ -74,10 +74,12 @@ function createManagedCollector(message, user, options = {}) {
     autoDisableOnEnd = true,
   } = options;
 
-  const collector = message.createMessageComponentCollector({
-    componentType,
-    time,
-  });
+  const collectorConfig = { time };
+  if (options.componentType !== null) {
+    collectorConfig.componentType = componentType;
+  }
+
+  const collector = message.createMessageComponentCollector(collectorConfig);
 
   registerCollector(message.id, collector);
 
