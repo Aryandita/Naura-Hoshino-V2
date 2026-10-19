@@ -168,8 +168,7 @@ class ServiceContainer {
 
 // Global runtime instance
 const container = new ServiceContainer();
+container.container = container;
+container.ServiceContainer = ServiceContainer;
 
-module.exports = {
-  container,
-  ServiceContainer,
-};
+module.exports = container;
