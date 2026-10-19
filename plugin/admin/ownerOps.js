@@ -612,13 +612,12 @@ module.exports = {
       const targetId = interaction.options.getString("user_id") || targetUser?.id || interaction.user.id;
       const days = interaction.options.getInteger("durasi_hari") || 30;
 
-      const UserProfile = require("../../src/models/UserProfile");
       const store = require("../../src/premium/premiumStore");
       const { tierDisplayName } = require("../../src/premium/premiumTiers");
       const cacheManager = require("../../src/managers/cacheManager");
       const redisManager = require("../../src/managers/redisManager");
 
-      const [profile] = await UserProfile.findOrCreate({ where: { userId: targetId } });
+      const profile = await cacheManager.getUserProfile(targetId);
 
       if (action === "revoke") {
         await store.revokePremium(targetId, profile);

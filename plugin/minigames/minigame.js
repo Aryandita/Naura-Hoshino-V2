@@ -3,8 +3,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
-const UserProfile = require("../../src/models/UserProfile");
-const UserSurvival = require("../../src/models/UserSurvival");
+const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
 const { buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const {
@@ -31,12 +30,8 @@ async function runMinigameLogic(interaction) {
   const subcommandName = interaction.options.getSubcommand();
   const user = interaction.user;
 
-  const [profile] = await UserProfile.findOrCreate({
-    where: { userId: user.id },
-  });
-  const [survival] = await UserSurvival.findOrCreate({
-    where: { userId: user.id },
-  });
+  const profile = await cacheManager.getUserProfile(user.id);
+  const survival = await cacheManager.getUserSurvival(user.id);
 
   const premiumTier = getUserPremiumTier(profile);
   const nsfMultiplier = getMinigameMultiplier(premiumTier);

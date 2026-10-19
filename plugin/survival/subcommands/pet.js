@@ -12,6 +12,7 @@ const UserSurvival = require("../../../src/models/UserSurvival");
 const UserPet = require("../../../src/models/UserPet");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const {
   safeParseInventory,
   findItem,
@@ -130,7 +131,7 @@ module.exports = {
         });
 
         const adoptPayload = buildContainerV2({
-          accentColorHex: "#86EFAC",
+          accentColorHex: survivalUI.getColor("emerald"),
           authorName: "Adopsi Sahabat Satwa Naura Wilds",
           title: `🎉 Selamat Mengadopsi ${species.name}!`,
           description: [
@@ -187,7 +188,9 @@ module.exports = {
 
       const active = habitatData.activePet || pet;
       const payload = buildContainerV2({
-        accentColorHex: active.cosmicAura ? "#C084FC" : "#F472B6",
+        accentColorHex: active.cosmicAura
+          ? survivalUI.getRarityColor("epic")
+          : survivalUI.getRarityColor("mythic"),
         authorName: `${ui.getEmoji("home") || "🏡"} Sanctuary & Cosmic Pet Habitat`,
         title: `${ui.getEmoji("sparkles") || "✨"} Kamar Santai ${active.petName || active.petType}`,
         description: [
@@ -247,7 +250,7 @@ module.exports = {
       }
 
       const payload = buildContainerV2({
-        accentColorHex: "#C084FC",
+        accentColorHex: survivalUI.getRarityColor("epic"),
         authorName: `${ui.getEmoji("sparkle") || "🌌"} Ritual Cosmic Pet Ascension`,
         title: `${ui.getEmoji("celebrate") || "🎉"} COSMIC ASCENSION BERHASIL!`,
         description: [
@@ -304,7 +307,7 @@ module.exports = {
 
       const baby = breedRes.offspring;
       const payload = buildContainerV2({
-        accentColorHex: "#EC4899",
+        accentColorHex: survivalUI.getRarityColor("mythic"),
         authorName: "PET BREEDING & GENETICS SANCTUARY",
         title: "🧬 Kelahiran Pet Hibrida Berhasil!",
         description: [
@@ -337,7 +340,7 @@ module.exports = {
 
     const buildPetPayload = (moodEmoji, closing, imgAttachment, buttonsRow) =>
       buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        accentColorHex: survivalUI.getColor("emerald"),
         authorName: "Naura Pet Care",
         title: `${e(moodEmoji, "\uD83D\uDC3E")} ${petLabel(pet)} nemenin kamu`,
         iconURL: user.displayAvatarURL(),
@@ -563,7 +566,7 @@ module.exports = {
         .catch(() => {});
 
       const foragePayload = buildContainerV2({
-        accentColorHex: foraged.tier.color || "#86EFAC",
+        accentColorHex: foraged.tier.color || survivalUI.getColor("emerald"),
         authorName: `🧭 Ekspedisi Alam: ${foraged.petName}`,
         title: `🎒 ${foraged.petName} Membawa Temuan Berharga!`,
         description: [
@@ -693,7 +696,8 @@ module.exports = {
       }
     });
 
-    collector.on("end", async () => {
+    collector.on("end", async (collected, reason) => {
+      if (reason === "navigated") return;
       // Pesan Components V2 tidak boleh diedit hanya dengan components saja,
       // seluruh payload harus dikirim ulang.
       const closingImg = getPetImage(pet.petType);

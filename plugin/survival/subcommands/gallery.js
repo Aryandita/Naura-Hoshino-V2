@@ -10,13 +10,15 @@ const {
   MessageFlags,
 } = require("discord.js");
 
-const UserSurvival = require("../../../src/models/UserSurvival");
 const UserNPC = require("../../../src/models/UserNPC");
+const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const npcs = require("../../../src/survival/data/npcs");
 const { findPortrait } = require("../../../src/survival/helpers/npcHelpers");
 const {
   buildContainerV2,
+  disableContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 
 const COLLECTOR_MS = 180000;
@@ -67,9 +69,7 @@ function formatDate(value) {
 module.exports = {
   async execute(interaction, client) {
     const user = interaction.user;
-    const [survival] = await UserSurvival.findOrCreate({
-      where: { userId: user.id },
-    });
+    const survival = await cacheManager.getUserSurvival(user.id);
 
     const bonds = await UserNPC.findAll({ where: { userId: user.id } });
     // ATURAN KETAT: Hanya tampilkan NPC yang sudah pernah ditemui (afeksi > 0 atau lastInteraction != null)
@@ -83,7 +83,7 @@ module.exports = {
 
     if (met.length === 0 && unlockedCgs.length === 0) {
       const emptyPayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        accentColorHex: survivalUI.getColor("emerald"),
         authorName: "Album Kenangan Naura",
         title: `${e("gallery", "📸")} Albummu masih kosong`,
         iconURL: client.user.displayAvatarURL(),
@@ -100,7 +100,7 @@ module.exports = {
     const buildIndex = () => {
       const saved = met.filter((b) => album.includes(b.npcId)).length;
       return buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        accentColorHex: survivalUI.getColor("emerald"),
         authorName: "Album Kenangan Naura",
         title: `${e("gallery", "📸")} Album ${user.displayName || user.username}`,
         iconURL: user.displayAvatarURL(),
@@ -141,7 +141,8 @@ module.exports = {
       );
     };
 
-    const response = await interaction.reply(buildIndex());
+    let currentPayload = buildIndex();
+    const response = await interaction.reply(currentPayload);
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -195,7 +196,7 @@ module.exports = {
       if (hasFamilyCg) extraCgStatus.push("👶 Potret Keluarga: Terbuka");
 
       return buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        accentColorHex: survivalUI.getColor("emerald"),
         authorName: `${npc.name} - ${npc.title || "Warga"}`,
         title: `${isFavorite ? "⭐" : e("gallery", "📸")} Kenangan bersama ${npc.name}`,
         iconURL: user.displayAvatarURL(),
@@ -228,11 +229,13 @@ module.exports = {
             flags: MessageFlags.Ephemeral,
           });
         }
-        return i.editReply(photoPayload(opened));
+        currentPayload = photoPayload(opened);
+        return i.editReply(currentPayload);
       }
 
       if (i.customId === "gallery_back" || !opened) {
-        return i.editReply(buildIndex());
+        currentPayload = buildIndex();
+        return i.editReply(currentPayload);
       }
 
       if (i.customId === "gallery_save") {
@@ -240,14 +243,16 @@ module.exports = {
         if (index >= 0) album.splice(index, 1);
         else album.push(opened.npcId);
 
-        survival.rpg_state = {
-          ...(survival.rpg_state || {}),
-          gallery_album: album,
-        };
-        survival.changed("rpg_state", true);
-        await survival.save({ fields: ["rpg_state"] });
+        await cacheManager.mutateUserSurvivalJson(user.id, "rpg_state", (state) => {
+          const current = state && typeof state === "object" ? state : {};
+          return {
+            ...current,
+            gallery_album: album,
+          };
+        });
 
-        return i.editReply(photoPayload(opened));
+        currentPayload = photoPayload(opened);
+        return i.editReply(currentPayload);
       }
 
       if (i.customId === "gallery_download") {
@@ -271,9 +276,11 @@ module.exports = {
       }
     });
 
-    collector.on("end", async () => {
-      const closing = buildIndex();
-      await interaction.editReply(closing).catch(() => {});
+    collector.on("end", async (collected, reason) => {
+      if (reason === "navigated") return;
+      if (currentPayload) {
+        await interaction.editReply(disableContainerV2(currentPayload)).catch(() => {});
+      }
     });
   },
 };

@@ -8,11 +8,13 @@ const {
   MessageFlags,
 } = require("discord.js");
 
-const UserSurvival = require("../../../src/models/UserSurvival");
+const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const {
   buildContainerV2,
   buildErrorContainerV2,
+  disableContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const currency = require("../../../src/survival/engines/currency");
 const economyGuard = require("../../../src/services/economyGuardEngine");
@@ -56,12 +58,8 @@ module.exports = {
       );
     }
 
-    const [senderSurvival] = await UserSurvival.findOrCreate({
-      where: { userId: sender.id },
-    });
-    const [targetSurvival] = await UserSurvival.findOrCreate({
-      where: { userId: targetUser.id },
-    });
+    const senderSurvival = await cacheManager.getUserSurvival(sender.id);
+    const targetSurvival = await cacheManager.getUserSurvival(targetUser.id);
 
     const senderBalance = currency.balanceOf(currency.FRAGMENT, {
       survival: senderSurvival,
@@ -97,7 +95,7 @@ module.exports = {
     );
 
     const tradePayload = buildContainerV2({
-      accentColorHex: "#00FFFF",
+      accentColorHex: survivalUI.getColor("river"),
       authorName: "Naura Secure Trading",
       title: `${e("happy", "\uD83E\uDD1D")} Ada penawaran transfer!`,
       iconURL: sender.displayAvatarURL(),
@@ -142,7 +140,7 @@ module.exports = {
 
       if (i.customId === "trade_reject") {
         const rejectPayload = buildContainerV2({
-          accentColorHex: ui.getColor("error") || "#FF0000",
+          accentColorHex: survivalUI.getColor("danger"),
           authorName: "Naura Secure Trading",
           title: `${e("hmph", "\uD83D\uDE45")} Penawarannya ditolak`,
           iconURL: targetUser.displayAvatarURL(),
@@ -199,7 +197,7 @@ module.exports = {
       );
 
       const successPayload = buildContainerV2({
-        accentColorHex: ui.getColor("success") || "#00FF00",
+        accentColorHex: survivalUI.getColor("moss"),
         authorName: "Naura Secure Trading",
         title: `${e("cheers", "\u2705")} Transfernya berhasil!`,
         iconURL: targetUser.displayAvatarURL(),
@@ -218,17 +216,12 @@ module.exports = {
       return i.update({ ...successPayload, embeds: [] }).catch(() => {});
     });
 
-    collector.on("end", async () => {
-      if (settled) return;
+    collector.on("end", async (collected, reason) => {
+      if (settled || reason === "navigated") return;
 
-      const expired = buildErrorContainerV2({
-        title: `${e("sleepy", "\u231B")} Penawarannya kedaluwarsa`,
-        description:
-          "Waktunya habis dan belum ada tanggapan, jadi Naura batalkan penawarannya. Saldomu utuh, nggak ada yang berkurang!",
-        footerText: ui.getFooter("survival"),
-      });
-
-      await interaction.editReply({ ...expired, embeds: [] }).catch(() => {});
+      await interaction
+        .editReply({ ...disableContainerV2(tradePayload), embeds: [] })
+        .catch(() => {});
     });
   },
 };

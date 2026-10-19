@@ -10,7 +10,6 @@ const {
 const fs = require("fs");
 const path = require("path");
 
-const UserSurvival = require("../../../src/models/UserSurvival");
 const UserNPC = require("../../../src/models/UserNPC");
 const cacheManager = require("../../../src/managers/cacheManager");
 const {
@@ -18,9 +17,11 @@ const {
   takeItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const npcConfig = require("../../../src/survival/data/npcs");
 const {
   buildContainerV2,
+  disableContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 
 const COLLECTOR_MS = 120000;
@@ -64,9 +65,7 @@ function findPortrait(npc) {
 module.exports = {
   async execute(interaction) {
     const user = interaction.user;
-    const [survival] = await UserSurvival.findOrCreate({
-      where: { userId: user.id },
-    });
+    const survival = await cacheManager.getUserSurvival(user.id);
 
     if (survival.currentLocation === "prison")
       return ui.sendError(interaction, "err_sys_39", true);
@@ -124,7 +123,7 @@ module.exports = {
     const row = new ActionRowBuilder().addComponents(selectMenu);
 
     const datePayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      accentColorHex: survivalUI.getColor("emerald"),
       authorName: "Naura Amusement Park",
       title: `${e("happy", "\uD83C\uDFA1")} Taman Hiburan Naura`,
       iconURL: user.displayAvatarURL(),
@@ -161,7 +160,7 @@ module.exports = {
 
       if ((npcData.affection || 0) < MIN_AFFECTION) {
         const reject = buildContainerV2({
-          accentColorHex: ui.getColor("error") || "#ef4444",
+          accentColorHex: survivalUI.getColor("danger"),
           authorName: "Naura Amusement Park",
           title: `${e("shy", "\uD83D\uDE33")} Ajakanmu belum diterima`,
           iconURL: user.displayAvatarURL(),
@@ -222,7 +221,7 @@ module.exports = {
         RELATIONSHIP_NAMES[npcData.relationshipLevel || 0] || "Kenalan";
 
       const successPayload = buildContainerV2({
-        accentColorHex: ui.getColor("success") || "#22c55e",
+        accentColorHex: survivalUI.getColor("moss"),
         authorName: "Naura Amusement Park",
         title: `${e("blowkiss", "\uD83D\uDC96")} Kencannya menyenangkan!`,
         iconURL: user.displayAvatarURL(),
@@ -245,21 +244,12 @@ module.exports = {
       await i.editReply({ ...successPayload, embeds: [] }).catch(() => {});
     });
 
-    collector.on("end", async () => {
-      if (handled) return;
+    collector.on("end", async (collected, reason) => {
+      if (handled || reason === "navigated") return;
 
-      const timeout = buildContainerV2({
-        accentColorHex: ui.getColor("warning") || "#FFB347",
-        authorName: "Naura Amusement Park",
-        title: `${e("sleepy", "\u231B")} Waktunya habis`,
-        iconURL: user.displayAvatarURL(),
-        expression: "fail",
-        description:
-          "Tamannya mulai sepi dan kamu belum memilih siapa pun. Tiketmu Naura simpan utuh kok, jadi bisa dipakai lain waktu!",
-        footerText: ui.getFooter("survival"),
-      });
-
-      await interaction.editReply({ ...timeout, embeds: [] }).catch(() => {});
+      await interaction
+        .editReply({ ...disableContainerV2(datePayload), embeds: [] })
+        .catch(() => {});
     });
   },
 };

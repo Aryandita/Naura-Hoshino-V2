@@ -1,10 +1,10 @@
 const {
-  EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   MessageFlags,
 } = require("discord.js");
+const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const ui = require("../../config/ui");
 const { logger } = require("../../managers/logger");
 const gemini = require("./gemini");
@@ -59,22 +59,18 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
 
   let currentPlayerId = message.author.id;
 
-  const intro = new EmbedBuilder()
-    .setColor(ui.getColor("primary") || "#FFB6C1")
-    .setTitle(
-      `${ui.getEmoji("happy") || "\uD83C\uDFAD"} Truth or Dare bareng Naura!`,
-    )
-    .setDescription(
+  const intro = buildContainerV2({
+    accentColorHex: ui.getColor("primary") || "#FFC0CB",
+    title: `${ui.getEmoji("happy") || "🎭"} Truth or Dare bareng Naura!`,
+    description:
       `Hai <@${currentPlayerId}>! Naura udah siap jadi wasitnya, hihi.\n\n` +
-        "Pilih salah satu tombol di bawah buat mulai tantanganmu, yaa!",
-    )
-    .setThumbnail(message.author.displayAvatarURL())
-    .setFooter({ text: ui.getFooter("naura") });
-
-  const board = await message.channel.send({
-    embeds: [intro],
-    components: [choiceRow(currentPlayerId)],
+      "Pilih salah satu tombol di bawah buat mulai tantanganmu, yaa!",
+    headerIconURL: message.author.displayAvatarURL(),
+    buttonsRow: choiceRow(currentPlayerId),
+    footerText: ui.getFooter("naura"),
   });
+
+  const board = await message.channel.send(intro);
 
   const collector = board.createMessageComponentCollector({
     filter: (i) => i.customId.startsWith("tod_chan_"),
@@ -95,43 +91,33 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
     // Keduanya juga berawalan tod_chan_, jadi kalau dibiarkan jatuh ke
     // bawah, tombol Selesai akan ikut dianggap sebagai Dare.
     if (i.customId.startsWith("tod_chan_done_")) {
-      const done = new EmbedBuilder()
-        .setColor(ui.getColor("success") || "#2ecc71")
-        .setTitle(
-          `${ui.getEmoji("cheers") || "\uD83C\uDF89"} Tantangan selesai!`,
-        )
-        .setDescription(
-          `Hebat banget, <@${currentPlayerId}>! Naura bangga sama kamu.\n\nMau lanjut satu ronde lagi?`,
-        )
-        .setFooter({ text: ui.getFooter("naura") });
-
-      return i.editReply({
-        embeds: [done],
-        components: [
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`tod_chan_next_${currentPlayerId}`)
-              .setLabel("Main lagi")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        ],
+      const done = buildContainerV2({
+        accentColorHex: ui.getColor("success") || "#2ecc71",
+        title: `${ui.getEmoji("cheers") || "🎉"} Tantangan selesai!`,
+        description: `Hebat banget, <@${currentPlayerId}>! Naura bangga sama kamu.\n\nMau lanjut satu ronde lagi?`,
+        buttonsRow: new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`tod_chan_next_${currentPlayerId}`)
+            .setLabel("Main lagi")
+            .setStyle(ButtonStyle.Primary),
+        ),
+        footerText: ui.getFooter("naura"),
       });
+
+      return i.editReply(done);
     }
 
     if (i.customId.startsWith("tod_chan_next_")) {
-      const again = new EmbedBuilder()
-        .setColor(ui.getColor("primary") || "#FFB6C1")
-        .setTitle(`${ui.getEmoji("happy") || "\uD83C\uDFAD"} Ronde baru!`)
-        .setDescription(
-          `Giliran <@${currentPlayerId}> lagi. Mau **Truth** atau **Dare**?`,
-        )
-        .setThumbnail(i.user.displayAvatarURL())
-        .setFooter({ text: ui.getFooter("naura") });
-
-      return i.editReply({
-        embeds: [again],
-        components: [choiceRow(currentPlayerId)],
+      const again = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        title: `${ui.getEmoji("happy") || "🎭"} Ronde baru!`,
+        description: `Giliran <@${currentPlayerId}> lagi. Mau **Truth** atau **Dare**?`,
+        headerIconURL: i.user.displayAvatarURL(),
+        buttonsRow: choiceRow(currentPlayerId),
+        footerText: ui.getFooter("naura"),
       });
+
+      return i.editReply(again);
     }
 
     if (i.customId.startsWith("tod_chan_spin_")) {
@@ -148,40 +134,31 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
 
       currentPlayerId = chosen.id;
 
-      const spun = new EmbedBuilder()
-        .setColor(ui.getColor("primary") || "#FFB6C1")
-        .setTitle(
-          `${ui.getEmoji("shocked") || "\uD83D\uDD04"} Botolnya berhenti!`,
-        )
-        .setDescription(
-          `Waah, botolnya nunjuk <@${currentPlayerId}>!\n\nSekarang giliran kamu pilih **Truth** atau **Dare**, yaa!`,
-        )
-        .setThumbnail(chosen.displayAvatarURL())
-        .setFooter({ text: ui.getFooter("naura") });
-
-      return i.editReply({
-        embeds: [spun],
-        components: [choiceRow(currentPlayerId)],
+      const spun = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        title: `${ui.getEmoji("shocked") || "🔄"} Botolnya berhenti!`,
+        description: `Waah, botolnya nunjuk <@${currentPlayerId}>!\n\nSekarang giliran kamu pilih **Truth** atau **Dare**, yaa!`,
+        headerIconURL: chosen.displayAvatarURL(),
+        buttonsRow: choiceRow(currentPlayerId),
+        footerText: ui.getFooter("naura"),
       });
+
+      return i.editReply(spun);
     }
 
     const isTruth = i.customId.startsWith("tod_chan_truth_");
     const label = isTruth ? "Truth" : "Dare";
     const labelEmoji = isTruth
-      ? ui.getEmoji("read") || "\uD83D\uDCDD"
-      : ui.getEmoji("hmph") || "\uD83D\uDE08";
+      ? ui.getEmoji("read") || "📝"
+      : ui.getEmoji("hmph") || "😈";
 
-    await i.editReply({
-      embeds: [
-        new EmbedBuilder()
-          .setColor(ui.getColor("primary") || "#FFB6C1")
-          .setDescription(
-            `${ui.getEmoji("thinking") || "\u23F3"} Bentar yaa, Naura lagi mikirin ${label} yang seru buat kamu...`,
-          )
-          .setFooter({ text: ui.getFooter("naura") }),
-      ],
-      components: [],
+    const thinking = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFC0CB",
+      description: `${ui.getEmoji("thinking") || "⏳"} Bentar yaa, Naura lagi mikirin ${label} yang seru buat kamu...`,
+      footerText: ui.getFooter("naura"),
     });
+
+    await i.editReply(thinking);
 
     const prompt = isTruth
       ? "Buatkan 1 pertanyaan Truth yang memalukan, lucu, dan seru untuk dijawab di depan teman-teman. Jawab hanya teks pertanyaannya dalam Bahasa Indonesia, tanpa tambahan apa pun."
@@ -199,34 +176,27 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
     const player = await i.client.users
       .fetch(currentPlayerId)
       .catch(() => i.user);
-    const card = new EmbedBuilder()
-      .setColor(
-        isTruth
-          ? ui.getColor("success") || "#2ecc71"
-          : ui.getColor("error") || "#e74c3c",
-      )
-      .setAuthor({
-        name: `${label} untuk ${player.username}`,
-        iconURL: player.displayAvatarURL(),
-      })
-      .setDescription(`### ${labelEmoji} ${label}\n\n> **${challenge}**\n\n*Kalau sudah selesai, pencet tombol Selesai di bawah yaa!*`)
-      .setFooter({ text: ui.getFooter("naura") });
-
-    return i.editReply({
-      embeds: [card],
-      components: [
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`tod_chan_done_${currentPlayerId}`)
-            .setLabel("Selesai")
-            .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-            .setCustomId(`tod_chan_next_${currentPlayerId}`)
-            .setLabel("Giliran baru")
-            .setStyle(ButtonStyle.Primary),
-        ),
-      ],
+    const card = buildContainerV2({
+      accentColorHex: isTruth
+        ? ui.getColor("success") || "#2ecc71"
+        : ui.getColor("error") || "#e74c3c",
+      authorName: `${label} untuk ${player.username}`,
+      headerIconURL: player.displayAvatarURL(),
+      description: `### ${labelEmoji} ${label}\n\n> **${challenge}**\n\n*Kalau sudah selesai, pencet tombol Selesai di bawah yaa!*`,
+      buttonsRow: new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`tod_chan_done_${currentPlayerId}`)
+          .setLabel("Selesai")
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(`tod_chan_next_${currentPlayerId}`)
+          .setLabel("Giliran baru")
+          .setStyle(ButtonStyle.Primary),
+      ),
+      footerText: ui.getFooter("naura"),
     });
+
+    return i.editReply(card);
   });
 
   collector.on("end", () => {

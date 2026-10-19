@@ -10,6 +10,7 @@ const {
 const ui = require("../../../src/config/ui");
 const {
   buildContainerV2,
+  disableContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const questGen = require("../../../src/survival/engines/questGenerator");
@@ -121,7 +122,7 @@ module.exports = {
     }
 
     const minePayload = buildContainerV2({
-      accentColorHex: "#f59e0b",
+      accentColorHex: survivalUI.getColor("amber"),
       authorName: "Naura Ancient Cave",
       title: `${e("thinking", "\u26CF\uFE0F")} Menambang di Gua Kuno`,
       iconURL: user.displayAvatarURL(),
@@ -157,7 +158,7 @@ module.exports = {
 
       if (chosen !== target.id) {
         const failPayload = buildContainerV2({
-          accentColorHex: ui.getColor("warning") || "#FFB347",
+          accentColorHex: survivalUI.getColor("amber"),
           authorName: "Naura Ancient Cave",
           title: `${e("akward", "\uD83D\uDCA5")} Salah batu`,
           iconURL: user.displayAvatarURL(),
@@ -204,7 +205,7 @@ module.exports = {
 
       if (!stored.ok) {
         const writeFailPayload = buildContainerV2({
-          accentColorHex: ui.getColor("warning") || "#FFB347",
+          accentColorHex: survivalUI.getColor("amber"),
           authorName: "Naura Ancient Cave",
           title: `${e("akward", "\uD83D\uDCA5")} Hasilnya gagal dicatat`,
           iconURL: user.displayAvatarURL(),
@@ -299,23 +300,11 @@ module.exports = {
       await checkNauraBirthdayEncounter(interaction, user.id);
     });
 
-    collector.on("end", async () => {
-      if (answered) return;
-
-      const timeoutPayload = buildContainerV2({
-        accentColorHex: ui.getColor("warning") || "#FFB347",
-        authorName: "Naura Ancient Cave",
-        title: `${e("sleepy", "\uD83D\uDCA8")} Cahayanya sudah hilang`,
-        iconURL: user.displayAvatarURL(),
-        expression: "fail",
-        description:
-          "Kilau batu mulianya memudar sebelum kamu sempat memukul. Nggak apa-apa, gua ini masih banyak batunya. Naura tunggu kamu coba lagi!",
-        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
-        footerText: ui.getFooter("survival"),
-      });
+    collector.on("end", async (collected, reason) => {
+      if (answered || reason === "navigated") return;
 
       await interaction
-        .editReply({ ...timeoutPayload, embeds: [] })
+        .editReply({ ...disableContainerV2(minePayload), embeds: [] })
         .catch(() => {});
     });
   },

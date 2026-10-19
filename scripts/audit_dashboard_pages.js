@@ -6,9 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const OUTPUT_DIR = path.join(
-  "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\78c3a4ac-d68d-4cea-81d1-6ed1db3fc550\\scratch\\screenshots"
-);
+const OUTPUT_DIR = path.join(os.tmpdir(), "dashboard_audit");
 
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });

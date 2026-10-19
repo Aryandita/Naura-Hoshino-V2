@@ -10,7 +10,10 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const GuildSettings = require("../../src/models/GuildSettings");
+const {
+  getGuildSetting,
+  updateGuildSetting,
+} = require("../../src/managers/guildSettingsService");
 const { logger } = require("../../src/managers/logger");
 const cacheManager = require("../../src/managers/cacheManager");
 const {
@@ -1343,28 +1346,12 @@ module.exports = {
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand() || "dashboard";
 
-    const [settingsRecord] = await GuildSettings.findOrCreate({
-      where: { guildId: interaction.guild.id },
-    });
-
-    let currentSettings;
-    try {
-      currentSettings =
-        typeof settingsRecord.settings === "string"
-          ? JSON.parse(settingsRecord.settings)
-          : settingsRecord.settings || {};
-    } catch (e) {
-      currentSettings = {};
-    }
+    const currentSettings = (await getGuildSetting(interaction.guild.id)) || {};
 
     const saveSettings = async (newSettings) => {
-      settingsRecord.settings = newSettings;
-      settingsRecord.changed("settings", true);
-      // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
-      await settingsRecord.save({ fields: ["settings"] });
-      await cacheManager
-        .invalidateGuildSettings(interaction.guild.id)
-        .catch(() => {});
+      await updateGuildSetting(interaction.guild.id, (s) => {
+        Object.assign(s, newSettings);
+      });
     };
 
     const handler = handlers[subcommand];

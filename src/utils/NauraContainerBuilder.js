@@ -899,6 +899,54 @@ function buildDashboardLinkButton(pagePath = "", label = "🌐 Buka di Dashboard
     .setURL(url);
 }
 
+/**
+ * Menonaktifkan seluruh tombol dan select menu secara rekursif tanpa mengubah struktur payload.
+ * Mematuhi aturan Gotcha #16 (mempertahankan tampilan kartu aktif saat timeout).
+ * @param {Array} components
+ * @returns {Array}
+ */
+function disableComponents(components) {
+  if (!Array.isArray(components)) return [];
+  return components.map((comp) => {
+    const raw = typeof comp?.toJSON === "function" ? comp.toJSON() : JSON.parse(JSON.stringify(comp));
+    if (raw.type === 17 && Array.isArray(raw.components)) {
+      return {
+        ...raw,
+        components: disableComponents(raw.components),
+      };
+    }
+    if (raw.type === 1 && Array.isArray(raw.components)) {
+      return {
+        ...raw,
+        components: raw.components.map((c) => ({
+          ...c,
+          disabled: true,
+        })),
+      };
+    }
+    if (raw.type >= 2 && raw.type <= 8) {
+      return {
+        ...raw,
+        disabled: true,
+      };
+    }
+    return raw;
+  });
+}
+
+/**
+ * Membungkus payload Components V2 dan menonaktifkan seluruh kontrol interaktifnya.
+ * @param {object} payload
+ * @returns {object}
+ */
+function disableContainerV2(payload) {
+  if (!payload || !Array.isArray(payload.components)) return payload;
+  return {
+    ...payload,
+    components: disableComponents(payload.components),
+  };
+}
+
 module.exports = {
   buildContainerV2,
   buildErrorContainerV2,
@@ -908,6 +956,8 @@ module.exports = {
   buildPersonaContainerV2,
   buildDashboardLinkButton,
   sanitizeComponentCustomIds,
+  disableComponents,
+  disableContainerV2,
   textDisplay,
   separatorComp,
   ux: uxHelper,

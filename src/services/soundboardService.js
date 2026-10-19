@@ -243,14 +243,6 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
       timestamp: Date.now(),
     });
 
-    if (client.dashboardIo) {
-      client.dashboardIo.to(String(guildId)).emit("soundboard_played", {
-        sound: targetSound,
-        requester: requester ? { id: requester.id, username: requester.username } : null,
-        timestamp: Date.now(),
-      });
-    }
-
     return {
       success: true,
       message: `Memutar soundboard: ${targetSound.title}`,

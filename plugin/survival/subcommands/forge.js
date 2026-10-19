@@ -15,7 +15,8 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const { buildContainerV2, buildErrorContainerV2, disableContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const cacheManager = require("../../../src/managers/cacheManager");
 const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
@@ -100,7 +101,7 @@ module.exports = {
       );
 
       return buildContainerV2({
-        accentColorHex: "#F59E0B",
+        accentColorHex: survivalUI.getColor("amber"),
         authorName: "Naura Wilds - Bengkel Tempa & Daur Ulang",
         title: "⚒️ Bengkel Pandai Besi Bagas",
         description: descLines.join("\n"),
@@ -109,8 +110,8 @@ module.exports = {
       });
     };
 
-    const initialPayload = buildPayload();
-    const reply = await interaction.editReply(initialPayload);
+    let currentPayload = buildPayload();
+    const reply = await interaction.editReply(currentPayload);
 
     if (!reply) return;
 
@@ -146,8 +147,8 @@ module.exports = {
         } else {
           snippet = `⚠️ **Daur Ulang Massal:** ${allRes.message || "Tidak ada barang yang dibongkar."}`;
         }
-        const updated = buildPayload(snippet);
-        await i.editReply(updated).catch(() => {});
+        currentPayload = buildPayload(snippet);
+        await i.editReply(currentPayload).catch(() => {});
         return;
       }
 
@@ -173,13 +174,16 @@ module.exports = {
           snippet = `⚠️ **Gagal Daur Ulang:** ${salvageRes.message || "Barang tidak dapat dibongkar."}`;
         }
 
-        const updated = buildPayload(snippet);
-        await i.editReply(updated).catch(() => {});
+        currentPayload = buildPayload(snippet);
+        await i.editReply(currentPayload).catch(() => {});
       }
     });
 
-    collector.on("end", async () => {
-      await interaction.editReply({ components: [] }).catch(() => {});
+    collector.on("end", async (collected, reason) => {
+      if (reason === "navigated") return;
+      if (currentPayload) {
+        await interaction.editReply(disableContainerV2(currentPayload)).catch(() => {});
+      }
     });
   },
 };

@@ -13,6 +13,7 @@
  * - Deteksi Siklus Resolusi (Circular Dependency Guard)
  * - Lifecycle Hooks: init() dan dispose()
  */
+const { EntityNotFoundError, SystemError } = require("../errors/DomainError");
 
 class ServiceContainer {
   constructor() {
@@ -95,13 +96,13 @@ class ServiceContainer {
     // 2. Cek apakah ada factory terdaftar
     const definition = this.factories.get(name);
     if (!definition) {
-      throw new Error(`[ServiceContainer] Layanan '${name}' belum terdaftar di container.`);
+      throw new EntityNotFoundError(`[ServiceContainer] Layanan '${name}' belum terdaftar di container.`);
     }
 
     // 3. Deteksi ketergantungan sirkular pada resolution stack
     if (this.resolutionStack.has(name)) {
       const cyclePath = [...this.resolutionStack, name].join(" -> ");
-      throw new Error(
+      throw new SystemError(
         `[ServiceContainer] Circular dependency terdeteksi saat meresolve '${name}': ${cyclePath}`,
       );
     }
@@ -128,7 +129,7 @@ class ServiceContainer {
         try {
           await instance.init();
         } catch (error) {
-          throw new Error(
+          throw new SystemError(
             `[ServiceContainer] Gagal menginisialisasi layanan '${name}': ${error.message}`,
           );
         }

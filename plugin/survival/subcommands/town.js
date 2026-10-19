@@ -6,10 +6,9 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const { buildContainerV2, disableContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
-const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const currency = require("../../../src/survival/engines/currency");
 const worldMapData = require("../../../src/survival/data/worldMapData");
@@ -21,9 +20,7 @@ const COLLECTOR_MS = 90000;
 module.exports = {
   async execute(interaction) {
     const user = interaction.user;
-    const [survival] = await UserSurvival.findOrCreate({
-      where: { userId: user.id },
-    });
+    const survival = await cacheManager.getUserSurvival(user.id);
     const profile = await cacheManager.getUserProfile(user.id);
 
     const now = new Date();
@@ -128,7 +125,7 @@ module.exports = {
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId("town_exchange_nsf")
-              .setLabel("Tukar 1000 NSF -> 1 NC (Bank Pratama)")
+              .setLabel("Tukar NSF -> NC (Bank Pratama)")
               .setEmoji("🏦")
               .setStyle(ButtonStyle.Success),
           ),
@@ -138,7 +135,7 @@ module.exports = {
       rows.push(survivalUI.buildSurvivalActionRow("town", user.id));
 
       return buildContainerV2({
-        accentColorHex: region.themeColor || "#10B981",
+        accentColorHex: survivalUI.getColor(region.themeColor) || survivalUI.getColor("emerald"),
         authorName: `Naura Wilds - ${region.name}`,
         title: `🗺️ ${region.title}`,
         description: descLines.join("\n"),
@@ -147,8 +144,8 @@ module.exports = {
       });
     };
 
-    const initialPayload = buildPayload();
-    const reply = await interaction.editReply(initialPayload);
+    let currentPayload = buildPayload();
+    const reply = await interaction.editReply(currentPayload);
     if (!reply) return;
 
     const collector = reply.createMessageComponentCollector({
@@ -182,8 +179,8 @@ module.exports = {
           `🛠️ **Fasilitas Tersedia:** ${detail.facilities.join(", ")}`,
         ].join("\n");
 
-        const updatedPayload = buildPayload(snippet);
-        await i.editReply(updatedPayload).catch(() => {});
+        currentPayload = buildPayload(snippet);
+        await i.editReply(currentPayload).catch(() => {});
       } else if (i.customId === "town_greet_npc") {
         await i.deferUpdate().catch(() => {});
         const selectedNpcId = i.values[0];
@@ -202,32 +199,42 @@ module.exports = {
           .filter(Boolean)
           .join("\n");
 
-        const updatedPayload = buildPayload(talkSnippet);
-        await i.editReply(updatedPayload).catch(() => {});
+        currentPayload = buildPayload(talkSnippet);
+        await i.editReply(currentPayload).catch(() => {});
       } else if (i.customId === "town_exchange_nsf") {
         await i.deferUpdate().catch(() => {});
-        // Kurs resmi: 1000 NSF -> 1 NC di Bank Kota Pratama
+        const quote = await currency.getDynamicRateAndFee(1100);
+        const minNeeded = Math.ceil(quote.rate / (1 - quote.feePercent));
+        const amountToExchange = Math.max(1000, minNeeded);
         const currentNsf = currency.balanceOf(currency.FRAGMENT, { survival, profile });
-        if (currentNsf < 1000) {
-          const errPayload = buildPayload("⚠️ **Bank Pratama:** Saldo Naura Star Fragments (NSF) milikmu kurang dari 1.000 NSF.");
+        if (currentNsf < amountToExchange) {
+          const errPayload = buildPayload(`⚠️ **Bank Pratama:** Saldo Naura Star Fragments (NSF) milikmu kurang (${currentNsf.toLocaleString("id-ID")} / butuh ${amountToExchange.toLocaleString("id-ID")} NSF).`);
           return i.editReply(errPayload).catch(() => {});
         }
 
-        const debit = await currency.charge(currency.FRAGMENT, { survival, profile }, 1000);
-        if (!debit) {
-          const errPayload = buildPayload("⚠️ **Bank Pratama:** Gagal memotong saldo NSF.");
+        const result = await currency.exchange({ survival, profile }, currency.FRAGMENT, currency.COIN, amountToExchange);
+        if (!result.ok) {
+          let errReason = "Gagal memproses penukaran kurs di Bank Pratama.";
+          if (result.reason === "insufficient") {
+            errReason = `Saldo Naura Star Fragments (NSF) milikmu kurang (${result.balance.toLocaleString("id-ID")} / butuh ${result.needed.toLocaleString("id-ID")} NSF).`;
+          } else if (result.reason === "below_minimum") {
+            errReason = `Jumlah penukaran di bawah batas minimum (minimal ${result.minimum.toLocaleString("id-ID")} NSF untuk 1 NC).`;
+          }
+          const errPayload = buildPayload(`⚠️ **Bank Pratama:** ${errReason}`);
           return i.editReply(errPayload).catch(() => {});
         }
 
-        await cacheManager.incrementUserProfile(user.id, { economy_wallet: 1 });
-        const successSnippet = "🏦 **Transaksi Sukses:** Kamu menukarkan **1.000 NSF** menjadi **1 Naura Coin (NC)** di Bank Sentral Pratama!";
-        const updatedPayload = buildPayload(successSnippet);
-        await i.editReply(updatedPayload).catch(() => {});
+        const successSnippet = `🏦 **Transaksi Sukses:** Kamu menukarkan **${result.spent.toLocaleString("id-ID")} NSF** menjadi **${result.received.toLocaleString("id-ID")} Naura Coin (NC)** di Bank Sentral Pratama!\n*(Biaya Spread: ${result.feeNsf.toLocaleString("id-ID")} NSF dialirkan ke Server Treasury & Kas Kota)*`;
+        currentPayload = buildPayload(successSnippet);
+        await i.editReply(currentPayload).catch(() => {});
       }
     });
 
-    collector.on("end", async () => {
-      await interaction.editReply({ components: [] }).catch(() => {});
+    collector.on("end", async (collected, reason) => {
+      if (reason === "navigated") return;
+      if (currentPayload) {
+        await interaction.editReply(disableContainerV2(currentPayload)).catch(() => {});
+      }
     });
   },
 };

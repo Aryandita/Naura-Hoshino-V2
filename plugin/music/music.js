@@ -230,11 +230,6 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub
-        .setName("247")
-        .setDescription("Aktifkan atau matikan mode 24/7 di Voice Channel"),
-    )
-    .addSubcommand((sub) =>
-      sub
         .setName("lyrics")
         .setDescription(
           "Cari lirik lagu yang sedang diputar atau berdasarkan judul",
@@ -266,17 +261,6 @@ module.exports = {
               { name: "Vibrato", value: "vibrato" },
               { name: "Tremolo", value: "tremolo" },
             ),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("profile")
-        .setDescription("Tampilkan kartu profil musik statistik personal kamu")
-        .addUserOption((opt) =>
-          opt
-            .setName("target")
-            .setDescription("User yang ingin dilihat profil musiknya")
-            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -323,93 +307,119 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub
-        .setName("wrapped")
-        .setDescription(
-          "Lihat rekap kilas balik musik personal & server Naura Wrapped",
-        )
-        .addUserOption((opt) =>
-          opt
-            .setName("target")
-            .setDescription("User yang ingin dilihat rekap Wrapped-nya")
-            .setRequired(false),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
         .setName("party")
         .setDescription(
           "Buka sesi Listening Party kolaboratif bersama seluruh anggota Voice",
         ),
     )
-    .addSubcommand((sub) =>
-      sub
-        .setName("dj")
-        .setDescription(
-          "🎧 Aktifkan atau kelola mode AI Smart DJ Companion (Hoshino FM)",
+    .addSubcommandGroup((group) =>
+      group
+        .setName("settings")
+        .setDescription("Pengaturan dan konfigurasi pemutaran audio/musik")
+        .addSubcommand((sub) =>
+          sub
+            .setName("audio")
+            .setDescription(
+              "🎚️ Atur kualitas format audio atau cek status kluster federasi",
+            )
+            .addStringOption((opt) =>
+              opt
+                .setName("opsi")
+                .setDescription("Pilihan pengaturan audio atau status kluster")
+                .setRequired(false)
+                .addChoices(
+                  { name: "Standard (128kbps)", value: "standard" },
+                  { name: "HD Audio (256kbps)", value: "hd" },
+                  {
+                    name: "Lossless Hi-Fi (384kbps FLAC/Opus)",
+                    value: "lossless",
+                  },
+                  { name: "Status Kualitas Audio (Status)", value: "status" },
+                  { name: "Status Kluster Node (Cluster)", value: "cluster" },
+                ),
+            ),
         )
-        .addStringOption((opt) =>
-          opt
-            .setName("mode")
-            .setDescription("Pilihan mode DJ")
-            .setRequired(false)
-            .addChoices(
-              { name: "Aktifkan AI Smart DJ (On)", value: "on" },
-              { name: "Matikan AI Smart DJ (Off)", value: "off" },
-              { name: "Status AI Smart DJ (Status)", value: "status" },
+        .addSubcommand((sub) =>
+          sub
+            .setName("dj")
+            .setDescription(
+              "🎧 Aktifkan atau kelola mode AI Smart DJ Companion (Hoshino FM)",
+            )
+            .addStringOption((opt) =>
+              opt
+                .setName("mode")
+                .setDescription("Pilihan mode DJ")
+                .setRequired(false)
+                .addChoices(
+                  { name: "Aktifkan AI Smart DJ (On)", value: "on" },
+                  { name: "Matikan AI Smart DJ (Off)", value: "off" },
+                  { name: "Status AI Smart DJ (Status)", value: "status" },
+                ),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("247")
+            .setDescription("Aktifkan atau matikan mode 24/7 di Voice Channel"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("duplicates")
+            .setDescription(
+              "🛡️ Smart Duplicate Track Detection di antrean lagu guild (5 lagu terakhir)",
+            )
+            .addStringOption((opt) =>
+              opt
+                .setName("mode")
+                .setDescription("Pilihan mode anti-duplikasi")
+                .setRequired(false)
+                .addChoices(
+                  { name: "Aktifkan Anti-Duplikasi (On)", value: "on" },
+                  { name: "Matikan Anti-Duplikasi (Off)", value: "off" },
+                  { name: "Status Anti-Duplikasi (Status)", value: "status" },
+                ),
             ),
         ),
     )
-    .addSubcommand((sub) =>
-      sub
-        .setName("duplicates")
-        .setDescription(
-          "🛡️ Smart Duplicate Track Detection di antrean lagu guild (5 lagu terakhir)",
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("mode")
-            .setDescription("Pilihan mode anti-duplikasi")
-            .setRequired(false)
-            .addChoices(
-              { name: "Aktifkan Anti-Duplikasi (On)", value: "on" },
-              { name: "Matikan Anti-Duplikasi (Off)", value: "off" },
-              { name: "Status Anti-Duplikasi (Status)", value: "status" },
+    .addSubcommandGroup((group) =>
+      group
+        .setName("stats")
+        .setDescription("Statistik dan personalisasi profil musik kamu")
+        .addSubcommand((sub) =>
+          sub
+            .setName("profile")
+            .setDescription("Tampilkan kartu profil musik statistik personal kamu")
+            .addUserOption((opt) =>
+              opt
+                .setName("target")
+                .setDescription("User yang ingin dilihat profil musiknya")
+                .setRequired(false),
             ),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("aura")
-        .setDescription(
-          "🔮 Analisis AI Music Aura & Kartu Resonansi Kepribadian Musik Kamu",
         )
-        .addUserOption((opt) =>
-          opt
-            .setName("target")
-            .setDescription("User yang ingin dianalisis Music Aura-nya")
-            .setRequired(false),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("audio")
-        .setDescription(
-          "🎚️ Atur kualitas format audio atau cek status kluster federasi",
+        .addSubcommand((sub) =>
+          sub
+            .setName("wrapped")
+            .setDescription(
+              "Lihat rekap kilas balik musik personal & server Naura Wrapped",
+            )
+            .addUserOption((opt) =>
+              opt
+                .setName("target")
+                .setDescription("User yang ingin dilihat rekap Wrapped-nya")
+                .setRequired(false),
+            ),
         )
-        .addStringOption((opt) =>
-          opt
-            .setName("opsi")
-            .setDescription("Pilihan pengaturan audio atau status kluster")
-            .setRequired(false)
-            .addChoices(
-              { name: "Standard (128kbps)", value: "standard" },
-              { name: "HD Audio (256kbps)", value: "hd" },
-              {
-                name: "Lossless Hi-Fi (384kbps FLAC/Opus)",
-                value: "lossless",
-              },
-              { name: "Status Kualitas Audio (Status)", value: "status" },
-              { name: "Status Kluster Node (Cluster)", value: "cluster" },
+        .addSubcommand((sub) =>
+          sub
+            .setName("aura")
+            .setDescription(
+              "🔮 Analisis AI Music Aura & Kartu Resonansi Kepribadian Musik Kamu",
+            )
+            .addUserOption((opt) =>
+              opt
+                .setName("target")
+                .setDescription("User yang ingin dianalisis Music Aura-nya")
+                .setRequired(false),
             ),
         ),
     ),
@@ -587,7 +597,13 @@ module.exports = {
 
   async executePrefix(message, args, client) {
     if (!args || args.length === 0) return ui.sendError(message, "err_sys_13");
-    const subcommand = args.shift().toLowerCase();
+    let subcommand = args.shift().toLowerCase();
+    if (
+      (subcommand === "settings" || subcommand === "stats") &&
+      args.length > 0
+    ) {
+      subcommand = args.shift().toLowerCase();
+    }
     const parsedArgs = {
       query: args.join(" "),
       url: args[0],

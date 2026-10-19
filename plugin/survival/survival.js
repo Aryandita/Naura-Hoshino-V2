@@ -115,7 +115,11 @@ module.exports = {
 
   // --- DUKUNGAN PREFIX (LEGACY) ---
   async executePrefix(message, args, client) {
-    const inputSubCmd = args[0] ? args[0].toLowerCase() : "info";
+    let inputSubCmd = args[0] ? args[0].toLowerCase() : "info";
+    if (inputSubCmd === "combat" && args[1]) {
+      args.shift();
+      inputSubCmd = args[0] ? args[0].toLowerCase() : "info";
+    }
     const subCmdName = ALIAS_MAP[inputSubCmd] || inputSubCmd;
     const cmd = subcommands.get(subCmdName);
 

@@ -11,7 +11,6 @@ const {
   MessageFlags,
 } = require("discord.js");
 
-const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const items = require("../../../src/survival/data/items");
@@ -34,6 +33,7 @@ const {
 const {
   buildContainerV2,
   buildErrorContainerV2,
+  disableContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
@@ -73,9 +73,7 @@ module.exports = {
       fuzzyFilter,
     } = require("../../../src/utils/autocompleteHelper");
     const focusedValue = interaction.options.getFocused().toLowerCase();
-    const [survival] = await UserSurvival.findOrCreate({
-      where: { userId: interaction.user.id },
-    });
+    const survival = await cacheManager.getUserSurvival(interaction.user.id);
     const shop = resolveShop(survival.currentLocation);
     if (!shop) return safeRespond(interaction, []);
 
@@ -143,9 +141,7 @@ module.exports = {
 
     const user = interaction.user;
     const profile = await cacheManager.getUserProfile(user.id);
-    const [survival] = await UserSurvival.findOrCreate({
-      where: { userId: user.id },
-    });
+    const survival = await cacheManager.getUserSurvival(user.id);
 
     if (survival.currentLocation === "prison")
       return ui.sendError(interaction, "err_sys_58", true);
@@ -424,9 +420,7 @@ module.exports = {
 
     const renderSellView = async () => {
       const freshProfile = await cacheManager.getUserProfile(user.id);
-      const freshSurvival = await UserSurvival.findOne({
-        where: { userId: user.id },
-      });
+      const freshSurvival = await cacheManager.getUserSurvival(user.id);
       holders.profile = freshProfile;
       holders.survival = freshSurvival;
 
@@ -488,7 +482,8 @@ module.exports = {
       [modeRow("buy"), categoryRow()],
     );
 
-    const response = await interaction.editReply(openPayload);
+    let activePayload = openPayload;
+    const response = await interaction.editReply(activePayload);
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -502,9 +497,7 @@ module.exports = {
 
       if (i.customId === "shop_mode_buy") {
         const freshProfile = await cacheManager.getUserProfile(user.id);
-        const freshSurvival = await UserSurvival.findOne({
-          where: { userId: user.id },
-        });
+        const freshSurvival = await cacheManager.getUserSurvival(user.id);
         holders.profile = freshProfile;
         holders.survival = freshSurvival;
 
@@ -515,11 +508,13 @@ module.exports = {
           false,
           [modeRow("buy"), categoryRow()],
         );
-        return i.editReply(mainPayload);
+        activePayload = mainPayload;
+        return i.editReply(activePayload);
       }
 
       if (i.customId === "shop_mode_sell") {
-        return i.editReply(await renderSellView());
+        activePayload = await renderSellView();
+        return i.editReply(activePayload);
       }
 
       if (i.customId === "shop_sell_pick") {
@@ -541,15 +536,14 @@ module.exports = {
             .setStyle(ButtonStyle.Secondary),
         );
 
-        return i.editReply(
-          shopPayload(
-            `💰 Konfirmasi Penjualan`,
-            `Barang: **${item ? item.name : itemId}**\nJumlah di ransel: **${amount} unit**\nHarga per unit: **${value.toLocaleString("id-ID")} NSF**\n\nMau dijual 1 unit dulu atau semuanya sekaligus?`,
-            "",
-            false,
-            [confirmRow],
-          ),
+        activePayload = shopPayload(
+          `💰 Konfirmasi Penjualan`,
+          `Barang: **${item ? item.name : itemId}**\nJumlah di ransel: **${amount} unit**\nHarga per unit: **${value.toLocaleString("id-ID")} NSF**\n\nMau dijual 1 unit dulu atau semuanya sekaligus?`,
+          "",
+          false,
+          [confirmRow],
         );
+        return i.editReply(activePayload);
       }
 
       if (
@@ -574,9 +568,7 @@ module.exports = {
         }
 
         const freshProfile = await cacheManager.getUserProfile(user.id);
-        const freshSurvival = await UserSurvival.findOne({
-          where: { userId: user.id },
-        });
+        const freshSurvival = await cacheManager.getUserSurvival(user.id);
         holders.profile = freshProfile;
         holders.survival = freshSurvival;
 
@@ -594,7 +586,8 @@ module.exports = {
           ),
         );
 
-        return i.editReply(await renderSellView());
+        activePayload = await renderSellView();
+        return i.editReply(activePayload);
       }
 
       if (i.customId === "shop_category") {
@@ -639,7 +632,8 @@ module.exports = {
             activeIsCoupon,
             [modeRow("buy"), categoryRow()],
           );
-          return i.editReply(emptyPayload);
+          activePayload = emptyPayload;
+          return i.editReply(activePayload);
         }
 
         const buyRow = new ActionRowBuilder().addComponents(
@@ -678,29 +672,24 @@ module.exports = {
           activeIsCoupon,
           [modeRow("buy"), categoryRow(), buyRow],
         );
-        return i.editReply(listPayload);
+        activePayload = listPayload;
+        return i.editReply(activePayload);
       }
 
       if (i.customId === "shop_buy") {
         await processBuy(i, i.values[0], activeIsCoupon);
         const freshProfile = await cacheManager.getUserProfile(user.id);
-        const freshSurvival = await UserSurvival.findOne({
-          where: { userId: user.id },
-        });
+        const freshSurvival = await cacheManager.getUserSurvival(user.id);
         holders.profile = freshProfile;
         holders.survival = freshSurvival;
       }
     });
 
-    collector.on("end", async () => {
-      const closingPayload = shopPayload(
-        `${e("sleepy", "💤")} ${shop.shopName} sudah tutup`,
-        say(shop.dialog.farewell, vars),
-        "",
-        false,
-        [],
-      );
-      await interaction.editReply(closingPayload).catch(() => {});
+    collector.on("end", async (collected, reason) => {
+      if (reason === "navigated") return;
+      if (activePayload) {
+        await interaction.editReply(disableContainerV2(activePayload)).catch(() => {});
+      }
     });
   },
 };

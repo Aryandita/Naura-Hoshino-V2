@@ -11,7 +11,10 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const { sendModLog } = require("../../src/utils/modLogHelper");
-const GuildSettings = require("../../src/models/GuildSettings");
+const {
+  getGuildSetting,
+  updateGuildSetting,
+} = require("../../src/managers/guildSettingsService");
 
 function ephemeral(payload) {
   return { ...payload, flags: (payload.flags || 0) | MessageFlags.Ephemeral };
@@ -91,12 +94,7 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      const [settingsRow] = await GuildSettings.findOrCreate({
-        where: { guildId: guild.id },
-        defaults: { guildId: guild.id, settings: {} },
-      });
-
-      const currentSettings = { ...(settingsRow.settings || {}) };
+      const currentSettings = (await getGuildSetting(guild.id)) || {};
       const currentShield = currentSettings.shield || { active: false };
 
       if (subcommand === "on") {
@@ -133,19 +131,17 @@ module.exports = {
           });
         }
 
-        currentSettings.shield = {
-          active: true,
-          previousLevel: prevLevel,
-          lockdown: isLockdown,
-          lockdownChannelId: isLockdown ? interaction.channel.id : null,
-          activatedBy: author.id,
-          activatedAt: new Date().toISOString(),
-          reason,
-        };
-
-        settingsRow.settings = currentSettings;
-        settingsRow.changed("settings", true);
-        await settingsRow.save({ fields: ["settings"] });
+        await updateGuildSetting(guild.id, (s) => {
+          s.shield = {
+            active: true,
+            previousLevel: prevLevel,
+            lockdown: isLockdown,
+            lockdownChannelId: isLockdown ? interaction.channel.id : null,
+            activatedBy: author.id,
+            activatedAt: new Date().toISOString(),
+            reason,
+          };
+        });
 
         const shieldOnContainer = buildContainerV2({
           accentColorHex: ui.getColor("error") || "#ef4444",
@@ -202,15 +198,13 @@ module.exports = {
           }
         }
 
-        currentSettings.shield = {
-          active: false,
-          deactivatedBy: author.id,
-          deactivatedAt: new Date().toISOString(),
-        };
-
-        settingsRow.settings = currentSettings;
-        settingsRow.changed("settings", true);
-        await settingsRow.save({ fields: ["settings"] });
+        await updateGuildSetting(guild.id, (s) => {
+          s.shield = {
+            active: false,
+            deactivatedBy: author.id,
+            deactivatedAt: new Date().toISOString(),
+          };
+        });
 
         const shieldOffContainer = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#10b981",

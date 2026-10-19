@@ -13,7 +13,7 @@ const allEmojis = {
 
 const ui = {
   getEmoji: (name) => allEmojis[name] || null,
-  getColor: (name) => colors[name] || colors.primary || "#FFB6C1",
+  getColor: (name) => colors[name] || colors.primary || "#FFC0CB",
   getFooter: (cat = "core") => footers[cat] || footers.core || "Naura Hoshino",
 };
 

@@ -80,7 +80,11 @@ for (const file of pluginFiles) {
     if (!isHandled && hasCollect) {
       const collectIdx = content.indexOf("on(\"collect\"");
       const collectBlock = content.slice(collectIdx);
-      isHandled = collectBlock.includes(checkKey) || collectBlock.includes(cid) || (rel.includes("poll.js") && collectBlock.includes("split(\"_\")"));
+      isHandled =
+        collectBlock.includes(checkKey) ||
+        collectBlock.includes(cid) ||
+        ((rel.includes("poll.js") || rel.includes("tictactoe.js") || rel.includes("trivia.js")) &&
+          (collectBlock.includes('split("_")') || collectBlock.includes("split('_')")));
     }
 
     if (!isHandled) {

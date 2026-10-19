@@ -10,7 +10,7 @@ const {
   buildErrorContainerV2,
 } = require("../../utils/NauraContainerBuilder");
 const { renderInWorker } = require("../../canvas/canvasRuntime");
-const UserProfile = require("../../models/UserProfile");
+const cacheManager = require("../../managers/cacheManager");
 const UserLeveling = require("../../models/UserLeveling");
 const UserSurvival = require("../../models/UserSurvival");
 
@@ -36,9 +36,7 @@ module.exports = {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      const [profile] = await UserProfile.findOrCreate({
-        where: { userId: targetUser.id },
-      });
+      const profile = await cacheManager.getUserProfile(targetUser.id);
       const [leveling] = await UserLeveling.findOrCreate({
         where: { userId: targetUser.id },
       });

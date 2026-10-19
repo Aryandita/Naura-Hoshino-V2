@@ -26,7 +26,7 @@
 | **Standar Anti-Slop**   | Filter desain & copy AI (R-01 s/d R-38), data jujur, tanpa gradien/orb generik, Delivery Gate | Bagian 1.4.3 |
 | **Desain Survival**     | Sub-brand Naura Wilds, token warna dari `src/utils/survivalUIHelper.js`                   | Bagian 1.5         |
 | **Tulis Data User**     | HANYA via `cacheManager` (increment/debit/mutateJson), bukan model langsung               | Bagian 1.6         |
-| **Currency V2 Moneter** | Controlled Bridge (1000 NSF = 1 NC, Spread Fee 5-25%), 4-Channel Closed-Loop Pool       | Bagian 1.6.3 & 1.6.4 |
+| **Currency V2 Moneter** | One-Way Bridge (1000 NSF = 1 NC, Spread Fee 5-25%), 4-Channel Closed-Loop Pool       | Bagian 1.6.3 & 1.6.4 |
 | **Diskon & Modifier NPC** | Single Modifier tertinggi, Hard Cap 50%, Pengecualian Mythic/Bursa, Floor Price 1       | Bagian 1.6.5         |
 | **Tulis GuildSettings** | HANYA via `guildSettingsService.updateGuildSetting()`                                     | Bagian 1.8         |
 | **Render Canvas**       | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (Worker Threads)         | Bagian 1.9         |
@@ -75,6 +75,10 @@
 | Konstanta global       | `UPPER_SNAKE_CASE`            | `OWNER_IDS`, `LAVA_HOST`                           |
 | Event handler files    | `camelCase.js` (nama event)   | `messageCreate.js`, `voiceStateUpdate.js`          |
 | File unit test         | `<nama>.test.js` bersebelahan | `rateLimiter.test.js`, `inventoryHelper.test.js`   |
+| Sub-helper plugin (14 berkas) | `camelCase.js` (pengecualian) | `adminCosmetic.js`, `ownerOps.js`, `roleShop.js`   |
+
+> [!NOTE]
+> **Pengecualian Berkas Sub-Helper/Sub-Engine Plugin**: Sebanyak 14 berkas sub-helper internal dan modul sub-engine di dalam direktori `plugin/` (seperti `adminCosmetic.js`, `ownerOps.js`, `roleShop.js`, `coreShared.js`, dll.) diperbolehkan dan dipertahankan menggunakan konvensi `camelCase.js` untuk membedakan perannya sebagai modul komputasi pendukung internal dari berkas command router (`kebab-case.js` atau root command).
 
 ## 1.3 Aturan Keamanan & Integritas Sistem
 
@@ -230,10 +234,9 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 - **Pemisahan Sirkulasi Regional**:
   - *Naura Star Fragments (NSF)*: Mata uang sirkulasi primer wilayah Desa Sukamaju untuk kebutuhan vital dasar (makanan warung, penginapan, perkakas dasar, bibit pertanian).
   - *Naura Coins (NC)*: Mata uang ekonomi makro Kota Pratama untuk transaksi bernilai tinggi (bursa karir, layanan medis rumah sakit, balai lelang, pasar saham server).
-- **Kurs Resmi Baku**: Kurs penukaran dasar ditetapkan secara absolut: **1.000 NSF = 1 NC**.
-- **Jembatan Dua Arah Terkendali (*Controlled Two-Way Bridge*)**:
-  - *Penukaran Maju (NSF -> NC)*: Pemain dapat menukarkan 1.000 NSF menjadi 1 NC di Bank Sentral Pratama secara bebas sesuai kecukupan saldo grinding mereka.
-  - *Arus Balik Terkendali (NC -> NSF)*: Penukaran kembali NC ke NSF dibuka tanpa kuota harian kaku, namun diatur ketat dengan **Spread Fee Progresif Eksponensial (5% hingga 25%)** berdasarkan total volume transaksi penukaran harian server guna mencegah inflasi liar atau eksploitasi dumping saldo global server ke ekosistem survival.
+- **Jembatan Satu Arah Terkunci (*One-Way Bridge*)**:
+  - *Penukaran Maju (NSF -> NC)*: Pemain dapat menukarkan 1.000 NSF menjadi 1 NC di Bank Sentral Pratama secara bebas sesuai kecukupan saldo grinding mereka dengan biaya spread fee dinamis (5% hingga 25%).
+  - *Penukaran Balik Terkunci (NC -> NSF)*: Ditolak secara permanen (`one_way_restricted`). Naura Central Bank tidak melayani penukaran Naura Coin kembali ke Star Fragments untuk menjaga integritas ekosistem bertahan hidup dan mencegah inflasi dari ekonomi makro server.
   - *Alokasi Biaya*: 100% dari biaya spread fee penukaran mata uang wajib disalurkan langsung ke kas `ServerTreasury` (skema 4 alokasi pool).
 
 ### 1.6.5 Batas Pengubah Harga Ekonomi & Diskon Relasi NPC

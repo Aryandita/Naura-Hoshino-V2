@@ -76,65 +76,159 @@ function addRpgSubcommands(builder) {
             "⚡ Kelola Pohon Kemampuan Jiwa & alokasikan Stat Points",
           ),
       )
-      .addSubcommand((sub) =>
-        sub
-          .setName("duel")
-          .setDescription(
-            "\ud83d\udee1\ufe0f Tantang pemain lain dalam duel bertarung RPG turn-based!",
+      .addSubcommandGroup((group) =>
+        group
+          .setName("combat")
+          .setDescription("Sistem pertempuran, arena, dungeon, dan duel")
+          .addSubcommand((sub) =>
+            sub
+              .setName("dungeon")
+              .setDescription("Memasuki lorong gelap untuk melawan monster"),
           )
-          .addUserOption((opt) =>
-            opt
-              .setName("lawan")
-              .setDescription("Pilih lawan main yang ingin kamu tantang")
-              .setRequired(true),
-          )
-          .addIntegerOption((opt) =>
-            opt
-              .setName("taruhan")
-              .setDescription("Jumlah Naura Coin taruhan (Opsional)")
-              .setRequired(false)
-              .setMinValue(100),
-          )
-          .addBooleanOption((opt) =>
-            opt
-              .setName("ranked")
+          .addSubcommand((sub) =>
+            sub
+              .setName("abyss")
               .setDescription(
-                "Mainkan mode Ranked untuk mendapatkan poin MMR? (Opsional)",
+                "🌀 Jelajahi Labirin Rogue-lite Prosedural 50 Lantai (The Neo-Abyss)",
               )
-              .setRequired(false),
-          ),
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("arena")
-          .setDescription("Akses sistem PvP Arena (Leaderboard & Stats)")
-          .addStringOption((opt) =>
-            opt
-              .setName("menu")
-              .setDescription("Pilih menu arena")
-              .setRequired(true)
-              .addChoices(
-                { name: "🏆 Papan Peringkat MMR", value: "leaderboard" },
-                { name: "📊 Statistik PvP Pribadi", value: "stats" },
-                {
-                  name: "⚔️ Galactic Coliseum 3v3 Match",
-                  value: "coliseum_match",
-                },
-                {
-                  name: "🛡️ Formasi Tim & Divisi Coliseum",
-                  value: "coliseum_team",
-                },
-                {
-                  name: "👑 Papan Peringkat Divisi Master",
-                  value: "coliseum_leaderboard",
-                },
+              .addStringOption((opt) =>
+                opt
+                  .setName("aksi")
+                  .setDescription("Pilih aksi ekspedisi labirin")
+                  .addChoices(
+                    { name: "🚀 Mulai / Lanjutkan Ekspedisi", value: "start" },
+                    { name: "🚪 Masuki Ruangan 1", value: "room_1" },
+                    { name: "🚪 Masuki Ruangan 2", value: "room_2" },
+                    { name: "🚪 Masuki Ruangan 3", value: "room_3" },
+                    { name: "🏁 Selesaikan & Klaim Hadiah", value: "leave" },
+                  )
+                  .setRequired(false),
+              )
+              .addIntegerOption((opt) =>
+                opt
+                  .setName("taruhan")
+                  .setDescription(
+                    "Jumlah Star Fragments (NSF) yang dipertaruhkan",
+                  )
+                  .setRequired(false)
+                  .setMinValue(50)
+                  .setMaxValue(100000),
+              ),
+          )
+          .addSubcommand((sub) =>
+            sub
+              .setName("raid")
+              .setDescription(
+                "🐉 Serang World Boss Global bersama seluruh petualang!",
+              )
+              .addStringOption((opt) =>
+                opt
+                  .setName("aksi")
+                  .setDescription("Pilih aksi raid")
+                  .setRequired(false)
+                  .addChoices(
+                    { name: "📊 Status World Boss", value: "status" },
+                    { name: "⚔️ Serang World Boss", value: "serang" },
+                    {
+                      name: "🏆 Papan Peringkat Kontribusi",
+                      value: "leaderboard",
+                    },
+                  ),
+              ),
+          )
+          .addSubcommand((sub) =>
+            sub
+              .setName("arena")
+              .setDescription("Akses sistem PvP Arena (Leaderboard & Stats)")
+              .addStringOption((opt) =>
+                opt
+                  .setName("menu")
+                  .setDescription("Pilih menu arena")
+                  .setRequired(true)
+                  .addChoices(
+                    { name: "🏆 Papan Peringkat MMR", value: "leaderboard" },
+                    { name: "📊 Statistik PvP Pribadi", value: "stats" },
+                    {
+                      name: "⚔️ Galactic Coliseum 3v3 Match",
+                      value: "coliseum_match",
+                    },
+                    {
+                      name: "🛡️ Formasi Tim & Divisi Coliseum",
+                      value: "coliseum_team",
+                    },
+                    {
+                      name: "👑 Papan Peringkat Divisi Master",
+                      value: "coliseum_leaderboard",
+                    },
+                  ),
+              ),
+          )
+          .addSubcommand((sub) =>
+            sub
+              .setName("duel")
+              .setDescription(
+                "\ud83d\udee1\ufe0f Tantang pemain lain dalam duel bertarung RPG turn-based!",
+              )
+              .addUserOption((opt) =>
+                opt
+                  .setName("lawan")
+                  .setDescription("Pilih lawan main yang ingin kamu tantang")
+                  .setRequired(true),
+              )
+              .addIntegerOption((opt) =>
+                opt
+                  .setName("taruhan")
+                  .setDescription("Jumlah Naura Coin taruhan (Opsional)")
+                  .setRequired(false)
+                  .setMinValue(100),
+              )
+              .addBooleanOption((opt) =>
+                opt
+                  .setName("ranked")
+                  .setDescription(
+                    "Mainkan mode Ranked untuk mendapatkan poin MMR? (Opsional)",
+                  )
+                  .setRequired(false),
+              ),
+          )
+          .addSubcommand((sub) =>
+            sub
+              .setName("siege")
+              .setDescription(
+                "Perang wilayah GvG & pengepungan Menara Relik Kuno",
+              )
+              .addStringOption((opt) =>
+                opt
+                  .setName("aksi")
+                  .setDescription("Aksi pengepungan")
+                  .setRequired(false)
+                  .addChoices(
+                    { name: "Lihat Status Menara", value: "status" },
+                    { name: "Serang Menara (Attack)", value: "attack" },
+                    { name: "Klaim Dividen (Dividends)", value: "dividends" },
+                  ),
+              )
+              .addStringOption((opt) =>
+                opt
+                  .setName("tower_id")
+                  .setDescription("Pilih menara target")
+                  .setRequired(false)
+                  .addChoices(
+                    {
+                      name: "Chrono Siphon (Menara Waktu)",
+                      value: "chrono_siphon",
+                    },
+                    {
+                      name: "Nebula Bastion (Benteng Nebula)",
+                      value: "nebula_bastion",
+                    },
+                    {
+                      name: "Void Citadel (Benteng Kehampaan)",
+                      value: "void_citadel",
+                    },
+                  ),
               ),
           ),
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("dungeon")
-          .setDescription("Memasuki lorong gelap untuk melawan monster"),
       )
       .addSubcommand((sub) =>
         sub
@@ -209,42 +303,6 @@ function addRpgSubcommands(builder) {
       )
       .addSubcommand((sub) =>
         sub
-          .setName("siege")
-          .setDescription("Perang wilayah GvG & pengepungan Menara Relik Kuno")
-          .addStringOption((opt) =>
-            opt
-              .setName("aksi")
-              .setDescription("Aksi pengepungan")
-              .setRequired(false)
-              .addChoices(
-                { name: "Lihat Status Menara", value: "status" },
-                { name: "Serang Menara (Attack)", value: "attack" },
-                { name: "Klaim Dividen (Dividends)", value: "dividends" },
-              ),
-          )
-          .addStringOption((opt) =>
-            opt
-              .setName("tower_id")
-              .setDescription("Pilih menara target")
-              .setRequired(false)
-              .addChoices(
-                {
-                  name: "Chrono Siphon (Menara Waktu)",
-                  value: "chrono_siphon",
-                },
-                {
-                  name: "Nebula Bastion (Benteng Nebula)",
-                  value: "nebula_bastion",
-                },
-                {
-                  name: "Void Citadel (Benteng Kehampaan)",
-                  value: "void_citadel",
-                },
-              ),
-          ),
-      )
-      .addSubcommand((sub) =>
-        sub
           .setName("trade")
           .setDescription(
             "\ud83e\udd1d P2P Transfer Star Fragment dengan pemain lain",
@@ -261,24 +319,6 @@ function addRpgSubcommands(builder) {
               .setDescription("Jumlah Star Fragment (NSF)")
               .setRequired(true)
               .setMinValue(1),
-          ),
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("raid")
-          .setDescription(
-            "🐉 Serang World Boss Global bersama seluruh petualang!",
-          )
-          .addStringOption((opt) =>
-            opt
-              .setName("aksi")
-              .setDescription("Pilih aksi raid")
-              .setRequired(false)
-              .addChoices(
-                { name: "📊 Status World Boss", value: "status" },
-                { name: "⚔️ Serang World Boss", value: "serang" },
-                { name: "🏆 Papan Peringkat Kontribusi", value: "leaderboard" },
-              ),
           ),
       )
       .addSubcommand((sub) =>
@@ -341,34 +381,6 @@ function addRpgSubcommands(builder) {
               .setMinValue(10)
               .setMaxValue(500)
               .setRequired(false),
-          ),
-      )
-      .addSubcommand((sub) =>
-        sub
-          .setName("abyss")
-          .setDescription(
-            "🌀 Jelajahi Labirin Rogue-lite Prosedural 50 Lantai (The Neo-Abyss)",
-          )
-          .addStringOption((opt) =>
-            opt
-              .setName("aksi")
-              .setDescription("Pilih aksi ekspedisi labirin")
-              .addChoices(
-                { name: "🚀 Mulai / Lanjutkan Ekspedisi", value: "start" },
-                { name: "🚪 Masuki Ruangan 1", value: "room_1" },
-                { name: "🚪 Masuki Ruangan 2", value: "room_2" },
-                { name: "🚪 Masuki Ruangan 3", value: "room_3" },
-                { name: "🏁 Selesaikan & Klaim Hadiah", value: "leave" },
-              )
-              .setRequired(false),
-          )
-          .addIntegerOption((opt) =>
-            opt
-              .setName("taruhan")
-              .setDescription("Jumlah Star Fragments (NSF) yang dipertaruhkan")
-              .setRequired(false)
-              .setMinValue(50)
-              .setMaxValue(100000),
           ),
       )
       .addSubcommand((sub) =>

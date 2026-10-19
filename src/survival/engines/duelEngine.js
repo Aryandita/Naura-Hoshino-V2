@@ -276,13 +276,12 @@ async function runDuel(attackerUser, defenderUser) {
     return { success: false, reason: "Petarung tidak valid." };
   }
 
-  const UserProfile = require("../../models/UserProfile");
-  const UserSurvival = require("../../models/UserSurvival");
+  const cacheManager = require("../../managers/cacheManager");
 
-  const [p1Profile] = await UserProfile.findOrCreate({ where: { userId: attackerUser.id } });
-  const [p1Survival] = await UserSurvival.findOrCreate({ where: { userId: attackerUser.id } });
-  const [p2Profile] = await UserProfile.findOrCreate({ where: { userId: defenderUser.id } });
-  const [p2Survival] = await UserSurvival.findOrCreate({ where: { userId: defenderUser.id } });
+  const p1Profile = await cacheManager.getUserProfile(attackerUser.id);
+  const p1Survival = await cacheManager.getUserSurvival(attackerUser.id);
+  const p2Profile = await cacheManager.getUserProfile(defenderUser.id);
+  const p2Survival = await cacheManager.getUserSurvival(defenderUser.id);
 
   if (!p1Survival || !p2Survival) {
     return { success: false, reason: "Data petarung tidak ditemukan." };

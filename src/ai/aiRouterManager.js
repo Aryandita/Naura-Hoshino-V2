@@ -145,7 +145,7 @@ class AIRouterManager {
       }
 
       try {
-        if (!useVerba) throw new Error("INTENT_TOOL_CALL");
+        if (!useVerba) throw new SystemError("INTENT_TOOL_CALL");
 
         const contextPrompt = `${persona}${previousBotMessage}\n\nPesan dari User (${message.author.username}): ${userMessage || "(Menyapa)"}`;
 

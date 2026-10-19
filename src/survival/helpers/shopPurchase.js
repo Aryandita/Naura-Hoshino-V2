@@ -4,13 +4,13 @@
 // ringan. Modul ini menangani tiga mata uang sekaligus: Naura Star Fragment di
 // desa, Naura Coin di kota, dan Naura Coupon di kios Gaston.
 
-const UserSurvival = require("../../models/UserSurvival");
 const cacheManager = require("../../managers/cacheManager");
 const currencyHelper = require("../engines/currency");
 const stock = require("../data/shopStock");
 const coupons = require("./shopCoupon");
 const { addItemsAtomic } = require("../engines/inventoryHelper");
 const { applyItemEffect } = require("./specialEffects");
+const { executeAtomicPayment } = require("../../utils/transactionHelper");
 
 const COUPON_PREFIX = "kupon:";
 const PROPERTY_MAP = {
@@ -58,51 +58,56 @@ async function buy({ userId, value, currency }) {
     return { ok: false, reason: "invalid" };
 
   const profile = await cacheManager.getUserProfile(userId);
-  const survival = await UserSurvival.findOne({ where: { userId } });
+  const survival = await cacheManager.getUserSurvival(userId);
   if (!survival || !profile) return { ok: false, reason: "no_profile" };
 
+  const c = currencyHelper.resolve(currency);
   const holders = { survival, profile };
-  const balance = currencyHelper.balanceOf(currency, holders);
+  const balance = currencyHelper.balanceOf(c, holders);
   if (balance < price) {
     return { ok: false, reason: "broke", shortage: price - balance };
   }
 
-  const charged = await currencyHelper.charge(currency, holders, price);
-  if (charged === null)
-    return { ok: false, reason: "broke", shortage: price - balance };
-
   const itemName = catalogNameOf(itemId, isCoupon);
   let effectNote = "";
 
-  // Penyimpanan dibatasi ke kolom yang memang berubah. Uangnya sudah dipotong
-  // secara atomik di database, jadi menyimpan seluruh objek hanya akan menulis
-  // ulang saldo dari memori dan membuka kembali peluang balapan.
-  if (itemId.startsWith("prop_")) {
-    survival.propertyId = PROPERTY_MAP[itemId] || survival.propertyId;
-    await survival.save({ fields: ["propertyId"] });
-  } else if (itemId.startsWith("veh_")) {
-    survival.vehicle = itemId === "veh_motor" ? "motorcycle" : "bicycle";
-    await survival.save({ fields: ["vehicle"] });
-  } else {
-    const couponItem = isCoupon ? coupons.getCouponItem(itemId) : null;
-
-    // Barang kupon berkhasiat permanen langsung dipasang, karena efeknya
-    // memang bukan sesuatu yang perlu disimpan dulu di dalam tas.
-    if (couponItem && couponItem.effect) {
-      const applied = await applyItemEffect(couponItem.effect, {
-        survival,
-        userId,
-      });
-      if (applied && applied.ok) {
-        effectNote = applied.message || "Khasiatnya langsung terpasang!";
+  const payment = await executeAtomicPayment({
+    userId,
+    amount: price,
+    currency: c.field,
+    reason: `shop_buy_${itemId}`,
+    action: async () => {
+      if (itemId.startsWith("prop_")) {
+        await cacheManager.updateUserSurvival(userId, {
+          propertyId: PROPERTY_MAP[itemId] || survival.propertyId,
+        });
+      } else if (itemId.startsWith("veh_")) {
+        await cacheManager.updateUserSurvival(userId, {
+          vehicle: itemId === "veh_motor" ? "motorcycle" : "bicycle",
+        });
       } else {
-        effectNote =
-          "Khasiatnya belum bisa dipasang sekarang, jadi barangnya Naura simpan di tas dulu.";
-        await storeItem(userId, profile, itemId, itemName);
+        const couponItem = isCoupon ? coupons.getCouponItem(itemId) : null;
+        if (couponItem && couponItem.effect) {
+          const applied = await applyItemEffect(couponItem.effect, {
+            survival,
+            userId,
+          });
+          if (applied && applied.ok) {
+            effectNote = applied.message || "Khasiatnya langsung terpasang!";
+          } else {
+            effectNote =
+              "Khasiatnya belum bisa dipasang sekarang, jadi barangnya Naura simpan di tas dulu.";
+            await storeItem(userId, profile, itemId, itemName);
+          }
+        } else {
+          await storeItem(userId, profile, itemId, itemName);
+        }
       }
-    } else {
-      await storeItem(userId, profile, itemId, itemName);
-    }
+    },
+  });
+
+  if (!payment.ok) {
+    return { ok: false, reason: "broke", shortage: price - balance };
   }
 
   return { ok: true, itemId, itemName, price, isCoupon, effectNote };

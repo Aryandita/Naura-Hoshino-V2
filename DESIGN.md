@@ -4,14 +4,14 @@ name: Naura Hoshino OS
 description: Antarmuka sistem kontrol Naura OS dengan tema cyber-anime yang ditambatkan pada kanvas gelap pekat bernuansa luar angkasa. Brand ini tidak mengandalkan elemen datar tradisional, energinya berasal dari efek glassmorphism (panel kaca transparan), pendaran neon (neon glows) bernuansa pink dan ungu pastel, serta tipografi futuristik Orbitron untuk data real-time. Antarmuka terasa dinamis, sangat responsif, dan mencerminkan presisi sistem bot Discord modern tanpa kehilangan estetika ramah dari karakter Naura. Sejak versi 1.1.0, brand ini memiliki sub-brand resmi bernama Naura Wilds yang membungkus seluruh antarmuka sistem Survival RPG dengan lapisan palet earth-tone (emerald, amber, moss) di atas fondasi glassmorphism yang sama.
 
 colors:
-  primary: "#FFB6C1"
-  primary-glow: "rgba(255, 182, 193, 0.8)"
+  primary: "#FFC0CB"
+  primary-glow: "rgba(255, 192, 203, 0.8)"
   ink: "#ffffff"
   body: "#9ca3af"
   body-strong: "#d1d5db"
   muted: "#6b7280"
-  hairline: "rgba(255, 182, 193, 0.15)"
-  hairline-strong: "rgba(255, 182, 193, 0.3)"
+  hairline: "rgba(255, 192, 203, 0.15)"
+  hairline-strong: "rgba(255, 192, 203, 0.3)"
   canvas: "#0b0c10"
   surface-glass: "rgba(255, 255, 255, 0.03)"
   surface-glass-hover: "rgba(255, 255, 255, 0.05)"

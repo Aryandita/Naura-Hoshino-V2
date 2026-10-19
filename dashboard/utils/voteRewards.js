@@ -8,8 +8,8 @@
  */
 
 const { logger } = require("../../src/managers/logger");
-const UserProfile = require("../../src/models/UserProfile");
 const UserSurvival = require("../../src/models/UserSurvival");
+const cacheManager = require("../../src/managers/cacheManager");
 const currency = require("../../src/survival/engines/currency");
 
 const TRIAL_HOURS = 12;
@@ -94,7 +94,7 @@ async function grantVoteRewards(
         unlockedBiggestFan = true;
 
         // Hadiahkan Starter Plan (7 Hari)
-        const [profile] = await UserProfile.findOrCreate({ where: { userId } });
+        const profile = await cacheManager.getUserProfile(userId);
         const store = require("../../src/premium/premiumStore");
         const newExpiry = await store.grantPremium(userId, profile, 7);
 
@@ -107,7 +107,6 @@ async function grantVoteRewards(
             client = container.resolve("client");
           }
         } catch (_) {}
-        if (!client) client = global.client || null;
         if (client) {
           await sendPremiumDM(client, userId, "activated", {
             username: profile.username || "Voter Setia",

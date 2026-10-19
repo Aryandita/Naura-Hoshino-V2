@@ -1,12 +1,11 @@
 const {
   ChannelType,
   PermissionFlagsBits,
-  EmbedBuilder,
 } = require("discord.js");
 const { logger } = require("../../managers/logger");
 const cacheManager = require("../../managers/cacheManager");
 const tempVoiceRegistry = require("../../managers/tempVoiceRegistry");
-const UserProfile = require("../../models/UserProfile");
+const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const env = require("../../config/env");
 const ui = require("../../config/ui");
 
@@ -68,22 +67,20 @@ module.exports = {
 
             if (ownerMember) {
               // Cek apakah owner adalah user premium atau owner bot
-              const ownerProfile = await UserProfile.findOne({
-                where: { userId: ownerMember.id },
-              });
+              const ownerProfile = await cacheManager.getUserProfile(ownerMember.id);
               const isBotOwner =
                 env.OWNER_IDS && env.OWNER_IDS.includes(ownerMember.id);
 
               if ((ownerProfile && ownerProfile.isPremium) || isBotOwner) {
                 // Kirim DM ke owner
-                const dmEmbed = new EmbedBuilder()
-                  .setColor(ui.getColor("premium-gold") || "#FFD700")
-                  .setTitle("🔔 Tamu TempVoice Lounge")
-                  .setDescription(
+                const dmPayload = buildContainerV2({
+                  accentColorHex: ui.getColor("premium-gold") || "#FFD700",
+                  title: "🔔 Tamu TempVoice Lounge",
+                  description:
                     `Halo **${ownerMember.user.username}**! Seseorang bernama **${member.user.username}** sedang menunggu di **Waiting Room** milikmu.\n\nSilakan cek panel kontrol TempVoice untuk mengizinkan mereka masuk.`,
-                  )
-                  .setFooter({ text: ui.getFooter("utility") });
-                await ownerMember.send({ embeds: [dmEmbed] }).catch(() => {});
+                  footerText: ui.getFooter("utility"),
+                });
+                await ownerMember.send(dmPayload).catch(() => {});
               }
             }
           } catch (e) {
@@ -97,9 +94,7 @@ module.exports = {
     if (newState.channelId === tempConfig.triggerChannelId) {
       try {
         // Cek status premium pembuat
-        const [userProfile] = await UserProfile.findOrCreate({
-          where: { userId },
-        });
+        const userProfile = await cacheManager.getUserProfile(userId);
         const isPremium = userProfile.isPremium;
         const isBotOwner = env.OWNER_IDS && env.OWNER_IDS.includes(userId);
 
@@ -176,23 +171,6 @@ module.exports = {
 
         await member.voice.setChannel(tempChannel);
 
-        // Setup Panel Kontrol (dikirim ke text channel voice tersebut)
-        const panelEmbed = new EmbedBuilder()
-          .setColor(
-            isPremium || isBotOwner
-              ? "#FFD700"
-              : ui.getColor("primary") || "#FFB6C1",
-          )
-          .setTitle("\ud83c\udf9b\ufe0f TempVoice Control Panel")
-          .setDescription(
-            `Selamat datang di ruanganmu, **${member.user.username}**!\n\n` +
-              (isPremium || isBotOwner
-                ? `\u2728 **${isBotOwner ? "Owner" : "VIP"} Lounge Aktif!**\nRuanganmu di-boost ke **Kualitas Audio Ultra** (${Math.round(roomBitrate / 1000)}kbps)! Kamu juga memiliki akses "Invisible Mode" eksklusif.\n\n`
-                : "") +
-              `Gunakan tombol-tombol di bawah ini untuk mengatur Voice Channel-mu:`,
-          )
-          .setFooter({ text: ui.getFooter("utility") });
-
         const {
           ActionRowBuilder,
           ButtonBuilder,
@@ -203,27 +181,27 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("tvc_lock")
             .setLabel("Kunci")
-            .setEmoji("\ud83d\udd12")
+            .setEmoji("🔒")
             .setStyle(ButtonStyle.Danger),
           new ButtonBuilder()
             .setCustomId("tvc_unlock")
             .setLabel("Buka")
-            .setEmoji("\ud83d\udd13")
+            .setEmoji("🔓")
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
             .setCustomId("tvc_hide")
             .setLabel("Sembunyikan")
-            .setEmoji("\ud83d\udc7b")
+            .setEmoji("👻")
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId("tvc_unhide")
             .setLabel("Tampilkan")
-            .setEmoji("\ud83d\udc41\ufe0f")
+            .setEmoji("👁️")
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId("tvc_status")
             .setLabel("Status")
-            .setEmoji("\ud83d\udcac")
+            .setEmoji("💬")
             .setStyle(ButtonStyle.Primary),
         );
 
@@ -231,27 +209,27 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("tvc_rename")
             .setLabel("Ganti Nama")
-            .setEmoji("\u270f\ufe0f")
+            .setEmoji("✏️")
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
             .setCustomId("tvc_limit")
             .setLabel("Limit User")
-            .setEmoji("\ud83d\udc65")
+            .setEmoji("👥")
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
             .setCustomId("tvc_region")
             .setLabel("Region")
-            .setEmoji("\ud83c\udf0d")
+            .setEmoji("🌍")
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId("tvc_stage")
             .setLabel("Stage Mode")
-            .setEmoji("\ud83c\udf99\ufe0f")
+            .setEmoji("🎙️")
             .setStyle(ButtonStyle.Danger),
           new ButtonBuilder()
             .setCustomId("tvc_waiting")
             .setLabel("Waiting Room")
-            .setEmoji("\u23f3")
+            .setEmoji("⏳")
             .setStyle(ButtonStyle.Success),
         );
 
@@ -259,20 +237,36 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("tvc_save")
             .setLabel("Simpan Sesi")
-            .setEmoji("\ud83d\udcbe")
+            .setEmoji("💾")
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId("tvc_move")
             .setLabel("Pindah User")
-            .setEmoji("\ud83d\udcf2")
+            .setEmoji("📲")
             .setStyle(ButtonStyle.Primary),
         );
+
+        // Setup Panel Kontrol (dikirim ke text channel voice tersebut)
+        const panelPayload = buildContainerV2({
+          accentColorHex:
+            isPremium || isBotOwner
+              ? "#FFD700"
+              : ui.getColor("primary") || "#FFB6C1",
+          title: "🎛️ TempVoice Control Panel",
+          description:
+            `Selamat datang di ruanganmu, **${member.user.username}**!\n\n` +
+            (isPremium || isBotOwner
+              ? `✨ **${isBotOwner ? "Owner" : "VIP"} Lounge Aktif!**\nRuanganmu di-boost ke **Kualitas Audio Ultra** (${Math.round(roomBitrate / 1000)}kbps)! Kamu juga memiliki akses "Invisible Mode" eksklusif.\n\n`
+              : "") +
+            `Gunakan tombol-tombol di bawah ini untuk mengatur Voice Channel-mu:`,
+          buttonsRow: [row1, row2, row3],
+          footerText: ui.getFooter("utility"),
+        });
 
         await tempChannel
           .send({
             content: `<@${userId}>`,
-            embeds: [panelEmbed],
-            components: [row1, row2, row3],
+            ...panelPayload,
           })
           .catch(() => {});
       } catch (error) {

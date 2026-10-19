@@ -5,6 +5,7 @@ const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const DuelRecord = require("../../../src/models/DuelRecord");
 const UserProfile = require("../../../src/models/UserProfile");
 
@@ -134,7 +135,9 @@ module.exports = {
       }
 
       const payload = buildContainerV2({
-        accentColorHex: battleRes.isVictory ? "#86EFAC" : "#EF4444",
+        accentColorHex: battleRes.isVictory
+          ? survivalUI.getColor("emerald")
+          : survivalUI.getColor("danger"),
         authorName: "⚔️ Galactic Coliseum, 3v3 Championship",
         title: battleRes.isVictory
           ? `🎉 KEMENANGAN ARENA (${battleRes.score})!`
@@ -177,7 +180,7 @@ module.exports = {
         .join("\n");
 
       const payload = buildContainerV2({
-        accentColorHex: "#C084FC",
+        accentColorHex: survivalUI.getRarityColor("epic"),
         authorName: "🛡️ Formasi Tim Galactic Coliseum",
         title: `✨ Skuad: ${team.teamName}`,
         description: [
@@ -215,7 +218,7 @@ module.exports = {
         .join("\n");
 
       const payload = buildContainerV2({
-        accentColorHex: "#FFD700",
+        accentColorHex: survivalUI.getRarityColor("legendary"),
         authorName: "👑 Papan Peringkat Divisi Master Galactic Coliseum",
         title: "🏆 Top 10 Juara Global",
         description:

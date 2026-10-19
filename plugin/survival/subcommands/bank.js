@@ -21,6 +21,9 @@ const {
   MIN_INVEST_COIN,
   assetOf,
 } = require("../../../src/survival/data/bankConfig");
+const {
+  disableContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 
 const CITY_KEYS = ["kota", "city"];
 
@@ -82,14 +85,14 @@ module.exports = {
     const snapshotNow = async () =>
       actions.snapshot(await actions.freshData(user.id));
 
+    let currentView = views.mainView(user, await snapshotNow());
+
     const showMain = async (target) => {
-      const payload = views.mainView(user, await snapshotNow());
-      return target.editReply(payload);
+      currentView = views.mainView(user, await snapshotNow());
+      return target.editReply(currentView);
     };
 
-    const response = await interaction.editReply(
-      views.mainView(user, await snapshotNow()),
-    );
+    const response = await interaction.editReply(currentView);
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -107,7 +110,8 @@ module.exports = {
       { title, description, balance = 0, unit = "", run },
     ) => {
       activePromptRun = run;
-      await i.editReply(views.promptView(title, description, balance, unit));
+      currentView = views.promptView(title, description, balance, unit);
+      await i.editReply(currentView);
 
       if (!interaction.channel) return;
 
@@ -181,22 +185,27 @@ module.exports = {
         }
 
         if (id === "bank_menu_exchange") {
-          return i.editReply(views.exchangeView(await snapshotNow()));
+          currentView = views.exchangeView(await snapshotNow());
+          return i.editReply(currentView);
         }
 
         if (id === "bank_menu_savings") {
-          return i.editReply(views.savingsView(await snapshotNow()));
+          currentView = views.savingsView(await snapshotNow());
+          return i.editReply(currentView);
         }
 
         if (id === "bank_menu_deposit") {
-          return i.editReply(views.depositView(await snapshotNow()));
+          currentView = views.depositView(await snapshotNow());
+          return i.editReply(currentView);
         }
 
         if (id === "bank_menu_invest") {
           const snap = await snapshotNow();
-          return i.editReply(
-            views.investView(snap, actions.valuate(snap.investments, snap.day)),
+          currentView = views.investView(
+            snap,
+            actions.valuate(snap.investments, snap.day),
           );
+          return i.editReply(currentView);
         }
 
         // --- Penukaran mata uang ---
@@ -391,13 +400,11 @@ module.exports = {
       }
     });
 
-    // Pesan Components V2 tidak boleh dikosongkan komponennya, jadi kartu
-    // penutup dirender ulang seperti biasa.
-    collector.on("end", async () => {
-      const snap = await snapshotNow().catch(() => null);
-      if (!snap) return;
-      const closing = views.mainView(user, snap);
-      await interaction.editReply(closing).catch(() => {});
+    collector.on("end", async (collected, reason) => {
+      if (reason === "navigated") return;
+      if (currentView) {
+        await interaction.editReply(disableContainerV2(currentView)).catch(() => {});
+      }
     });
   },
 };

@@ -397,7 +397,6 @@ class AiEnsembleRouter {
       "llama-3.1-8b-instant",
       "llama-3.2-3b-preview",
       "llama-3.2-1b-preview",
-      "llama3-70b-8192",
     ];
 
     let lastGroqStatus = null;

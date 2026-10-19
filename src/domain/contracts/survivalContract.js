@@ -6,7 +6,6 @@ const {
   addItemsAtomic,
   takeItemsAtomic,
 } = require("../../survival/engines/inventoryHelper");
-const economyContract = require("./economyContract");
 const eventBus = require("../../core/eventBus");
 
 /**
@@ -241,10 +240,10 @@ class SurvivalContract {
 
   /**
    * Jembatan satu arah: Menukar Star Fragments (NSF) ke Naura Coins (NC).
-   * Nilai tukar: 1000 NSF = 1 NC dengan spread biaya 5%.
+   * Menghubungi currency.exchange() dengan Dynamic Spread Fee (5-25%) yang dialirkan ke ServerTreasury.
    * @param {string} userId
    * @param {number} fragmentsAmount
-   * @returns {Promise<Readonly<{ ok: boolean, fragmentsDebited: number, coinsGranted: number, reason?: string }>>}
+   * @returns {Promise<Readonly<{ ok: boolean, fragmentsDebited: number, coinsGranted: number, feeNsf?: number, reason?: string }>>}
    */
   async bridgeFragmentsToCoins(userId, fragmentsAmount) {
     const safeFragments = Math.floor(Number(fragmentsAmount) || 0);
@@ -257,36 +256,41 @@ class SurvivalContract {
       });
     }
 
-    // 1. Potong NSF secara lokal
-    const chargeRes = await this.chargeFragments(userId, safeFragments, { reason: "bridge_to_coins" });
-    if (!chargeRes.ok) {
+    const currency = require("../../survival/engines/currency");
+    const [survival, profile] = await Promise.all([
+      cacheManager.getUserSurvival(userId),
+      cacheManager.getUserProfile(userId),
+    ]);
+
+    const result = await currency.exchange(
+      { survival, profile },
+      currency.FRAGMENT,
+      currency.COIN,
+      safeFragments,
+    );
+
+    if (!result.ok) {
       return Object.freeze({
         ok: false,
         fragmentsDebited: 0,
         coinsGranted: 0,
-        reason: chargeRes.reason,
+        reason: result.reason,
       });
     }
 
-    // 2. Konversi 1000 NSF = 1 NC, fee 5%
-    const grossCoins = Math.floor(safeFragments / 1000);
-    const fee = Math.floor(grossCoins * 0.05);
-    const netCoins = Math.max(1, grossCoins - fee);
-
-    // 3. Panggil Economy Domain Contract secara satu arah
-    await economyContract.reward(userId, netCoins, { source: "survival_bridge" });
-
     eventBus.emit("survival:bridge_to_coins", {
       userId,
-      fragmentsDebited: safeFragments,
-      coinsGranted: netCoins,
+      fragmentsDebited: result.spent,
+      coinsGranted: result.received,
+      feeNsf: result.feeNsf,
       timestamp: Date.now(),
     });
 
     return Object.freeze({
       ok: true,
-      fragmentsDebited: safeFragments,
-      coinsGranted: netCoins,
+      fragmentsDebited: result.spent,
+      coinsGranted: result.received,
+      feeNsf: result.feeNsf,
     });
   }
 }

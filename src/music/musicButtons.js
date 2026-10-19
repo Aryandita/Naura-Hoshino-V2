@@ -7,8 +7,7 @@ const {
   buildErrorContainerV2,
 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
-const UserProfile = require("../models/UserProfile");
-const GuildSettings = require("../models/GuildSettings");
+const { updateGuildSetting } = require("../managers/guildSettingsService");
 const LyricsManager = require("../music/LyricsManager"); // 👈 Memanggil mesin lirik baru
 const { resolveSpotifyQuery } = require("./spotifyResolver");
 
@@ -162,9 +161,7 @@ module.exports = async (interaction, client) => {
         const filterType = interaction.values[0];
 
         if (premiumFilters.includes(filterType)) {
-          const [profile] = await UserProfile.findOrCreate({
-            where: { userId: interaction.user.id },
-          });
+          const profile = await cacheManager.getUserProfile(interaction.user.id);
           if (
             !profile.isPremium ||
             !profile.premiumUntil ||
@@ -226,9 +223,6 @@ module.exports = async (interaction, client) => {
   switch (interaction.customId) {
     case "music_save":
       try {
-        const [userProfile] = await UserProfile.findOrCreate({
-          where: { userId: interaction.user.id },
-        });
         if (!player.currentTrack || !player.currentTrack.info)
           return interaction.editReply(
             buildErrorContainerV2({
@@ -238,32 +232,23 @@ module.exports = async (interaction, client) => {
           );
 
         const savedData = `${player.currentTrack.info.title} | ${player.currentTrack.info.uri}`;
-        const rawPl = userProfile.music_playlist;
-        const playlist = Array.isArray(rawPl)
-          ? rawPl
-          : typeof rawPl === "string"
-            ? (() => {
-                try {
-                  return JSON.parse(rawPl);
-                } catch (e) {
-                  return [];
-                }
-              })()
-            : [];
+        let alreadyExists = false;
 
-        if (!playlist.includes(savedData)) {
-          playlist.push(savedData);
-          userProfile.music_playlist = playlist;
-          userProfile.changed("music_playlist", true);
-          await userProfile.save({ fields: ["music_playlist"] });
-          const payload = buildContainerV2({
-            accentColorHex: "#22c55e",
-            title: "Lagu Difavoritkan",
-            description: `${getEmoji("favorite")} | **${player.currentTrack.info.title}** ditambahkan ke Naura Playlist!`,
-            footerText: ui.getFooter("music"),
-          });
-          return interaction.editReply(payload);
-        } else {
+        await cacheManager.mutateUserProfileJson(
+          interaction.user.id,
+          "music_playlist",
+          (currentList) => {
+            const list = Array.isArray(currentList) ? [...currentList] : [];
+            if (list.includes(savedData)) {
+              alreadyExists = true;
+              return list;
+            }
+            list.push(savedData);
+            return list;
+          },
+        );
+
+        if (alreadyExists) {
           const errPayload = buildErrorContainerV2({
             title: "Sudah Ada",
             description: "⚠️ | Lagu ini sudah ada di daftar favorit Anda.",
@@ -271,6 +256,14 @@ module.exports = async (interaction, client) => {
           });
           return interaction.editReply(errPayload);
         }
+
+        const payload = buildContainerV2({
+          accentColorHex: "#22c55e",
+          title: "Lagu Difavoritkan",
+          description: `${getEmoji("favorite")} | **${player.currentTrack.info.title}** ditambahkan ke Naura Playlist!`,
+          footerText: ui.getFooter("music"),
+        });
+        return interaction.editReply(payload);
       } catch (e) {
         const errPayload = buildErrorContainerV2({
           title: "DB Error",
@@ -282,9 +275,7 @@ module.exports = async (interaction, client) => {
       break;
 
     case "music_lyrics": {
-      const [profile] = await UserProfile.findOrCreate({
-        where: { userId: interaction.user.id },
-      });
+      const profile = await cacheManager.getUserProfile(interaction.user.id);
       if (
         !profile.isPremium ||
         !profile.premiumUntil ||
@@ -310,9 +301,7 @@ module.exports = async (interaction, client) => {
     }
 
     case "music_autoplay": {
-      const [profile] = await UserProfile.findOrCreate({
-        where: { userId: interaction.user.id },
-      });
+      const profile = await cacheManager.getUserProfile(interaction.user.id);
       if (
         !profile.isPremium ||
         !profile.premiumUntil ||
@@ -380,17 +369,13 @@ module.exports = async (interaction, client) => {
       player.is247 = !player.is247;
 
       try {
-        const [guildData] = await GuildSettings.findOrCreate({
-          where: { guildId: interaction.guildId },
+        await updateGuildSetting(interaction.guildId, (s) => {
+          const musicData = s.music || {};
+          musicData.twentyFourSeven = player.is247;
+          musicData.voiceChannel = player.is247 ? player.voiceChannel : null;
+          musicData.textChannel = player.is247 ? player.textChannel : null;
+          s.music = musicData;
         });
-        const musicData = guildData.music || {};
-        musicData.twentyFourSeven = player.is247;
-        musicData.voiceChannel = player.is247 ? player.voiceChannel : null;
-        musicData.textChannel = player.is247 ? player.textChannel : null;
-        guildData.music = musicData;
-        guildData.changed("music", true);
-        await guildData.save({ fields: ["music"] });
-        cacheManager.invalidateGuildSettings(interaction.guildId);
       } catch (e) {
         logger.error("[musicButtons] Operasi database gagal: " + (e?.message || e), e);
       }

@@ -5,7 +5,6 @@ const {
   buildErrorContainerV2,
 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
-const UserProfile = require("../models/UserProfile");
 const cacheManager = require("../managers/cacheManager");
 
 const premiumFilters = ["nightcore", "vaporwave", "8d", "karaoke"];
@@ -138,9 +137,7 @@ module.exports = {
     const filterType = interaction.options.getString("type");
 
     if (premiumFilters.includes(filterType)) {
-      const [profile] = await UserProfile.findOrCreate({
-        where: { userId: interaction.user.id },
-      });
+      const profile = await cacheManager.getUserProfile(interaction.user.id);
       if (
         !profile.isPremium ||
         !profile.premiumUntil ||

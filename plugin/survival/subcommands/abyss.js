@@ -5,10 +5,12 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
+  MessageFlags,
 } = require("discord.js");
 const {
   buildContainerV2,
   buildErrorContainerV2,
+  disableContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
@@ -53,7 +55,7 @@ module.exports = {
       if (wagerNote) descriptionLines.push(wagerNote);
 
       const payload = buildContainerV2({
-        accentColorHex: "#86EFAC",
+        accentColorHex: survivalUI.getColor("emerald"),
         authorName: "🏁 Pintu Keluar The Neo-Abyss",
         title: "✨ Ekspedisi Berhasil Diselesaikan!",
         description: descriptionLines.join("\n"),
@@ -97,7 +99,7 @@ module.exports = {
 
     if (run.status === "DEFEATED") {
       const payload = buildContainerV2({
-        accentColorHex: "#EF4444",
+        accentColorHex: survivalUI.getColor("danger"),
         authorName: "☠️ Ekspedisi Berakhir Tragis",
         title: "Kamu Gugur di Dalam Labirin!",
         description: [
@@ -117,7 +119,7 @@ module.exports = {
 
     if (run.status === "VICTORY") {
       const payload = buildContainerV2({
-        accentColorHex: "#FFD700",
+        accentColorHex: survivalUI.getRarityColor("legendary"),
         authorName: "👑 Penakluk Legendaris Neo-Abyss",
         title: "🎉 KEMENANGAN TOTAL! 50 LANTAI DITAKLUKKAN!",
         description: [
@@ -171,7 +173,7 @@ module.exports = {
         : "";
 
     const payload = buildContainerV2({
-      accentColorHex: "#A855F7",
+      accentColorHex: survivalUI.getRarityColor("epic"),
       authorName:
         run.wager > 0
           ? `🌀 The Neo-Abyss · Lantai ${run.currentFloor} / 50 (Taruhan: ${run.wager.toLocaleString("id-ID")} NSF)`
@@ -203,7 +205,7 @@ module.exports = {
       if (btnInteraction.user.id !== userId) {
         return btnInteraction.reply({
           content: "❌ Ini bukan ekspedisi labirin milikmu!",
-          flags: 64,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -217,12 +219,12 @@ module.exports = {
             : "";
         return interaction.followUp({
           ...buildContainerV2({
-            accentColorHex: "#86EFAC",
+            accentColorHex: survivalUI.getColor("emerald"),
             title: "✨ Ekspedisi Berhasil Diselesaikan!",
             description: `Kamu berhasil mengamankan **+${leaveRes.totalCoins.toLocaleString("id-ID")} Star Fragments**!${wagerBonusText}`,
             footerText: ui.getFooter("survival"),
           }),
-          flags: 64,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -235,13 +237,21 @@ module.exports = {
 
       return interaction.followUp({
         ...buildContainerV2({
-          accentColorHex: nextRun.status === "DEFEATED" ? "#EF4444" : "#A855F7",
+          accentColorHex:
+            nextRun.status === "DEFEATED"
+              ? survivalUI.getColor("danger")
+              : survivalUI.getRarityColor("epic"),
           title: `Lantai ${nextRun.currentFloor} / 50 (HP: ${nextRun.currentHp}/${nextRun.maxHp})`,
           description: processRes.outcome.log,
           footerText: ui.getFooter("survival"),
         }),
-        flags: 64,
+        flags: MessageFlags.Ephemeral,
       });
+    });
+
+    collector.on("end", async (collected, reason) => {
+      if (reason === "navigated") return;
+      await interaction.editReply(disableContainerV2(payload)).catch(() => {});
     });
   },
 };

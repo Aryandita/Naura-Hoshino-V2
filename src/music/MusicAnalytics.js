@@ -158,13 +158,6 @@ class MusicAnalytics {
         music_trackingData: buckets,
         timestamp: Date.now(),
       });
-      if (client.dashboardIo) {
-        client.dashboardIo.emit("music_analytics_update", {
-          userId,
-          music_trackingData: buckets,
-          timestamp: Date.now(),
-        });
-      }
     } catch (error) {
       logger.error("[MusicAnalytics] Gagal merekam analitik:", error.message);
     }

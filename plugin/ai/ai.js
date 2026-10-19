@@ -1,7 +1,7 @@
 "use strict";
 
 const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
-const UserProfile = require("../../src/models/UserProfile");
+const cacheManager = require("../../src/managers/cacheManager");
 const chat = require("./subcommands/chat");
 
 function isPremium(profile) {
@@ -39,9 +39,7 @@ module.exports = {
           return typeof val === "function" ? val.bind(target) : val;
         },
       });
-      const [profile] = await UserProfile.findOrCreate({
-        where: { userId: interaction.user.id },
-      });
+      const profile = await cacheManager.getUserProfile(interaction.user.id);
       return chat(mockInteraction, {
         profile,
         isPremiumUser: isPremium(profile),

@@ -100,7 +100,11 @@ module.exports = {
 
   // --- DUKUNGAN PREFIX (LEGACY) ---
   async executePrefix(message, args, client) {
-    const inputSubCmd = args[0] ? args[0].toLowerCase() : "start";
+    let inputSubCmd = args[0] ? args[0].toLowerCase() : "start";
+    if (inputSubCmd === "combat" && args[1]) {
+      args.shift();
+      inputSubCmd = args[0] ? args[0].toLowerCase() : "start";
+    }
     const cmd = subcommands.get(inputSubCmd);
 
     const lang = await languageManager.getUserLanguage(message.author.id);

@@ -73,7 +73,7 @@ function extractDiscordId(input) {
  * @returns {{ok: boolean, reason?: string, method?: string}}
  */
 function verifyWebhookSignature(req, { envKey, headerNames = [], secretOverride = null } = {}) {
-  const secret = (secretOverride || (envKey ? env[envKey] || process.env[envKey] : "") || "").trim();
+  const secret = (secretOverride || (envKey ? env[envKey] : "") || "").trim();
   if (!secret) {
     return { ok: false, reason: "unconfigured" };
   }

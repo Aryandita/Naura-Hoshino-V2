@@ -135,10 +135,8 @@ module.exports = [
     async handler(interaction) {
       const prompt = interaction.fields.getTextInputValue("chat_prompt");
       await interaction.deferReply();
-      const UserProfile = require("../../models/UserProfile");
-      const [profile] = await UserProfile.findOrCreate({
-        where: { userId: interaction.user.id },
-      });
+      const cacheManager = require("../../managers/cacheManager");
+      const profile = await cacheManager.getUserProfile(interaction.user.id);
       const isPremiumUser = Boolean(
         profile.isPremium &&
         profile.premiumUntil &&

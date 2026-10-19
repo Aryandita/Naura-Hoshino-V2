@@ -600,7 +600,7 @@ module.exports = {
   },
 
   async seek(ctx) {
-    const { client, player, args, sendReply, guild } = ctx;
+    const { player, args, sendReply, guild } = ctx;
     const eError = ui.getEmoji("error") || "❌";
     const divider = "-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
 
@@ -658,23 +658,6 @@ module.exports = {
         duration: t.info.length,
       })),
     });
-
-    if (client.dashboardIo) {
-      client.dashboardIo.to(String(guild.id)).emit("music_state", {
-        currentTrack: {
-          title: track.title,
-          uri: track.uri,
-          duration: track.length,
-          position: clampedMs,
-          isPlaying: player.isPlaying,
-          isPaused: player.isPaused,
-        },
-        queue: player.queue.map((t) => ({
-          title: t.info.title,
-          duration: t.info.length,
-        })),
-      });
-    }
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",

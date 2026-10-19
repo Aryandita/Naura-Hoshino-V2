@@ -1,9 +1,9 @@
 "use strict";
 const { logger } = require("../../../src/managers/logger");
 
-const ui = require("../../../src/config/ui");
 const env = require("../../../src/config/env");
-const UserProfile = require("../../../src/models/UserProfile");
+const ui = require("../../../src/config/ui");
+const cacheManager = require("../../../src/managers/cacheManager");
 const UserPlaylist = require("../../../src/models/UserPlaylist");
 const {
   buildContainerV2,
@@ -26,9 +26,7 @@ const playlistEngine = {
       return sendReply(errPayload, true);
     }
 
-    const [profile] = await UserProfile.findOrCreate({
-      where: { userId: user.id },
-    });
+    const profile = await cacheManager.getUserProfile(user.id);
     const isPremium = profile.isPremium && profile.premiumUntil > new Date();
     const userPlaylistsCount = await UserPlaylist.count({
       where: { userId: user.id },
@@ -138,9 +136,7 @@ const playlistEngine = {
       return sendReply(errPayload, true);
     }
 
-    const [profile] = await UserProfile.findOrCreate({
-      where: { userId: user.id },
-    });
+    const profile = await cacheManager.getUserProfile(user.id);
     const isPremium = profile.isPremium && profile.premiumUntil > new Date();
     const count = await UserPlaylist.count({ where: { userId: user.id } });
     if (!isPremium && count >= 3) {

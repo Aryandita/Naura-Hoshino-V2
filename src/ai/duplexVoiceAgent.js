@@ -17,6 +17,7 @@ const { logger } = require("../managers/logger");
 const eventBus = require("../core/eventBus");
 const fishAudioService = require("../services/fishAudioService");
 const aiEnsembleRouter = require("./aiEnsembleRouter");
+const { ValidationError } = require("../errors/DomainError");
 const { TASK_TYPES } = aiEnsembleRouter;
 
 const VOICE_STATES = Object.freeze({
@@ -73,7 +74,7 @@ class DuplexVoiceAgent extends EventEmitter {
    */
   startSession(guildId, options = {}) {
     if (!guildId) {
-      throw new Error("Guild ID wajib diisi untuk memulai Duplex Voice Agent.");
+      throw new ValidationError("Guild ID wajib diisi untuk memulai Duplex Voice Agent.");
     }
 
     const gId = String(guildId);
@@ -401,7 +402,7 @@ class DuplexVoiceAgent extends EventEmitter {
 
     // Simulasi durasi ucapan berdasarkan ukuran buffer MP3 (~16KB per detik pada 128kbps)
     const estimatedDurationMs =
-      process.env.NODE_ENV === "test"
+      env.NODE_ENV === "test"
         ? 20
         : Math.min(15000, Math.max(1200, Math.round((audioBuffer.length / 16000) * 1000)));
 

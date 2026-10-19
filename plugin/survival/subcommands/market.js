@@ -20,8 +20,8 @@ const {
 const {
   buildContainerV2,
   buildErrorContainerV2,
+  disableContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
-const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const market = require("../../../src/survival/helpers/marketStock");
@@ -68,9 +68,7 @@ module.exports = {
       fuzzyFilter,
     } = require("../../../src/utils/autocompleteHelper");
     const focusedValue = interaction.options.getFocused().toLowerCase();
-    const [survival] = await UserSurvival.findOrCreate({
-      where: { userId: interaction.user.id },
-    });
+    const survival = await cacheManager.getUserSurvival(interaction.user.id);
 
     if (!VILLAGE_KEYS.includes(survival.currentLocation)) {
       return safeRespond(interaction, [
@@ -100,9 +98,7 @@ module.exports = {
 
   async execute(interaction) {
     const user = interaction.user;
-    const [survival] = await UserSurvival.findOrCreate({
-      where: { userId: user.id },
-    });
+    const survival = await cacheManager.getUserSurvival(user.id);
 
     const access = evaluateMarketAccess({
       currentLocation: survival.currentLocation,
@@ -129,9 +125,7 @@ module.exports = {
 
     const walletNow = async () => {
       const freshProfile = await cacheManager.getUserProfile(user.id);
-      const freshSurvival = await UserSurvival.findOne({
-        where: { userId: user.id },
-      });
+      const freshSurvival = await cacheManager.getUserSurvival(user.id);
       return {
         profile: freshProfile,
         survival: freshSurvival,
@@ -310,7 +304,8 @@ module.exports = {
       });
     };
 
-    const response = await interaction.editReply(await mainCard());
+    let activeCard = await mainCard();
+    const response = await interaction.editReply(activeCard);
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
       time: COLLECTOR_MS,
@@ -320,26 +315,27 @@ module.exports = {
       await i.deferUpdate();
 
       if (i.customId === "market_back") {
-        return i.editReply(await mainCard());
+        activeCard = await mainCard();
+        return i.editReply(activeCard);
       }
 
       if (i.customId === "market_buy_init") {
         const { balance } = await walletNow();
-        return i.editReply(
-          card({
-            title: `${e("shop_cart")} Beli Kebutuhan Desa`,
-            description: [
-              `> *"${say(vendor.dialog.browse, vars)}"*`,
-              "",
-              `${currencyHelper.emojiOf(FRAGMENT)} **Sisa dompet:** \`${n(balance)}\` ${FRAGMENT.name}`,
-            ].join("\n"),
-            rows: [categoryRow(), backRow()],
-          }),
-        );
+        activeCard = card({
+          title: `${e("shop_cart")} Beli Kebutuhan Desa`,
+          description: [
+            `> *"${say(vendor.dialog.browse, vars)}"*`,
+            "",
+            `${currencyHelper.emojiOf(FRAGMENT)} **Sisa dompet:** \`${n(balance)}\` ${FRAGMENT.name}`,
+          ].join("\n"),
+          rows: [categoryRow(), backRow()],
+        });
+        return i.editReply(activeCard);
       }
 
       if (i.customId === "market_sell_init") {
-        return i.editReply(await sellCard());
+        activeCard = await sellCard();
+        return i.editReply(activeCard);
       }
 
       if (i.customId === "market_category") {
@@ -349,14 +345,13 @@ module.exports = {
         const { balance } = await walletNow();
 
         if (pool.length === 0) {
-          return i.editReply(
-            card({
-              title: `${e("shop_box")} ${meta.label}`,
-              description: `> *"Aduh, yang itu sedang habis. Besok Pak Damar bawa lagi, ya!"*`,
-              rows: [categoryRow(), backRow()],
-              expression: "Akward",
-            }),
-          );
+          activeCard = card({
+            title: `${e("shop_box")} ${meta.label}`,
+            description: `> *"Aduh, yang itu sedang habis. Besok Pak Damar bawa lagi, ya!"*`,
+            rows: [categoryRow(), backRow()],
+            expression: "Akward",
+          });
+          return i.editReply(activeCard);
         }
 
         const buyMenu = new StringSelectMenuBuilder()
@@ -374,26 +369,26 @@ module.exports = {
             })),
           );
 
-        return i.editReply(
-          card({
-            title: `${e(meta.emojiKey)} ${meta.label}`,
-            description: [
-              `> *"${say(vendor.dialog.browse, vars)}"*`,
-              "",
-              `${currencyHelper.emojiOf(FRAGMENT)} **Sisa dompet:** \`${n(balance)}\` ${FRAGMENT.name}`,
-            ].join("\n"),
-            rows: [
-              new ActionRowBuilder().addComponents(buyMenu),
-              categoryRow(),
-              backRow("market_buy_init"),
-            ],
-          }),
-        );
+        activeCard = card({
+          title: `${e(meta.emojiKey)} ${meta.label}`,
+          description: [
+            `> *"${say(vendor.dialog.browse, vars)}"*`,
+            "",
+            `${currencyHelper.emojiOf(FRAGMENT)} **Sisa dompet:** \`${n(balance)}\` ${FRAGMENT.name}`,
+          ].join("\n"),
+          rows: [
+            new ActionRowBuilder().addComponents(buyMenu),
+            categoryRow(),
+            backRow("market_buy_init"),
+          ],
+        });
+        return i.editReply(activeCard);
       }
 
       if (i.customId === "market_buy_pick") {
         await processBuy(i, i.values[0]);
-        return i.editReply(await mainCard());
+        activeCard = await mainCard();
+        return i.editReply(activeCard);
       }
 
       if (i.customId === "market_sell_pick") {
@@ -415,20 +410,19 @@ module.exports = {
             .setStyle(ButtonStyle.Secondary),
         );
 
-        return i.editReply(
-          card({
-            title: `${currencyHelper.emojiOf(FRAGMENT)} Yakin mau dijual?`,
-            description: [
-              `Barang: **${item ? item.name : itemId}**`,
-              `Jumlah di tas: **${amount} unit**`,
-              `Harga per unit: ${currencyHelper.format(FRAGMENT, value)}`,
-              "",
-              `> *"Pak Damar bayar tunai, kok. Mau dijual satu dulu atau semuanya sekalian?"*`,
-            ].join("\n"),
-            rows: [confirmRow],
-            expression: "Thinking",
-          }),
-        );
+        activeCard = card({
+          title: `${currencyHelper.emojiOf(FRAGMENT)} Yakin mau dijual?`,
+          description: [
+            `Barang: **${item ? item.name : itemId}**`,
+            `Jumlah di tas: **${amount} unit**`,
+            `Harga per unit: ${currencyHelper.format(FRAGMENT, value)}`,
+            "",
+            `> *"Pak Damar bayar tunai, kok. Mau dijual satu dulu atau semuanya sekalian?"*`,
+          ].join("\n"),
+          rows: [confirmRow],
+          expression: "Thinking",
+        });
+        return i.editReply(activeCard);
       }
 
       if (
@@ -478,19 +472,16 @@ module.exports = {
           ),
         );
 
-        return i.editReply(await sellCard());
+        activeCard = await sellCard();
+        return i.editReply(activeCard);
       }
     });
 
-    // Pesan Components V2 tidak boleh dikosongkan komponennya, jadi kartu
-    // penutupnya dirender ulang dengan salam perpisahan Pak Damar.
-    collector.on("end", async () => {
-      const closing = card({
-        title: `${e("sleepy")} Pasar desa sudah bubar`,
-        description: `> *"${say(vendor.dialog.farewell, vars)}"*`,
-        expression: "Sleepy",
-      });
-      await interaction.editReply(closing).catch(() => {});
+    collector.on("end", async (collected, reason) => {
+      if (reason === "navigated") return;
+      if (activeCard) {
+        await interaction.editReply(disableContainerV2(activeCard)).catch(() => {});
+      }
     });
   },
 };

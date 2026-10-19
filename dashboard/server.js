@@ -739,9 +739,6 @@ module.exports = (containerOrClient) => {
   if (container && typeof container.value === "function") {
     container.value("dashboardIo", io);
   }
-  if (client) {
-    client.dashboardIo = io;
-  }
 
   require("./sockets")(client, io, { sessionMiddleware });
 

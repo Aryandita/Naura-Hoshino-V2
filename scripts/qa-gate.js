@@ -92,9 +92,12 @@ async function run() {
   // 5. Inline script HTML dashboard
   results.push(await runStep("5/6 Sintaks Script Inline Dashboard", "node", ["scripts/check-inline-scripts.js"]));
 
-  // 6. Automated Unit Tests (100% full coverage across src, dashboard, and plugin)
+  // 6. Drift Arsitektur
+  results.push(await runStep("6/7 Verifikasi Drift Arsitektur", "node", ["scripts/verify-drift.js"]));
+
+  // 7. Automated Unit Tests (100% full coverage across src, dashboard, and plugin)
   results.push(
-    await runStep("6/6 Automated Unit Test Suite", "node", [
+    await runStep("7/7 Automated Unit Test Suite", "node", [
       "--test",
       "src/**/*.test.js",
       "dashboard/**/*.test.js",
@@ -120,7 +123,7 @@ async function run() {
   console.log(`\n  ${C.bold}Waktu Total:${C.reset} ${totalDuration} detik`);
 
   if (allPassed) {
-    console.log(`\n  ${C.green}${C.bold}✨ SEMUA 6 TAHAPAN QA GATE 100% HIJAU! SIAP UNTUK COMMIT / DEPLOY ✨${C.reset}\n`);
+    console.log(`\n  ${C.green}${C.bold}✨ SEMUA TAHAPAN QA GATE 100% HIJAU! SIAP UNTUK COMMIT / DEPLOY ✨${C.reset}\n`);
     process.exit(0);
   } else {
     console.log(`\n  ${C.red}${C.bold}⚠️ QA GATE GAGAL. Harap perbaiki error di atas sebelum commit!${C.reset}\n`);

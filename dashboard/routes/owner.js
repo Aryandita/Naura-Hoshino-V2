@@ -29,8 +29,6 @@ const EVAL_ENABLED = Boolean(env.OWNER_EVAL_ENABLED);
 function broadcast(client, message) {
   const eventBus = require("../../src/core/eventBus");
   eventBus.emit("system:broadcast", { message });
-  if (client?.dashboardIo)
-    client.dashboardIo.emit("system_broadcast", { message });
 }
 
 module.exports = (client) => {
