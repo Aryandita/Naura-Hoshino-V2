@@ -10,9 +10,9 @@ class MetricsManager {
    */
   logCommand(commandName) {
     try {
-      if (redisManager.client?.isReady) {
-        redisManager.client.hincrby("metrics:commands", commandName, 1);
-        redisManager.client.hincrby("metrics:commands", "total", 1);
+      if (redisManager.isReady) {
+        redisManager.hIncrBy("metrics:commands", commandName, 1);
+        redisManager.hIncrBy("metrics:commands", "total", 1);
       }
     } catch (err) {
       logger.warn("[metricsManager:logCommand] Operasi cache Redis gagal: " + (err?.message || err));
@@ -25,13 +25,13 @@ class MetricsManager {
    */
   logComponent(componentName) {
     try {
-      if (redisManager.client?.isReady) {
-        redisManager.client.hincrby(
+      if (redisManager.isReady) {
+        redisManager.hIncrBy(
           "metrics:components",
           componentName || "unknown",
           1,
         );
-        redisManager.client.hincrby("metrics:components", "total", 1);
+        redisManager.hIncrBy("metrics:components", "total", 1);
       }
     } catch (err) {
       logger.warn("[metricsManager:logComponent] Operasi cache Redis gagal: " + (err?.message || err));
@@ -42,12 +42,12 @@ class MetricsManager {
    * Ambil data metrik saat ini.
    */
   async getMetrics() {
-    if (!redisManager.client?.isReady) return null;
+    if (!redisManager.isReady) return null;
 
     try {
       const [commands, components] = await Promise.all([
-        redisManager.client.hgetall("metrics:commands"),
-        redisManager.client.hgetall("metrics:components"),
+        redisManager.hGetAll("metrics:commands"),
+        redisManager.hGetAll("metrics:components"),
       ]);
       return { commands, components };
     } catch {

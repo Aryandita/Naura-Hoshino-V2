@@ -38,6 +38,28 @@ class RedisManager {
     this.client.on("reconnecting", () =>
       logger.warn("[Redis] Mencoba reconnect ke Redis..."),
     );
+
+    // Kompatibilitas alias untuk pemanggilan command dengan format lowercase
+    this.client.hincrby = (...args) => {
+      if (typeof this.client.hIncrBy === "function") {
+        return this.client.hIncrBy(...args);
+      }
+    };
+    this.client.hgetall = (...args) => {
+      if (typeof this.client.hGetAll === "function") {
+        return this.client.hGetAll(...args);
+      }
+    };
+    this.client.hset = (...args) => {
+      if (typeof this.client.hSet === "function") {
+        return this.client.hSet(...args);
+      }
+    };
+    this.client.hget = (...args) => {
+      if (typeof this.client.hGet === "function") {
+        return this.client.hGet(...args);
+      }
+    };
   }
 
   /** Satu-satunya sumber kebenaran untuk mengecek kesiapan Redis. */
@@ -258,6 +280,46 @@ class RedisManager {
 
   async del(key) {
     return this.deleteCache(key);
+  }
+
+  async hIncrBy(key, field, increment = 1) {
+    if (!this.isReady) return 0;
+    try {
+      if (typeof this.client.hIncrBy === "function") {
+        return await this.client.hIncrBy(key, field, increment);
+      }
+      if (typeof this.client.hincrby === "function") {
+        return await this.client.hincrby(key, field, increment);
+      }
+      return 0;
+    } catch (err) {
+      logger.error("[Redis] hIncrBy error:", err.message);
+      return 0;
+    }
+  }
+
+  async hincrby(key, field, increment = 1) {
+    return this.hIncrBy(key, field, increment);
+  }
+
+  async hGetAll(key) {
+    if (!this.isReady) return {};
+    try {
+      if (typeof this.client.hGetAll === "function") {
+        return (await this.client.hGetAll(key)) || {};
+      }
+      if (typeof this.client.hgetall === "function") {
+        return (await this.client.hgetall(key)) || {};
+      }
+      return {};
+    } catch (err) {
+      logger.error("[Redis] hGetAll error:", err.message);
+      return {};
+    }
+  }
+
+  async hgetall(key) {
+    return this.hGetAll(key);
   }
 
   // ==========================================

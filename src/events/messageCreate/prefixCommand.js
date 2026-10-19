@@ -370,13 +370,10 @@ module.exports = async function handlePrefixCommand(message, client) {
     .catch(() => null);
 
   try {
-    // Metrik: Catat penggunaan prefix command di Redis Hash
+    // Metrik: Catat penggunaan prefix command di Redis Hash via metricsManager
     try {
-      const redis = require("../../managers/redisManager").client;
-      if (redis?.isReady) {
-        redis.hincrby("metrics:commands", targetCommandName, 1);
-        redis.hincrby("metrics:commands", "total", 1);
-      }
+      const metricsManager = require("../../managers/metricsManager");
+      metricsManager.logCommand(targetCommandName);
     } catch (err) {
       logger.warn("[prefixCommand] Operasi cache Redis gagal: " + (err?.message || err));
     }
