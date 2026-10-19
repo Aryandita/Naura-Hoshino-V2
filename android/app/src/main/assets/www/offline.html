@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Naura OS - Mode Offline</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      background-color: #0B0F19;
+      color: #E2E8F0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: hidden;
+    }
+    .background-glow {
+      position: fixed;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 182, 193, 0.12) 0%, rgba(0, 255, 255, 0.05) 50%, transparent 80%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 360px;
+      background: #121826;
+      border: 1px solid rgba(255, 182, 193, 0.2);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6), 0 0 24px rgba(255, 182, 193, 0.08);
+      backdrop-filter: blur(12px);
+    }
+    .icon-container {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px auto;
+      border-radius: 50%;
+      background: rgba(255, 182, 193, 0.08);
+      border: 1px solid rgba(255, 182, 193, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px rgba(255, 182, 193, 0.2);
+    }
+    .icon-container svg {
+      width: 36px;
+      height: 36px;
+      fill: none;
+      stroke: #FFB6C1;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #00FFFF;
+      background: rgba(0, 255, 255, 0.1);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 9999px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+    p {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #94A3B8;
+      margin-bottom: 24px;
+    }
+    .btn-retry {
+      width: 100%;
+      padding: 13px 20px;
+      background: linear-gradient(135deg, #FFB6C1 0%, #F472B6 100%);
+      color: #0B0F19;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(244, 114, 182, 0.35);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .btn-retry:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+    .status-hint {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #64748B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #EF4444;
+      box-shadow: 0 0 6px #EF4444;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+  </style>
+</head>
+<body>
+  <div class="background-glow"></div>
+  <div class="card">
+    <div class="icon-container">
+      <svg viewBox="0 0 24 24">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+    <div class="badge">Koneksi Terputus</div>
+    <h1>Mode Luar Jaringan</h1>
+    <p>Naura OS memerlukan sambungan jaringan untuk memuat pembaruan terkini. Aplikasi akan otomatis terhubung kembali saat internet tersedia.</p>
+    <button class="btn-retry" id="retryBtn" onclick="handleRetry()">Coba Muat Ulang</button>
+    <div class="status-hint">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Menunggu sinyal jaringan...</span>
+    </div>
+  </div>
+
+  <script>
+    function handleRetry() {
+      const btn = document.getElementById('retryBtn');
+      btn.innerText = 'Menghubungkan...';
+      btn.disabled = true;
+
+      if (window.NauraNative && typeof window.NauraNative.vibrate === 'function') {
+        window.NauraNative.vibrate(30);
+      }
+
+      setTimeout(function() {
+        if (window.NauraNative && typeof window.NauraNative.reload === 'function') {
+          window.NauraNative.reload();
+        } else {
+          window.location.reload();
+        }
+      }, 350);
+    }
+
+    window.addEventListener('online', function() {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      if (dot) {
+        dot.style.background = '#10B981';
+        dot.style.boxShadow = '0 0 6px #10B981';
+      }
+      if (text) {
+        text.innerText = 'Jaringan terdeteksi! Memuat...';
+      }
+      setTimeout(handleRetry, 600);
+    });
+  </script>
+</body>
+</html>

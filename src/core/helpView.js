@@ -11,6 +11,7 @@ const {
 const fs = require("node:fs");
 
 const ui = require("../config/ui");
+const { getColorInt } = require("../config/tokens/designTokens");
 const languageManager = require("../managers/languageManager");
 const commandRegistry = require("../services/commandRegistry");
 const { findClosestCommand } = require("../utils/levenshteinSuggest");
@@ -31,6 +32,13 @@ const HELP_CATEGORY_KEYS = [
   "admin",
   "modmail",
 ];
+
+function getHelpCategoryKeys() {
+  if (commandRegistry && typeof commandRegistry.getCategoryKeys === "function") {
+    return commandRegistry.getCategoryKeys();
+  }
+  return HELP_CATEGORY_KEYS;
+}
 
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
@@ -55,7 +63,7 @@ function buildHelpCategories(langInput) {
   const isEn =
     lang && (lang.LANG_CODE === "en" || lang.HELP_TITLE?.includes("Help"));
 
-  return {
+  const categories = {
     core: {
       emoji: e("help_core", "⚙️"),
       label: lang.HELP_CAT_CORE_LABEL || "Core System",
@@ -157,6 +165,24 @@ function buildHelpCategories(langInput) {
       content: formatHelpContent(lang.HELP_CONTENT_MODMAIL),
     },
   };
+
+  if (commandRegistry && typeof commandRegistry.getCategories === "function") {
+    try {
+      const regCats = commandRegistry.getCategories();
+      for (const cat of regCats) {
+        if (!categories[cat.id]) {
+          categories[cat.id] = {
+            emoji: cat.emoji || "📁",
+            label: cat.label || (cat.id.charAt(0).toUpperCase() + cat.id.slice(1)),
+            desc: cat.description || (isEn ? `Commands for ${cat.id} module.` : `Kumpulan perintah modul ${cat.id}.`),
+            content: cat.description || "",
+          };
+        }
+      }
+    } catch (_) {}
+  }
+
+  return categories;
 }
 
 function buildCategoryBanners() {
@@ -227,51 +253,73 @@ function buildHelpPayload(
       ? langInput
       : languageManager.getLanguageSync(langInput);
 
-  const categoryKeys = HELP_CATEGORY_KEYS;
+  const categoryKeys = getHelpCategoryKeys();
   const userName = ui.ux.resolveUserName(user);
   const isEn =
     lang && (lang.LANG_CODE === "en" || lang.HELP_TITLE?.includes("Help"));
   const categories = buildHelpCategories(lang);
 
   const activeKey = categoryIndex >= 0 ? categoryKeys[categoryIndex] : null;
-  const activeCat = activeKey ? categories[activeKey] : null;
+  const activeCat = activeKey
+    ? (categories[activeKey] || {
+        emoji: "📁",
+        label: activeKey.charAt(0).toUpperCase() + activeKey.slice(1),
+        desc: isEn ? `Commands for ${activeKey} module.` : `Kumpulan perintah modul ${activeKey}.`,
+        content: "",
+      })
+    : null;
 
   let bodyContent = "";
   let totalSubPages = 1;
 
-  if (activeKey === "utility") {
-    const utilityData = commandRegistry.getCategory("utility");
-    const cmds = utilityData?.commands || [];
-    const pageSize = 10;
-    totalSubPages = Math.max(1, Math.ceil(cmds.length / pageSize));
-    if (currentSubPage >= totalSubPages) currentSubPage = totalSubPages - 1;
-    if (currentSubPage < 0) currentSubPage = 0;
+  if (activeCat) {
+    const catData = commandRegistry.getCategory(activeKey);
+    const cmds = catData?.commands || [];
 
-    const startIdx = currentSubPage * pageSize;
-    const pageCmds = cmds.slice(startIdx, startIdx + pageSize);
+    if (cmds.length > 0) {
+      const pageSize = 10;
+      totalSubPages = Math.max(1, Math.ceil(cmds.length / pageSize));
+      if (currentSubPage >= totalSubPages) currentSubPage = totalSubPages - 1;
+      if (currentSubPage < 0) currentSubPage = 0;
 
-    const listLines = pageCmds.map((c) => {
-      const subInfo =
-        c.subcommands.length > 0 ? ` *(${c.subcommands.length} aksi)*` : "";
-      return `• **\`/${c.name}\`**${subInfo} : ${c.description}`;
-    });
+      const startIdx = currentSubPage * pageSize;
+      const pageCmds = cmds.slice(startIdx, startIdx + pageSize);
 
-    bodyContent = [
-      `${activeCat.emoji} **${activeCat.label}** (${cmds.length} Perintah)`,
-      isEn
+      const listLines = pageCmds.map((c) => {
+        let line = `• **\`/${c.name}\`**`;
+        if (Array.isArray(c.subcommands) && c.subcommands.length > 0) {
+          const subNames = c.subcommands.map((s) => s.name).slice(0, 4).join(", ");
+          const more = c.subcommands.length > 4 ? ` +${c.subcommands.length - 4}` : "";
+          line += ` *(${c.subcommands.length} aksi: ${subNames}${more})* : ${c.description}`;
+        } else if (Array.isArray(c.options) && c.options.length > 0) {
+          line = `• **\`${c.syntax}\`** : ${c.description}`;
+        } else {
+          line += ` : ${c.description}`;
+        }
+        return line;
+      });
+
+      const headerTitle = `${activeCat.emoji} **${activeCat.label}** (${cmds.length} ${isEn ? "Commands" : "Perintah"})`;
+      const pageIndicatorText = isEn
         ? `Page **${currentSubPage + 1}** of **${totalSubPages}**`
-        : `Halaman **${currentSubPage + 1}** dari **${totalSubPages}**`,
-      "",
-      listLines.length > 0
-        ? listLines.join("\n")
-        : formatHelpContent(lang.HELP_CONTENT_UTILITY),
-      "",
-      isEn
-        ? "-# *Tip: Use `/core help command:<name>` for instant syntax lookup.*"
-        : "-# *Tips: Gunakan `/core help command:<nama>` untuk melihat detail sintaks perintah.*",
-    ].join("\n");
-  } else if (activeCat) {
-    bodyContent = `${activeCat.emoji} **${activeCat.label}**\n\n${activeCat.content}`;
+        : `Halaman **${currentSubPage + 1}** dari **${totalSubPages}**`;
+
+      const categoryDesc = activeCat.desc ? `*${activeCat.desc}*\n` : "";
+
+      bodyContent = [
+        headerTitle,
+        categoryDesc,
+        pageIndicatorText,
+        "",
+        listLines.join("\n"),
+        "",
+        isEn
+          ? "-# *Tip: Use `/core help command:<name>` for instant syntax lookup.*"
+          : "-# *Tips: Gunakan `/core help command:<nama>` untuk melihat detail sintaks perintah.*",
+      ].filter((x) => x !== null && x !== undefined).join("\n");
+    } else {
+      bodyContent = `${activeCat.emoji} **${activeCat.label}**\n\n${activeCat.content}`;
+    }
   } else {
     // Quick-Start Bento untuk Beranda (Overview)
     bodyContent = [
@@ -305,8 +353,7 @@ function buildHelpPayload(
     ].join("\n");
   }
 
-  const primaryHex = (ui.getColor("primary") || "#FFB6C1").replace("#", "");
-  const accentColor = parseInt(primaryHex, 16);
+  const accentColor = getColorInt("primary", ui.getColor("primary") || "#FFB6C1");
 
   // 1. Dropdown Menu (Select Menu): Menampilkan seluruh 13 kategori publik
   const selectOptions = [];
@@ -323,7 +370,11 @@ function buildHelpPayload(
 
   for (const key of categoryKeys) {
     if (key === activeKey) continue;
-    const cat = categories[key];
+    const cat = categories[key] || {
+      label: key.charAt(0).toUpperCase() + key.slice(1),
+      desc: isEn ? `Commands for ${key} module.` : `Kumpulan perintah modul ${key}.`,
+      emoji: "📁",
+    };
     const option = {
       label: cat.label,
       description: cat.desc,
@@ -360,10 +411,9 @@ function buildHelpPayload(
   let indicatorLabel = "";
   if (isOverview) {
     indicatorLabel = isEn ? "🏠 Overview" : "🏠 Beranda";
-  } else if (activeKey === "utility" && totalSubPages > 1) {
-    indicatorLabel = isEn
-      ? `📄 ${currentSubPage + 1}/${totalSubPages} (Utility)`
-      : `📄 ${currentSubPage + 1}/${totalSubPages} (Utilitas)`;
+  } else if (totalSubPages > 1) {
+    const catLabel = activeKey === "utility" ? (isEn ? "Utility" : "Utilitas") : activeKey;
+    indicatorLabel = `📄 ${currentSubPage + 1}/${totalSubPages} (${catLabel})`;
   } else {
     indicatorLabel = `📄 ${categoryIndex + 1} / ${categoryKeys.length}`;
   }
@@ -411,7 +461,7 @@ function buildHelpPayload(
 
   const categoryBanners = buildCategoryBanners();
   const activeBannerPath = activeKey
-    ? categoryBanners[activeKey]
+    ? (categoryBanners[activeKey] || categoryBanners.overview)
     : categoryBanners.overview;
   const bannerFilename = `help-banner-${activeKey || "main"}.jpeg`;
   const files = [];
@@ -565,6 +615,7 @@ function handleCommandDetailHelp(query, langInput) {
 
 module.exports = {
   HELP_CATEGORY_KEYS,
+  getHelpCategoryKeys,
   formatHelpContent,
   buildHelpCategories,
   buildHelpPayload,

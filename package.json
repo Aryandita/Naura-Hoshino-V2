@@ -27,6 +27,8 @@
     "mobile:dev": "vite --config dashboard/mobile/vite.config.mjs dashboard/mobile",
     "mobile:build": "vite build --config dashboard/mobile/vite.config.mjs dashboard/mobile",
     "mobile:preview": "vite preview --config dashboard/mobile/vite.config.mjs dashboard/mobile",
+    "mobile:sync-android": "node scripts/sync-android-assets.js",
+    "android:build": "node scripts/build-apk.js",
     "locales:check": "node scripts/validate-locales.js",
     "locales:check:strict": "node scripts/validate-locales.js --strict",
     "test:requires": "node scripts/check-requires.js",

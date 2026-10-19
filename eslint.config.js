@@ -41,6 +41,7 @@ module.exports = [
       "scratch/**",
       "pending_plugin/**",
       ".agents/**",
+      "android/**",
     ],
   },
   {

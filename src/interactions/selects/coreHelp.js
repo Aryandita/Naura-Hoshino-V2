@@ -1,7 +1,11 @@
 "use strict";
 
 const languageManager = require("../../managers/languageManager");
-const { buildHelpPayload, HELP_CATEGORY_KEYS } = require("../../core/helpView");
+const {
+  buildHelpPayload,
+  getHelpCategoryKeys,
+  HELP_CATEGORY_KEYS,
+} = require("../../core/helpView");
 
 module.exports = [
   {
@@ -10,10 +14,14 @@ module.exports = [
     defer: "update",
     async handler(interaction) {
       const selectedValue = interaction.values[0];
+      const categoryKeys =
+        typeof getHelpCategoryKeys === "function"
+          ? getHelpCategoryKeys()
+          : HELP_CATEGORY_KEYS;
       const categoryIndex =
         selectedValue === "overview"
           ? -1
-          : HELP_CATEGORY_KEYS.indexOf(selectedValue);
+          : categoryKeys.indexOf(selectedValue);
       const userLang =
         interaction.localeLang ||
         (await languageManager.getUserLanguage(interaction.user.id));

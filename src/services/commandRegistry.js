@@ -116,6 +116,13 @@ class CommandRegistry {
     return cat;
   }
 
+  ensureBuilt(client = null) {
+    if (!this.isBuilt) {
+      this.buildRegistry(client);
+    }
+    return this;
+  }
+
   buildRegistry(client) {
     this.commands.clear();
     this.categories.clear();
@@ -126,8 +133,103 @@ class CommandRegistry {
       this.categories.set(catId, []);
     }
 
+    let targetClient = client;
+    if (targetClient === undefined || targetClient === null) {
+      try {
+        const { container } = require("../core/container");
+        if (container && container.has("client")) {
+          targetClient = container.resolve("client");
+        }
+      } catch (_) {}
+    }
+
+    if (targetClient && targetClient.commands && targetClient.commands.size > 0) {
+      this.populateFromClient(targetClient);
+    } else if (client === undefined || client === null) {
+      this.autoScanPluginDirectory();
+    }
+
+    this.isBuilt = true;
+    return this;
+  }
+
+  autoScanPluginDirectory(customPluginDir = null) {
+    const path = require("node:path");
+    const fs = require("node:fs");
+    const pluginDir = customPluginDir || path.resolve(__dirname, "../../plugin");
+    if (!fs.existsSync(pluginDir)) return this;
+
+    try {
+      const glob = require("fast-glob");
+      const searchPattern = path.posix.join(
+        pluginDir.split(path.sep).join("/"),
+        "**/*.js",
+      );
+      const commandFiles = glob.sync(searchPattern, {
+        ignore: [
+          "**/subcommands/**",
+          "**/helpers/**",
+          "**/*.test.js",
+          "**/*.spec.js",
+        ],
+      });
+
+      const mockCommands = new Map();
+      const mockAliases = new Map();
+
+      for (const filePath of commandFiles) {
+        const normalizedPath = filePath.replace(/\\/g, "/");
+        if (
+          normalizedPath.includes("/subcommands/") ||
+          normalizedPath.includes("/helpers/") ||
+          normalizedPath.endsWith(".test.js") ||
+          normalizedPath.endsWith(".spec.js")
+        ) {
+          continue;
+        }
+
+        try {
+          const absPath = path.resolve(filePath);
+          const command = require(absPath);
+          if (command.isSubcommand) continue;
+
+          if (("data" in command || "name" in command) && ("execute" in command || "executePrefix" in command)) {
+            const rawData =
+              typeof command.data?.toJSON === "function"
+                ? command.data.toJSON()
+                : (command.data || command);
+            const cmdName = (rawData.name || command.name).toLowerCase();
+            const relPath = path.relative(pluginDir, filePath);
+            let category = command.category;
+            if (!category) {
+              const parts = relPath.split(path.sep);
+              if (parts.length > 1) {
+                category = parts[0];
+              } else {
+                category = path.basename(pluginDir).replace(/\.js$/, "");
+              }
+            }
+            command.category = category;
+
+            mockCommands.set(cmdName, command);
+
+            if (Array.isArray(command.aliases)) {
+              for (const a of command.aliases) {
+                mockAliases.set(a.toLowerCase(), cmdName);
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      this.populateFromClient({ commands: mockCommands, aliases: mockAliases });
+    } catch (_) {}
+
+    return this;
+  }
+
+  populateFromClient(client) {
     if (!client || !client.commands) {
-      this.isBuilt = true;
       return this;
     }
 
@@ -296,13 +398,24 @@ class CommandRegistry {
     return parts.join(" ");
   }
 
+  getCategoryKeys() {
+    const keys = [...PUBLIC_CATEGORIES];
+    for (const catId of this.categories.keys()) {
+      if (!keys.includes(catId) && catId !== "owner") {
+        keys.push(catId);
+      }
+    }
+    return keys;
+  }
+
   getCategories() {
-    return PUBLIC_CATEGORIES.map((id) => {
+    const keys = this.getCategoryKeys();
+    return keys.map((id) => {
       const meta = CATEGORY_METADATA[id] || {
         id,
         emoji: "📁",
-        label: id.toUpperCase(),
-        description: "",
+        label: id.charAt(0).toUpperCase() + id.slice(1),
+        description: `Kumpulan perintah modul ${id}`,
       };
       const list = this.categories.get(id) || [];
       return {
@@ -315,8 +428,12 @@ class CommandRegistry {
 
   getCategory(id) {
     const normalized = this.normalizeCategory(id);
-    const meta = CATEGORY_METADATA[normalized];
-    if (!meta) return null;
+    const meta = CATEGORY_METADATA[normalized] || {
+      id: normalized,
+      emoji: "📁",
+      label: normalized.charAt(0).toUpperCase() + normalized.slice(1),
+      description: `Kumpulan perintah modul ${normalized}`,
+    };
     const list = this.categories.get(normalized) || [];
     return {
       ...meta,

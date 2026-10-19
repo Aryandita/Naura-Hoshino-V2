@@ -74,6 +74,7 @@ naura_NEW_fixed*.glb
 *.zip
 *.tar.gz
 *.patch
+*.apk
 Naura_Hoshino_V2_*.zip
 
 # Artefak tools offline & testing lokal

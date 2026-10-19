@@ -1,7 +1,11 @@
 "use strict";
 
 const languageManager = require("../../managers/languageManager");
-const { buildHelpPayload, HELP_CATEGORY_KEYS } = require("../../core/helpView");
+const {
+  buildHelpPayload,
+  getHelpCategoryKeys,
+  HELP_CATEGORY_KEYS,
+} = require("../../core/helpView");
 
 function findIndicatorBtn(message) {
   if (!message || !Array.isArray(message.components)) return null;
@@ -30,20 +34,35 @@ function findIndicatorBtn(message) {
 
 function getCurrentState(interaction) {
   let currentIndex = -1;
-  let currentSubPage = 0;
+  const currentSubPage = 0;
+  const categoryKeys =
+    typeof getHelpCategoryKeys === "function"
+      ? getHelpCategoryKeys()
+      : HELP_CATEGORY_KEYS;
   const message = interaction.message || interaction;
   const indicatorBtn = findIndicatorBtn(message);
   const label = indicatorBtn ? (indicatorBtn.label || indicatorBtn.data?.label || "") : "";
   if (label) {
-    const utilMatch = label.match(/(\d+)\/(\d+)\s*\((?:Utilitas|Utility)\)/i);
-    if (utilMatch) {
-      currentIndex = HELP_CATEGORY_KEYS.indexOf("utility");
-      currentSubPage = parseInt(utilMatch[1], 10) - 1;
+    const subPageMatch = label.match(/(\d+)\/(\d+)\s*\(([^)]+)\)/i);
+    if (subPageMatch) {
+      const pageNum = parseInt(subPageMatch[1], 10) - 1;
+      const totalPages = parseInt(subPageMatch[2], 10);
+      const catKeyRaw = subPageMatch[3].trim().toLowerCase();
+      let foundIndex = categoryKeys.indexOf(catKeyRaw);
+      if (foundIndex === -1) {
+        if (catKeyRaw.includes("util")) {
+          foundIndex = categoryKeys.indexOf("utility");
+        } else {
+          foundIndex = categoryKeys.findIndex((k) => catKeyRaw.includes(k) || k.includes(catKeyRaw));
+        }
+      }
+      const isUtility = foundIndex === categoryKeys.indexOf("utility");
       return {
-        currentIndex,
-        currentSubPage,
-        isUtility: true,
-        totalSubPages: parseInt(utilMatch[2], 10),
+        currentIndex: foundIndex,
+        currentSubPage: Math.max(0, pageNum),
+        isUtility,
+        isSubPaged: true,
+        totalSubPages: totalPages,
       };
     }
     const match = label.match(/(\d+)\s*\/\s*(\d+)/);
@@ -51,7 +70,7 @@ function getCurrentState(interaction) {
       currentIndex = parseInt(match[1], 10) - 1;
     }
   }
-  return { currentIndex, currentSubPage, isUtility: false, totalSubPages: 1 };
+  return { currentIndex, currentSubPage, isUtility: false, isSubPaged: false, totalSubPages: 1 };
 }
 
 module.exports = [
@@ -85,7 +104,7 @@ module.exports = [
       let targetIndex = state.currentIndex;
       let targetSubPage = 0;
 
-      if (state.isUtility && state.currentSubPage > 0) {
+      if ((state.isSubPaged || state.isUtility) && state.currentSubPage > 0) {
         targetSubPage = state.currentSubPage - 1;
       } else if (state.currentIndex <= 0) {
         targetIndex = -1;
@@ -120,13 +139,17 @@ module.exports = [
       let targetIndex = state.currentIndex;
       let targetSubPage = 0;
 
-      if (state.isUtility && state.currentSubPage < state.totalSubPages - 1) {
+      if ((state.isSubPaged || state.isUtility) && state.currentSubPage < state.totalSubPages - 1) {
         targetSubPage = state.currentSubPage + 1;
       } else if (state.currentIndex === -1) {
         targetIndex = 0;
       } else {
+        const categoryKeys =
+          typeof getHelpCategoryKeys === "function"
+            ? getHelpCategoryKeys()
+            : HELP_CATEGORY_KEYS;
         targetIndex = Math.min(
-          HELP_CATEGORY_KEYS.length - 1,
+          categoryKeys.length - 1,
           state.currentIndex + 1,
         );
       }
@@ -153,7 +176,11 @@ module.exports = [
         interaction.localeLang ||
         (await languageManager.getUserLanguage(interaction.user.id));
       const lang = languageManager.getLanguageSync(userLang);
-      const targetIndex = HELP_CATEGORY_KEYS.length - 1;
+      const categoryKeys =
+        typeof getHelpCategoryKeys === "function"
+          ? getHelpCategoryKeys()
+          : HELP_CATEGORY_KEYS;
+      const targetIndex = categoryKeys.length - 1;
       const payload = buildHelpPayload(
         lang,
         targetIndex,
