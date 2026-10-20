@@ -62,6 +62,46 @@ module.exports = [
         const winnerName = isP1
           ? session.p2User.username
           : session.p1User.username;
+        const winnerId = isP1 ? session.p2UserId : session.p1UserId;
+        const loserId = isP1 ? session.p1UserId : session.p2UserId;
+
+        if (!session.isPvE) {
+          try {
+            const [wDeck] = await UserCardDeck.findOrCreate({
+              where: { userId: winnerId },
+            });
+            const [lDeck] = await UserCardDeck.findOrCreate({
+              where: { userId: loserId },
+            });
+
+            const currentWinnerElo = wDeck.eloRating || 1000;
+            const currentLoserElo = lDeck.eloRating || 1000;
+            const eloCalc = CardBattleV2Engine.calculateElo(currentWinnerElo, currentLoserElo);
+
+            wDeck.wins += 1;
+            wDeck.eloRating = eloCalc.winnerNewElo;
+            await wDeck.save({ fields: ["wins", "eloRating"] });
+
+            lDeck.losses += 1;
+            lDeck.eloRating = eloCalc.loserNewElo;
+            await lDeck.save({ fields: ["losses", "eloRating"] });
+
+            if (redisManager.isReady) {
+              await redisManager.zAdd("card:ranked:ladder", eloCalc.winnerNewElo, winnerId);
+              await redisManager.zAdd("card:ranked:ladder", eloCalc.loserNewElo, loserId);
+            }
+
+            if (session.betAmount > 0) {
+              await currency.reward(
+                "starFragments",
+                { userId: winnerId },
+                session.betAmount * 2,
+              );
+            }
+          } catch (e) {
+            // Defensif: jangan biarkan error database menggagalkan pesan surrender
+          }
+        }
 
         const container = buildContainerV2({
           title: `${ui.getEmoji("flag_white") || "🏳️"} Pertempuran Kartu Berakhir (Menyerah)`,
@@ -194,8 +234,8 @@ module.exports = [
 
           // Update Redis Ranked Ladder
           if (redisManager.isReady) {
-            await redisManager.client.zadd("card:ranked:ladder", eloCalc.winnerNewElo, winnerId);
-            await redisManager.client.zadd("card:ranked:ladder", eloCalc.loserNewElo, loserId);
+            await redisManager.zAdd("card:ranked:ladder", eloCalc.winnerNewElo, winnerId);
+            await redisManager.zAdd("card:ranked:ladder", eloCalc.loserNewElo, loserId);
           }
 
           const rankTier = CardBattleV2Engine.getRankTier(eloCalc.winnerNewElo);
@@ -204,9 +244,9 @@ module.exports = [
           // Bet reward payout
           if (session.betAmount > 0) {
             await currency.reward(
-              winnerId,
-              { starFragments: session.betAmount * 2 },
-              "Card Battle Win",
+              "starFragments",
+              { userId: winnerId },
+              session.betAmount * 2,
             );
           }
         } else if (session.isTower) {
@@ -221,9 +261,9 @@ module.exports = [
           // Tower floor reward
           const frags = session.towerFloor * 50;
           await currency.reward(
-            winnerId,
-            { starFragments: frags },
-            `Tower of Babel F${session.towerFloor}`,
+            "starFragments",
+            { userId: winnerId },
+            frags,
           );
         }
 

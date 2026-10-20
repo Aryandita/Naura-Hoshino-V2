@@ -66,13 +66,35 @@ module.exports = {
       });
     }
 
+    // Arbitrase Lavalink: Cegah crash voice websocket bila musik sedang aktif
+    if (VoiceManager.isMusicActive(interaction.guildId, interaction.client)) {
+      return interaction.reply({
+        ...buildErrorContainerV2({
+          title: "Musik Sedang Diputar",
+          description:
+            "Lavalink sedang memutar musik di server ini. Untuk mencegah gangguan koneksi suara, hentikan pemutaran musik terlebih dahulu sebelum menggunakan fitur suara Naura!",
+          footerText: ui.getFooter("utility"),
+        }),
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === "speak") {
       const text = interaction.options.getString("pesan");
       await interaction.deferReply();
 
-      await VoiceManager.speak(text, member);
+      const speakRes = await VoiceManager.speak(text, member);
+      if (!speakRes.success) {
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Gagal Mengucapkan Pesan",
+            description: `Tidak dapat memutar suara di channel: ${speakRes.reason || "kesalahan internal"}`,
+            footerText: ui.getFooter("utility"),
+          }),
+        });
+      }
 
       const payload = buildContainerV2({
         accentColorHex: "#FFB6C1",
@@ -139,6 +161,7 @@ module.exports = {
 
       if (aktif) {
         voiceAgent.startSession(interaction.guildId, {
+          voiceChannel: member.voice.channel,
           channelId: member.voice.channel.id,
           initiatorId: interaction.user.id,
         });

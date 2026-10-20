@@ -30,7 +30,8 @@ async function generateProfileCard(arg1, arg2, arg3, arg4) {
     };
     userProfile = {
       isPremium: Boolean(arg1.isPremium),
-      premium_tier: arg1.premiumTier || "none",
+      premiumUntil: arg1.premiumUntil || null,
+      premium_tier: arg1.premiumTier || arg1.premium_tier || "none",
       activeBanners: arg1.activeBanners,
       economy_wallet: arg1.wallet || 0,
       economy_bank: arg1.bank || 0,

@@ -140,7 +140,7 @@ module.exports = [
       const isPremiumUser = Boolean(
         profile.isPremium &&
         profile.premiumUntil &&
-        profile.premiumUntil > new Date(),
+        new Date(profile.premiumUntil) > new Date(),
       );
       const chatFn = require("../../../plugin/ai/subcommands/chat");
       const mockInteraction = createMockInteraction(interaction, { pesan: prompt, prompt, _default: prompt });

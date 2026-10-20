@@ -7,8 +7,8 @@ module.exports = {
   name: Events.ClientReady,
   once: true,
   execute(client) {
-    console.log(
-      `\x1b[44m\x1b[37m 🤖 SYSTEM \x1b[0m \x1b[34mNaura Hoshino Online! Terhubung sebagai \x1b[36m${client.user.tag}\x1b[0m`,
+    logger.system(
+      `Naura Hoshino Online! Terhubung sebagai ${client.user.tag}`,
     );
 
     // Load and execute all ready handlers dynamically

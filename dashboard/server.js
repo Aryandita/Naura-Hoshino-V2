@@ -525,7 +525,8 @@ module.exports = (containerOrClient) => {
     const ua = req.headers['user-agent'] || '';
     const isMobilePath = req.path.startsWith('/mobile');
     const isApiPath = req.path.startsWith('/api') || req.path.startsWith('/auth') 
-                   || req.path.startsWith('/socket.io') || req.path === '/health';
+                   || req.path.startsWith('/socket.io') || req.path === '/health'
+                   || req.path.startsWith('/activity');
     
     // Redirect jika device mobile dan belum di path /mobile atau /api
     if (MOBILE_UA.test(ua) && !isMobilePath && !isApiPath) {
@@ -580,6 +581,8 @@ module.exports = (containerOrClient) => {
   webApp.get("/automations", requireLogin, view("automations.html"));
   webApp.get("/automod", view("automod.html"));
   webApp.get("/activity", view("activity.html"));
+  webApp.get("/activity.html", (req, res) => res.redirect(301, "/activity"));
+  webApp.get("/pages/activity.html", (req, res) => res.redirect(301, "/activity"));
   webApp.get("/music", requireLogin, view("music.html"));
   webApp.get("/economy", view("economy.html"));
   webApp.get("/status", view("status.html"));
@@ -599,6 +602,7 @@ module.exports = (containerOrClient) => {
   webApp.get("/jam", view("jam.html"));
   webApp.get("/lounge", view("lounge.html"));
   webApp.get("/war-room", view("war-room.html"));
+webApp.get("/treasury", view("treasury.html"));
   webApp.get("/clan", view("clan.html"));
   webApp.get("/marketplace", view("marketplace.html"));
   webApp.get("/admin", requireLogin, view("admin.html"));

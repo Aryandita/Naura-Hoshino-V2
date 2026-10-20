@@ -64,12 +64,24 @@ function statLines(pet) {
     pet.passiveSkill && pet.passiveSkill !== "none"
       ? `\n**Bakat Alam:** \`${pet.passiveSkill}\``
       : "";
+  const hungerBar = survivalUI.buildVitalsBar({
+    current: pet.hunger || 0,
+    target: 100,
+    length: 8,
+    showPercentage: true,
+  });
+  const affectionBar = survivalUI.buildVitalsBar({
+    current: pet.affection || 0,
+    target: 100,
+    length: 8,
+    showPercentage: true,
+  });
   return [
     `**Sahabat Setia:** **${displayName}**`,
     `**Spesies Alami:** ${species.emoji} **${species.name}** (*${species.latin}*)`,
     `**Tingkatan Rarity:** \`[Tier ${tier.badge}] ${tier.label}\``,
     `**Level Pertumbuhan:** Level ${pet.petLevel || 1} (${pet.petExp || 0}/${XP_PER_LEVEL} XP)`,
-    `**Kenyang:** ${pet.hunger || 0}/100 | **Afeksi:** ${pet.affection || 0}/100`,
+    `🍗 **Kenyang:** \`${hungerBar.bar}\` | 💖 **Afeksi:** \`${affectionBar.bar}\``,
     `**Kondisi Mood:** \`${String(pet.mood || "normal").toUpperCase()}\`${buffText}`,
   ].join("\n");
 }

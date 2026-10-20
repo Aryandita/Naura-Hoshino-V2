@@ -121,8 +121,8 @@ module.exports = {
     ); // Jalankan setiap jam
     if (reminderTimer.unref) reminderTimer.unref();
 
-    console.log(
-      "\x1b[45m\x1b[37m 🎁 REMINDER \x1b[0m \x1b[35mSistem notifikasi Daily Reward berhasil diaktifkan.\x1b[0m",
+    logger.system(
+      "Sistem notifikasi Daily Reward berhasil diaktifkan.",
     );
   },
 };

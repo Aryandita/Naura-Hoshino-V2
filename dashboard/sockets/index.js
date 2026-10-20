@@ -21,6 +21,9 @@ const { getSystemMetrics } = require("../utils/systemMetrics");
 const STATS_INTERVAL_MS = 3000;
 const MUSIC_INTERVAL_MS = 2000;
 
+/** Pelacak pemain aktif di ruang Discord Activity per-channel */
+const activityRooms = new Map();
+
 /** Susun potret keadaan pemutar musik satu guild. */
 function snapshotPlayer(client, player) {
   const channel = client.channels.cache.get(player.voiceChannel);
@@ -451,17 +454,83 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       socket.join(room);
       socket.activityChannelId = channelId;
       socket.activityUser = user;
-      socket.to(room).emit("activity:player_move", {
+
+      if (!activityRooms.has(channelId)) {
+        activityRooms.set(channelId, new Map());
+      }
+      const roomPlayers = activityRooms.get(channelId);
+
+      const playerData = {
         userId: user?.id || socket.id,
         username: user?.username || "Explorer",
+        avatar: user?.avatar || null,
+        level: user?.level || 1,
         x: position?.x || 0,
         z: position?.z || 0,
+        rotation: position?.rotation || 0,
+        isMoving: false,
+        action: "idle",
+      };
+      roomPlayers.set(socket.id, playerData);
+
+      // Kirim daftar pemain yang sudah ada di room kepada pemain baru
+      const existingPlayers = Array.from(roomPlayers.values()).filter(
+        (p) => p.userId !== playerData.userId,
+      );
+      socket.emit("activity:room_players", existingPlayers);
+
+      // Siarkan kehadiran pemain baru ke pemain lain di room
+      socket.to(room).emit("activity:player_move", playerData);
+    });
+
+    socket.on("activity:move", ({ channelId = "global_sanctuary", userId, username, avatar, level, x, z, rotation, isMoving, action } = {}) => {
+      const room = `activity:${channelId}`;
+      const roomPlayers = activityRooms.get(channelId);
+      if (roomPlayers && roomPlayers.has(socket.id)) {
+        const p = roomPlayers.get(socket.id);
+        p.x = Number(x) || 0;
+        p.z = Number(z) || 0;
+        p.rotation = Number(rotation) || 0;
+        p.isMoving = !!isMoving;
+        p.action = action || "idle";
+      }
+
+      socket.to(room).emit("activity:player_move", {
+        userId: userId || socket.id,
+        username: username || "Explorer",
+        avatar: avatar || null,
+        level: level || 1,
+        x: Number(x) || 0,
+        z: Number(z) || 0,
+        rotation: Number(rotation) || 0,
+        isMoving: !!isMoving,
+        action: action || "idle",
       });
     });
 
-    socket.on("activity:move", ({ channelId = "global_sanctuary", userId, username, x, z } = {}) => {
+    socket.on("activity:action", ({ channelId = "global_sanctuary", userId, username, actionType, targetName, resultText } = {}) => {
       const room = `activity:${channelId}`;
-      socket.to(room).emit("activity:player_move", { userId, username, x, z });
+      socket.to(room).emit("activity:player_action", {
+        userId: userId || socket.id,
+        username: username || "Explorer",
+        actionType,
+        targetName,
+        resultText,
+        timestamp: Date.now(),
+      });
+    });
+
+    socket.on("activity:chat", ({ channelId = "global_sanctuary", userId, username, message } = {}) => {
+      const room = `activity:${channelId}`;
+      const safeMessage = String(message || "").trim().slice(0, 100);
+      if (safeMessage) {
+        socket.to(room).emit("activity:player_chat", {
+          userId: userId || socket.id,
+          username: username || "Explorer",
+          message: safeMessage,
+          timestamp: Date.now(),
+        });
+      }
     });
 
     // --- Town Square Live Multiplayer Avatar Radar (#12) ---
@@ -488,9 +557,17 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
     });
 
     socket.on("disconnect", () => {
-      if (socket.activityChannelId && socket.activityUser) {
+      if (socket.activityChannelId) {
+        const roomPlayers = activityRooms.get(socket.activityChannelId);
+        if (roomPlayers) {
+          roomPlayers.delete(socket.id);
+          if (roomPlayers.size === 0) {
+            activityRooms.delete(socket.activityChannelId);
+          }
+        }
+        const uid = socket.activityUser?.id || socket.id;
         socket.to(`activity:${socket.activityChannelId}`).emit("activity:player_leave", {
-          userId: socket.activityUser.id || socket.id,
+          userId: uid,
         });
       }
       if (socket.townLocation && socket.townUser) {

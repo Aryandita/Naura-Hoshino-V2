@@ -259,6 +259,511 @@ function register(router, client) {
     }
   });
 
+  // In-memory guest sessions cache for visitors playing without Discord login
+  const guestSessions = new Map();
+
+  function getOrCreateGuest(guestId, username) {
+    const id = guestId || `guest_${Math.random().toString(36).substring(2, 9)}`;
+    if (!guestSessions.has(id)) {
+      guestSessions.set(id, {
+        userId: id,
+        username: username || "Petualang Sukamaju",
+        avatar: null,
+        hp: 100,
+        maxHp: 120,
+        stamina: 100,
+        maxStamina: 100,
+        hunger: 100,
+        thirst: 100,
+        starFragments: 150,
+        coins: 1000,
+        survival_level: 1,
+        survival_xp: 0,
+        inventory: [
+          { id: "wooden_axe", name: "Kapak Kayu", amount: 1, type: "tool" },
+          { id: "wooden_pickaxe", name: "Beliung Kayu", amount: 1, type: "tool" },
+          { id: "wood", name: "Kayu", amount: 5, type: "material" },
+          { id: "stone", name: "Batu", amount: 3, type: "material" },
+        ],
+        lastBlessing: 0,
+      });
+    }
+    return guestSessions.get(id);
+  }
+
+  // --- 3B. Hybrid Discord Embedded App Auth & Session Handshake ---
+  router.post("/activity/auth", async (req, res) => {
+    try {
+      const { code, guestId, username: reqUsername, avatar: reqAvatar } = req.body || {};
+      let userId = req.user?.id || null;
+      let username = req.user?.username || null;
+      let avatar = req.user?.avatar ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png` : null;
+      let isGuest = false;
+
+      // 1. Check if authenticated via Express Session / Passport
+      if (userId) {
+        isGuest = false;
+      } else if (code) {
+        // 2. Check if Discord OAuth code was provided by Embedded App SDK
+        const env = require("../../../src/config/env");
+        if (env.CLIENT_ID && env.CLIENT_SECRET) {
+          try {
+            const axios = require("axios");
+            const tokenRes = await axios.post(
+              "https://discord.com/api/oauth2/token",
+              new URLSearchParams({
+                client_id: env.CLIENT_ID,
+                client_secret: env.CLIENT_SECRET,
+                grant_type: "authorization_code",
+                code,
+              }),
+              {
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                timeout: 5000,
+              },
+            );
+            if (tokenRes.data?.access_token) {
+              const userRes = await axios.get("https://discord.com/api/users/@me", {
+                headers: { Authorization: `Bearer ${tokenRes.data.access_token}` },
+                timeout: 5000,
+              });
+              if (userRes.data?.id) {
+                userId = userRes.data.id;
+                username = userRes.data.username;
+                avatar = userRes.data.avatar
+                  ? `https://cdn.discordapp.com/avatars/${userRes.data.id}/${userRes.data.avatar}.png`
+                  : null;
+                isGuest = false;
+              }
+            }
+          } catch (_) {
+            // Fallback to guest if token exchange fails (e.g. offline dev, mock code)
+          }
+        }
+      }
+
+      // 3. Fallback to Guest Mode if not authenticated
+      let survivalData = null;
+      let inventoryList = [];
+
+      if (userId && !isGuest) {
+        const cacheManager = require("../../../src/managers/cacheManager");
+        const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+        const [userSurvival, userProfile] = await Promise.all([
+          cacheManager.getUserSurvival(userId),
+          cacheManager.getUserProfile(userId),
+        ]);
+
+        inventoryList = safeParseInventory(userProfile?.inventory);
+        survivalData = {
+          hp: Number(userSurvival?.hp ?? 100),
+          maxHp: 120,
+          stamina: Number(userSurvival?.stamina ?? 100),
+          maxStamina: 100,
+          hunger: Number(userSurvival?.hunger ?? 100),
+          thirst: Number(userSurvival?.thirst ?? 100),
+          starFragments: Number(userSurvival?.starFragments ?? 0),
+          coins: Number(userProfile?.economy_wallet ?? 0),
+          survival_level: Number(userSurvival?.survival_level ?? 1),
+          survival_xp: Number(userSurvival?.survival_xp ?? 0),
+        };
+      } else {
+        isGuest = true;
+        const guest = getOrCreateGuest(guestId, reqUsername);
+        userId = guest.userId;
+        username = guest.username;
+        avatar = reqAvatar || null;
+        survivalData = {
+          hp: guest.hp,
+          maxHp: guest.maxHp,
+          stamina: guest.stamina,
+          maxStamina: guest.maxStamina,
+          hunger: guest.hunger,
+          thirst: guest.thirst,
+          starFragments: guest.starFragments,
+          coins: guest.coins,
+          survival_level: guest.survival_level,
+          survival_xp: guest.survival_xp,
+        };
+        inventoryList = guest.inventory;
+      }
+
+      res.json({
+        success: true,
+        isGuest,
+        user: { id: userId, username: username || "Petualang Sukamaju", avatar },
+        survival: survivalData,
+        inventory: inventoryList,
+        location: "desa_sukamaju",
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- Real-time Activity State (Survival Stats, Inventory, Weather) ---
+  router.get("/activity/state", async (req, res) => {
+    try {
+      const targetUserId = req.query.userId || req.user?.id || null;
+      const guestId = req.query.guestId || null;
+
+      if (!targetUserId && !guestId) {
+        const guest = getOrCreateGuest(null);
+        return res.json({
+          success: true,
+          isGuest: true,
+          user: { id: guest.userId, username: guest.username, avatar: null },
+          survival: {
+            hp: guest.hp,
+            maxHp: guest.maxHp,
+            stamina: guest.stamina,
+            maxStamina: guest.maxStamina,
+            starFragments: guest.starFragments,
+            coins: guest.coins,
+            survival_level: guest.survival_level,
+            survival_xp: guest.survival_xp,
+          },
+          inventory: guest.inventory,
+          location: "desa_sukamaju",
+        });
+      }
+
+      if (targetUserId && !targetUserId.startsWith("guest_")) {
+        const cacheManager = require("../../../src/managers/cacheManager");
+        const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+        const [userSurvival, userProfile] = await Promise.all([
+          cacheManager.getUserSurvival(targetUserId),
+          cacheManager.getUserProfile(targetUserId),
+        ]);
+
+        const inventory = safeParseInventory(userProfile?.inventory);
+        return res.json({
+          success: true,
+          isGuest: false,
+          user: {
+            id: targetUserId,
+            username: req.user?.username || (await resolveUsername(client, targetUserId)),
+            avatar: req.user?.avatar ? `https://cdn.discordapp.com/avatars/${targetUserId}/${req.user.avatar}.png` : null,
+          },
+          survival: {
+            hp: Number(userSurvival?.hp ?? 100),
+            maxHp: 120,
+            stamina: Number(userSurvival?.stamina ?? 100),
+            maxStamina: 100,
+            hunger: Number(userSurvival?.hunger ?? 100),
+            thirst: Number(userSurvival?.thirst ?? 100),
+            starFragments: Number(userSurvival?.starFragments ?? 0),
+            coins: Number(userProfile?.economy_wallet ?? 0),
+            survival_level: Number(userSurvival?.survival_level ?? 1),
+            survival_xp: Number(userSurvival?.survival_xp ?? 0),
+          },
+          inventory,
+          location: userSurvival?.currentLocation || "desa_sukamaju",
+        });
+      }
+
+      const guest = getOrCreateGuest(targetUserId || guestId);
+      return res.json({
+        success: true,
+        isGuest: true,
+        user: { id: guest.userId, username: guest.username, avatar: null },
+        survival: {
+          hp: guest.hp,
+          maxHp: guest.maxHp,
+          stamina: guest.stamina,
+          maxStamina: guest.maxStamina,
+          starFragments: guest.starFragments,
+          coins: guest.coins,
+          survival_level: guest.survival_level,
+          survival_xp: guest.survival_xp,
+        },
+        inventory: guest.inventory,
+        location: "desa_sukamaju",
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- Real-time Atomic Gathering Action (Pine Wood, Mineral Ore, Fishing) ---
+  router.post("/activity/gather", async (req, res) => {
+    try {
+      const { action, guestId } = req.body || {};
+      const validActions = ["chop", "mine", "fish"];
+      if (!action || !validActions.includes(action)) {
+        return res.status(400).json({
+          success: false,
+          error: "Aksi gathering tidak valid. Pilih antara 'chop', 'mine', atau 'fish'.",
+        });
+      }
+
+      const activeUserId = req.user?.id || (req.body?.userId && !req.body.userId.startsWith("guest_") ? req.body.userId : null);
+
+      const STAMINA_COSTS = { chop: 12, mine: 15, fish: 10 };
+      const cost = STAMINA_COSTS[action];
+
+      const itemsGained = [];
+      let xpGained = 0;
+      let nsfGained = 0;
+      let message = "";
+
+      if (action === "chop") {
+        const woodCount = Math.floor(Math.random() * 3) + 1;
+        itemsGained.push({ id: "wood", name: "Kayu Pinus", amount: woodCount, type: "material" });
+        if (Math.random() < 0.25) {
+          itemsGained.push({ id: "fiber", name: "Serat Tumbuhan", amount: 1, type: "material" });
+        }
+        xpGained = 25;
+        nsfGained = 15;
+        message = `Tebasan mantap! Kamu berhasil memanen ${woodCount}x Kayu Pinus (+${nsfGained} NSF, +${xpGained} XP).`;
+      } else if (action === "mine") {
+        const stoneCount = Math.floor(Math.random() * 3) + 1;
+        itemsGained.push({ id: "stone", name: "Batu Andesit", amount: stoneCount, type: "material" });
+        const oreRoll = Math.random();
+        if (oreRoll < 0.15) {
+          itemsGained.push({ id: "iron_ore", name: "Bijih Besi Murni", amount: 1, type: "material" });
+        } else if (oreRoll < 0.35) {
+          itemsGained.push({ id: "copper_ore", name: "Bijih Tembaga", amount: 1, type: "material" });
+        } else if (oreRoll < 0.50) {
+          itemsGained.push({ id: "coal_lump", name: "Bongkahan Batubara", amount: 1, type: "material" });
+        }
+        xpGained = 35;
+        nsfGained = 20;
+        message = `Batu pecah! Kamu menambang ${stoneCount}x Batu dan mineral berharga (+${nsfGained} NSF, +${xpGained} XP).`;
+      } else if (action === "fish") {
+        const fishRoll = Math.random();
+        if (fishRoll < 0.12) {
+          itemsGained.push({ id: "golden_fish", name: "Ikan Mas Koki Bintang", amount: 1, type: "consumable" });
+          nsfGained = 50;
+          xpGained = 55;
+          message = `Luar biasa! Kamu menangkap Ikan Mas Koki Bintang Langka di Kolam Bintang (+${nsfGained} NSF, +${xpGained} XP)!`;
+        } else if (fishRoll < 0.50) {
+          itemsGained.push({ id: "salmon", name: "Ikan Salmon Segar", amount: 1, type: "consumable" });
+          nsfGained = 30;
+          xpGained = 40;
+          message = `Umpan disambar! Kamu menangkap 1x Ikan Salmon Segar (+${nsfGained} NSF, +${xpGained} XP).`;
+        } else {
+          itemsGained.push({ id: "fish", name: "Ikan Nila Kolam", amount: 2, type: "consumable" });
+          nsfGained = 20;
+          xpGained = 30;
+          message = `Tarik joran! Kamu mendapatkan 2x Ikan Nila Kolam (+${nsfGained} NSF, +${xpGained} XP).`;
+        }
+      }
+
+      if (activeUserId) {
+        // Real authenticated DB mutation
+        const survivalVitals = require("../../../src/survival/helpers/survivalVitals");
+        const cacheManager = require("../../../src/managers/cacheManager");
+        const { addItemsAtomic, safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+        const survivalLeveling = require("../../../src/survival/engines/survivalLeveling");
+
+        const energyRes = await survivalVitals.consumeEnergyOrVitals(activeUserId, cost);
+        if (!energyRes.ok) {
+          return res.status(400).json({
+            success: false,
+            error: "Stamina tidak mencukupi untuk melakukan aktivitas ini! Istirahat sejenak atau minta berkah ke Pak Kades Tirto.",
+          });
+        }
+
+        await addItemsAtomic(activeUserId, itemsGained);
+        await cacheManager.incrementUserSurvival(activeUserId, "starFragments", nsfGained);
+        await survivalLeveling.addPlayerXP(activeUserId, xpGained);
+
+        const [updatedSurvival, updatedProfile] = await Promise.all([
+          cacheManager.getUserSurvival(activeUserId),
+          cacheManager.getUserProfile(activeUserId),
+        ]);
+
+        return res.json({
+          success: true,
+          action,
+          itemsGained,
+          xpGained,
+          starFragmentsGained: nsfGained,
+          staminaRemaining: Number(updatedSurvival?.stamina ?? 0),
+          survival: {
+            hp: Number(updatedSurvival?.hp ?? 100),
+            stamina: Number(updatedSurvival?.stamina ?? 0),
+            starFragments: Number(updatedSurvival?.starFragments ?? 0),
+            survival_level: Number(updatedSurvival?.survival_level ?? 1),
+            survival_xp: Number(updatedSurvival?.survival_xp ?? 0),
+          },
+          inventory: safeParseInventory(updatedProfile?.inventory),
+          message,
+        });
+      }
+
+      // Guest mutation
+      const guest = getOrCreateGuest(guestId || req.body?.userId);
+      if (guest.stamina < cost) {
+        return res.status(400).json({
+          success: false,
+          error: "Stamina petualang tamu habis! Minta berkah pemulihan ke Pak Kades Tirto yuk.",
+        });
+      }
+
+      guest.stamina = Math.max(0, guest.stamina - cost);
+      guest.starFragments += nsfGained;
+      guest.survival_xp += xpGained;
+      if (guest.survival_xp >= guest.survival_level * 100) {
+        guest.survival_xp -= guest.survival_level * 100;
+        guest.survival_level += 1;
+      }
+
+      for (const it of itemsGained) {
+        const exist = guest.inventory.find((i) => i.id === it.id);
+        if (exist) {
+          exist.amount += it.amount;
+        } else {
+          guest.inventory.push({ ...it });
+        }
+      }
+
+      return res.json({
+        success: true,
+        action,
+        itemsGained,
+        xpGained,
+        starFragmentsGained: nsfGained,
+        staminaRemaining: guest.stamina,
+        survival: {
+          hp: guest.hp,
+          stamina: guest.stamina,
+          starFragments: guest.starFragments,
+          survival_level: guest.survival_level,
+          survival_xp: guest.survival_xp,
+        },
+        inventory: guest.inventory,
+        message,
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- Real-time Village NPC Interaction (Kades Tirto, Bagas, Mang Ujang) ---
+  router.post("/activity/npc-interact", async (req, res) => {
+    try {
+      const { npcId, choice, guestId } = req.body || {};
+      const activeUserId = req.user?.id || (req.body?.userId && !req.body.userId.startsWith("guest_") ? req.body.userId : null);
+
+      const NPC_DATABASE = {
+        kades_tirto: {
+          id: "kades_tirto",
+          name: "Pak Kades Tirto",
+          title: "Kepala Desa Sukamaju",
+          image: "/assets/survival/characters/kades_tirto.jpeg",
+          defaultDialogue: "Selamat datang di Desa Sukamaju, Petualang! Desa kami subur dan aman. Di utara ada Hutan Pinus untuk kayu, di timur ada Bukit Tambang kaya mineral, dan di selatan ada Kolam Bintang tempat memancing yang menenangkan.",
+          options: [
+            { id: "blessing", label: "Minta Berkah Desa (+40 Stamina, +50 NSF)" },
+            { id: "guide", label: "Panduan Wilayah & Sumber Daya" },
+            { id: "close", label: "Pamit Melanjutkan Petualangan" },
+          ],
+        },
+        bagas: {
+          id: "bagas",
+          name: "Bagas",
+          title: "Pandai Besi Sukamaju",
+          image: "/assets/survival/characters/bagas.jpeg",
+          defaultDialogue: "Klang! Klang! Halo kawan! Aku Bagas, pandai besi desa. Butuh perkakas tangguh atau ingin mengasah kapak dan beliungmu? Api bengkelku selalu berkobar!",
+          options: [
+            { id: "starter_kit", label: "Minta Peralatan Tempa Dasar (Kapak & Beliung)" },
+            { id: "repair", label: "Asah & Perbaiki Peralatan (20 NSF)" },
+            { id: "close", label: "Pamit Dulu, Bagas" },
+          ],
+        },
+        mang_ujang: {
+          id: "mang_ujang",
+          name: "Mang Ujang",
+          title: "Nelayan Kolam Bintang",
+          image: "/assets/survival/characters/mang_ujang.jpeg",
+          defaultDialogue: "Semilir angin kolam memang paling sedap dinikmati sore hari. Ikan di Kolam Bintang ini jinak-jinak, asal sabar joranmu pasti disambar!",
+          options: [
+            { id: "fishing_kit", label: "Minta Pancingan Bambu Nelayan" },
+            { id: "tips", label: "Tips Menangkap Golden Koi" },
+            { id: "close", label: "Pamit Memancing" },
+          ],
+        },
+      };
+
+      const npc = NPC_DATABASE[npcId] || NPC_DATABASE.kades_tirto;
+      let dialogue = npc.defaultDialogue;
+      let reward = null;
+
+      if (npcId === "kades_tirto") {
+        if (choice === "blessing") {
+          dialogue = "Pak Kades Tirto tersenyum hangat dan menepuk bahumu: 'Semoga leluhur Sukamaju memberkatimu dengan kesegaran tubuh dan kelimpahan bintang hari ini!' (+40 Stamina & +50 Star Fragments)";
+          reward = { stamina: 40, starFragments: 50 };
+          if (activeUserId) {
+            const cacheManager = require("../../../src/managers/cacheManager");
+            const userSurv = await cacheManager.getUserSurvival(activeUserId);
+            const currentStam = Number(userSurv?.stamina ?? 100);
+            const stamDelta = Math.max(0, Math.min(40, 100 - currentStam));
+            const deltas = { starFragments: 50 };
+            if (stamDelta > 0) deltas.stamina = stamDelta;
+            await cacheManager.incrementUserSurvival(activeUserId, deltas);
+          } else {
+            const guest = getOrCreateGuest(guestId || req.body?.userId);
+            guest.stamina = Math.min(100, guest.stamina + 40);
+            guest.starFragments += 50;
+          }
+        } else if (choice === "guide") {
+          dialogue = "Pak Kades Tirto: 'Peta Sukamaju terhubung tanpa sekat. Berjalanlah ke utara melewati pohon pinus, tambang batu di timur laut, dan segarkan diri di kolam dermaga selatan. Jangan ragu menyapa warga lain di voice channel!'";
+        }
+      } else if (npcId === "bagas") {
+        if (choice === "starter_kit") {
+          dialogue = "Bagas menyerahkan Kapak dan Beliung: 'Ini dia modal pertamamu! Pakai dengan bijak untuk memajukan perekonomian desa!'";
+          const starterTools = [
+            { id: "wooden_axe", name: "Kapak Kayu", amount: 1, type: "tool" },
+            { id: "wooden_pickaxe", name: "Beliung Kayu", amount: 1, type: "tool" },
+          ];
+          reward = { items: starterTools };
+          if (activeUserId) {
+            const { addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
+            await addItemsAtomic(activeUserId, starterTools);
+          } else {
+            const guest = getOrCreateGuest(guestId || req.body?.userId);
+            for (const t of starterTools) {
+              if (!guest.inventory.some((i) => i.id === t.id)) {
+                guest.inventory.push({ ...t });
+              }
+            }
+          }
+        } else if (choice === "repair") {
+          dialogue = "Bagas mengayunkan palunya: 'Klang! Selesai! Seluruh perkakasmu kini tajam kembali dan siap bekerja keras!'";
+          reward = { repaired: true };
+        }
+      } else if (npcId === "mang_ujang") {
+        if (choice === "fishing_kit") {
+          dialogue = "Mang Ujang memberikan joran bambu: 'Ini pancingan bambu buat kamu. Pegang erat-erat saat joran melengkung ya!'";
+          const rodItem = [{ id: "bamboo_fishing_rod", name: "Pancingan Bambu", amount: 1, type: "tool" }];
+          reward = { items: rodItem };
+          if (activeUserId) {
+            const { addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
+            await addItemsAtomic(activeUserId, rodItem);
+          } else {
+            const guest = getOrCreateGuest(guestId || req.body?.userId);
+            if (!guest.inventory.some((i) => i.id === "bamboo_fishing_rod")) {
+              guest.inventory.push(rodItem[0]);
+            }
+          }
+        } else if (choice === "tips") {
+          dialogue = "Mang Ujang: 'Ikan Mas Koki Bintang suka berenang di dekat dermaga saat riak air tenang. Perhatikan lingkaran cahaya air dan lempar kailmu ke sana!'";
+        }
+      }
+
+      return res.json({
+        success: true,
+        npc,
+        dialogue,
+        options: npc.options,
+        reward,
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // --- 4. Spatial Audio & Positioning ---
   router.get("/activity/spatial-proximity", async (req, res) => {
     try {

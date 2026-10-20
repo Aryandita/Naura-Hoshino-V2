@@ -7,7 +7,7 @@
  * sosial dua pengguna Discord dengan visual avatar ganda, persentase resonansi,
  * lencana harmoni, dan kutipan interaktif Naura.
  *
- * Mematuhi prinsip antislop-ui dan bebas karakter em-dash (\u2014).
+ * Mematuhi prinsip antislop-ui dan bebas karakter em-dash (U+2014).
  */
 
 const { createCanvas, loadImage } = require("./canvasRuntime");

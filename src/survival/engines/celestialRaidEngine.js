@@ -104,6 +104,17 @@ class CelestialRaidEngine {
     };
 
     this.activeRaids.set(instanceId, raidSession);
+
+    try {
+      const webPushService = require("../../services/webPushService");
+      webPushService.notifyWorldBossSpawn({
+        bossName: bossConfig.name,
+        level: Math.round(bossConfig.baseHp / 2000),
+        location: "Kubah Celestial",
+        rewardNsf: bossConfig.rewardNsf,
+      }).catch(() => {});
+    } catch (_) {}
+
     return raidSession;
   }
 

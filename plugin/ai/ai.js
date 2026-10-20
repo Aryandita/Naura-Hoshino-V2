@@ -8,7 +8,7 @@ function isPremium(profile) {
   return Boolean(
     profile.isPremium &&
     profile.premiumUntil &&
-    profile.premiumUntil > new Date(),
+    new Date(profile.premiumUntil) > new Date(),
   );
 }
 

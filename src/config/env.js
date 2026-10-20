@@ -61,6 +61,7 @@ const env = {
   PREFIX: cleanEnv(process.env.PREFIX) || "n!",
   GUILD_ID: cleanEnv(process.env.GUILD_ID),
   SENTRY_DSN: cleanEnv(process.env.SENTRY_DSN),
+  DISCORD_PUBLIC_KEY: cleanEnv(process.env.DISCORD_PUBLIC_KEY),
   OWNER_IDS: (process.env.OWNER_IDS || process.env.OWNER_ID)
     ? (process.env.OWNER_IDS || process.env.OWNER_ID)
         .split(",")
@@ -74,17 +75,15 @@ const env = {
   PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || "Belum ada kolaborasi",
 
   // SUPABASE (Primary Relational Cloud Provider)
-  SUPABASE_URL:
-    cleanEnv(process.env.SUPABASE_URL) ||
-    "https://ceqkjzvrxyifxzgxtkig.supabase.co",
+  // Tidak ada hardcoded fallback - wajib diisi di .env untuk produksi
+  SUPABASE_URL: cleanEnv(process.env.SUPABASE_URL) || "",
   SUPABASE_KEY:
     cleanEnv(
       process.env.SUPABASE_KEY ||
         process.env.SUPABASE_ANON_KEY ||
         process.env.SUPABASE_PUBLISHABLE_KEY,
-    ) || "sb_publishable_9gd0-5FflbVgYPCd7WGAwQ_dJLMxyRX",
-  SUPABASE_PROJECT_ID:
-    cleanEnv(process.env.SUPABASE_PROJECT_ID) || "ceqkjzvrxyifxzgxtkig",
+    ) || "",
+  SUPABASE_PROJECT_ID: cleanEnv(process.env.SUPABASE_PROJECT_ID) || "",
 
   // DATABASE (Multi-Dialect: Supabase / PostgreSQL, MySQL, SQLite Fallback)
   DATABASE_URL: cleanEnv(
@@ -235,7 +234,13 @@ const env = {
 };
 
 // Variabel yang wajib ada sebelum bot boleh menyala
-const REQUIRED_KEYS = ["TOKEN", "CLIENT_ID"];
+const REQUIRED_KEYS = [
+  "TOKEN",
+  "CLIENT_ID",
+  "SUPABASE_URL",
+  "SUPABASE_KEY",
+  "SUPABASE_PROJECT_ID",
+];
 
 /** Daftar variabel wajib yang masih kosong. */
 function getMissingEnvKeys() {

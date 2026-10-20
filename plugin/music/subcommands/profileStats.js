@@ -48,7 +48,7 @@ module.exports = {
         topTracks: calculateTop5(profile.music_topTrack),
         topServers: calculateTop5(profile.music_topServer),
         topFriends: calculateTop5(profile.music_topFriend),
-        isPremium: profile.isPremium && profile.premiumUntil > new Date(),
+        isPremium: Boolean(profile?.isPremium && profile?.premiumUntil && new Date(profile.premiumUntil) > new Date()),
       };
       const imageBuffer = await generateMusicProfileImage(
         target,
@@ -190,7 +190,7 @@ module.exports = {
         topTracks: calculateTop5(profile?.music_topTrack),
         topServers: calculateTop5(profile?.music_topServer),
         topFriends: calculateTop5(profile?.music_topFriend),
-        isPremium: profile?.isPremium && profile?.premiumUntil > new Date(),
+        isPremium: Boolean(profile?.isPremium && profile?.premiumUntil && new Date(profile.premiumUntil) > new Date()),
       };
 
       const imageBuffer = await canvasWorkerPool.execute({

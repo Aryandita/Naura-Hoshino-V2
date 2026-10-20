@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server Treasury | Naura OS</title>
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+      .treasury-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+      .treasury-card { background: rgba(134, 239, 172, 0.06); border: 1px solid rgba(134, 239, 172, 0.2); border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+      .treasury-card h3 { margin: 0; font-size: 0.95rem; color: #86EFAC; display: flex; justify-content: space-between; align-items: baseline; }
+      .treasury-card .value { font-size: 1.5rem; font-weight: 700; color: #ffffff; }
+      .treasury-card .pct { font-size: 0.85rem; color: #9CA3AF; }
+      .treasury-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 0.5rem; }
+      .treasury-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+      .chart-wrap { background: rgba(134, 239, 172, 0.04); border: 1px solid rgba(134, 239, 172, 0.15); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem; }
+      .pool-stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+      .pool-stat { flex: 1; min-width: 140px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1rem; text-align: center; }
+      .pool-stat .label { font-size: 0.8rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+      .pool-stat .number { font-size: 1.4rem; font-weight: 700; color: #ffffff; }
+      .updated-badge { display: inline-block; margin-top: 1rem; padding: 0.4rem 0.8rem; background: rgba(34, 211, 238, 0.1); border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 20px; font-size: 0.75rem; color: #22D3EE; }
+      .error-msg { color: #F87171; padding: 1rem; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 8px; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-brand"><i class="fa-solid fa-coins"></i> Naura Treasury</div>
+      <div class="nav-links">
+        <a href="/" class="nav-link"><i class="fa-solid fa-house"></i> Beranda</a>
+        <a href="/economy" class="nav-link">Ekonomi</a>
+        <a href="/treasury" class="nav-link active">Treasury</a>
+      </div>
+    </nav>
+    <main class="container">
+      <header class="page-header">
+        <h1><i class="fa-solid fa-coins"></i> Server Treasury</h1>
+        <p>Transparansi alokasi kas server Naura Hoshino V2 (Currency V2 Closed-Loop)</p>
+      </header>
+
+      <div id="treasuryLoading" class="pool-stat">
+        <div class="label">Memuat</div>
+        <div class="number">...</div>
+      </div>
+
+      <div id="treasuryError" class="error-msg" style="display:none;"></div>
+
+      <div id="treasuryContent" style="display:none;">
+        <div class="pool-stats" id="poolStats"></div>
+
+        <div class="treasury-grid" id="allocationGrid"></div>
+
+        <div class="chart-wrap">
+          <h3 style="margin:0 0 1rem 0; color:#ffffff;">Alokasi 4 Saluran Kas Server</h3>
+          <canvas id="treasuryChart" width="400" height="200"></canvas>
+        </div>
+
+        <div id="treasuryUpdated" class="updated-badge"></div>
+      </div>
+    </main>
+    <script>
+      const API_BASE = '/api/treasury';
+      const COLORS = { moss: '#34D399', amber: '#FBBF24', emerald: '#86EFAC', danger: '#F87171' };
+      function fmt(n) { return Number(n || 0).toLocaleString('id-ID'); }
+      async function fetchTreasury() {
+        const loading = document.getElementById('treasuryLoading');
+        const error = document.getElementById('treasuryError');
+        const content = document.getElementById('treasuryContent');
+        try {
+          const res = await fetch(`${API_BASE}/summary`);
+          const data = await res.json();
+          if (!data.success) throw new Error(data.error || 'Gagal memuat');
+          loading.style.display = 'none';
+          error.style.display = 'none';
+          content.style.display = 'block';
+          const poolStats = document.getElementById('poolStats');
+          poolStats.innerHTML = `
+            <div class="pool-stat"><div class="label">Dompet Server (NC)</div><div class="number">${fmt(data.pools_nc.total_wallet)}</div></div>
+            <div class="pool-stat"><div class="label">Bank Server (NC)</div><div class="number">${fmt(data.pools_nc.total_bank)}</div></div>
+            <div class="pool-stat"><div class="label">Star Fragments (NSF)</div><div class="number">${fmt(data.pools_nsf.total_star_fragments)}</div></div>
+            <div class="pool-stat"><div class="label">Total Treasury (NSF)</div><div class="number" style="color:${COLORS.amber};">${fmt(data.pools_nsf.treasury_total)}</div></div>
+          `;
+          const grid = document.getElementById('allocationGrid');
+          const alloc = data.allocation;
+          const order = ['infrastructure', 'lottery', 'subsidy', 'merchant'];
+          grid.innerHTML = order.map(key => {
+            const a = alloc[key];
+            const color = a.color || COLORS.moss;
+            return `
+              <div class="treasury-card">
+                <h3>${a.label} <span class="pct">${a.pct}%</span></h3>
+                <div class="value">${fmt(a.value)} NSF</div>
+                <div class="treasury-bar"><div class="treasury-bar-fill" style="width:0%; background:${color};" data-pct="${a.pct}"></div></div>
+              </div>
+            `;
+          }).join('');
+          setTimeout(() => { document.querySelectorAll('.treasury-bar-fill').forEach(el => { el.style.width = el.dataset.pct + '%'; }); }, 100);
+          const ctx = document.getElementById('treasuryChart').getContext('2d');
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: order.map(k => alloc[k].label), datasets: [{ data: order.map(k => alloc[k].value), backgroundColor: order.map(k => alloc[k].color), borderWidth: 0, hoverOffset: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#ffffff', font: { size: 12 } } }, title: { display: false } }, cutout: '70%' },
+          });
+          const badge = document.getElementById('treasuryUpdated');
+          badge.textContent = 'Terakhir diperbarui: ' + new Date(data.updatedAt).toLocaleString('id-ID');
+        } catch (err) {
+          loading.style.display = 'none';
+          error.style.display = 'block';
+          error.textContent = 'Gagal memuat data treasury. Coba lagi nanti.';
+          console.error(err);
+        }
+      }
+      document.addEventListener('DOMContentLoaded', fetchTreasury);
+    </script>
+  </body>
+</html>

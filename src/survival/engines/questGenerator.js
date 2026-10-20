@@ -317,6 +317,14 @@ async function incrementQuestProgress(userId, action, amount = 1, metadata = {})
   } catch (e) {
     // Intentional: Ignore error
   }
+
+  // Sinkronisasi otomatis ke Daily & Weekly Quest Engine V2
+  try {
+    const { recordQuestProgress } = require("./dailyQuestEngine");
+    await recordQuestProgress(userId, action, amount, metadata);
+  } catch (syncErr) {
+    // Non-blocking sync
+  }
 }
 
 async function incrementClanQuestProgress(clanId, action, amount = 1) {

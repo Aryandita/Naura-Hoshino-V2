@@ -29,8 +29,8 @@ module.exports = {
             );
           }
         }
-        console.log(
-          `\x1b[42m\x1b[30m 🌐 GLOBAL CHAT \x1b[0m \x1b[32mBerhasil memuat ${client.globalChatChannels.size} channel Global Chat.\x1b[0m`,
+        logger.system(
+          `[GLOBAL CHAT] Berhasil memuat ${client.globalChatChannels.size} channel Global Chat.`,
         );
 
         // Redis Pub/Sub untuk Cross-Shard Global Chat

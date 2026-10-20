@@ -111,17 +111,22 @@ module.exports = {
 
     const jam = timeUpdate.hour.toString().padStart(2, "0");
 
+    const staBar = survivalUI.buildVitalsBar({ current: newStamina, target: MAX_STAT, length: 8, showPercentage: true });
+    const hpBar = survivalUI.buildVitalsBar({ current: newHp, target: maxHp, length: 8, showPercentage: true });
+    const hunBar = survivalUI.buildVitalsBar({ current: newHunger, target: 100, length: 8, showPercentage: true });
+    const thiBar = survivalUI.buildVitalsBar({ current: newThirst, target: 100, length: 8, showPercentage: true });
+
     const description = [
       introText,
       "",
       `**Yang pulih waktu kamu ${isDaytime ? "rehat" : "tidur"}:**`,
-      `> Stamina **+${regenStamina}** (sekarang ${newStamina}%)`,
-      `> HP **+${regenHp}** (sekarang ${newHp})`,
-      `> ⚡ **Reset Energi (5 Jam):** ${energyResetInfo.reset ? "Energi telah pulih 100%!" : "Siap dalam " + energyResetInfo.formattedCountdown}`,
+      `> ⚡ Stamina: \`${staBar.bar}\` *(+${regenStamina})*`,
+      `> ❤️ HP: \`${hpBar.bar}\` *(+${regenHp})*`,
+      `> 🔋 **Reset Energi (5 Jam):** ${energyResetInfo.reset ? "Energi telah pulih 100%!" : "Siap dalam " + energyResetInfo.formattedCountdown}`,
       "",
       `**Kebutuhan fisik berkurang sedikit:**`,
-      `> Lapar **-${hungerDrain}%** (sisa ${newHunger}%)`,
-      `> Haus **-${thirstDrain}%** (sisa ${newThirst}%)`,
+      `> 🍖 Lapar: \`${hunBar.bar}\` *(-${hungerDrain}%)*`,
+      `> 💧 Haus: \`${thiBar.bar}\` *(-${thirstDrain}%)*`,
       "",
       "**Sekarang sudah:**",
       `> ${timeState.emoji} **Hari ke-${timeUpdate.day}**, jam ${jam}:00 (${timeState.label})`,

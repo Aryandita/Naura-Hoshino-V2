@@ -45,8 +45,14 @@ async function checkPremiumStatus(userId) {
  * @returns {string} 'none' | 'starter' | 'supporter' | 'friends' | 'vip'
  */
 function getUserPremiumTier(userProfile) {
-  if (!userProfile || !userProfile.isPremium || !userProfile.premiumUntil) {
+  if (!userProfile || !userProfile.isPremium) {
     return "none";
+  }
+  if (userProfile.premium_tier && userProfile.premium_tier !== "none") {
+    return userProfile.premium_tier;
+  }
+  if (!userProfile.premiumUntil) {
+    return userProfile.isPremium ? "vip" : "none";
   }
   const now = new Date();
   const until = new Date(userProfile.premiumUntil);

@@ -290,7 +290,11 @@ async function shutdown() {
       await cacheManager.flushAll();
     }
 
-    if (client.musicManager && client.musicManager.poru) {
+    if (
+      client.musicManager &&
+      client.musicManager.poru &&
+      Array.isArray(client.musicManager.poru.nodes)
+    ) {
       console.log("[-] Menghancurkan Lavalink node(s)...");
       client.musicManager.poru.nodes.forEach((node) => node.destroy());
     }

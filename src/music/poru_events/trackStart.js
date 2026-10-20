@@ -47,8 +47,8 @@ module.exports = {
       manager.clearSkipVotes?.(player.guildId);
       manager.saveQueueState?.(player.guildId, player);
 
-      console.log(
-        `\x1b[44m\x1b[37m 🔊 PLAYING \x1b[0m \x1b[36m${activeTrack.info.title} \x1b[0m\x1b[90mdi ${manager.client.guilds.cache.get(player.guildId)?.name}\x1b[0m`,
+      logger.music(
+        `Memutar lagu: ${activeTrack.info.title} di ${manager.client.guilds.cache.get(player.guildId)?.name || "Guild"}`,
       );
 
       if (!player.playedHistory) player.playedHistory = new Set();
@@ -232,14 +232,14 @@ module.exports = {
               return t;
             });
 
-            console.log(
-              `\x1b[42m\x1b[30m 💿 AUTOPLAY NATIVE \x1b[0m \x1b[32mPre-fetch lagu rekomendasi: ${best.info.title}\x1b[0m`,
+            logger.music(
+              `Pre-fetch lagu rekomendasi: ${best.info.title}`,
             );
           }
         }
       } catch (e) {
-        console.error(
-          `\x1b[41m\x1b[37m ⚠️ AUTOPLAY NATIVE ERROR \x1b[0m Alasan: \x1b[33m${e.message || "Tidak diketahui"}\x1b[0m. Menggunakan fallback...`,
+        logger.warn(
+          `Autoplay native fetch error: ${e.message || "Tidak diketahui"}. Menggunakan fallback...`,
         );
       }
     }

@@ -188,6 +188,13 @@ const pushState = {
     return memoryPushSubscriptions.size;
   },
 
+  async getAllSubscriptions() {
+    return Array.from(memoryPushSubscriptions.entries()).map(([userId, subData]) => ({
+      userId,
+      ...(subData || {}),
+    }));
+  },
+
   async deleteSubscription(userId) {
     memoryPushSubscriptions.delete(userId);
     if (redisManager && redisManager.isReady) {

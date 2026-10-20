@@ -24,6 +24,11 @@ module.exports = {
     const eError = ui.getEmoji("error") || "❌";
     const divider = "-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
 
+    const VoiceManager = require("../../../src/managers/voiceManager");
+    if (VoiceManager.hasActiveConnection(guild.id)) {
+      await VoiceManager.yieldToMusic(guild.id);
+    }
+
     if (!player) {
       player = poru.createConnection({
         guildId: guild.id,
@@ -99,6 +104,11 @@ module.exports = {
       deleteReply,
     } = ctx;
     const eError = ui.getEmoji("error") || "❌";
+
+    const VoiceManager = require("../../../src/managers/voiceManager");
+    if (VoiceManager.hasActiveConnection(guild.id)) {
+      await VoiceManager.yieldToMusic(guild.id);
+    }
 
     if (!player) {
       player = poru.createConnection({

@@ -697,9 +697,9 @@
 
           <!-- ── Telemetry Cards ── -->
           <div class="section-title animate-in delay-2" style="margin-bottom:12px;">Telemetri Sistem Real-Time</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;align-items:stretch;" class="animate-in delay-2" id="telemetryGrid">
+          <div class="bento-grid animate-in delay-2" id="telemetryGrid">
 
-            <div class="metric-card cat-primary" id="cardTelemetryPing">
+            <div class="bento-col-3 metric-card cat-primary" id="cardTelemetryPing">
               <div class="metric-top">
                 <span class="metric-label">Network Latency</span>
                 <span class="metric-badge" style="color:var(--primary);border-color:var(--border-primary);">Gateway RTT</span>
@@ -713,7 +713,7 @@
               </div>
             </div>
 
-            <div class="metric-card cat-green" id="cardTelemetryUptime">
+            <div class="bento-col-3 metric-card cat-green" id="cardTelemetryUptime">
               <div class="metric-top">
                 <span class="metric-label">System Uptime</span>
                 <span class="metric-badge" style="color:var(--accent-green);border-color:rgba(52,211,153,0.3);">Process</span>
@@ -727,7 +727,7 @@
               </div>
             </div>
 
-            <div class="metric-card cat-cyan" id="cardTelemetryUsers">
+            <div class="bento-col-3 metric-card cat-cyan" id="cardTelemetryUsers">
               <div class="metric-top">
                 <span class="metric-label">Total Pengguna</span>
                 <span class="metric-badge" style="color:var(--accent-cyan);border-color:var(--border-cyan);">Database</span>
@@ -741,7 +741,7 @@
               </div>
             </div>
 
-            <div class="metric-card cat-violet" id="cardTelemetryGuilds">
+            <div class="bento-col-3 metric-card cat-violet" id="cardTelemetryGuilds">
               <div class="metric-top">
                 <span class="metric-label">Server Aktif</span>
                 <span class="metric-badge" style="color:var(--accent-violet);border-color:var(--border-violet);">Cluster #0</span>
@@ -758,10 +758,10 @@
           </div>
 
           <!-- ── Charts Row ── -->
-          <div class="dashboard-two-col animate-in delay-3" style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px;align-items:stretch;">
+          <div class="bento-grid animate-in delay-3">
 
             <!-- Telemetry Line Chart -->
-            <div class="card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
+            <div class="bento-col-8 card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
               <div class="card-header" style="margin-bottom:14px;">
                 <div class="card-title" style="color:var(--accent-cyan);">
                   <i class="fa-solid fa-chart-line"></i> Telemetri Real-Time
@@ -774,7 +774,7 @@
             </div>
 
             <!-- Command Distribution Doughnut -->
-            <div class="card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
+            <div class="bento-col-4 card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
               <div class="card-header" style="margin-bottom:14px;">
                 <div class="card-title" style="color:var(--primary);">
                   <i class="fa-solid fa-chart-pie"></i> Distribusi Perintah
@@ -806,10 +806,10 @@
           </div>
 
           <!-- ── Row 1: Hall of Fame (Left) + Now Playing & Vitals (Right) ── -->
-          <div class="dashboard-two-col animate-in delay-4" style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px;align-items:stretch;">
+          <div class="bento-grid animate-in delay-4">
 
             <!-- Left: Top 5 Hall of Fame -->
-            <div class="card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
+            <div class="bento-col-8 card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
               <div class="card-header" style="margin-bottom:14px;">
                 <div class="card-title" style="color:var(--accent-amber);">
                   <i class="fa-solid fa-trophy"></i> Top 5 Hall of Fame
@@ -827,7 +827,7 @@
             </div>
 
             <!-- Right: Mini Music Player + Survival Vitals (Synchronized with Hall of Fame Height) -->
-            <div style="display:flex;flex-direction:column;gap:16px;height:100%;">
+            <div class="bento-col-4" style="display:flex;flex-direction:column;gap:16px;height:100%;">
 
               <!-- Mini Music Player -->
               <div class="card card-solid card-p-sm" style="display:flex;flex-direction:column;">
@@ -904,10 +904,10 @@
           </div>
 
           <!-- ── Row 2: Live Activity Feed (Left) + System Architecture (Right) ── -->
-          <div class="dashboard-two-col animate-in delay-4" style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;align-items:stretch;">
+          <div class="bento-grid animate-in delay-4" style="margin-bottom:24px;">
 
             <!-- Left: Live Activity Feed -->
-            <div class="card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
+            <div class="bento-col-8 card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
               <div class="card-header" style="margin-bottom:14px;">
                 <div class="card-title" style="color:var(--accent-cyan);">
                   <i class="fa-solid fa-bolt"></i> Live Activity Feed
@@ -922,7 +922,7 @@
             </div>
 
             <!-- Right: System Architecture -->
-            <div class="card card-solid card-p-sm" style="display:flex;flex-direction:column;height:100%;">
+            <div class="bento-col-4 card card-solid card-p-sm" style="display:flex;flex-direction:column;height:100%;">
               <div class="card-header" style="margin-bottom:14px;">
                 <div class="card-title">
                   <i class="fa-solid fa-server"></i> Architecture
@@ -1618,21 +1618,13 @@
         });
       });
 
-      // Responsive grid fix for telemetry
+      // Responsive layout adjustment
       function adjustTelemetryGrid() {
-        const grid = document.getElementById('telemetryGrid');
-        if (!grid) return;
-        if (window.innerWidth < 768) {
-          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
-        } else if (window.innerWidth < 1280) {
-          grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
-        } else {
-          grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
-        }
+        // Handled natively by .bento-grid CSS rules
       }
 
       function adjustHeroGrid() {
-        const heroGrid = document.querySelector('.hero-grid-layout') || document.querySelector('[style*="grid-template-columns:1fr 280px"]');
+        const heroGrid = document.querySelector('.hero-grid-layout');
         if (!heroGrid) return;
         if (window.innerWidth < 900) {
           heroGrid.style.gridTemplateColumns = '1fr';
@@ -1642,29 +1634,15 @@
       }
 
       function adjustChartsGrid() {
-        const chartsGrid = document.querySelector('[style*="grid-template-columns:2fr 1fr"]');
-        if (!chartsGrid) return;
-        if (window.innerWidth < 768) {
-          chartsGrid.style.gridTemplateColumns = '1fr';
-        } else {
-          chartsGrid.style.gridTemplateColumns = '2fr 1fr';
-        }
+        // Handled natively by .bento-grid CSS rules
       }
 
       function adjustBottomGrid() {
-        const bottomGrids = document.querySelectorAll('[style*="grid-template-columns:2fr 1fr"]');
-        bottomGrids.forEach((grid) => {
-          if (window.innerWidth < 900) {
-            grid.style.gridTemplateColumns = '1fr';
-          } else {
-            grid.style.gridTemplateColumns = '2fr 1fr';
-          }
-        });
+        // Handled natively by .bento-grid CSS rules
       }
 
       function adjustQuickActionsGrid() {
-        // Grid kini menggunakan kelas .quick-actions-grid dengan media query CSS.
-        // Fungsi ini dipertahankan untuk backward-compat resize handling.
+        // Handled natively by .quick-actions-grid CSS rules
       }
 
       window.addEventListener('resize', () => {

@@ -37,15 +37,15 @@ module.exports = {
         if (lag > 150) {
           if (!isSystemLagging) {
             isSystemLagging = true;
-            console.log(
-              `\x1b[41m\x1b[37m ⚠️ EVENT LOOP \x1b[0m \x1b[31mTerdeteksi lag tinggi pada event loop: ${lag}ms! Mengubah status bot ke DND.\x1b[0m`,
+            logger.warn(
+              `[EVENT LOOP] Terdeteksi lag tinggi pada event loop: ${lag}ms! Mengubah status bot ke DND.`,
             );
           }
         } else {
           if (isSystemLagging && lag < 50) {
             isSystemLagging = false;
-            console.log(
-              `\x1b[42m\x1b[30m ⚡ EVENT LOOP \x1b[0m \x1b[32mLag event loop kembali normal: ${lag}ms. Memulihkan status.\x1b[0m`,
+            logger.success(
+              `[EVENT LOOP] Lag event loop kembali normal: ${lag}ms. Memulihkan status.`,
             );
           }
         }
@@ -72,8 +72,8 @@ module.exports = {
           }
           guildPrefixes = [...uniquePrefixes];
           if (guildPrefixes.length > 0) {
-            console.log(
-              `\x1b[45m\x1b[37m 🏷️ PREFIX \x1b[0m \x1b[35mDimuat ${guildPrefixes.length} prefiks kustom guild untuk rotasi status.\x1b[0m`,
+            logger.system(
+              `[PREFIX] Dimuat ${guildPrefixes.length} prefiks kustom guild untuk rotasi status.`,
             );
           }
         } catch (e) {

@@ -320,7 +320,7 @@ module.exports = {
       const cacheManager = require("../../src/managers/cacheManager");
       const profile = await cacheManager.getUserProfile(user.id);
       const isPremium =
-        profile?.isPremium && profile?.premiumUntil > new Date();
+        Boolean(profile?.isPremium && profile?.premiumUntil && new Date(profile.premiumUntil) > new Date());
 
       const galleryPath = path.join(
         __dirname,

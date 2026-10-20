@@ -825,6 +825,20 @@ function register(router, client) {
         });
       }
 
+      const {
+        generateClanQuestsForClan,
+      } = require("../../../src/survival/engines/questGenerator");
+      let questsState =
+        typeof targetClan.questsState === "string"
+          ? JSON.parse(targetClan.questsState)
+          : targetClan.questsState;
+      if (!questsState || !questsState.weekly) {
+        questsState = generateClanQuestsForClan(targetClan);
+      }
+
+      const outlawBountyEngine = require("../../../src/survival/engines/outlawBountyEngine");
+      const wantedBounties = await outlawBountyEngine.getWantedBoard().catch(() => []);
+
       return res.json({
         success: true,
         hasClan: true,
@@ -839,6 +853,8 @@ function register(router, client) {
           towersCount: territories.length,
           members: enrichedMembers,
           hallLayout: targetClan.hallLayout || {},
+          weeklyQuests: questsState.weekly || [],
+          wantedBounties: wantedBounties.slice(0, 5),
         },
       });
     } catch (err) {

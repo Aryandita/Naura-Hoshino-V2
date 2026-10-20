@@ -5,7 +5,7 @@
  *
  * Mengatur tingkatan (Common s/d Mythic), spesies satwa dunia nyata,
  * batas 1 pet setia, serta tabel drop item eksklusif pet berbasis benda nyata.
- * Mematuhi prinsip /antislop-copywriting tanpa istilah klise dan bebas em-dash (\u2014).
+ * Mematuhi prinsip /antislop-copywriting tanpa istilah klise dan bebas em-dash (U+2014).
  */
 
 const PET_TIERS = Object.freeze({

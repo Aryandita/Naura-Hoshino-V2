@@ -71,8 +71,10 @@ module.exports = [
         const targetSurvival =
           (await cacheManager.getUserSurvival(targetId)) || {};
 
-        const chPower = (challengerSurvival.level || 1) * 10 + Math.floor(Math.random() * 50) + 10;
-        const tgPower = (targetSurvival.level || 1) * 10 + Math.floor(Math.random() * 50) + 10;
+        const chLevel = Number(challengerSurvival.survival_level) || 1;
+        const tgLevel = Number(targetSurvival.survival_level) || 1;
+        const chPower = chLevel * 10 + Math.floor(Math.random() * 50) + 10;
+        const tgPower = tgLevel * 10 + Math.floor(Math.random() * 50) + 10;
 
         const challengerWins = chPower >= tgPower;
         const winnerId = challengerWins ? challengerId : targetId;

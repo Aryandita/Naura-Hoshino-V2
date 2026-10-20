@@ -103,6 +103,56 @@
       .badge-leader { background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.4); }
       .badge-officer { background: rgba(167, 139, 250, 0.2); color: #A78BFA; border: 1px solid rgba(167, 139, 250, 0.4); }
       .badge-member { background: rgba(34, 211, 238, 0.2); color: #22D3EE; border: 1px solid rgba(34, 211, 238, 0.4); }
+
+      .quest-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+      }
+      .quest-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--border-medium);
+      }
+      .quest-item:last-child {
+        margin-bottom: 0;
+      }
+      .quest-progress-track {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 9999px;
+        overflow: hidden;
+        margin-top: 8px;
+        position: relative;
+      }
+      .quest-progress-fill {
+        height: 100%;
+        border-radius: 9999px;
+        transition: width 0.4s ease;
+      }
+      .bounty-item {
+        background: rgba(239, 68, 68, 0.05);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: var(--r-md);
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s ease;
+      }
+      .bounty-item:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.35);
+        transform: translateY(-1px);
+      }
+      .bounty-item:last-child {
+        margin-bottom: 0;
+      }
     </style>
   </head>
   <body>
@@ -150,6 +200,49 @@
           <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;"><i class="fa-solid fa-trophy"></i> PRESTISE ALIANSI</div>
           <div id="clan-prestige" style="font-size:22px; font-weight:700; color:#10B981; font-family:var(--font-mono);">Aliansi Aktif</div>
           <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">War Room Sektor Aktif</div>
+        </div>
+      </section>
+
+      <!-- Clan Operations Bento Grid: Weekly Quests & Bounty Board -->
+      <section class="bento-grid" style="margin-bottom: 28px;">
+        <!-- Weekly Clan Quests Card -->
+        <div class="bento-card bento-col-7">
+          <div class="bento-card-header">
+            <div class="bento-card-title">
+              <div class="bento-icon-badge"><i class="fa-solid fa-scroll"></i></div>
+              <span>Misi Aliansi Mingguan</span>
+            </div>
+            <span class="role-badge badge-officer" id="clan-quest-reset-badge"><i class="fa-solid fa-clock"></i> Reset Tiap Senin</span>
+          </div>
+          <div class="bento-card-body" id="clan-quests-list">
+            <div style="text-align:center; padding:24px; color:var(--text-muted);">
+              <i class="fa-solid fa-spinner fa-spin" style="margin-right:8px; color:var(--primary);"></i> Memuat misi mingguan klan...
+            </div>
+          </div>
+          <div class="bento-card-footer">
+            <span><i class="fa-solid fa-circle-info"></i> Selesaikan bersama anggota aliansi untuk menambah kas klan.</span>
+            <span id="clan-quests-summary" style="font-family:var(--font-mono); font-weight:600;">0/3 Misi</span>
+          </div>
+        </div>
+
+        <!-- Outlaw Bounty Board Card -->
+        <div class="bento-card bento-col-5">
+          <div class="bento-card-header">
+            <div class="bento-card-title">
+              <div class="bento-icon-badge" style="background:rgba(239, 68, 68, 0.15); color:#EF4444; border-color:rgba(239, 68, 68, 0.3);"><i class="fa-solid fa-crosshairs"></i></div>
+              <span>Papan Buronan Outlaw</span>
+            </div>
+            <span class="role-badge" style="background:rgba(239, 68, 68, 0.15); color:#EF4444; border:1px solid rgba(239, 68, 68, 0.3);"><i class="fa-solid fa-skull"></i> SAYEMBARA</span>
+          </div>
+          <div class="bento-card-body" id="clan-bounties-list">
+            <div style="text-align:center; padding:24px; color:var(--text-muted);">
+              <i class="fa-solid fa-spinner fa-spin" style="margin-right:8px; color:#EF4444;"></i> Memuat papan buronan...
+            </div>
+          </div>
+          <div class="bento-card-footer">
+            <span>Buru target di Discord via <code>/survival hunt</code></span>
+            <span id="clan-bounties-count" style="font-family:var(--font-mono); font-weight:600;">0 Target</span>
+          </div>
         </div>
       </section>
 
@@ -267,6 +360,97 @@
                 </tr>
               `;
             }
+
+            // Render Weekly Clan Quests
+            const questsListEl = document.getElementById('clan-quests-list');
+            const questsSummaryEl = document.getElementById('clan-quests-summary');
+            if (questsListEl) {
+              if (c.weeklyQuests && c.weeklyQuests.length > 0) {
+                let completedCount = 0;
+                questsListEl.innerHTML = c.weeklyQuests.map((q) => {
+                  const cur = Number(q.current || 0);
+                  const tgt = Math.max(1, Number(q.target || 1));
+                  const pct = Math.min(100, Math.round((cur / tgt) * 100));
+                  const isCompleted = q.claimed || cur >= tgt;
+                  if (isCompleted) completedCount += 1;
+
+                  return `
+                    <div class="quest-item">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div style="font-weight:600; font-size:14px; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+                          <i class="fa-solid ${isCompleted ? 'fa-circle-check' : 'fa-circle-dot'}" style="color:${isCompleted ? '#10B981' : 'var(--primary)'}; font-size:12px;"></i>
+                          <span>${q.title || 'Misi Aliansi'}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                          <span style="color:#F59E0B; font-weight:700; font-family:var(--font-mono); font-size:12px;">
+                            <i class="fa-solid fa-coins"></i> +${Number(q.reward || 0).toLocaleString('id-ID')} NSF
+                          </span>
+                          <span class="role-badge" style="${isCompleted ? 'background:rgba(16,185,129,0.15); color:#10B981; border:1px solid rgba(16,185,129,0.3);' : 'background:rgba(56,189,248,0.12); color:#38BDF8; border:1px solid rgba(56,189,248,0.25);'}">
+                            ${isCompleted ? 'Selesai' : pct + '%'}
+                          </span>
+                        </div>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">
+                        <span>Progres Bersama</span>
+                        <span>${cur.toLocaleString('id-ID')} / ${tgt.toLocaleString('id-ID')}</span>
+                      </div>
+                      <div class="quest-progress-track">
+                        <div class="quest-progress-fill" style="width: ${pct}%; background:${isCompleted ? 'linear-gradient(90deg, #10B981 0%, #34D399 100%)' : 'linear-gradient(90deg, var(--primary) 0%, #A78BFA 100%)'};"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+                if (questsSummaryEl) questsSummaryEl.textContent = `${completedCount}/${c.weeklyQuests.length} Selesai`;
+              } else {
+                questsListEl.innerHTML = `
+                  <div style="text-align:center; padding:24px; color:var(--text-muted);">
+                    <i class="fa-solid fa-calendar-check" style="font-size:24px; display:block; margin-bottom:8px; opacity:0.5;"></i>
+                    Belum ada misi klan aktif untuk periode ini. Misi diperbarui otomatis tiap awal pekan.
+                  </div>
+                `;
+                if (questsSummaryEl) questsSummaryEl.textContent = '0/0 Selesai';
+              }
+            }
+
+            // Render Outlaw Bounty Board
+            const bountiesListEl = document.getElementById('clan-bounties-list');
+            const bountiesCountEl = document.getElementById('clan-bounties-count');
+            if (bountiesListEl) {
+              if (c.wantedBounties && c.wantedBounties.length > 0) {
+                bountiesListEl.innerHTML = c.wantedBounties.map((b) => {
+                  const targetDisplay = b.targetUserId ? `Buronan #${String(b.targetUserId).slice(0, 6)}` : 'Target Anonim';
+                  const rewardFormatted = Number(b.rewardNsf || 0).toLocaleString('id-ID');
+                  const reasonText = b.reason || 'Dicari hidup atau mati oleh aliansi petualang.';
+
+                  return `
+                    <div class="bounty-item">
+                      <div style="min-width:0; flex:1;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                          <span style="font-weight:700; color:#EF4444; font-size:13px; font-family:var(--font-mono);">${targetDisplay}</span>
+                          <span class="role-badge" style="background:rgba(239,68,68,0.15); color:#EF4444; font-size:10px; padding:2px 6px;">WANTED</span>
+                        </div>
+                        <div style="font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${reasonText}</div>
+                      </div>
+                      <div style="text-align:right; flex-shrink:0;">
+                        <div style="color:#F59E0B; font-weight:700; font-family:var(--font-mono); font-size:13px;">
+                          <i class="fa-solid fa-coins"></i> ${rewardFormatted} NSF
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted);">Imbalan</div>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+                if (bountiesCountEl) bountiesCountEl.textContent = `${c.wantedBounties.length} Buronan`;
+              } else {
+                bountiesListEl.innerHTML = `
+                  <div style="text-align:center; padding:24px; color:var(--text-muted);">
+                    <i class="fa-solid fa-shield-cat" style="font-size:24px; display:block; margin-bottom:8px; opacity:0.5;"></i>
+                    Papan buronan sedang aman. Belum ada outlaw yang dilaporkan di wilayah klan.
+                  </div>
+                `;
+                if (bountiesCountEl) bountiesCountEl.textContent = '0 Target';
+              }
+            }
           } else {
             // Empty state: no clan exists yet
             document.getElementById('clan-name').innerText = 'Aliansi Belum Terbentuk';
@@ -287,6 +471,23 @@
                 </td>
               </tr>
             `;
+
+            const questsListEl = document.getElementById('clan-quests-list');
+            if (questsListEl) {
+              questsListEl.innerHTML = `
+                <div style="text-align:center; padding:24px; color:var(--text-muted);">
+                  Bentuk klan untuk mengakses misi mingguan aliansi.
+                </div>
+              `;
+            }
+            const bountiesListEl = document.getElementById('clan-bounties-list');
+            if (bountiesListEl) {
+              bountiesListEl.innerHTML = `
+                <div style="text-align:center; padding:24px; color:var(--text-muted);">
+                  Bentuk klan untuk berburu sayembara buronan outlaw.
+                </div>
+              `;
+            }
           }
         } catch (err) {
           console.warn('Gagal memuat data klan:', err);

@@ -22,15 +22,27 @@ class VoiceAgent {
    * @param {string} guildId
    * @param {object} session
    */
-  startSession(guildId, session) {
-    this.activeVoiceSessions.set(guildId, {
+  startSession(guildId, session = {}) {
+    const gId = String(guildId);
+    let nativeConnection = null;
+
+    if (session.voiceChannel) {
+      const VoiceManager = require("../managers/voiceManager");
+      nativeConnection = VoiceManager.acquireConnection({
+        voiceChannel: session.voiceChannel,
+        mode: "persistent",
+      });
+    }
+
+    this.activeVoiceSessions.set(gId, {
       ...session,
+      connection: nativeConnection?.connection || session.connection || null,
       startedAt: Date.now(),
       history: [],
       isSpeaking: false,
     });
     logger.info(
-      `[VoiceAgent] Sesi Cyber Waifu Voice AI dimulai di guild ${guildId}`,
+      `[VoiceAgent] Sesi Cyber Waifu Voice AI dimulai di guild ${gId}`,
     );
   }
 
@@ -39,21 +51,18 @@ class VoiceAgent {
    * @param {string} guildId
    */
   stopSession(guildId) {
-    const session = this.activeVoiceSessions.get(guildId);
+    const gId = String(guildId);
+    const session = this.activeVoiceSessions.get(gId);
     if (session) {
       try {
-        if (
-          session.connection &&
-          typeof session.connection.destroy === "function"
-        ) {
-          session.connection.destroy();
-        }
+        const VoiceManager = require("../managers/voiceManager");
+        VoiceManager.disconnect(gId);
       } catch (e) {
         logger.debug("[voiceAgent:stopSession] Pembersihan koneksi/collector gagal: " + (e?.message || e));
       }
-      this.activeVoiceSessions.delete(guildId);
+      this.activeVoiceSessions.delete(gId);
       logger.info(
-        `[VoiceAgent] Sesi Cyber Waifu Voice AI dihentikan di guild ${guildId}`,
+        `[VoiceAgent] Sesi Cyber Waifu Voice AI dihentikan di guild ${gId}`,
       );
     }
   }

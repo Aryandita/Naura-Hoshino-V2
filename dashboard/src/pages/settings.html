@@ -900,6 +900,20 @@
                         <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
                       </div>
                     </div>
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--amber-dim);">🔔</div>
+                        <div>
+                          <div class="settings-item-title">Web Push Alerts (PWA)</div>
+                          <div class="settings-item-desc">Notifikasi browser untuk spawn World Boss & reset harian</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <button type="button" class="btn btn-sm btn-primary" id="btnToggleWebPush" onclick="handleToggleWebPush()">
+                          <i class="fa-solid fa-bell"></i> <span id="labelToggleWebPush">Aktifkan</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1030,6 +1044,30 @@
         document.querySelectorAll('#settingsSideNav .nav-item').forEach((btn, i) => {
           btn.classList.toggle('active', tabKeys[i] === tab);
         });
+      }
+
+      async function handleToggleWebPush() {
+        const btn = document.getElementById('btnToggleWebPush');
+        const label = document.getElementById('labelToggleWebPush');
+        if (btn) btn.disabled = true;
+        if (label) label.textContent = 'Memproses...';
+
+        if (typeof window.subscribeWebPush === 'function') {
+          const res = await window.subscribeWebPush();
+          if (res && res.success) {
+            if (label) label.textContent = 'Aktif';
+            if (btn) {
+              btn.className = 'btn btn-sm btn-ghost';
+              btn.disabled = true;
+            }
+          } else {
+            if (label) label.textContent = 'Gagal (Coba Lagi)';
+            if (btn) btn.disabled = false;
+            if (res && res.error) {
+              alert(res.error);
+            }
+          }
+        }
       }
 
       function selectColor(dot, color) {

@@ -41,7 +41,10 @@
     "sync:github": "node scripts/git-sync.js",
     "assistant": "node assistant/server.js",
     "ralph": "node scripts/ralph/ralph.js",
-    "verify:drift": "node scripts/verify-drift.js"
+    "verify:drift": "node scripts/verify-drift.js",
+    "logs": "node scripts/view-logs.js",
+    "logs:tail": "node scripts/view-logs.js --follow",
+    "logs:errors": "node scripts/view-logs.js --errors"
   },
   "engines": {
     "node": ">=24.0.0"
@@ -63,6 +66,7 @@
   "author": "Aryandita",
   "license": "ISC",
   "dependencies": {
+    "@discordjs/voice": "^0.18.0",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@google/genai": "^1.46.0",
     "@iamtraction/google-translate": "^2.0.1",
@@ -97,6 +101,7 @@
     "node-cron": "^4.6.0",
     "officeparser": "^7.8.0",
     "ollama": "^0.5.15",
+    "opusscript": "^0.1.1",
     "parse-duration": "^2.1.6",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",

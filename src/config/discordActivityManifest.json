@@ -10,7 +10,7 @@
     "height": 720
   },
   "client_id": "123456789012345678",
-  "entrypoint": "/pages/activity.html",
+  "entrypoint": "/activity",
   "capabilities": [
     "voice_state",
     "rpc",

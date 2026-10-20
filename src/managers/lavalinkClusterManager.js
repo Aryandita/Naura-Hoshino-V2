@@ -442,7 +442,23 @@ class LavalinkClusterManager {
         `✨ [LavalinkClusterManager] Memindahkan player guild ${guildId} ke node "${targetNodeName}"...`,
       );
 
-      // 3. Bersihkan koneksi internal player lama tanpa menghancurkan data Discord
+      // 3. Coba Poru native moveNode untuk zero-drop audio failover & posisi pemutaran presisi
+      if (typeof player.moveNode === "function") {
+        try {
+          await player.moveNode(targetNodeName);
+          logger.info(
+            `✨ [LavalinkClusterManager] Zero-drop audio migration berhasil via Poru moveNode ke "${targetNodeName}".`,
+          );
+          this.migrationLocks.delete(guildId);
+          return true;
+        } catch (moveErr) {
+          logger.warn(
+            `[LavalinkClusterManager] player.moveNode gagal, menggunakan fallback reconnect: ${moveErr.message}`,
+          );
+        }
+      }
+
+      // Fallback reconnect: Bersihkan koneksi internal player lama
       try {
         if (typeof player.destroy === "function") {
           player.destroy();

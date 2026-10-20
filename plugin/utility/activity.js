@@ -39,7 +39,7 @@ module.exports = {
     const dashboardOrigin =
       env.DASHBOARD_ORIGIN ||
       `http://localhost:${env.DASHBOARD_PORT || 3000}`;
-    const activityUrl = `${dashboardOrigin}/pages/activity.html`;
+    const activityUrl = `${dashboardOrigin}/activity`;
 
     const eGamepad = ui.getEmoji("gamepad") || "🎮";
     const eStar = ui.getEmoji("star") || "🌟";

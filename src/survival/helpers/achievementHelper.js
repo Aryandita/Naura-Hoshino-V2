@@ -127,7 +127,7 @@ async function unlockAchievement(interaction, achievementId) {
     } else if (source === "achievement_rare") {
       lines.push(
         "",
-        `${e("impressed", "\u2728")} Pencapaian **Langka** \u2014 Naura simpan baik-baik di lemari piala kamu.`,
+        `${e("impressed", "\u2728")} Pencapaian **Langka**, Naura simpan baik-baik di lemari piala kamu.`,
       );
     }
 

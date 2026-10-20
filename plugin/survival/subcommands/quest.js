@@ -180,6 +180,20 @@ module.exports = async function questBoard(interaction, user, survivalData) {
     }
   }
 
+  const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+  const buttonsRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("btn_dailyquest_view")
+      .setLabel("Quest Harian V2")
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji("📜"),
+    new ButtonBuilder()
+      .setCustomId("btn_weeklyquest_view")
+      .setLabel("Papan Mingguan V2")
+      .setStyle(ButtonStyle.Success)
+      .setEmoji("🗓️"),
+  );
+
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("primary") || "#FFB6C1",
     authorName: "Naura Quest Board",
@@ -187,6 +201,7 @@ module.exports = async function questBoard(interaction, user, survivalData) {
     iconURL: user.displayAvatarURL(),
     expression: rewardTotal > 0 ? "success" : "info",
     description: parts.join("\n"),
+    buttonsRow: [buttonsRow],
     footerText: ui.getFooter("survival"),
   });
 

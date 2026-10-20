@@ -34,8 +34,8 @@ module.exports = {
           }
         }
       });
-      console.log(
-        "\x1b[46m\x1b[30m 🔊 TEMPVOICE \x1b[0m \x1b[36mPembersihan awal ghost temp voice channel berhasil.\x1b[0m",
+      logger.system(
+        "Pembersihan awal ghost temp voice channel berhasil.",
       );
     } catch (err) {
       logger.error("[TEMPVOICE BOOT CLEANUP ERROR]", err);

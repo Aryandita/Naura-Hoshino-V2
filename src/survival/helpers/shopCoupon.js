@@ -138,7 +138,7 @@ function isOpen(location, day, hour) {
 /** Kalimat petunjuk untuk pemain yang belum menemukan Gaston hari ini. */
 function rumor(day) {
   const schedule = spawnOf(day);
-  return `Kata orang, Gaston si pedagang kupon sedang menggelar tikar di **${schedule.locationLabel}**, ${schedule.spot}, dari jam **${schedule.startHour}.00 sampai ${schedule.endHour}.00** \u2014 pas ${schedule.windowLabel}.`;
+  return `Kata orang, Gaston si pedagang kupon sedang menggelar tikar di **${schedule.locationLabel}**, ${schedule.spot}, dari jam **${schedule.startHour}.00 sampai ${schedule.endHour}.00** - pas ${schedule.windowLabel}.`;
 }
 
 /** Kategori yang benar-benar punya barang, supaya menu tidak pernah kosong. */

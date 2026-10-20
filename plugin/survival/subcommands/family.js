@@ -7,6 +7,7 @@ const {
   buildErrorContainerV2,
   buildSuccessContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 
 module.exports = {
@@ -39,8 +40,18 @@ module.exports = {
 
     // 1. STATUS ANAK
     if (action === "status") {
-      const hungerBar = "🟩".repeat(Math.round(child.hunger / 10)) + "⬜".repeat(10 - Math.round(child.hunger / 10));
-      const happyBar = "🟨".repeat(Math.round(child.happiness / 10)) + "⬜".repeat(10 - Math.round(child.happiness / 10));
+      const hungerBar = survivalUI.buildVitalsBar({
+        current: child.hunger,
+        target: 100,
+        length: 10,
+        showPercentage: true,
+      });
+      const happyBar = survivalUI.buildVitalsBar({
+        current: child.happiness,
+        target: 100,
+        length: 10,
+        showPercentage: true,
+      });
 
       const stageLabels = {
         Toddler: "🍼 Balita (Toddler)",
@@ -57,8 +68,8 @@ module.exports = {
           `🌱 **Fase Pertumbuhan:** \`${stageLabels[child.stage] || child.stage}\``,
           `⭐ **Level Tumbuh Kembang:** \`Level ${child.level} / 10\` (\`${child.xp} / ${child.nextLevelXp} XP\`)`,
           "",
-          `🍗 **Kenyang:** \`${child.hunger}%\`\n${hungerBar}`,
-          `💖 **Kebahagiaan:** \`${child.happiness}%\`\n${happyBar}`,
+          `🍗 **Kenyang:** \`${hungerBar.bar}\``,
+          `💖 **Kebahagiaan:** \`${happyBar.bar}\``,
           "",
           child.level >= 8
             ? "✨ *Anakmu sudah cukup dewasa dan siap membantu mata pencaharian keluarga! Gunakan `/survival family aksi:apprentice` untuk mengklaim bantuan harian.*"

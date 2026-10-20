@@ -547,5 +547,87 @@ module.exports = (client) => {
     }
   });
 
+  // ------------------------------------------------------------------
+  // 6. Server Treasury Summary (publik, read-only)
+  // Menampilkan alokasi 4 saluran kas server sesuai Currency V2.
+  // ------------------------------------------------------------------
+  router.get("/api/treasury/summary", async (req, res) => {
+    try {
+      const ServerTreasury = require("../../src/models/ServerTreasury");
+      const UserSurvival = require("../../src/models/UserSurvival");
+
+      let treasury = null;
+      try {
+        treasury = await ServerTreasury.findOne({
+          order: [["updatedAt", "DESC"]],
+        });
+      } catch (_) {}
+
+      let totalWallet = 0;
+      let totalBank = 0;
+      let totalStarFragments = 0;
+      try {
+        totalWallet = (await UserProfile.sum("economy_wallet")) || 0;
+        totalBank = (await UserProfile.sum("economy_bank")) || 0;
+      } catch (_) {}
+      try {
+        totalStarFragments = (await UserSurvival.sum("starFragments")) || 0;
+      } catch (_) {}
+
+      const treasuryNsf = treasury
+        ? Number(treasury.lotteryJackpot || 0) +
+          Number(treasury.noviceAidPool || 0) +
+          Number(treasury.wanderingMerchantPool || 0)
+        : 0;
+
+      const allocation = {
+        infrastructure: {
+          label: "Kas Infrastruktur",
+          pct: 40,
+          value: totalBank || 0,
+          color: "#34D399",
+        },
+        lottery: {
+          label: "Pool Undian (Lottery)",
+          pct: 25,
+          value: treasury ? Number(treasury.lotteryJackpot || 0) : 0,
+          color: "#FBBF24",
+        },
+        subsidy: {
+          label: "Subsidi Pemula (Novice Aid)",
+          pct: 20,
+          value: treasury ? Number(treasury.noviceAidPool || 0) : 0,
+          color: "#86EFAC",
+        },
+        merchant: {
+          label: "Insentif Pedagang (Merchant Pool)",
+          pct: 15,
+          value: treasury ? Number(treasury.wanderingMerchantPool || 0) : 0,
+          color: "#F87171",
+        },
+      };
+
+      return res.json({
+        success: true,
+        updatedAt: treasury ? treasury.updatedAt : new Date().toISOString(),
+        pools_nc: {
+          total_wallet: totalWallet,
+          total_bank: totalBank,
+        },
+        pools_nsf: {
+          total_star_fragments: totalStarFragments,
+          treasury_total: treasuryNsf,
+        },
+        allocation,
+        last_lottery_draw: treasury ? treasury.lastLotteryDrawAt : null,
+      });
+    } catch (err) {
+      logger.error("[API TREASURY] Error:", err);
+      return res
+        .status(500)
+        .json({ success: false, error: "Gagal memuat data treasury." });
+    }
+  });
+
   return router;
 };

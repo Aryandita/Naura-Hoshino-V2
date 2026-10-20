@@ -552,32 +552,35 @@ select option:hover, select option:checked {
   --glass-specular: inset 0 1px 0 0 rgba(134, 239, 172, 0.14);
 }
 
-/* ── 5. Theme: Light Horizon (Clean Daylight Mode) ────────────────────── */
-[data-theme="light-horizon"] {
+/* ── 5. Theme: Light Horizon (Clean Daylight Mode - WCAG AA / AAA) ─────── */
+[data-theme="light-horizon"],
+[data-theme="light"] {
   --canvas: #f8fafc;
   --color-canvas: #f8fafc;
   --bg-deep: #f1f5f9;
   --bg-layer: #ffffff;
   --bg-primary: #f8fafc;
-  --bg-surface: rgba(15, 23, 42, 0.035);
+  --bg-surface: rgba(15, 23, 42, 0.04);
   --bg-surface-elevated: #ffffff;
-  --color-surface-glass: rgba(255, 255, 255, 0.8);
+  --color-surface-glass: rgba(255, 255, 255, 0.88);
   --color-surface-elevated: #ffffff;
-  --color-hairline: rgba(219, 39, 119, 0.25);
-  --border-subtle: rgba(15, 23, 42, 0.08);
-  --border-medium: rgba(15, 23, 42, 0.16);
-  --border-strong: rgba(15, 23, 42, 0.24);
-  --naura-primary: #db2777;
-  --color-primary: #db2777;
-  --primary: #db2777;
-  --primary-glow: rgba(219, 39, 119, 0.25);
+  --color-surface-glass-hover: rgba(15, 23, 42, 0.06);
+  --color-hairline: rgba(190, 24, 93, 0.28);
+  --border-subtle: rgba(15, 23, 42, 0.12);
+  --border-medium: rgba(15, 23, 42, 0.22);
+  --border-strong: rgba(15, 23, 42, 0.35);
+  --naura-primary: #be185d;
+  --color-primary: #be185d;
+  --primary: #be185d;
+  --primary-glow: rgba(190, 24, 93, 0.25);
   --naura-accent: #0284c7;
   --color-ink: #0f172a;
   --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --color-body: #64748b;
-  --text-muted: #64748b;
-  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  --text-secondary: #334155;
+  --color-body: #334155;
+  --text-muted: #475569;
+  --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #be185d;
+  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
 }
 
 /* ── 6. Theme: OLED Obsidian (Pure Pitch Black) ───────────────────────── */

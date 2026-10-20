@@ -74,17 +74,13 @@ module.exports = {
           }
         }
         if (trackToPlay) {
-          console.log(
-            `\x1b[42m\x1b[30m 💿 AUTOPLAY BUFFER \x1b[0m \x1b[32mMemakai cadangan dari autoplayQueue: ${trackToPlay.info.title}\x1b[0m`,
-          );
+          logger.music(`Memakai cadangan dari autoplayQueue: ${trackToPlay.info.title}`);
         }
       }
 
       // Jika tidak ada lagu yang di-prefetch/di-buffer, coba YouTube Mix secara langsung (100% Tanpa AI)
       if (!trackToPlay && player.previousTrack) {
-        console.log(
-          `\x1b[45m\x1b[37m 💿 AUTOPLAY \x1b[0m \x1b[35mMencari lagu rekomendasi native YouTube Mix...\x1b[0m`,
-        );
+        logger.music("Mencari lagu rekomendasi native YouTube Mix...");
         try {
           const mixUrl = `https://www.youtube.com/watch?v=${player.previousTrack.info.identifier}&list=RD${player.previousTrack.info.identifier}`;
           const searchRes = await manager.poru.resolve({
@@ -106,23 +102,19 @@ module.exports = {
               trackToPlay.info.originalSource = "youtube";
               // Sisa kandidat teratas disimpan sebagai buffer untuk siklus autoplay berikutnya
               if (ranked.length > 1) player.autoplayQueue = ranked.slice(1);
-              console.log(
-                `\x1b[42m\x1b[30m 💿 AUTOPLAY NATIVE \x1b[0m \x1b[32mBerhasil memuat lagu rekomendasi YouTube Mix: ${freshTrack.info.title}\x1b[0m`,
+              logger.music(
+                `Berhasil memuat lagu rekomendasi YouTube Mix: ${freshTrack.info.title}`,
               );
             }
           }
         } catch (e) {
-          console.error(
-            `\x1b[41m\x1b[37m ⚠️ AUTOPLAY NATIVE ERROR \x1b[0m Gagal fetch: ${e.message}`,
-          );
+          logger.warn(`Gagal fetch YouTube Mix: ${e.message}`);
         }
       }
 
       // Fallback ke Gemini AI jika native Mix kosong
       if (!trackToPlay && geminiClient.isAvailable() && player.previousTrack) {
-        console.log(
-          `\x1b[45m\x1b[37m 💿 AUTOPLAY \x1b[0m \x1b[35mMencari lagu rekomendasi AI Fallback...\x1b[0m`,
-        );
+        logger.music("Mencari lagu rekomendasi AI Fallback...");
         try {
           const activeTrack = player.previousTrack;
           const prompt = `Aku sedang memutar lagu "${activeTrack.info.title}" oleh "${activeTrack.info.author}".
@@ -199,9 +191,7 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
       }
 
       if (trackToPlay) {
-        console.log(
-          `\x1b[45m\x1b[37m 💿 AUTOPLAY \x1b[0m \x1b[35mMemutar lagu rekomendasi: ${trackToPlay.info.title}\x1b[0m`,
-        );
+        logger.music(`Memutar lagu rekomendasi: ${trackToPlay.info.title}`);
 
         // Track manual agar tidak berulang
         if (!player.playedHistory) player.playedHistory = new Set();

@@ -306,11 +306,46 @@ module.exports = {
     if (subcommand === "ranked") {
       await interaction.deferReply();
 
-      // Ambil top 10 dari database UserCardDeck order by eloRating DESC
-      const topDecks = await UserCardDeck.findAll({
-        order: [["eloRating", "DESC"]],
-        limit: 10,
-      });
+      // Coba ambil dari Redis Sorted Sets O(1) jika tersedia
+      let topDecks = [];
+      const zsetKey = "leaderboard:zset:card_elo";
+      if (redisManager && redisManager.isReady) {
+        try {
+          const cachedScores = await redisManager.zRevRangeWithScores(zsetKey, 0, 9);
+          if (cachedScores && cachedScores.length > 0) {
+            const userIds = cachedScores.map((entry) => entry.value);
+            const userDecks = await UserCardDeck.findAll({
+              where: { userId: userIds },
+            }).catch(() => []);
+            const deckMap = new Map(userDecks.map((d) => [d.userId, d]));
+            topDecks = cachedScores.map((entry) => {
+              const d = deckMap.get(entry.value);
+              return {
+                userId: entry.value,
+                eloRating: Math.round(Number(entry.score) || 1000),
+                wins: typeof d?.wins === "number" ? d.wins : null,
+                losses: typeof d?.losses === "number" ? d.losses : null,
+              };
+            });
+          }
+        } catch (_) {}
+      }
+
+      if (topDecks.length === 0) {
+        // Ambil top 10 dari database UserCardDeck order by eloRating DESC
+        const dbDecks = await UserCardDeck.findAll({
+          order: [["eloRating", "DESC"]],
+          limit: 10,
+        });
+        topDecks = dbDecks;
+        if (redisManager && redisManager.isReady && dbDecks.length > 0) {
+          try {
+            for (const d of dbDecks) {
+              await redisManager.zAdd(zsetKey, d.eloRating || 1000, d.userId);
+            }
+          } catch (_) {}
+        }
+      }
 
       // Ambil deck user pemanggil untuk mengetahui posisinya
       const [myDeck] = await UserCardDeck.findOrCreate({ where: { userId } });
@@ -335,7 +370,11 @@ module.exports = {
         const elo = deck.eloRating || 1000;
         const tier = CardBattleV2Engine.getRankTier(elo);
         const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `\`#${i + 1}\``;
-        leaderboardDesc += `${medal} <@${deck.userId}> : ${tier.icon} **${tier.name}** (\`${elo} ELO\` | ⚔️ ${deck.wins || 0}W - ${deck.losses || 0}L)\n`;
+        const winLoss =
+          typeof deck.wins === "number" && typeof deck.losses === "number"
+            ? ` | ⚔️ ${deck.wins}W - ${deck.losses}L`
+            : "";
+        leaderboardDesc += `${medal} <@${deck.userId}> : ${tier.icon} **${tier.name}** (\`${elo} ELO\`${winLoss})\n`;
       }
 
       const container = buildContainerV2({
@@ -655,9 +694,9 @@ module.exports = {
 
       if (bet > 0) {
         const canDebit = await currency.charge(
-          userId,
-          { starFragments: bet },
-          "Card Battle Bet Escrow",
+          "starFragments",
+          { userId },
+          bet,
         );
         if (!canDebit) {
           return interaction.editReply({

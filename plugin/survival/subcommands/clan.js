@@ -60,7 +60,10 @@ function bossMaxHp(level) {
 
 module.exports = {
   async execute(interaction, client) {
-    const action = interaction.options.getString("aksi") || "info";
+    const action =
+      interaction.customAction ||
+      interaction.options.getString("aksi") ||
+      "info";
     const clanNameInput = interaction.options.getString("nama");
     const amountInput = interaction.options.getInteger("jumlah") || 100;
     const user = interaction.user;
@@ -180,6 +183,10 @@ module.exports = {
           .setLabel("🏡 2.5D Guild Hall")
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
+          .setCustomId("clan_hub_bounty")
+          .setLabel("📜 Papan Sayembara")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
           .setCustomId("clan_hub_coffee")
           .setLabel("☕ Seduh Kopi (+25 Energy)")
           .setStyle(ButtonStyle.Success),
@@ -197,6 +204,127 @@ module.exports = {
         description: description.join("\n"),
         footerText: ui.getFooter("survival"),
         buttonsRow: hubButtons,
+      });
+
+      return interaction.editReply({ ...payload, embeds: [] });
+    }
+
+    // 1a. CLAN BOUNTY BOARD & WEEKLY CLAN QUESTS
+    if (action === "bounty" || action === "quests") {
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
+      if (!userClan)
+        return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0);
+      todayDate.setDate(
+        todayDate.getDate() -
+          (todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1),
+      );
+      const currentWeek = todayDate.toISOString().split("T")[0];
+
+      const {
+        generateClanQuestsForClan,
+      } = require("../../../src/survival/engines/questGenerator");
+      let state =
+        typeof userClan.questsState === "string"
+          ? JSON.parse(userClan.questsState)
+          : userClan.questsState;
+      let needsSave = false;
+      if (!state || state.lastWeeklyReset !== currentWeek) {
+        state = generateClanQuestsForClan(userClan);
+        needsSave = true;
+      }
+
+      let rewardTotal = 0;
+      const questLines = [];
+      const nsfEmoji = currency.emojiOf(currency.FRAGMENT);
+      state.weekly.forEach((q, idx) => {
+        const icon = q.claimed
+          ? e("cheers", "✅")
+          : q.current >= q.target
+            ? e("impressed", "⭐")
+            : e("thinking", "⏳");
+        if (q.current >= q.target && !q.claimed) {
+          q.claimed = true;
+          rewardTotal += q.reward;
+          needsSave = true;
+        }
+        const goalBar = ui.ux.buildGoalGradientBar({
+          current: q.current || 0,
+          target: q.target || 1,
+          length: 8,
+          lang: "id",
+        });
+        questLines.push(
+          `**${idx + 1}.** ${icon} **${q.title}**\n> \`${goalBar.bar}\` \`${q.current} / ${q.target}\` (${goalBar.percent}%) • Kas Klan: ${nsfEmoji} **+${(q.reward || 0).toLocaleString("id-ID")} NSF**`,
+        );
+      });
+
+      if (rewardTotal > 0) {
+        userClan.vault = (userClan.vault || 0) + rewardTotal;
+      }
+
+      if (needsSave) {
+        userClan.questsState = state;
+        userClan.changed("questsState", true);
+        await userClan.save({ fields: ["questsState", "vault"] });
+      }
+
+      const outlawBountyEngine = require("../../../src/survival/engines/outlawBountyEngine");
+      const wantedList = await outlawBountyEngine.getWantedBoard();
+      const topWanted = wantedList.slice(0, 3);
+      const wantedLines = topWanted.length > 0
+        ? topWanted.map((b, i) => `> ${i + 1}. 🎯 <@${b.targetUserId}> : ${nsfEmoji} **${(b.rewardNsf || 0).toLocaleString("id-ID")} NSF** (*${b.reason || "Dicari"}*)`).join("\n")
+        : "> *Belum ada buronan aktif saat ini.*";
+
+      const {
+        ActionRowBuilder: BountyRowBuilder,
+        ButtonBuilder: BountyBtnBuilder,
+        ButtonStyle: BountyBtnStyle,
+      } = require("discord.js");
+      const actionRow = new BountyRowBuilder().addComponents(
+        new BountyBtnBuilder()
+          .setCustomId("clan_hub_info")
+          .setLabel("🏰 Info Klan")
+          .setStyle(BountyBtnStyle.Primary),
+        new BountyBtnBuilder()
+          .setCustomId("clan_hub_hall")
+          .setLabel("🏡 2.5D Guild Hall")
+          .setStyle(BountyBtnStyle.Secondary),
+        new BountyBtnBuilder()
+          .setCustomId("clan_hub_raid")
+          .setLabel("⚔️ Serang Bos")
+          .setStyle(BountyBtnStyle.Danger),
+      );
+
+      const description = [
+        `🏰 **Klan:** **${userClan.name}** (Lv. ${userClan.level})`,
+        `💰 **Kas Brankas Klan:** ${currency.format(currency.FRAGMENT, userClan.vault || 0)}`,
+        "",
+        `**${e("read", "📋")} Misi Kerja Sama Mingguan Klan**`,
+        ...questLines,
+        "",
+        `**🎯 Sayembara Buronan Liar (Outlaw Bounties)**`,
+        wantedLines,
+      ];
+
+      if (rewardTotal > 0) {
+        description.push(
+          `\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **+${rewardTotal.toLocaleString("id-ID")} NSF**!`,
+        );
+      }
+
+      const payload = buildContainerV2({
+        accentColorHex: "#38BDF8",
+        authorName: "📜 PAPAN SAYEMBARA & MISI MINGGUAN KLAN",
+        title: `⚔️ Papan Progres Klan ${userClan.name}`,
+        iconURL: interaction.user.displayAvatarURL(),
+        description: description.join("\n"),
+        buttonsRow: actionRow,
+        footerText: ui.getFooter("survival"),
       });
 
       return interaction.editReply({ ...payload, embeds: [] });

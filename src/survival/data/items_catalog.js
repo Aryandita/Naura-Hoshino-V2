@@ -5,7 +5,7 @@
  *
  * Menyatukan seluruh item survival ke dalam satu sumber kebenaran terpadu.
  * Mematuhi prinsip antislop-copywriting: nama memikat, deskripsi mendalam tanpa kata klise,
- * dan bebas dari karakter em-dash (\u2014).
+ * dan bebas dari karakter em-dash (U+2014).
  */
 
 const TIERS = Object.freeze({

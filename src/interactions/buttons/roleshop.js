@@ -102,17 +102,34 @@ module.exports = [
         });
       }
 
-      // Lakukan pemotongan saldo
-      if (currency === "nsf") {
-        await cacheManager.debitUserSurvival(userId, "starFragments", price);
-      } else if (currency === "coin") {
-        await cacheManager.debitUserProfile(userId, "economy_wallet", price);
-      } else if (currency === "coupon") {
-        await cacheManager.debitUserSurvival(userId, "coupons", price);
+      // Verifikasi pemberian role terlebih dahulu
+      try {
+        await interaction.member.roles.add(roleObj);
+      } catch (err) {
+        return interaction.reply({
+          content: `${ui.getEmoji("cross") || "❌"} Gagal memberikan role. Pastikan bot memiliki izin Manage Roles dan posisi role bot berada di atas role **${roleObj.name}**!`,
+          flags: MessageFlags.Ephemeral,
+        });
       }
 
-      // Tambahkan role
-      await interaction.member.roles.add(roleObj).catch(() => {});
+      // Lakukan pemotongan saldo secara atomik
+      let debitResult = { ok: false };
+      if (currency === "nsf") {
+        debitResult = await cacheManager.debitUserSurvival(userId, "starFragments", price);
+      } else if (currency === "coin") {
+        debitResult = await cacheManager.debitUserProfile(userId, "economy_wallet", price);
+      } else if (currency === "coupon") {
+        debitResult = await cacheManager.debitUserSurvival(userId, "coupons", price);
+      }
+
+      if (!debitResult || !debitResult.ok) {
+        // Rollback pemberian role jika pemotongan saldo gagal
+        await interaction.member.roles.remove(roleObj).catch(() => {});
+        return interaction.reply({
+          content: `${ui.getEmoji("cross") || "❌"} Saldo **${currencyName}** kamu tidak mencukupi saat proses transaksi!`,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
 
       // Catat sewa
       const expiresAt = new Date(Date.now() + item.days * 24 * 60 * 60 * 1000);

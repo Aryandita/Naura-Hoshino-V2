@@ -52,7 +52,7 @@ function overviewCard(interaction, ai) {
 
   return buildContainerV2({
     accentColorHex: ui.getColor("primary") || "#FFB6C1",
-    authorName: `Pengaturan AI \u2014 ${interaction.guild.name}`,
+    authorName: `Pengaturan AI - ${interaction.guild.name}`,
     title: `${e("read", "\u2699\uFE0F")} Konfigurasi AI Naura`,
     iconURL:
       interaction.guild.iconURL() || interaction.client.user.displayAvatarURL(),
@@ -134,7 +134,7 @@ module.exports = async function settings(interaction) {
 
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("success") || "#22c55e",
-    authorName: `Pengaturan AI \u2014 ${interaction.guild.name}`,
+    authorName: `Pengaturan AI - ${interaction.guild.name}`,
     title: `${e("impressed", "\u2699\uFE0F")} Sudah Naura catat!`,
     iconURL:
       interaction.guild.iconURL() || interaction.client.user.displayAvatarURL(),

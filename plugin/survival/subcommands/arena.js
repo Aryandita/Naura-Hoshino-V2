@@ -228,5 +228,120 @@ module.exports = {
 
       return interaction.editReply(payload);
     }
+
+    // 6. PET BATTLE ARENA (PvP MMR)
+    if (menu === "pet_battle" || menu === "pet") {
+      const UserPet = require("../../../src/models/UserPet");
+      const petBattleEngine = require("../../../src/survival/engines/petBattleEngine");
+
+      // Cari pet aktif pemain
+      let activePet = await UserPet.findOne({
+        where: { userId: interaction.user.id, isActive: true },
+      });
+
+      if (!activePet) {
+        activePet = await UserPet.findOne({
+          where: { userId: interaction.user.id, isTamed: true },
+        });
+      }
+
+      if (!activePet) {
+        return interaction.editReply(
+          buildContainerV2({
+            accentColorHex: ui.getColor("warning"),
+            authorName: "NAURA WILDS • Pet Battle Arena",
+            title: "🐾 Belum Memiliki Pet Bertarung!",
+            description: [
+              "Kakak belum memiliki hewan peliharaan aktif yang siap bertarung di Arena!",
+              "",
+              "• Tangkap dan jinakkan hewan peliharaanmu melalui **/survival pet**.",
+              "• Pastikan pet sudah disetel aktif dan dalam kondisi sehat/kenyang sebelum masuk arena.",
+            ].join("\n"),
+            footerText: ui.getFooter("survival"),
+          }),
+        );
+      }
+
+      // Periksa target user
+      const targetUser = interaction.options?.getUser?.("target");
+      let opponentData = null;
+
+      if (targetUser && targetUser.id !== interaction.user.id) {
+        let oppPet = await UserPet.findOne({
+          where: { userId: targetUser.id, isActive: true },
+        });
+        if (!oppPet) {
+          oppPet = await UserPet.findOne({
+            where: { userId: targetUser.id, isTamed: true },
+          });
+        }
+
+        if (oppPet) {
+          const oppArena = await petBattleEngine.getPetArenaProfile(targetUser.id);
+          opponentData = {
+            isNpc: false,
+            ownerName: targetUser.username,
+            mmr: oppArena.mmr || 1000,
+            pet: oppPet,
+            stats: petBattleEngine.getPetCombatStats(oppPet),
+          };
+        }
+      }
+
+      // Jika tidak ada lawan sesama pemain, buat penantang liar AI
+      if (!opponentData) {
+        const userArena = await petBattleEngine.getPetArenaProfile(interaction.user.id);
+        opponentData = petBattleEngine.generateWildChallenger(userArena.mmr || 1000);
+      }
+
+      const battleResult = await petBattleEngine.processPetBattle(
+        interaction.user.id,
+        activePet,
+        opponentData,
+      );
+
+      const payload = petBattleEngine.renderPetBattleCard(battleResult, interaction.user);
+      return interaction.editReply(payload);
+    }
+
+    // 7. PET ARENA LEADERBOARD
+    if (menu === "pet_leaderboard") {
+      const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+      const petBattleEngine = require("../../../src/survival/engines/petBattleEngine");
+      const userArena = await petBattleEngine.getPetArenaProfile(interaction.user.id);
+      const division = petBattleEngine.getDivisionTier(userArena.mmr || 1000);
+
+      const payload = buildContainerV2({
+        accentColorHex: division.color || "#F59E0B",
+        authorName: "NAURA WILDS • Pet Battle Arena Leaderboard",
+        title: "🐾 Hall of Fame Pet Masters",
+        description: [
+          `📊 **Peringkat Pribadimu:** \`${userArena.mmr || 1000} MMR\` (${division.badge} Divisi: **${division.name}**)`,
+          `🏆 **Rekor Tempur:** \`${userArena.wins || 0} Menang / ${userArena.losses || 0} Kalah\` (Streak: **${userArena.streak || 0}** 🔥)`,
+          "",
+          "👑 **Tingkatan Divisi Pet Arena:**",
+          "• 👑 **Master Rimba** (≥ 2200 MMR)",
+          "• 💠 **Diamond** (1900 - 2199 MMR)",
+          "• 💎 **Platinum** (1600 - 1899 MMR)",
+          "• 🥇 **Gold** (1300 - 1599 MMR)",
+          "• 🥈 **Silver** (1100 - 1299 MMR)",
+          "• 🥉 **Bronze** (< 1100 MMR)",
+          "",
+          "- # *Tantang lawan baru di arena dengan memilih `/survival arena menu:pet_battle`!*",
+        ].join("\n"),
+        buttonsRow: [
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId("btn_petarena_match")
+              .setLabel("Cari Lawan Pet Arena")
+              .setStyle(ButtonStyle.Primary)
+              .setEmoji("⚔️"),
+          ),
+        ],
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply(payload);
+    }
   },
 };

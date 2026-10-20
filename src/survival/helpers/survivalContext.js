@@ -241,7 +241,10 @@ function adaptSurvivalInteraction(interaction, actionName = null) {
     interaction.options = {
       getSubcommand: () => actionKey,
       getSubcommandGroup: () => null,
-      getString: (name) => defaults[name] ?? null,
+      getString: (name) =>
+        name === "aksi" && interaction.customAction
+          ? interaction.customAction
+          : (defaults[name] ?? null),
       getInteger: (name) => (typeof defaults[name] === "number" ? defaults[name] : null),
       getNumber: (name) => (typeof defaults[name] === "number" ? defaults[name] : null),
       getBoolean: (name) => (typeof defaults[name] === "boolean" ? defaults[name] : false),

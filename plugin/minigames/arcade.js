@@ -108,9 +108,9 @@ module.exports = {
       await interaction.deferReply();
 
       const canDebit = await currency.charge(
-        userId,
-        { starFragments: bet },
-        "Arcade Roulette Bet",
+        "starFragments",
+        { userId },
+        bet,
       );
       if (!canDebit) {
         return interaction.editReply({
@@ -126,9 +126,9 @@ module.exports = {
 
       if (result.isWon) {
         await currency.reward(
-          userId,
-          { starFragments: result.payout },
-          "Arcade Roulette Win",
+          "starFragments",
+          { userId },
+          result.payout,
         );
       }
 
@@ -154,9 +154,9 @@ module.exports = {
 
       if (bet > 0) {
         const canDebit = await currency.charge(
-          userId,
-          { starFragments: bet },
-          "Arcade Trivia Bet Escrow",
+          "starFragments",
+          { userId },
+          bet,
         );
         if (!canDebit) {
           return interaction.editReply({
@@ -212,9 +212,9 @@ module.exports = {
 
       if (bet > 0) {
         const canDebit = await currency.charge(
-          userId,
-          { starFragments: bet },
-          "Arcade Rhythm Bet Escrow",
+          "starFragments",
+          { userId },
+          bet,
         );
         if (!canDebit) {
           return interaction.editReply({

@@ -268,7 +268,7 @@ async function dispatchFunction(name, rawArgs, message) {
         reputation: profile?.reputation || 0,
         characterClass: profile?.characterClass || "None",
         isPremium: Boolean(
-          profile?.isPremium && profile?.premiumUntil > new Date(),
+          profile?.isPremium && profile?.premiumUntil && new Date(profile.premiumUntil) > new Date(),
         ),
         language: profile?.language || "id",
       };
@@ -527,7 +527,7 @@ async function dispatchFunction(name, rawArgs, message) {
 
       const profile = await cacheManager.getUserProfile(userId);
       const isVIP = Boolean(
-        profile?.isPremium && profile?.premiumUntil > new Date(),
+        profile?.isPremium && profile?.premiumUntil && new Date(profile.premiumUntil) > new Date(),
       );
 
       const rewardFragments = isVIP ? 350 : 200;

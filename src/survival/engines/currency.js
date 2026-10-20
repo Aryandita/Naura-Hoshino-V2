@@ -162,8 +162,15 @@ function balanceOf(currency, holders = {}) {
 }
 
 function userIdOf(holders = {}) {
-  const { survival, profile } = holders;
-  return (survival && survival.userId) || (profile && profile.userId) || null;
+  if (typeof holders === "string") return holders;
+  if (!holders) return null;
+  const { survival, profile, userId } = holders;
+  return (
+    userId ||
+    (survival && survival.userId) ||
+    (profile && profile.userId) ||
+    null
+  );
 }
 
 /**
@@ -208,6 +215,24 @@ function canAfford(currency, holders, amount) {
  * Sejak migrasi v5, aturan ini berlaku untuk ketiga mata uang tanpa kecuali.
  */
 async function charge(currency, holders = {}, amount) {
+  // Dukungan signature fleksibel: charge(userId, { starFragments: 50 }, reason)
+  if (
+    typeof currency === "string" &&
+    /^\d{15,22}$/.test(currency) &&
+    holders &&
+    typeof holders === "object"
+  ) {
+    const targetUserId = currency;
+    let finalBalance = null;
+    for (const [currKey, currAmount] of Object.entries(holders)) {
+      if (typeof currAmount !== "number" || currAmount <= 0) continue;
+      const res = await charge(currKey, { userId: targetUserId }, currAmount);
+      if (res === null) return null;
+      finalBalance = res;
+    }
+    return finalBalance !== null ? finalBalance : 0;
+  }
+
   const c = resolve(currency);
   const cost = Math.max(0, Math.floor(Number(amount) || 0));
   const balance = balanceOf(c, holders);
@@ -229,6 +254,23 @@ async function charge(currency, holders = {}, amount) {
 }
 
 async function reward(currency, holders = {}, amount) {
+  // Dukungan signature fleksibel: reward(userId, { starFragments: 50 }, reason)
+  if (
+    typeof currency === "string" &&
+    /^\d{15,22}$/.test(currency) &&
+    holders &&
+    typeof holders === "object"
+  ) {
+    const targetUserId = currency;
+    let finalBalance = 0;
+    for (const [currKey, currAmount] of Object.entries(holders)) {
+      if (typeof currAmount !== "number" || currAmount <= 0) continue;
+      const res = await reward(currKey, { userId: targetUserId }, currAmount);
+      finalBalance = res;
+    }
+    return finalBalance;
+  }
+
   const c = resolve(currency);
   let gain = Math.max(0, Math.floor(Number(amount) || 0));
   const balance = balanceOf(c, holders);

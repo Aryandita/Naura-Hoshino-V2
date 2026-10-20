@@ -467,6 +467,11 @@ class TradeEngine {
       logger.warn(
         `🚨 [TradeEngine Ambush Alert] Karavan ${alertData.caravanId} disergap! Korban: ${alertData.ownerUserId}, Loot: ${alertData.lootAmount}`,
       );
+      try {
+        const webPushService = require("./webPushService");
+        await webPushService.notifyCaravanAmbush(alertData);
+      } catch (_) {}
+
       const axios = require("axios");
       const env = require("../config/env");
       const port = env.DASHBOARD_PORT || 3000;

@@ -144,6 +144,8 @@ module.exports = [
 
           await t.commit();
           await redisManager.deleteCache(`card:trade:${tradeId}`);
+          await redisManager.deleteCache(`user:survival:${trade.initiatorId}`);
+          await redisManager.deleteCache(`user:survival:${trade.targetUserId}`);
 
           const payload = buildContainerV2({
             title: `${ui.getEmoji("celebrate") || "🎉"} Transaksi Barter Kartu Sukses!`,

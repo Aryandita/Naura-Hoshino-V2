@@ -60,6 +60,11 @@ class RedisManager {
         return this.client.hGet(...args);
       }
     };
+    this.client.zadd = (key, score, value) => {
+      if (typeof this.client.zAdd === "function") {
+        return this.client.zAdd(key, [{ score: Number(score), value: String(value) }]);
+      }
+    };
   }
 
   /** Satu-satunya sumber kebenaran untuk mengecek kesiapan Redis. */
@@ -135,6 +140,56 @@ class RedisManager {
       return null;
     } catch (error) {
       logger.error("[Redis] Gagal membaca cache:", error.message);
+      return null;
+    }
+  }
+
+  async zAdd(key, score, value) {
+    if (!this.isReady) return null;
+    try {
+      return await this.client.zAdd(key, [{ score: Number(score), value: String(value) }]);
+    } catch (error) {
+      logger.error("[Redis] Gagal menjalankan zAdd:", error.message);
+      return null;
+    }
+  }
+
+  async zRevRangeWithScores(key, start = 0, stop = -1) {
+    if (!this.isReady) return [];
+    try {
+      return await this.client.zRangeWithScores(key, start, stop, { REV: true });
+    } catch (error) {
+      logger.error("[Redis] Gagal membaca zRevRangeWithScores:", error.message);
+      return [];
+    }
+  }
+
+  async zCard(key) {
+    if (!this.isReady) return 0;
+    try {
+      return await this.client.zCard(key);
+    } catch (error) {
+      logger.error("[Redis] Gagal membaca zCard:", error.message);
+      return 0;
+    }
+  }
+
+  async zScore(key, member) {
+    if (!this.isReady) return null;
+    try {
+      return await this.client.zScore(key, String(member));
+    } catch (error) {
+      logger.error("[Redis] Gagal membaca zScore:", error.message);
+      return null;
+    }
+  }
+
+  async zRevRank(key, member) {
+    if (!this.isReady) return null;
+    try {
+      return await this.client.zRevRank(key, String(member));
+    } catch (error) {
+      logger.error("[Redis] Gagal membaca zRevRank:", error.message);
       return null;
     }
   }

@@ -1,15 +1,13 @@
 // Lokasi: src/events/poru/nodeConnect.js
 const GuildSettings = require("../../models/GuildSettings");
+const { logger } = require("../../managers/logger");
 const {
   lavalinkClusterManager,
 } = require("../../managers/lavalinkClusterManager");
 
 module.exports = {
   async execute(manager, node) {
-    // Log sukses berwarna hijau cerah
-    console.log(
-      `\x1b[42m\x1b[30m ✨ SUCCESS \x1b[0m \x1b[32mKoneksi Audio Node [${node.name}] Berhasil & Stabil.\x1b[0m`,
-    );
+    logger.success(`Koneksi Audio Node [${node.name}] Berhasil & Stabil.`);
 
     // Reset circuit breaker dan periksa kapabilitas server secara otomatis
     lavalinkClusterManager.recordNodeSuccess(node.name);
@@ -35,9 +33,7 @@ module.exports = {
           }
         }
       } catch (e) {
-        console.log(
-          "\x1b[41m\x1b[37m ⚠️ ERROR \x1b[0m \x1b[31mGagal memulihkan mode 24/7.\x1b[0m",
-        );
+        logger.error("Gagal memulihkan mode 24/7.", e);
       }
     }, 5000);
   },

@@ -7,7 +7,7 @@
  * 1. Memberi tahu pemanggil saat pengguna yang di-tag sedang AFK dan mencatat pesan (snippet, link, waktu).
  * 2. Menyambut pengguna saat kembali aktif dan menyajikan Rangkuman Mention (Digest) rapi dan bersih.
  *
- * Mematuhi aturan Components V2 dan bebas karakter em-dash (\u2014).
+ * Mematuhi aturan Components V2 dan bebas karakter em-dash (U+2014).
  */
 
 const ui = require("../../config/ui");

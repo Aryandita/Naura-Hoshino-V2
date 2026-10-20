@@ -10,7 +10,7 @@
  * - [📋 Misi Harian] dengan pelacak progres misi aktif
  * - [🛡️ Pelindung Streak] penyelamat rantai streak via item streak_shield
  *
- * Mematuhi prinsip Components V2 dan bebas karakter em-dash (\u2014).
+ * Mematuhi prinsip Components V2 dan bebas karakter em-dash (U+2014).
  */
 
 const {

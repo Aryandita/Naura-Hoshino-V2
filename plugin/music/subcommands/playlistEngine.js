@@ -27,7 +27,7 @@ const playlistEngine = {
     }
 
     const profile = await cacheManager.getUserProfile(user.id);
-    const isPremium = profile.isPremium && profile.premiumUntil > new Date();
+    const isPremium = Boolean(profile?.isPremium && profile?.premiumUntil && new Date(profile.premiumUntil) > new Date());
     const userPlaylistsCount = await UserPlaylist.count({
       where: { userId: user.id },
     });
@@ -137,7 +137,7 @@ const playlistEngine = {
     }
 
     const profile = await cacheManager.getUserProfile(user.id);
-    const isPremium = profile.isPremium && profile.premiumUntil > new Date();
+    const isPremium = Boolean(profile?.isPremium && profile?.premiumUntil && new Date(profile.premiumUntil) > new Date());
     const count = await UserPlaylist.count({ where: { userId: user.id } });
     if (!isPremium && count >= 3) {
       const errPayload = buildErrorContainerV2({

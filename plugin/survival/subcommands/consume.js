@@ -407,27 +407,34 @@ module.exports = {
         `**${e("read", "\u2728")} Kondisimu sekarang**`,
       ];
 
-      if (hungerGain > 0)
+      if (hungerGain > 0) {
+        const hunBar = survivalUI.buildVitalsBar({ current: displayHunger, target: 100, length: 8, showPercentage: true });
         lines.push(
-          `> ${e("eat", "\uD83C\uDF54")} Lapar: \`${displayHunger}/100\` *(+${hungerGain})*`,
+          `> ${e("eat", "\uD83C\uDF54")} Lapar: \`${hunBar.bar}\` *(+${hungerGain})*`,
         );
-      if (thirstGain > 0)
+      }
+      if (thirstGain > 0) {
+        const thiBar = survivalUI.buildVitalsBar({ current: displayThirst, target: 100, length: 8, showPercentage: true });
         lines.push(
-          `> ${e("chirping", "\uD83E\uDD64")} Haus: \`${displayThirst}/100\` *(+${thirstGain})*`,
+          `> ${e("chirping", "\uD83E\uDD64")} Haus: \`${thiBar.bar}\` *(+${thirstGain})*`,
         );
+      }
       if (staminaGain > 0) {
+        const staBar = survivalUI.buildVitalsBar({ current: displayStamina, target: maxStamina, length: 8, showPercentage: true });
         const bonusTag =
           tierEnergyBonus > 0
             ? ` *(Tier ${conf.tier || 1} bonus +${tierEnergyBonus}⚡)*`
             : "";
         lines.push(
-          `> ${e("happy", "\u26A1")} Stamina: \`${displayStamina}/${maxStamina}\` *(+${staminaGain})${bonusTag}*`,
+          `> ${e("happy", "\u26A1")} Stamina: \`${staBar.bar}\` *(+${staminaGain})${bonusTag}*`,
         );
       }
-      if (hpGain > 0)
+      if (hpGain > 0) {
+        const hpBar = survivalUI.buildVitalsBar({ current: displayHP, target: maxPlayerHP || 100, length: 8, showPercentage: true });
         lines.push(
-          `> ${e("cheers", "\u2764\uFE0F")} HP: \`${displayHP}\` *(+${hpGain} dipulihkan)*`,
+          `> ${e("cheers", "\u2764\uFE0F")} HP: \`${hpBar.bar}\` *(+${hpGain} dipulihkan)*`,
         );
+      }
 
       if (hungerGain === 0 && thirstGain === 0 && staminaGain === 0 && hpGain === 0) {
         lines.push("> *(Item ini tidak memberikan efek statistik langsung.)*");

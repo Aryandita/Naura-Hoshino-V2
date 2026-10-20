@@ -400,28 +400,64 @@ class DuplexVoiceAgent extends EventEmitter {
     });
     eventBus.emit("duplex:speaking", { guildId: session.guildId, text });
 
-    // Simulasi durasi ucapan berdasarkan ukuran buffer MP3 (~16KB per detik pada 128kbps)
-    const estimatedDurationMs =
-      env.NODE_ENV === "test"
-        ? 20
-        : Math.min(15000, Math.max(1200, Math.round((audioBuffer.length / 16000) * 1000)));
+    const VoiceManager = require("../managers/voiceManager");
+
+    // Simulasi durasi ucapan pada test suite atau saat native voice tidak aktif
+    if (
+      env.NODE_ENV === "test" ||
+      !VoiceManager.isAvailable() ||
+      !VoiceManager.hasActiveConnection(session.guildId)
+    ) {
+      const estimatedDurationMs =
+        env.NODE_ENV === "test"
+          ? 20
+          : Math.min(15000, Math.max(1200, Math.round((audioBuffer.length / 16000) * 1000)));
+
+      return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          if (session.state === VOICE_STATES.SPEAKING) {
+            session.state = VOICE_STATES.LISTENING;
+            this.emit("agent:listening", { guildId: session.guildId });
+            eventBus.emit("duplex:listening", { guildId: session.guildId });
+          }
+          resolve();
+        }, estimatedDurationMs);
+
+        session.currentPlayback = {
+          stop: () => {
+            clearTimeout(timer);
+            resolve();
+          },
+        };
+      });
+    }
+
+    // Alur transmisi native Discord Voice
+    const { Readable } = require("node:stream");
+    const stream = Readable.from(audioBuffer);
+    VoiceManager.playAudioStream(session.guildId, stream);
 
     return new Promise((resolve) => {
-      const timer = setTimeout(() => {
-        if (session.state === VOICE_STATES.SPEAKING) {
-          session.state = VOICE_STATES.LISTENING;
-          this.emit("agent:listening", { guildId: session.guildId });
-          eventBus.emit("duplex:listening", { guildId: session.guildId });
-        }
-        resolve();
-      }, estimatedDurationMs);
-
       session.currentPlayback = {
         stop: () => {
-          clearTimeout(timer);
+          VoiceManager.stopPlayback(session.guildId);
           resolve();
         },
       };
+
+      const connSession = VoiceManager.connections.get(session.guildId);
+      if (connSession && connSession.player) {
+        connSession.player.once("idle", () => {
+          if (session.state === VOICE_STATES.SPEAKING) {
+            session.state = VOICE_STATES.LISTENING;
+            this.emit("agent:listening", { guildId: session.guildId });
+            eventBus.emit("duplex:listening", { guildId: session.guildId });
+          }
+          resolve();
+        });
+      } else {
+        resolve();
+      }
     });
   }
 

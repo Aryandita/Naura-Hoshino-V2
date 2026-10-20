@@ -135,18 +135,55 @@ function register(router) {
     }
   });
 
+  router.get("/push/vapid-key", (req, res) => {
+    try {
+      const webPushService = require("../../../src/services/webPushService");
+      const publicKey = webPushService.getVapidPublicKey();
+      res.json({
+        success: true,
+        publicKey,
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   router.get("/push/status", async (req, res) => {
     const count = await pushState.getSubscribersCount();
+    const webPushService = require("../../../src/services/webPushService");
     res.json({
       success: true,
       enabled: true,
       subscribersCount: count,
+      vapidConfigured: Boolean(webPushService.getVapidPublicKey()),
       supportedAlertTypes: [
         "caravan_ambush",
         "raid_boss_spawn",
+        "world_boss_spawn",
+        "daily_reset_alert",
         "lottery_winner",
       ],
     });
+  });
+
+  router.post("/push/test-boss", requireOwner, async (req, res) => {
+    try {
+      const webPushService = require("../../../src/services/webPushService");
+      const result = await webPushService.notifyWorldBossSpawn(req.body || {});
+      res.json({ success: true, message: "World Boss push notification triggered", result });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  router.post("/push/test-daily-reset", requireOwner, async (req, res) => {
+    try {
+      const webPushService = require("../../../src/services/webPushService");
+      const result = await webPushService.notifyDailyReset(req.body || {});
+      res.json({ success: true, message: "Daily reset push notification triggered", result });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   });
 
   // --- 4. Admin Flush Cache & Backup ---

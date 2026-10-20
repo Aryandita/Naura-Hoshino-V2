@@ -3,6 +3,7 @@
 const UserProfile = require("../models/UserProfile");
 const UserSurvival = require("../models/UserSurvival");
 const UserCardDeck = require("../models/UserCardDeck");
+const redisManager = require("../managers/redisManager");
 
 /**
  * Daftar kategori papan peringkat yang didukung sistem Naura Hoshino.
@@ -96,12 +97,116 @@ function getCategoryConfig(categoryId) {
  * @param {number} pageSize - Jumlah entri per halaman.
  * @returns {Promise<{category: object, page: number, totalPages: number, totalCount: number, items: Array}>}
  */
+function extractNumericScore(config, row) {
+  if (config.id === "wallet") return Number(row.economy_wallet) || 0;
+  if (config.id === "bank") return Number(row.economy_bank) || 0;
+  if (config.id === "fragments") return Number(row.starFragments) || 0;
+  if (config.id === "level") return Number(row.leveling_xp) || 0;
+  if (config.id === "survival_level") return Number(row.survival_xp) || 0;
+  if (config.id === "card_elo") return Number(row.eloRating) || 1000;
+  if (config.id === "reputation") return Number(row.reputation) || 0;
+  return 0;
+}
+
+/**
+ * Memperbarui nilai skor seorang pengguna pada Sorted Set Redis O(log N).
+ * @param {string} categoryId
+ * @param {string} userId
+ * @param {number} score
+ */
+async function updateLeaderboardScore(categoryId, userId, score) {
+  if (!redisManager.isReady || !userId) return;
+  const config = getCategoryConfig(categoryId);
+  const zsetKey = `leaderboard:zset:${config.id}`;
+  await redisManager.zAdd(zsetKey, Number(score) || 0, String(userId));
+}
+
+/**
+ * Mengambil peringkat global pengguna dalam kategori tertentu secara O(1).
+ * @param {string} categoryId
+ * @param {string} userId
+ * @returns {Promise<number|null>} Peringkat 1-indexed, atau null jika belum ada.
+ */
+async function getUserRank(categoryId, userId) {
+  if (!redisManager.isReady || !userId) return null;
+  const config = getCategoryConfig(categoryId);
+  const zsetKey = `leaderboard:zset:${config.id}`;
+  const rank = await redisManager.zRevRank(zsetKey, String(userId));
+  return rank !== null ? rank + 1 : null;
+}
+
+/**
+ * Mengambil data peringkat terpaginasi untuk kategori tertentu dengan Redis Sorted Sets O(1).
+ * @param {string} categoryId - ID kategori peringkat.
+ * @param {number} page - Halaman aktif (1-indexed).
+ * @param {number} pageSize - Jumlah entri per halaman.
+ * @returns {Promise<{category: object, page: number, totalPages: number, totalCount: number, items: Array}>}
+ */
 async function fetchLeaderboard(categoryId = "wallet", page = 1, pageSize = 10) {
   const config = getCategoryConfig(categoryId);
   const safePage = Math.max(1, parseInt(page, 10) || 1);
   const safePageSize = Math.min(25, Math.max(1, parseInt(pageSize, 10) || 10));
   const offset = (safePage - 1) * safePageSize;
+  const medalEmojis = ["🥇", "🥈", "🥉"];
+  const zsetKey = `leaderboard:zset:${config.id}`;
 
+  // 1. Coba baca dari Redis Sorted Sets O(1) / O(log N + M)
+  if (redisManager.isReady) {
+    try {
+      const cachedCount = await redisManager.zCard(zsetKey);
+      if (cachedCount > 0) {
+        const cachedSlice = await redisManager.zRevRangeWithScores(
+          zsetKey,
+          offset,
+          offset + safePageSize - 1,
+        );
+
+        if (cachedSlice && cachedSlice.length > 0) {
+          const totalPages = Math.max(1, Math.ceil(cachedCount / safePageSize));
+          const items = cachedSlice.map((entry, index) => {
+            const rank = offset + index + 1;
+            const badge = rank <= 3 ? medalEmojis[rank - 1] : `**#${rank}**`;
+            const scoreNum = Math.round(Number(entry.score) || 0);
+
+            let formattedScore = `${scoreNum.toLocaleString("id-ID")}`;
+            if (config.id === "wallet" || config.id === "bank") {
+              formattedScore = `${scoreNum.toLocaleString("id-ID")} NC`;
+            } else if (config.id === "fragments") {
+              formattedScore = `${scoreNum.toLocaleString("id-ID")} NSF`;
+            } else if (config.id === "card_elo") {
+              formattedScore = `${scoreNum} ELO`;
+            } else if (config.id === "reputation") {
+              formattedScore = `${scoreNum.toLocaleString("id-ID")} Rep`;
+            } else if (config.id === "level") {
+              formattedScore = `${scoreNum.toLocaleString("id-ID")} XP`;
+            } else if (config.id === "survival_level") {
+              formattedScore = `${scoreNum.toLocaleString("id-ID")} EXP`;
+            }
+
+            return {
+              rank,
+              badge,
+              userId: entry.value,
+              formattedScore,
+              raw: { userId: entry.value, score: scoreNum },
+            };
+          });
+
+          return {
+            category: config,
+            page: safePage,
+            totalPages,
+            totalCount: cachedCount,
+            items,
+          };
+        }
+      }
+    } catch (_) {
+      // Fallback ke database Sequelize bila Redis bermasalah
+    }
+  }
+
+  // 2. Query Database Sequelize
   let model;
   if (config.model === "UserSurvival") {
     model = UserSurvival;
@@ -118,7 +223,6 @@ async function fetchLeaderboard(categoryId = "wallet", page = 1, pageSize = 10) 
   });
 
   const totalPages = Math.max(1, Math.ceil(count / safePageSize));
-  const medalEmojis = ["🥇", "🥈", "🥉"];
 
   const items = rows.map((row, index) => {
     const rank = offset + index + 1;
@@ -131,6 +235,16 @@ async function fetchLeaderboard(categoryId = "wallet", page = 1, pageSize = 10) 
       raw: row.toJSON ? row.toJSON() : row,
     };
   });
+
+  // 3. Populasikan kembali ke Redis Sorted Sets untuk request berikutnya
+  if (redisManager.isReady && rows.length > 0) {
+    try {
+      for (const row of rows) {
+        const sc = extractNumericScore(config, row);
+        await redisManager.zAdd(zsetKey, sc, row.userId);
+      }
+    } catch (_) {}
+  }
 
   return {
     category: config,
@@ -230,4 +344,6 @@ module.exports = {
   getCategoryConfig,
   fetchLeaderboard,
   renderLeaderboardPayload,
+  updateLeaderboardScore,
+  getUserRank,
 };

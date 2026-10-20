@@ -22,8 +22,9 @@
  */
 
 const express = require("express");
-const { EmbedBuilder } = require("discord.js");
 const env = require("../../src/config/env");
+const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const { buildVoteStreakCelebrationCard } = require("../../src/utils/survivalUIHelper");
 const { logger } = require("../../src/managers/logger");
 const UserProfile = require("../../src/models/UserProfile");
 const ui = require("../../src/config/ui");
@@ -31,11 +32,11 @@ const { grantVoteRewards } = require("../utils/voteRewards");
 const { verifyToken, createRateLimiter } = require("../utils/httpGuard");
 const donationWebhooks = require("./donationWebhooks");
 
-/** Kirim DM. Gagal DM tidak boleh menggagalkan webhook. */
-async function notifyUser(client, userId, embed, tag) {
+/** Kirim DM Components V2. Gagal DM tidak boleh menggagalkan webhook. */
+async function notifyUser(client, userId, payload, tag) {
   try {
     const userObj = await client.users.fetch(userId);
-    await userObj.send({ embeds: [embed] });
+    await userObj.send(payload);
     return true;
   } catch {
     logger.info(`[WEBHOOK ${tag}] DM ke ${userId} gagal: DM-nya tertutup.`);
@@ -107,6 +108,9 @@ module.exports = (client) => {
     const body = req.body || {};
     const userId = body.user;
     if (!userId) return res.status(400).send("Missing user ID");
+    if (!/^\d{17,20}$/.test(String(userId))) {
+      return res.status(400).send("Invalid Discord user ID");
+    }
 
     // Tombol "Send Test" di dasbor top.gg tidak boleh memberi hadiah nyata.
     if (body.type === "test") {
@@ -128,23 +132,35 @@ module.exports = (client) => {
       const userObj = await client.users.fetch(userId).catch(() => null);
       const couponEmoji = ui.getEmoji("coupon") || "\uD83C\uDF9F\uFE0F";
 
-      const embed = new EmbedBuilder()
-        .setColor(ui.getColor("economy") || "#FFD700")
-        .setTitle(
-          `${ui.getEmoji("naura_cheers") || "\uD83C\uDF89"} Makasih banyak sudah vote Naura!`,
-        )
-        .setDescription(
-          `Hai ${userObj?.username || "kamu"}! Naura seneng banget kamu masih menyempatkan waktu buat vote hari ini.\n\n` +
+      const streak = Number(result.streak || 0);
+      const isMilestone = streak === 7 || streak === 30 || streak === 60;
+
+      let payload;
+      if (isMilestone) {
+        // Vote streak milestone: kirim kartu celebration khusus
+        payload = buildVoteStreakCelebrationCard({
+          user: userObj || { id: userId, displayName: "kamu", username: "kamu" },
+          streak,
+          isMilestone: true,
+        });
+      } else {
+        payload = buildContainerV2({
+          accentColorHex: ui.getColor("economy") || "#FFD700",
+          title:
+            `${ui.getEmoji("naura_cheers") || "\uD83C\uDF89"} Makasih banyak sudah vote Naura!`,
+          description:
+            `Hai ${userObj?.username || "kamu"}! Naura seneng banget kamu masih menyempatkan waktu buat vote hari ini.\n\n` +
             `Ini hadiah dari Naura ya:\n` +
             `\u2728 **Trial V.I.P Premium 12 jam**\n` +
             `${couponEmoji} **${result.coupons} Naura Coupon**${isWeekend ? " (bonus akhir pekan, dobel!)" : ""}\n\n` +
             `Total kuponmu sekarang **${result.totalCoupons}**. Kupon ini bisa kamu tukar dengan barang langka seperti peralatan Obsidian, lho!\n\n` +
             `\u23F3 **Premium aktif sampai:** <t:${Math.floor(result.expiry.getTime() / 1000)}:R>\n` +
             `\uD83D\uDCC5 **Vote ke-${result.streak}.** Jangan lupa balik lagi 12 jam lagi ya!`,
-        )
-        .setFooter({ text: ui.getFooter("premium") });
+          footerCategory: "premium",
+        });
+      }
 
-      await notifyUser(client, userId, embed, "VOTE");
+      await notifyUser(client, userId, payload, "VOTE");
       return res.status(200).send("Vote recorded successfully");
     } catch (error) {
       logger.error("[WEBHOOK ERROR] Vote:", error);

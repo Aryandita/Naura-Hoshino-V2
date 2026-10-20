@@ -100,17 +100,46 @@ function getVitalColor(percent) {
 }
 
 /**
+ * Karakter blok visual untuk bar vital Naura Wilds.
+ * Menggunakan karakter Unicode penuh/parcial untuk representasi visual yang
+ * lebih halus daripada ▰/▱ standar.
+ */
+const VITAL_BLOCKS = {
+  full: "█",
+  seven: "▇",
+  six: "▆",
+  five: "▅",
+  four: "▄",
+  three: "▃",
+  two: "▂",
+  one: "▁",
+  empty: "░",
+};
+
+/**
+ * Emoji indikator status vital berdasarkan persentase.
+ * @param {number} percent - Persentase vital (0-100)
+ * @returns {string} Emoji status
+ */
+function getVitalEmoji(percent) {
+  const p = Math.max(0, Math.min(100, Number(percent) || 0));
+  if (p <= 20) return "🔴";
+  if (p <= 50) return "🟡";
+  return "🟢";
+}
+
+/**
  * Membangun bar vital bertema Naura Wilds (HP/Stamina/Hunger/XP).
  * Mendelegasikan rendering bar ke uxHelper.buildGoalGradientBar() agar visual
  * progress konsisten dengan sistem UX psikologi bot, lalu menambahkan warna
- * threshold otomatis (moss/amber/danger).
+ * threshold otomatis (moss/amber/danger) dan emoji indikator status.
  * @param {object} options
  * @param {number} [options.current=0] - Nilai vital saat ini
  * @param {number} [options.target=100] - Nilai vital maksimum
  * @param {number} [options.length=10] - Panjang bar karakter
  * @param {object|string} [options.user=null] - User/interaction untuk pesan penyemangat personal
  * @param {string} [options.lang='id'] - Bahasa pesan penyemangat
- * @returns {{ bar: string, customBar: string, percent: number, current: number, target: number, remaining: number, cheerMessage: string, color: string }}
+ * @returns {{ bar: string, customBar: string, percent: number, current: number, target: number, remaining: number, cheerMessage: string, color: string, vitalEmoji: string, statusLabel: string }}
  */
 function buildVitalsBar({
   current = 0,
@@ -126,9 +155,48 @@ function buildVitalsBar({
     user,
     lang,
   });
+
+  // Bangun bar visual dengan blok partial untuk transisi halus
+  const safePercent = Math.max(0, Math.min(100, result.percent));
+  const blockCount = length * 8; // 8 sub-block per karakter
+  const filledBlocks = Math.round((safePercent / 100) * blockCount);
+  const fullBlocks = Math.floor(filledBlocks / 8);
+  const remainder = filledBlocks % 8;
+
+  let visualBar = "";
+  for (let i = 0; i < fullBlocks; i++) {
+    visualBar += VITAL_BLOCKS.full;
+  }
+  if (remainder > 0 && fullBlocks < length) {
+    const remainderMap = {
+      1: VITAL_BLOCKS.one,
+      2: VITAL_BLOCKS.two,
+      3: VITAL_BLOCKS.three,
+      4: VITAL_BLOCKS.four,
+      5: VITAL_BLOCKS.five,
+      6: VITAL_BLOCKS.six,
+      7: VITAL_BLOCKS.seven,
+    };
+    visualBar += remainderMap[remainder];
+  }
+  const remainingEmpty = length - fullBlocks - (remainder > 0 ? 1 : 0);
+  visualBar += VITAL_BLOCKS.empty.repeat(Math.max(0, remainingEmpty));
+
+  const color = getVitalColor(result.percent);
+  const vitalEmoji = getVitalEmoji(result.percent);
+  const statusLabel =
+    safePercent <= 20
+      ? "Kritik"
+      : safePercent <= 50
+        ? "Waspada"
+        : "Sehat";
+
   return {
     ...result,
-    color: getVitalColor(result.percent),
+    bar: visualBar,
+    color,
+    vitalEmoji,
+    statusLabel,
   };
 }
 
@@ -497,6 +565,56 @@ function buildDangerZoneCard({
   });
 }
 
+/**
+ * Pola D: Empty State Card (Components V2)
+ * Digunakan saat data survival kosong (belum start, inventaris kosong, dll.)
+ * dengan tombol navigasi kontekstual agar pemain tidak terdampar di kartu buntu.
+ *
+ * @param {object} params
+ * @param {object} params.user - Discord User objek
+ * @param {string} params.title - Judul empty state
+ * @param {string} params.description - Deskripsi kondisi kosong
+ * @param {string} [params.primaryActionId="start"] - ID aksi utama tombol utama
+ * @param {string} [params.primaryActionLabel="Mulai Petualangan"] - Label tombol utama
+ * @param {ActionRowBuilder|Array<ActionRowBuilder>} [params.buttonsRow]
+ * @returns {object} Payload Components V2 siap kirim
+ */
+function buildEmptyStateCard({
+  user,
+  title = "Belum Memulai Petualangan",
+  description = "Kamu belum terdaftar sebagai petualang Naura Wilds. Mulai perjalananmu sekarang!",
+  primaryActionId = "start",
+  primaryActionLabel = "Mulai Petualangan",
+  buttonsRow = null,
+} = {}) {
+  const userId = user?.id || "0";
+  const userName = user?.displayName || user?.username || "Petualang";
+
+  const defaultButtons = buttonsRow
+    ? (Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow])
+    : [
+        buildSurvivalActionRow("gathering", userId, {
+          exclude: ["chop", "mine", "fish", "rest"],
+          customButtons: [
+            { id: primaryActionId, label: primaryActionLabel, emoji: "🌱", style: ButtonStyle.Success },
+            { id: "info", label: "Panduan", emoji: "📖", style: ButtonStyle.Secondary },
+            { id: "town", label: "Desa Sukamaju", emoji: "🏘️", style: ButtonStyle.Secondary },
+          ],
+        }),
+      ];
+
+  return buildContainerV2({
+    accentColorHex: survivalColors.moss,
+    authorName: "Naura Wilds • Kosong",
+    title,
+    iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
+    expression: "thinking",
+    description: `Hai ${userName}! ${description}`,
+    buttonsRow: defaultButtons,
+    footerText: getFooter(),
+  });
+}
+
 module.exports = {
   survivalColors,
   survivalGlass,
@@ -513,4 +631,280 @@ module.exports = {
   buildStatusDashboardCard,
   buildActionResultCard,
   buildDangerZoneCard,
+  buildEmptyStateCard,
+};
+
+/**
+ * Pola E: Premium Benefit Preview Card (Components V2)
+ * Kartu preview manfaat setiap tier VIP (Tier 1/2/3) untuk konversi non-P2W.
+ * Tidak memberikan keunggulan statistik in-game, hanya estetika & kenyamanan.
+ *
+ * @param {object} params
+ * @param {object} params.user - Discord User objek
+ * @param {string} [params.currentTier="none"] - Tier pengguna saat ini
+ * @param {ActionRowBuilder|Array<ActionRowBuilder>} [params.buttonsRow]
+ * @returns {object} Payload Components V2 siap kirim
+ */
+function buildPremiumPreviewCard({
+  user,
+  currentTier = "none",
+  buttonsRow = null,
+} = {}) {
+  const userId = user?.id || "0";
+  const tierData = {
+    none: {
+      name: "Tanpa Tier",
+      color: survivalColors.emerald,
+      perks: [
+        "Akses ke semua fitur survival dasar",
+        "Chat AI dengan kuota harian terbatas",
+        "Profil Canvas standar",
+      ],
+      emoji: "🆓",
+    },
+    tier1: {
+      name: "Naura Star Pass",
+      color: "#86EFAC",
+      perks: [
+        "Frame neon hologram pada profil Canvas",
+        "Badge VIP emas di chat server",
+        "Kuota chat AI ditingkatkan",
+      ],
+      emoji: "⭐",
+    },
+    tier2: {
+      name: "Naura VIP Member",
+      color: "#93C5FD",
+      perks: [
+        "Semua Tier 1, plus:",
+        "Living AI Persona unlimited (tsundere, kuudere, gamer, butler)",
+        "Fish Audio Signature Greeting 3-5 detik saat memutar musik",
+        "Ekspansi slot soundboard kustom",
+      ],
+      emoji: "💎",
+    },
+    tier3: {
+      name: "Naura VVIP Elite / Guild Patron",
+      color: "#F9A8D4",
+      perks: [
+        "Semua Tier 2, plus:",
+        "Mode 24/7 Standby voice channel",
+        "Ekspansi slot soundboard hingga 50 slot",
+        "Badge Mythic pink pada profil",
+      ],
+      emoji: "👑",
+    },
+  };
+
+  const current = tierData[currentTier] || tierData.none;
+  const lines = [
+    `${current.emoji} **Tier Saat Ini:** ${current.name}`,
+    "",
+    "**Manfaat Non-P2W (Estetika & Kenyamanan):**",
+  ];
+  for (const perk of current.perks) {
+    lines.push(`> ${perk}`);
+  }
+  lines.push(
+    "",
+    "*Premium tidak memberikan keunggulan statistik in-game, bypass ekonomi, atau merusak keseimbangan survival.*",
+  );
+
+  const defaultButtons = buttonsRow
+    ? (Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow])
+    : [
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`premium_buy:${userId}`)
+            .setLabel("Beli Tier Premium")
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji("💳"),
+          new ButtonBuilder()
+            .setCustomId(`premium_info:${userId}`)
+            .setLabel("Info Detail Tier")
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji("📋"),
+        ),
+      ];
+
+  return buildContainerV2({
+    accentColorHex: current.color,
+    authorName: "Naura Premium • Manfaat Tier",
+    title: "Preview Manfaat Premium Naura",
+    iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
+    expression: "Cheers",
+    description: lines.join("\n"),
+    buttonsRow: defaultButtons,
+    footerText: getFooter(),
+  });
+}
+
+module.exports = {
+  survivalColors,
+  survivalGlass,
+  rarityColors,
+  getColor,
+  getRarityColor,
+  getVitalColor,
+  buildVitalsBar,
+  getFooter,
+  formatStat,
+  buildSurvivalHUD,
+  buildTimeLocationLine,
+  buildSurvivalActionRow,
+  buildStatusDashboardCard,
+  buildActionResultCard,
+  buildDangerZoneCard,
+  buildEmptyStateCard,
+  buildPremiumPreviewCard,
+};
+
+/**
+ * Pola F: Vote Streak Celebration Card (Components V2)
+ * Animasi/celebrasi saat mencapai streak vote 7, 30, 60 hari.
+ *
+ * @param {object} params
+ * @param {object} params.user - Discord User objek
+ * @param {number} params.streak - Jumlah streak vote saat ini
+ * @param {boolean} [params.isMilestone=false] - Apakah streak ini milestone (7/30/60)
+ * @param {ActionRowBuilder|Array<ActionRowBuilder>} [params.buttonsRow]
+ * @returns {object} Payload Components V2 siap kirim
+ */
+function buildVoteStreakCelebrationCard({
+  user,
+  streak = 0,
+  isMilestone = false,
+  buttonsRow = null,
+} = {}) {
+  const userId = user?.id || "0";
+  const milestoneText = isMilestone
+    ? `\n🎉 **MILESTONE CAPAIAN!** Kamu telah vote ${streak} hari berturut-turut!`
+    : "";
+  const emoji = streak >= 60 ? "👑" : streak >= 30 ? "💎" : streak >= 7 ? "⭐" : "✨";
+
+  const lines = [
+    `${emoji} **Terima kasih telah vote Naura!**`,
+    "",
+    `🔥 **Vote Streak:** ${streak} hari`,
+    milestoneText,
+    "",
+    "Jangan lupa balik lagi 12 jam lagi untuk melanjutkan streakmu!",
+  ];
+
+  const defaultButtons = buttonsRow
+    ? (Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow])
+    : [
+        buildSurvivalActionRow("town", userId, {
+          customButtons: [
+            { id: "vote_again", label: "Vote Lagi 12 Jam", emoji: "🗳️", style: ButtonStyle.Success },
+            { id: "inventory", label: "Buka Ransel", emoji: "🎒", style: ButtonStyle.Secondary },
+          ],
+        }),
+      ];
+
+  return buildContainerV2({
+    accentColorHex: streak >= 30 ? survivalColors.amber : survivalColors.moss,
+    authorName: `Naura Wilds • Vote Streak ${streak} Hari`,
+    title: `${emoji} Vote Streak Capai ${streak} Hari!`,
+    iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
+    expression: "Cheers",
+    description: lines.join("\n"),
+    buttonsRow: defaultButtons,
+    footerText: getFooter(),
+  });
+}
+
+/**
+ * Pola G: Durability Warning Card (Components V2)
+ * Notifikasi otomatis saat item terpilih durability < 20%.
+ *
+ * @param {object} params
+ * @param {object} params.user - Discord User objek
+ * @param {object} params.item - Objek item dengan durability rendah
+ * @param {number} params.repairCost - Biaya NSF untuk perbaikan
+ * @param {ActionRowBuilder|Array<ActionRowBuilder>} [params.buttonsRow]
+ * @returns {object} Payload Components V2 siap kirim
+ */
+function buildDurabilityWarningCard({
+  user,
+  item,
+  repairCost = 0,
+  buttonsRow = null,
+} = {}) {
+  const userId = user?.id || "0";
+  const itemName = item?.name || item?.id || "Peralatan";
+  const durability = Number(item?.durability ?? 0);
+  const color = durability <= 10 ? survivalColors.danger : survivalColors.amber;
+
+  const lines = [
+    `⚠️ **Peralatanmu Shows Tanda Keausan Parah!**`,
+    "",
+    `📦 **Item:** ${itemName}`,
+    `❤️ **Durabilitas:** ${durability}%`,
+    `${durability <= 10 ? "🔴 **KRITIS** - Perbaikan segera disarankan!" : "🟡 **WASPADA** - Segera perbaiki sebelum hancur!"}`,
+    "",
+  ];
+
+  if (repairCost > 0) {
+    lines.push(`💰 **Biaya Perbaikan:** ${repairCost.toLocaleString("id-ID")} NSF`);
+    lines.push("");
+  }
+
+  lines.push("Klik tombol di bawah untuk memperbaiki segera.");
+
+  const defaultButtons = buttonsRow
+    ? (Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow])
+    : [
+        new ActionRowBuilder().addComponents(
+          repairCost > 0
+            ? new ButtonBuilder()
+                .setCustomId(`durability_repair_${item.id || item.name}:${userId}`)
+                .setLabel("Perbaiki Sekarang")
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji("🔧")
+            : new ButtonBuilder()
+                .setCustomId(`durability_ignore:${userId}`)
+                .setLabel("Tandai Selesai")
+                .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId(`durability_inventory:${userId}`)
+            .setLabel("Lihat Ransel")
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji("🎒"),
+        ),
+      ];
+
+  return buildContainerV2({
+    accentColorHex: color,
+    authorName: "Naura Wilds • Peringatan Durabilitas",
+    title: "⚠️ Peralatan Butuh Perbaikan",
+    iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
+    expression: "alert",
+    description: lines.join("\n"),
+    buttonsRow: defaultButtons,
+    footerText: getFooter(),
+  });
+}
+
+module.exports = {
+  survivalColors,
+  survivalGlass,
+  rarityColors,
+  getColor,
+  getRarityColor,
+  getVitalColor,
+  getVitalEmoji,
+  buildVitalsBar,
+  getFooter,
+  formatStat,
+  buildSurvivalHUD,
+  buildTimeLocationLine,
+  buildSurvivalActionRow,
+  buildStatusDashboardCard,
+  buildActionResultCard,
+  buildDangerZoneCard,
+  buildEmptyStateCard,
+  buildPremiumPreviewCard,
+  buildVoteStreakCelebrationCard,
+  buildDurabilityWarningCard,
 };

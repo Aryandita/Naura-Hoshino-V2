@@ -52,9 +52,9 @@ class MinecraftBridgeService {
 
     // Bonus Star Fragments untuk penautan pertama
     await currency.reward(
-      data.userId,
-      { starFragments: 500 },
-      "Minecraft Account Linking Bonus",
+      "starFragments",
+      { userId: data.userId },
+      500,
     );
 
     return link;
@@ -92,10 +92,13 @@ class MinecraftBridgeService {
     const rewardCoupons = hoursSince >= 24 ? 1 : 0;
 
     await currency.reward(
-      userId,
-      { starFragments: rewardFrags, coupons: rewardCoupons },
-      "Minecraft Playtime Realm Sync",
+      "starFragments",
+      { userId },
+      rewardFrags,
     );
+    if (rewardCoupons > 0) {
+      await currency.reward("coupons", { userId }, rewardCoupons);
+    }
 
     link.lastSyncedAt = new Date();
     link.totalSyncRewards = (link.totalSyncRewards || 0) + rewardFrags;

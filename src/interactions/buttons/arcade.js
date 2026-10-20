@@ -42,9 +42,9 @@ module.exports = [
 
       if (isCorrect && rewardFrags > 0) {
         await currency.reward(
-          session.userId,
-          { starFragments: rewardFrags },
-          "Arcade Trivia Reward",
+          "starFragments",
+          { userId: session.userId },
+          rewardFrags,
         );
       }
 
@@ -109,9 +109,9 @@ module.exports = [
         await redisManager.del(`arcade:rhythm:${sessionId}`);
         const rewardFrags = session.bet > 0 ? session.bet * 2 : 100;
         await currency.reward(
-          session.userId,
-          { starFragments: rewardFrags },
-          "Arcade Rhythm Perfect Clear",
+          "starFragments",
+          { userId: session.userId },
+          rewardFrags,
         );
 
         const winPayload = buildContainerV2({

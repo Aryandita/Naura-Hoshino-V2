@@ -193,14 +193,12 @@
                         <nav class="shared-nav-links" aria-label="Navigasi Cepat">
                             <a href="/" class="shared-nav-link ${currentPath === '/' ? 'active' : ''}"><i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span></a>
                             <a href="/profile" class="shared-nav-link ${currentPath === '/profile' ? 'active' : ''}"><i class="fa-solid fa-id-card"></i> <span>Profil</span></a>
-                            <a href="/inventory" class="shared-nav-link ${currentPath === '/inventory' ? 'active' : ''}"><i class="fa-solid fa-backpack"></i> <span>Ransel</span></a>
                             <a href="/world" class="shared-nav-link ${currentPath === '/world' ? 'active' : ''}"><i class="fa-solid fa-earth-asia"></i> <span>Dunia</span></a>
                             <a href="/clan" class="shared-nav-link ${currentPath === '/clan' ? 'active' : ''}"><i class="fa-solid fa-users-rays"></i> <span>Klan</span></a>
-                            <a href="/marketplace" class="shared-nav-link ${currentPath === '/marketplace' ? 'active' : ''}"><i class="fa-solid fa-shop"></i> <span>Pasar</span></a>
-                            <a href="/arcade" class="shared-nav-link ${currentPath === '/arcade' ? 'active' : ''}"><i class="fa-solid fa-gamepad"></i> <span>Arcade</span></a>
+                            <a href="/economy" class="shared-nav-link ${currentPath === '/economy' ? 'active' : ''}"><i class="fa-solid fa-coins"></i> <span>Ekonomi</span></a>
+                            <a href="/leaderboard" class="shared-nav-link ${currentPath === '/leaderboard' ? 'active' : ''}"><i class="fa-solid fa-trophy"></i> <span>Peringkat</span></a>
                             <a href="/music" class="shared-nav-link ${currentPath === '/music' ? 'active' : ''}"><i class="fa-solid fa-music"></i> <span>Musik</span></a>
                             <a href="/settings" class="shared-nav-link ${currentPath === '/settings' ? 'active' : ''}"><i class="fa-solid fa-gears"></i> <span>Settings</span></a>
-                            <a href="/admin" class="shared-nav-link ${currentPath === '/admin' ? 'active' : ''}"><i class="fa-solid fa-screwdriver-wrench"></i> <span>Admin</span></a>
                         </nav>
                     </div>
                     <div class="header-right"></div>
@@ -872,7 +870,13 @@
     ];
 
     function applyTheme(themeId) {
-        const validTheme = AVAILABLE_THEMES.some(t => t.id === themeId) ? themeId : 'midnight';
+        let validTheme = themeId;
+        if (themeId === 'light') validTheme = 'light-horizon';
+        if (themeId === 'dark') validTheme = 'midnight';
+        if (!AVAILABLE_THEMES.some(t => t.id === validTheme)) {
+            validTheme = 'midnight';
+        }
+
         if (validTheme === 'midnight') {
             document.documentElement.removeAttribute('data-theme');
             document.body.removeAttribute('data-theme');
@@ -886,7 +890,29 @@
         if (pill) {
             const currentObj = AVAILABLE_THEMES.find(t => t.id === validTheme) || AVAILABLE_THEMES[0];
             pill.innerHTML = `<i class="${currentObj.icon}"></i> <span>${currentObj.label}</span>`;
+            pill.setAttribute('aria-label', `Palet tema aktif: ${currentObj.label}. Klik untuk ganti palet.`);
         }
+
+        const darkLightBtn = document.getElementById('themeDarkLightToggle');
+        if (darkLightBtn) {
+            const isLight = validTheme === 'light-horizon';
+            darkLightBtn.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+            darkLightBtn.setAttribute('title', isLight ? 'Beralih ke Mode Gelap' : 'Beralih ke Mode Terang');
+            darkLightBtn.setAttribute('aria-label', isLight ? 'Beralih ke Mode Gelap' : 'Beralih ke Mode Terang');
+            darkLightBtn.innerHTML = `<i class="fa-solid ${isLight ? 'fa-moon' : 'fa-sun'}"></i> <span>${isLight ? 'Dark' : 'Light'}</span>`;
+        }
+
+        // A11y Live Announcer untuk pembaca layar (Screen Readers)
+        let announcer = document.getElementById('a11yLiveAnnouncer');
+        if (!announcer) {
+            announcer = document.createElement('div');
+            announcer.id = 'a11yLiveAnnouncer';
+            announcer.className = 'sr-only';
+            announcer.setAttribute('aria-live', 'polite');
+            announcer.setAttribute('aria-atomic', 'true');
+            document.body.appendChild(announcer);
+        }
+        announcer.textContent = `Tema dashboard diubah ke ${validTheme === 'light-horizon' ? 'Mode Terang' : 'Mode Gelap (' + validTheme + ')'}`;
     }
 
     const savedTheme = localStorage.getItem('naura_theme') || 'midnight';
@@ -904,6 +930,7 @@
             searchBtn.id = 'paletteOpenBtn';
             searchBtn.className = 'theme-switcher-pill';
             searchBtn.title = 'Buka Command Palette (Ctrl+K)';
+            searchBtn.setAttribute('aria-label', 'Buka Command Palette pencarian navigasi (Shortcut: Ctrl+K)');
             searchBtn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> <span>Search (Ctrl+K)</span>`;
             searchBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -912,13 +939,64 @@
             headerRight.insertBefore(searchBtn, headerRight.firstChild);
         }
 
-        // Theme Switcher Button
+        // Dedicated Dark / Light Mode Toggle Button (WCAG AA Fast Switch)
+        if (!document.getElementById('themeDarkLightToggle')) {
+            const dlBtn = document.createElement('button');
+            dlBtn.type = 'button';
+            dlBtn.id = 'themeDarkLightToggle';
+            dlBtn.className = 'theme-switcher-pill';
+            const curTheme = localStorage.getItem('naura_theme') || 'midnight';
+            const isLight = curTheme === 'light-horizon';
+            dlBtn.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+            dlBtn.setAttribute('aria-label', isLight ? 'Beralih ke Mode Gelap' : 'Beralih ke Mode Terang');
+            dlBtn.title = isLight ? 'Beralih ke Mode Gelap' : 'Beralih ke Mode Terang';
+            dlBtn.innerHTML = `<i class="fa-solid ${isLight ? 'fa-moon' : 'fa-sun'}"></i> <span>${isLight ? 'Dark' : 'Light'}</span>`;
+
+            dlBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const current = localStorage.getItem('naura_theme') || 'midnight';
+                if (current === 'light-horizon') {
+                    const lastDark = localStorage.getItem('naura_last_dark_theme') || 'midnight';
+                    applyTheme(lastDark);
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: 'Mode Gelap',
+                            message: 'Beralih ke mode gelap.',
+                            duration: 2000
+                        });
+                    }
+                } else {
+                    localStorage.setItem('naura_last_dark_theme', current);
+                    applyTheme('light-horizon');
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: 'Mode Terang',
+                            message: 'Beralih ke mode terang (Light Horizon).',
+                            duration: 2000
+                        });
+                    }
+                }
+            });
+
+            const searchBtn = document.getElementById('paletteOpenBtn');
+            if (searchBtn && searchBtn.nextSibling) {
+                headerRight.insertBefore(dlBtn, searchBtn.nextSibling);
+            } else {
+                headerRight.insertBefore(dlBtn, headerRight.firstChild);
+            }
+        }
+
+        // Multi-Theme Palette Switcher Button
         if (!document.getElementById('themeSwitcherPill')) {
             const themePill = document.createElement('button');
             themePill.type = 'button';
             themePill.id = 'themeSwitcherPill';
             themePill.className = 'theme-switcher-pill';
-            themePill.title = 'Ganti Tema Dashboard (Midnight / Sakura / Cyber / Emerald / OLED)';
+            themePill.title = 'Ganti Palet Tema Dashboard (Midnight / Sakura / Cyber / Emerald / OLED)';
+            themePill.setAttribute('aria-haspopup', 'true');
+            themePill.setAttribute('aria-label', 'Pilih palet warna dashboard');
 
             const curTheme = localStorage.getItem('naura_theme') || 'midnight';
             const curObj = AVAILABLE_THEMES.find(t => t.id === curTheme) || AVAILABLE_THEMES[0];
@@ -941,11 +1019,11 @@
                 }
             });
 
-            const searchBtn = document.getElementById('paletteOpenBtn');
-            if (searchBtn && searchBtn.nextSibling) {
-                headerRight.insertBefore(themePill, searchBtn.nextSibling);
+            const dlBtn = document.getElementById('themeDarkLightToggle');
+            if (dlBtn && dlBtn.nextSibling) {
+                headerRight.insertBefore(themePill, dlBtn.nextSibling);
             } else {
-                headerRight.insertBefore(themePill, headerRight.firstChild);
+                headerRight.appendChild(themePill);
             }
         }
 
@@ -958,6 +1036,8 @@
             sfxPill.title = 'Bisu / Bunyikan Efek Suara Interaktif (SFX)';
 
             const isSfxMuted = localStorage.getItem('naura_sfx_enabled') === 'false';
+            sfxPill.setAttribute('aria-pressed', isSfxMuted ? 'false' : 'true');
+            sfxPill.setAttribute('aria-label', isSfxMuted ? 'Nyalakan efek suara' : 'Bisukan efek suara');
             sfxPill.innerHTML = `<i class="fa-solid ${isSfxMuted ? 'fa-bell-slash' : 'fa-bell'}"></i> <span>${isSfxMuted ? 'SFX Off' : 'SFX On'}</span>`;
 
             sfxPill.addEventListener('click', (e) => {
@@ -965,6 +1045,8 @@
                 if (!window.soundManager) return;
                 const nextState = !window.soundManager.sfxEnabled;
                 window.soundManager.setSfxEnabled(nextState);
+                sfxPill.setAttribute('aria-pressed', nextState ? 'true' : 'false');
+                sfxPill.setAttribute('aria-label', nextState ? 'Bisukan efek suara' : 'Nyalakan efek suara');
                 sfxPill.innerHTML = `<i class="fa-solid ${nextState ? 'fa-bell' : 'fa-bell-slash'}"></i> <span>${nextState ? 'SFX On' : 'SFX Off'}</span>`;
                 if (window.showToast) {
                     window.showToast({
@@ -1545,6 +1627,65 @@
             }
         }
     }
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    window.subscribeWebPush = async function subscribeWebPush() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            return { success: false, error: 'Push notifications tidak didukung browser ini.' };
+        }
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                return { success: false, error: 'Izin notifikasi ditolak oleh pengguna.' };
+            }
+            const reg = await navigator.serviceWorker.ready;
+            const res = await fetch('/api/push/vapid-key');
+            const keyData = await res.json();
+            if (!keyData.success || !keyData.publicKey) {
+                return { success: false, error: 'VAPID key belum tersedia dari server.' };
+            }
+            const convertedVapidKey = urlBase64ToUint8Array(keyData.publicKey);
+            const subscription = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey,
+            });
+            const subRes = await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subscription }),
+            });
+            const result = await subRes.json();
+            if (result.success && typeof window.showNauraToast === 'function') {
+                window.showNauraToast('Web Push aktif! Notifikasi World Boss & reset harian siap.', 'success');
+            }
+            return result;
+        } catch (err) {
+            console.error('[WebPush] Gagal mendaftar push notification:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
+    window.getWebPushSubscription = async function getWebPushSubscription() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            return await reg.pushManager.getSubscription();
+        } catch (_) {
+            return null;
+        }
+    };
 
     initPwaServiceWorker();
 })();

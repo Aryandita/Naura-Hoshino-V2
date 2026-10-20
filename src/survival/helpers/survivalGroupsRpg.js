@@ -160,6 +160,14 @@ function addRpgSubcommands(builder) {
                       name: "👑 Papan Peringkat Divisi Master",
                       value: "coliseum_leaderboard",
                     },
+                    {
+                      name: "🐾 Pet Battle Arena (PvP MMR)",
+                      value: "pet_battle",
+                    },
+                    {
+                      name: "🏆 Papan Peringkat Pet Arena",
+                      value: "pet_leaderboard",
+                    },
                   ),
               ),
           )
@@ -274,6 +282,7 @@ function addRpgSubcommands(builder) {
               .setRequired(true)
               .addChoices(
                 { name: "🏰 Dashboard & Info Klan", value: "info" },
+                { name: "📜 Papan Sayembara & Misi Mingguan (Bounty)", value: "bounty" },
                 { name: "🌐 Aliansi Federasi Global", value: "federation" },
                 { name: "⚔️ Pengepungan Menara Relik (Siege)", value: "siege" },
                 { name: "🐫 Papan Pengawalan Karavan (Caravan)", value: "caravan" },
