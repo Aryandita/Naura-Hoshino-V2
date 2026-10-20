@@ -35,6 +35,88 @@ displayClusterBootScreen({
   totalShards: "auto",
 });
 
+// ==========================================
+// 🛑 GRACEFUL SHUTDOWN & SIBLING TEARDOWN COORDINATION
+// ==========================================
+let isShuttingDown = false;
+let shutdownWatchdog = null;
+const deadChildren = new Set();
+
+function checkAllChildrenDead(source = "unknown") {
+  if (!isShuttingDown) return;
+
+  const children = (manager && (manager.clusters || manager.shards)) || null;
+  if (!children || children.size === 0) {
+    if (shutdownWatchdog) clearTimeout(shutdownWatchdog);
+    logger.success("[MANAGER] Tidak ada worker atau shard aktif. Manager keluar.");
+    process.exit(0);
+    return;
+  }
+
+  let aliveCount = 0;
+  for (const child of children.values()) {
+    const proc = child.process || child.worker;
+    const isDead =
+      deadChildren.has(child.id) ||
+      !proc ||
+      proc.exitCode !== null ||
+      proc.signalCode !== null ||
+      proc.killed;
+    if (!isDead) {
+      aliveCount++;
+    } else {
+      deadChildren.add(child.id);
+    }
+  }
+
+  logger.info(
+    `[MANAGER] Status teardown child processes: ${aliveCount} masih aktif (event: ${source}).`,
+  );
+
+  if (aliveCount === 0) {
+    if (shutdownWatchdog) clearTimeout(shutdownWatchdog);
+    logger.success(
+      `[MANAGER] Semua proses child (${children.size}) telah selesai teardown dan berhenti secara bersih. Manager exiting...`,
+    );
+    process.exit(0);
+  }
+}
+
+function handleManagerShutdown(originChildId = null) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  if (manager) manager.respawn = false;
+  deadChildren.clear();
+
+  logger.system(
+    `[MANAGER] Memulai penutupan terkendali seluruh child processes (pemicu: ${originChildId !== null ? `Child #${originChildId}` : "Signal OS"})...`,
+  );
+
+  const children = (manager && (manager.clusters || manager.shards)) || null;
+  if (children) {
+    children.forEach((child) => {
+      if (originChildId === null || child.id !== originChildId) {
+        try {
+          child.send({ type: "MANAGER_SHUTDOWN" });
+        } catch (_) {}
+      }
+    });
+  }
+
+  // Safety watchdog timer (15 detik): lebih lama dari lifecycleManager.TIMEOUT_MS (12 detik).
+  // Keluar dengan status 1 bila terpaksa dihentikan paksa (timeout) agar supervisor proses mendeteksi anomali.
+  shutdownWatchdog = setTimeout(() => {
+    logger.warn(
+      "[MANAGER] Batas waktu teardown (15 detik) tercapai. Memaksa seluruh proses manager berhenti.",
+    );
+    process.exit(1);
+  }, 15000);
+  if (shutdownWatchdog.unref) shutdownWatchdog.unref();
+
+  // Evaluasi jika ternyata tidak ada proses anak atau sudah langsung mati
+  setImmediate(() => checkAllChildrenDead("initial_check"));
+}
+
 if (useClustering) {
   manager = new ClusterManager(path.join(__dirname, "index.js"), {
     token: env.TOKEN,
@@ -46,6 +128,7 @@ if (useClustering) {
   });
 
   manager.on("clusterCreate", (cluster) => {
+    deadChildren.delete(cluster.id);
     logger.success(`[CLUSTERING] Launched Cluster #${cluster.id}`);
 
     cluster.on("disconnect", () => {
@@ -57,7 +140,28 @@ if (useClustering) {
     });
 
     cluster.on("ready", () => {
+      deadChildren.delete(cluster.id);
       logger.success(`[CLUSTERING] Cluster #${cluster.id} is fully ready!`);
+    });
+
+    cluster.on("message", (msg) => {
+      if (msg?.type === "MANAGER_SHUTDOWN") {
+        logger.system(`[CLUSTERING] Menerima sinyal MANAGER_SHUTDOWN dari Cluster #${cluster.id}.`);
+        handleManagerShutdown(cluster.id);
+      } else if (msg?.type === "MANAGER_RESTART") {
+        logger.system(`[CLUSTERING] Menerima sinyal MANAGER_RESTART dari Cluster #${cluster.id}. Merestart cluster...`);
+        cluster.respawn().catch((err) => logger.error("[CLUSTERING] Gagal respawn cluster:", err));
+      } else if (msg?.type === "MAINTENANCE_SYNC") {
+        if (manager.clusters) {
+          manager.clusters.forEach((c) => {
+            if (c.id !== cluster.id) {
+              try {
+                c.send(msg);
+              } catch (_) {}
+            }
+          });
+        }
+      }
     });
 
     cluster.on("error", (error) => {
@@ -80,6 +184,11 @@ if (useClustering) {
         );
         process.exitCode = EXIT_CODE_BAD_CONFIG;
       }
+
+      if (isShuttingDown) {
+        deadChildren.add(cluster.id);
+        checkAllChildrenDead(`cluster_${cluster.id}_death`);
+      }
     });
   });
 
@@ -94,6 +203,7 @@ if (useClustering) {
   });
 
   manager.on("shardCreate", (shard) => {
+    deadChildren.delete(shard.id);
     logger.success(`[SHARDING] Launched Shard #${shard.id}`);
 
     shard.on("disconnect", () => {
@@ -105,7 +215,28 @@ if (useClustering) {
     });
 
     shard.on("ready", () => {
+      deadChildren.delete(shard.id);
       logger.success(`[SHARDING] Shard #${shard.id} is fully ready!`);
+    });
+
+    shard.on("message", (msg) => {
+      if (msg?.type === "MANAGER_SHUTDOWN") {
+        logger.system(`[SHARDING] Menerima sinyal MANAGER_SHUTDOWN dari Shard #${shard.id}.`);
+        handleManagerShutdown(shard.id);
+      } else if (msg?.type === "MANAGER_RESTART") {
+        logger.system(`[SHARDING] Menerima sinyal MANAGER_RESTART dari Shard #${shard.id}. Merestart shard...`);
+        shard.respawn().catch((err) => logger.error("[SHARDING] Gagal respawn shard:", err));
+      } else if (msg?.type === "MAINTENANCE_SYNC") {
+        if (manager.shards) {
+          manager.shards.forEach((s) => {
+            if (s.id !== shard.id) {
+              try {
+                s.send(msg);
+              } catch (_) {}
+            }
+          });
+        }
+      }
     });
 
     shard.on("error", (error) => {
@@ -128,6 +259,11 @@ if (useClustering) {
         );
         process.exitCode = EXIT_CODE_BAD_CONFIG;
       }
+
+      if (isShuttingDown) {
+        deadChildren.add(shard.id);
+        checkAllChildrenDead(`shard_${shard.id}_death`);
+      }
     });
   });
 
@@ -148,23 +284,10 @@ process.on("uncaughtException", (error) => {
 });
 
 // ==========================================
-// 🛑 GRACEFUL SHUTDOWN HANDLER (MANAGER)
+// 🛑 OS SIGNAL HANDLERS (MANAGER)
 // ==========================================
-let isShuttingDown = false;
-async function shutdownManager() {
-  if (isShuttingDown) return;
-  isShuttingDown = true;
-  console.log(
-    "\n\x1b[41m\x1b[37m 🛑 MANAGER SHUTDOWN \x1b[0m \x1b[31mMencegah respawn dan menunggu worker mati...\x1b[0m",
-  );
-  manager.respawn = false;
-
-  setTimeout(() => {
-    console.log(
-      "\x1b[42m\x1b[30m ✨ MANAGER \x1b[0m \x1b[32mSemua proses cluster telah aman. Exiting...\x1b[0m",
-    );
-    process.exit(0);
-  }, 5000);
+function shutdownManager() {
+  handleManagerShutdown(null);
 }
 
 process.on("SIGINT", shutdownManager);

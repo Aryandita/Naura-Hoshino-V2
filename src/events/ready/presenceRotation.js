@@ -81,7 +81,10 @@ module.exports = {
         }
       })();
 
-      const presenceTimer = setInterval(() => {
+      const updatePresence = () => {
+        if (!client.user) return;
+        if (client.isMaintenance) return; // Pertahankan status maintenance jika aktif
+
         const activity = activities[currentIndex];
 
         // Resolve Lavalink & Music telemetry values
@@ -148,18 +151,19 @@ module.exports = {
         });
 
         currentIndex = (currentIndex + 1) % activities.length;
-      }, 15000); // Berganti setiap 15 detik
+      };
+
+      // Terapkan seketika saat bot ready (tanpa menunggu 15 detik pertama)
+      updatePresence();
+
+      const presenceTimer = setInterval(updatePresence, 15000); // Berganti setiap 15 detik
       // Rule 1.9: timer level-modul wajib unref agar tidak menahan proses
       // saat graceful shutdown.
       if (presenceTimer.unref) presenceTimer.unref();
 
-      console.log(
-        "\x1b[45m\x1b[37m ✨ PRESENCE \x1b[0m \x1b[35mRotasi status Naura berhasil diaktifkan.\x1b[0m",
-      );
+      logger.system("[PRESENCE] Rotasi status dan Rich Presence Naura berhasil diaktifkan seketika.");
     } else {
-      console.log(
-        "\x1b[43m\x1b[30m ⚠️ PRESENCE \x1b[0m \x1b[33mTidak ada daftar status yang ditemukan di konfigurasi bot-activity.js.\x1b[0m",
-      );
+      logger.warn("[PRESENCE] Tidak ada daftar status yang ditemukan di konfigurasi bot-activity.js.");
     }
   },
 };

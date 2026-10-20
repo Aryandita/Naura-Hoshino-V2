@@ -11,6 +11,8 @@ const ModMail = require("../../models/ModMail");
 const cacheManager = require("../../managers/cacheManager");
 const ui = require("../../config/ui");
 
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 module.exports = [
   {
     id: "mm_open",
@@ -59,16 +61,18 @@ module.exports = [
         .setFooter({ text: ui.getFooter("utility") });
       await interaction.channel.send({ embeds: [logEmbed] });
 
-      const user = await client.users.fetch(ticket.userId).catch(() => null);
-      if (user) {
-        const notifyEmbed = new EmbedBuilder()
-          .setColor("#FF0000")
-          .setDescription(
-            "🔒 Tiket bantuanmu dengan **" + interaction.guild.name + "** telah ditutup.",
-          )
-          .setFooter({ text: ui.getFooter("utility") })
-          .setTimestamp();
-        user.send({ embeds: [notifyEmbed] }).catch(() => {});
+      if (ticket.userId && SNOWFLAKE_REGEX.test(String(ticket.userId))) {
+        const user = await client.users.fetch(ticket.userId).catch(() => null);
+        if (user) {
+          const notifyEmbed = new EmbedBuilder()
+            .setColor("#FF0000")
+            .setDescription(
+              "🔒 Tiket bantuanmu dengan **" + interaction.guild.name + "** telah ditutup.",
+            )
+            .setFooter({ text: ui.getFooter("utility") })
+            .setTimestamp();
+          user.send({ embeds: [notifyEmbed] }).catch(() => {});
+        }
       }
 
       await interaction.reply(

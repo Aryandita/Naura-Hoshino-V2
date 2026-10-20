@@ -1,8 +1,11 @@
 const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
 const ui = require("../../config/ui");
 const ModMail = require("../../models/ModMail");
+const languageManager = require("../../managers/languageManager");
+const { buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
 
 const CLOSE_DELAY_MS = 5000;
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
 
 /**
  * Meneruskan balasan staf di channel tiket modmail kembali ke DM pengguna.
@@ -20,23 +23,25 @@ module.exports = async function handleStaffReply(message, client) {
     thread.closed = true;
     await thread.save({ fields: ["closed"] });
 
-    const user = await client.users.fetch(thread.userId).catch(() => null);
-    if (user) {
-      await user
-        .send({
-          embeds: [
-            new EmbedBuilder()
-              .setColor(ui.getColor("error") || "#FF0000")
-              .setTitle(
-                `${ui.getEmoji("sleepy") || "\uD83D\uDD12"} Sesi ditutup`,
-              )
-              .setDescription(
-                `Obrolanmu dengan staf **${message.guild.name}** sudah Naura tutup. Kalau butuh bantuan lagi, sapa Naura kapan saja, yaa!`,
-              )
-              .setFooter({ text: ui.getFooter("utility") }),
-          ],
-        })
-        .catch(() => {});
+    if (thread.userId && SNOWFLAKE_REGEX.test(String(thread.userId))) {
+      const user = await client.users.fetch(thread.userId).catch(() => null);
+      if (user) {
+        await user
+          .send({
+            embeds: [
+              new EmbedBuilder()
+                .setColor(ui.getColor("error") || "#FF0000")
+                .setTitle(
+                  `${ui.getEmoji("sleepy") || "\uD83D\uDD12"} Sesi ditutup`,
+                )
+                .setDescription(
+                  `Obrolanmu dengan staf **${message.guild.name}** sudah Naura tutup. Kalau butuh bantuan lagi, sapa Naura kapan saja, yaa!`,
+                )
+                .setFooter({ text: ui.getFooter("utility") }),
+            ],
+          })
+          .catch(() => {});
+      }
     }
 
     await message.channel.send(
@@ -46,8 +51,27 @@ module.exports = async function handleStaffReply(message, client) {
     return true;
   }
 
+  if (!thread.userId || !SNOWFLAKE_REGEX.test(String(thread.userId))) {
+    const lang =
+      message.localeLang ||
+      (await languageManager.getUserLanguage(
+        message.author.id,
+        message.guild?.id,
+      ));
+    await message.reply(
+      buildErrorContainerV2({
+        title: "modmail.invalid_user_id_title",
+        errorMessage: "modmail.invalid_user_id",
+        footerText: ui.getFooter("modmail", lang),
+        lang,
+      }),
+    ).catch(() => {});
+    return true;
+  }
+
   try {
-    const user = await client.users.fetch(thread.userId);
+    const user = await client.users.fetch(thread.userId).catch(() => null);
+    if (!user) throw new Error("Pengguna tidak ditemukan.");
     const embed = new EmbedBuilder()
       .setAuthor({
         name: `Balasan dari ${message.guild.name}`,

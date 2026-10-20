@@ -39,6 +39,13 @@ module.exports = {
           });
 
           for (const profile of users) {
+            const rawId = profile?.userId;
+            // Validasi format Discord snowflake (17-20 digit) untuk menghindari error API pada mock data/ID uji coba
+            if (!rawId || !/^\d{17,20}$/.test(String(rawId).trim())) {
+              continue;
+            }
+            const userId = String(rawId).trim();
+
             const cooldowns = profile.cooldowns || {};
             const reminders = [];
 
@@ -76,8 +83,20 @@ module.exports = {
             if (reminders.length === 0) continue;
 
             try {
-              const user = await client.users.fetch(profile.userId);
-              if (!user || user.bot) continue;
+              const user = await client.users.fetch(userId).catch((err) => {
+                if (
+                  [10008, 10013, 50035].includes(err?.code) ||
+                  err?.message?.includes("is not snowflake")
+                ) {
+                  return null;
+                }
+                throw err;
+              });
+              if (!user || user.bot) {
+                profile.dailyReminded = true;
+                await profile.save({ fields: ["dailyReminded"] }).catch(() => {});
+                continue;
+              }
 
               const embed = new EmbedBuilder()
                 .setColor(ui.getColor("economy"))
@@ -96,7 +115,7 @@ module.exports = {
 
               const row = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
-                  .setCustomId(`daily_notify_off_${profile.userId}`)
+                  .setCustomId(`daily_notify_off_${userId}`)
                   .setLabel("🔕 Matikan Notifikasi Ini")
                   .setStyle(ButtonStyle.Secondary),
               );
@@ -106,10 +125,20 @@ module.exports = {
               profile.dailyReminded = true;
               await profile.save({ fields: ["dailyReminded"] });
             } catch (dmErr) {
-              if (dmErr?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(dmErr.code)) {
-                // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+              if (
+                dmErr?.code &&
+                [10008, 10013, 10062, 40060, 50001, 50007, 50013, 50027, 50035].includes(
+                  dmErr.code,
+                )
+              ) {
+                // Intentional: Abaikan error DM tertutup, izin Discord, atau unknown user
+                profile.dailyReminded = true;
+                await profile.save({ fields: ["dailyReminded"] }).catch(() => {});
               } else {
-                logger.debug("[dailyReminder:execute] Pemanggilan Discord API gagal: " + (dmErr?.message || dmErr));
+                logger.debug(
+                  "[dailyReminder:execute] Pemanggilan Discord API gagal: " +
+                    (dmErr?.message || dmErr),
+                );
               }
             }
           }

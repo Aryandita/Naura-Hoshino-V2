@@ -546,8 +546,119 @@ const displayClusterBootScreen = (options = {}) => {
   console.log("\n" + L.join("\n"));
 };
 
+/**
+ * Menampilkan ASCII Art shutdown / restart screen ke stdout.
+ * @param {object} [params]
+ * @param {string} [params.mode="shutdown"] - Mode: 'shutdown' | 'restart'
+ * @param {string} [params.reason="Shutdown manual"]
+ * @param {string} [params.user="System"]
+ */
+const displayShutdownScreen = ({
+  mode = "shutdown",
+  reason = "Shutdown manual",
+  user = "System",
+} = {}) => {
+  const isRestart = mode.toLowerCase() === "restart";
+  const titleText = isRestart ? "NAURA RESTART SEQUENCE" : "NAURA GRACEFUL SHUTDOWN";
+  const color = isRestart ? C.sky : C.err;
+  const borderColor = isRestart ? C.cyan : C.err;
+  const L = [];
+
+  L.push(hLine(TL, TR, HL, borderColor));
+  L.push(blank());
+
+  BANNER_LINES.forEach(([bStr, bVis]) => {
+    L.push(row(bStr, bVis));
+  });
+
+  L.push(blank());
+  L.push(hLine(SL, SR, HL, borderColor));
+  L.push(blank());
+
+  const h = secHead(isRestart ? "🔄" : "🛑", titleText, isRestart ? C.gold : C.err);
+  L.push(row(h.content, h.vis));
+
+  const d1 = dual(
+    "Mode",
+    `${color}${C.b}${isRestart ? "Graceful Restart" : "Full Shutdown"}${C.r}`,
+    "Waktu",
+    `${C.g2}${nowStr()}${C.r}`,
+  );
+  L.push(row(d1.content, d1.vis));
+
+  const safeReason = String(reason || "Manual").substring(0, 24);
+  const d2 = dual(
+    "Pelaksana",
+    `${C.mint}${user}${C.r}`,
+    "Alasan",
+    `${C.gold}${safeReason}${C.r}`,
+  );
+  L.push(row(d2.content, d2.vis));
+
+  const d3 = dual(
+    "Keamanan Data",
+    `${C.ok}Antrean Cache & XP Tersimpan${C.r}`,
+    "Database",
+    `${C.warn}Semua Pool Ditutup${C.r}`,
+  );
+  L.push(row(d3.content, d3.vis));
+
+  L.push(blank());
+  L.push(hLine(BL, BR, HL, borderColor));
+
+  console.log("\n" + L.join("\n") + "\n");
+};
+
+/**
+ * Menampilkan ASCII Art status Maintenance Mode ke stdout.
+ * @param {object} [params]
+ * @param {boolean} [params.enabled=true]
+ * @param {string} [params.reason="Pemeliharaan sistem berkala"]
+ */
+const displayMaintenanceScreen = ({
+  enabled = true,
+  reason = "Pemeliharaan sistem berkala",
+} = {}) => {
+  const L = [];
+  const borderColor = enabled ? C.warn : C.ok;
+
+  L.push(hLine(TL, TR, HL, borderColor));
+  L.push(blank());
+
+  const h = secHead(
+    enabled ? "🛠️" : "✨",
+    enabled ? "MODE PEMELIHARAAN SISTEM DIAKTIFKAN" : "MODE PEMELIHARAAN DINONAKTIFKAN",
+    enabled ? C.gold : C.ok,
+  );
+  L.push(row(h.content, h.vis));
+
+  const d1 = dual(
+    "Status Akses",
+    enabled ? `${C.warn}${C.b}HANYA OWNER${C.r}` : `${C.ok}${C.b}NORMAL (PUBLIK)${C.r}`,
+    "Waktu",
+    `${C.g2}${nowStr()}${C.r}`,
+  );
+  L.push(row(d1.content, d1.vis));
+
+  const safeReason = String(reason || "Pemeliharaan").substring(0, 26);
+  const d2 = dual(
+    "Alasan",
+    `${C.gold}${safeReason}${C.r}`,
+    "Gateway Status",
+    enabled ? `${C.err}DND (Maintenance)${C.r}` : `${C.ok}Online (Rotasi)${C.r}`,
+  );
+  L.push(row(d2.content, d2.vis));
+
+  L.push(blank());
+  L.push(hLine(BL, BR, HL, borderColor));
+
+  console.log("\n" + L.join("\n") + "\n");
+};
+
 module.exports = {
   displayBootScreen,
   displayDashboardBootScreen,
   displayClusterBootScreen,
+  displayShutdownScreen,
+  displayMaintenanceScreen,
 };

@@ -75,19 +75,21 @@ const sendErrorLog = async (err, type, client) => {
   if (env.OWNER_IDS && env.OWNER_IDS.length > 0 && client) {
     try {
       const ownerId = env.OWNER_IDS[0];
-      const owner = await client.users.fetch(ownerId).catch(() => null);
+      if (ownerId && /^\d{17,20}$/.test(String(ownerId))) {
+        const owner = await client.users.fetch(ownerId).catch(() => null);
 
-      if (owner) {
-        const errEmbed = new EmbedBuilder()
-          .setColor("#00FFFF")
-          .setTitle(`⚠️ Naura Versi ${env.BOT_VERSION || "2.3.0"} - ${type}`)
-          .setDescription(
-            `\`\`\`js\n${String(err?.stack || err).substring(0, 4000)}\n\`\`\``,
-          )
-          .setFooter({ text: ui.getFooter("core") })
-          .setTimestamp();
+        if (owner) {
+          const errEmbed = new EmbedBuilder()
+            .setColor("#00FFFF")
+            .setTitle(`⚠️ Naura Versi ${env.BOT_VERSION || "2.3.0"} - ${type}`)
+            .setDescription(
+              `\`\`\`js\n${String(err?.stack || err).substring(0, 4000)}\n\`\`\``,
+            )
+            .setFooter({ text: ui.getFooter("core") })
+            .setTimestamp();
 
-        await owner.send({ embeds: [errEmbed] }).catch(() => {});
+          await owner.send({ embeds: [errEmbed] }).catch(() => {});
+        }
       }
     } catch (e) {
       logger.error(

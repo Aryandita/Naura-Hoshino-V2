@@ -12,6 +12,8 @@ const { addItemsAtomic } = require("../survival/engines/inventoryHelper");
 
 const clusterManager = require("./clusterManager");
 
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 /**
  * Membungkus task cron dengan proteksi mutex (hanya 1 eksekusi aktif bersamaan).
  * Memastikan flag selalu di-reset pada finally block agar tidak terjadi deadlock.
@@ -105,8 +107,14 @@ module.exports = {
       });
 
       for (const record of expiredTempbans) {
+        if (!record.userId || !SNOWFLAKE_REGEX.test(String(record.userId)) || !record.guildId || !SNOWFLAKE_REGEX.test(String(record.guildId))) {
+          record.isTempBanned = false;
+          record.tempbanExpiresAt = null;
+          await record.save({ fields: ["isTempBanned", "tempbanExpiresAt"] });
+          continue;
+        }
         try {
-          const guild = await client.guilds.fetch(record.guildId);
+          const guild = await client.guilds.fetch(record.guildId).catch(() => null);
           if (guild) {
             await guild.members
               .unban(record.userId, "Masa Tempban selesai")
@@ -138,8 +146,12 @@ module.exports = {
       });
 
       for (const lease of expiredLeases) {
+        if (!lease.userId || !SNOWFLAKE_REGEX.test(String(lease.userId)) || !lease.guildId || !SNOWFLAKE_REGEX.test(String(lease.guildId))) {
+          await lease.destroy();
+          continue;
+        }
         try {
-          const guild = await client.guilds.fetch(lease.guildId);
+          const guild = await client.guilds.fetch(lease.guildId).catch(() => null);
           if (guild) {
             const member = await guild.members
               .fetch(lease.userId)
@@ -181,6 +193,10 @@ module.exports = {
       });
 
       for (const rem of expiredReminders) {
+        if (!rem.userId || !SNOWFLAKE_REGEX.test(String(rem.userId))) {
+          await rem.destroy();
+          continue;
+        }
         try {
           const payload = buildContainerV2({
             accentColorHex: ui.getColor("primary"),
@@ -220,6 +236,7 @@ module.exports = {
       });
 
       for (const survival of fullStaminaUsers) {
+        if (!survival.userId || !SNOWFLAKE_REGEX.test(String(survival.userId))) continue;
         const profile = survival.UserProfile;
         if (!profile) continue;
 
@@ -265,6 +282,7 @@ module.exports = {
       });
 
       for (const cafe of readyCafes) {
+        if (!cafe.userId || !SNOWFLAKE_REGEX.test(String(cafe.userId))) continue;
         const profile = await cacheManager.getUserProfile(cafe.userId);
         const prefs = profile?.notification_prefs || {};
         if (prefs.idle_revenue && !prefs.sent_idle_revenue) {
@@ -305,6 +323,7 @@ module.exports = {
             },
           });
           for (const holder of holders) {
+            if (!holder.userId || !SNOWFLAKE_REGEX.test(String(holder.userId))) continue;
             const profile = await cacheManager.getUserProfile(holder.userId);
             const prefs = profile?.notification_prefs || {};
             if (prefs.stock_alert && !prefs.sent_stock_alert) {
@@ -339,6 +358,7 @@ module.exports = {
       const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
       for (const survival of survivals) {
+        if (!survival.userId || !SNOWFLAKE_REGEX.test(String(survival.userId))) continue;
         const state = survival.rpg_state || {};
         const lastVote = state.last_vote_at
           ? new Date(state.last_vote_at).getTime()
@@ -374,6 +394,7 @@ module.exports = {
       });
 
       for (const gh of greenhouses) {
+        if (!gh.userId || !SNOWFLAKE_REGEX.test(String(gh.userId))) continue;
         if (!gh.slots || !Array.isArray(gh.slots) || gh.slots.length === 0) continue;
         await farmWebhook.checkAndNotifyHarvest(gh.userId, gh);
       }
@@ -390,6 +411,7 @@ module.exports = {
       });
 
       for (const profile of profiles) {
+        if (!profile.userId || !SNOWFLAKE_REGEX.test(String(profile.userId))) continue;
         const prefs = profile.notification_prefs || {};
 
         if (prefs.quest_reset) {
@@ -509,14 +531,17 @@ module.exports = {
       const birthdaysToday = await UserBirthday.findAll({
         where: { day: d, month: m },
       });
-      if (birthdaysToday.length === 0) return;
+      const validBirthdays = birthdaysToday.filter(
+        (b) => b.userId && SNOWFLAKE_REGEX.test(String(b.userId)),
+      );
+      if (validBirthdays.length === 0) return;
 
       // Kumpulkan semua userId birthday hari ini untuk batch fetch
-      const birthdayUserIds = birthdaysToday.map((b) => b.userId);
+      const birthdayUserIds = validBirthdays.map((b) => b.userId);
 
       // Pre-render birthday card & serahkan birthday gift box via DM personal untuk setiap user
       const userCardMap = new Map();
-      for (const bday of birthdaysToday) {
+      for (const bday of validBirthdays) {
         try {
           const user = await client.users.fetch(bday.userId).catch(() => null);
           if (!user) continue;
@@ -751,6 +776,8 @@ module.exports = {
           await profile.save({ fields: ["isPremium", "premiumUntil"] });
           await cacheManager.invalidateUserProfile(profile.userId);
 
+          if (!profile.userId || !SNOWFLAKE_REGEX.test(String(profile.userId))) continue;
+
           // Kirim DM notifikasi expired
           const user = await client.users
             .fetch(profile.userId)
@@ -810,6 +837,7 @@ module.exports = {
 
       for (const profile of expiringUsers) {
         try {
+          if (!profile.userId || !SNOWFLAKE_REGEX.test(String(profile.userId))) continue;
           const user = await client.users
             .fetch(profile.userId)
             .catch(() => null);
@@ -1025,10 +1053,11 @@ module.exports = {
         );
         // Siarkan notifikasi penghargaan ke pemenang undian
         try {
-          const winnerUser = await client.users
-            .fetch(result.winnerUserId)
-            .catch(() => null);
-          if (winnerUser) {
+          if (result.winnerUserId && SNOWFLAKE_REGEX.test(String(result.winnerUserId))) {
+            const winnerUser = await client.users
+              .fetch(result.winnerUserId)
+              .catch(() => null);
+            if (winnerUser) {
             const notifPayload = buildContainerV2({
               accentColorHex: "#F59E0B",
               authorName: "Naura Wilds • Astral Lottery",
@@ -1044,6 +1073,7 @@ module.exports = {
               footerText: "Naura Hoshino Ecosystem • Astral Lottery",
             });
             await winnerUser.send(notifPayload).catch(() => {});
+            }
           }
         } catch (notifErr) {
           logger.warn(
@@ -1062,6 +1092,7 @@ module.exports = {
         attributes: ["userId"],
       });
       for (const u of lowStaminaUsers) {
+        if (!u.userId || !SNOWFLAKE_REGEX.test(String(u.userId))) continue;
         await cacheManager.updateUserSurvival(u.userId, { stamina: 100 });
       }
       logger.info(

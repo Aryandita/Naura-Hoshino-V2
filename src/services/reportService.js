@@ -9,6 +9,8 @@ const mongoManager = require("../managers/mongoManager");
 const UserReport = require("../models/mongo/UserReport");
 const { ValidationError, EntityNotFoundError } = require("../errors/DomainError");
 
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 // In-memory fallback untuk testing atau saat koneksi MongoDB offline
 const inMemoryReports = new Map();
 // Penyimpanan sementara lampiran dari slash command sebelum modal di-submit (TTL 10 menit)
@@ -146,6 +148,7 @@ async function createReport({
     }
 
     for (const ownerId of ownerIds) {
+      if (!ownerId || !SNOWFLAKE_REGEX.test(String(ownerId))) continue;
       try {
         const ownerUser = await client.users.fetch(ownerId).catch(() => null);
         if (ownerUser) {
@@ -246,7 +249,7 @@ async function replyToReport(reportId, replyText, repliedBy = "Owner", client = 
 
   // Kirim DM ke pelapor asli
   let deliveredToUser = false;
-  if (client && report.userId) {
+  if (client && report.userId && SNOWFLAKE_REGEX.test(String(report.userId))) {
     try {
       const reporter = await client.users.fetch(report.userId).catch(() => null);
       if (reporter) {

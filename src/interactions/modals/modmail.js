@@ -4,6 +4,8 @@ const { EmbedBuilder, MessageFlags } = require("discord.js");
 const ModMail = require("../../models/ModMail");
 const ui = require("../../config/ui");
 
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 async function submitReply(interaction, client) {
   const replyText = interaction.fields.getTextInputValue("mm_text_input");
   const isAnon = interaction.customId === "mm_modal_anon";
@@ -15,6 +17,14 @@ async function submitReply(interaction, client) {
     return ui.sendError(
       interaction,
       `${ui.getEmoji("error") || "\u274c"} Gagal: Tiket sudah ditutup.`,
+      true,
+    );
+  }
+
+  if (!ticket.userId || !SNOWFLAKE_REGEX.test(String(ticket.userId))) {
+    return ui.sendError(
+      interaction,
+      `${ui.getEmoji("error") || "\u274c"} Gagal: ID user tiket tidak valid.`,
       true,
     );
   }

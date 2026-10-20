@@ -45,6 +45,22 @@ function cloneJson(value) {
   }
 }
 
+// Normalisasi dan validasi identifier user untuk mencegah SequelizeValidationError
+// saat menerima objek Discord User, string kosong, null, atau undefined.
+function cleanUserId(userId) {
+  if (!userId) return null;
+  if (typeof userId === "object") {
+    userId = userId.id || userId.userId || userId.user_id || null;
+    if (!userId) return null;
+  }
+  const clean = String(userId).trim();
+  if (!clean || clean === "null" || clean === "undefined" || clean === "NaN") {
+    return null;
+  }
+  return clean;
+}
+
+
 /**
  * CacheManager: Read-Through and Write-Behind Caching Layer
  *
@@ -87,7 +103,8 @@ class CacheManager {
   // ✍️ ANTREAN TULIS (WRITE-BEHIND)
   // ==========================================
 
-  _enqueue(queue, userId, { set = null, inc = null } = {}) {
+  _enqueue(queue, rawUserId, { set = null, inc = null } = {}) {
+    const userId = cleanUserId(rawUserId);
     if (!userId) return;
     if (!queue.has(userId)) queue.set(userId, { set: {}, inc: {} });
     const entry = queue.get(userId);
@@ -176,7 +193,8 @@ class CacheManager {
    * `saldo >= nominal` dievaluasi terhadap nilai lama di database, sementara
    * penambahan yang baru saja terjadi masih menunggu di antrean.
    */
-  async flushUser(userId) {
+  async flushUser(rawUserId) {
+    const userId = cleanUserId(rawUserId);
     if (!userId) return;
     await this._flushOne(this.writeQueue, UserProfile, "UserProfile", userId);
     await this._flushOne(
@@ -284,7 +302,8 @@ class CacheManager {
   }
 
   /** Helper bersama untuk increment atomik pada model mana pun. */
-  async _increment(userId, deltas, { cacheKey, ttl, loader, queue }) {
+  async _increment(rawUserId, deltas, { cacheKey, ttl, loader, queue }) {
+    const userId = cleanUserId(rawUserId);
     if (!userId || !deltas || typeof deltas !== "object") return false;
 
     const cleanDeltas = {};
@@ -328,7 +347,8 @@ class CacheManager {
    *
    * @returns {Promise<{ ok: boolean, amount?: number, reason?: string }>}
    */
-  async _debit(userId, field, amount, { Model, cacheKey, label }) {
+  async _debit(rawUserId, field, amount, { Model, cacheKey, label }) {
+    const userId = cleanUserId(rawUserId);
     const value = Math.floor(Number(amount) || 0);
     if (!userId || !field) return { ok: false, reason: "invalid" };
     if (value < 0) return { ok: false, reason: "invalid" };
@@ -401,7 +421,8 @@ class CacheManager {
    *   misalnya ketika barang yang diminta ternyata tidak cukup.
    * @returns {Promise<{ ok: boolean, value?: any, reason?: string }>}
    */
-  async _mutateJson(userId, field, mutator, { Model, cacheKey, label }) {
+  async _mutateJson(rawUserId, field, mutator, { Model, cacheKey, label }) {
+    const userId = cleanUserId(rawUserId);
     if (!userId || !field || typeof mutator !== "function")
       return { ok: false, reason: "invalid" };
     if (!SAFE_COLUMN.test(field)) return { ok: false, reason: "invalid_field" };
@@ -418,18 +439,27 @@ class CacheManager {
       const outcome = await sequelize.transaction(async (t) => {
         let row = await Model.findOne({
           where: { userId },
+          paranoid: false,
           transaction: t,
           ...rowLock,
         });
         if (!row) {
-          await Model.findOrCreate({ where: { userId }, transaction: t });
+          await Model.findOrCreate({
+            where: { userId },
+            paranoid: false,
+            transaction: t,
+          });
           row = await Model.findOne({
             where: { userId },
+            paranoid: false,
             transaction: t,
             ...rowLock,
           });
         }
         if (!row) return { ok: false, reason: "no_row" };
+        if (row.deletedAt) {
+          await row.restore({ transaction: t });
+        }
 
         const next = await mutator(cloneJson(row[field]));
         if (next === null || next === undefined)
@@ -497,7 +527,8 @@ class CacheManager {
    * @param {string} userId - ID Discord User
    * @returns {Promise<Object>} Data profil pengguna (JSON)
    */
-  async getUserProfile(userId) {
+  async getUserProfile(rawUserId) {
+    const userId = cleanUserId(rawUserId);
     if (!userId) return null;
     const cacheKey = `user:profile:${userId}`;
 
@@ -507,8 +538,16 @@ class CacheManager {
       if (cachedProfile) return cachedProfile;
 
       // 2. Jika tidak ada di Redis, ambil dari Database Utama (findOrCreate)
-      const [dbProfile] = await UserProfile.findOrCreate({ where: { userId } });
+      // Gunakan paranoid: false agar record yang pernah di-soft-delete dapat dipulihkan
+      // tanpa memicu SequelizeUniqueConstraintError pada primary key userId.
+      const [dbProfile] = await UserProfile.findOrCreate({
+        where: { userId },
+        paranoid: false,
+      });
       if (dbProfile) {
+        if (dbProfile.deletedAt) {
+          await dbProfile.restore();
+        }
         const profileData = dbProfile.toJSON();
         await redisManager.setCache(cacheKey, profileData, PROFILE_TTL);
         return profileData;
@@ -516,12 +555,20 @@ class CacheManager {
 
       return null;
     } catch (error) {
-      logger.error("[CacheManager] Error getUserProfile:", error.message);
+      const errMsg =
+        error?.errors && Array.isArray(error.errors)
+          ? error.errors.map((e) => `${e.path}: ${e.message}`).join(", ")
+          : (error?.message || error);
+      logger.error(`[CacheManager] Error getUserProfile (${userId}):`, errMsg);
       // Fallback: Jika redis down, tembak DB langsung
       try {
         const [dbProfile] = await UserProfile.findOrCreate({
           where: { userId },
+          paranoid: false,
         });
+        if (dbProfile && dbProfile.deletedAt) {
+          await dbProfile.restore();
+        }
         return dbProfile ? dbProfile.toJSON() : null;
       } catch (dbError) {
         return null;
@@ -540,7 +587,8 @@ class CacheManager {
    * @param {any} [maybeValue] - Nilai jika parameter kedua adalah nama kolom
    * @returns {Promise<boolean>} Status keberhasilan cache
    */
-  async updateUserProfile(userId, fieldOrData, maybeValue) {
+  async updateUserProfile(rawUserId, fieldOrData, maybeValue) {
+    const userId = cleanUserId(rawUserId);
     if (!userId || fieldOrData === undefined || fieldOrData === null)
       return false;
     let updateData = fieldOrData;
@@ -558,7 +606,11 @@ class CacheManager {
           const [newDbProfile] = await UserProfile.findOrCreate({
             where: { userId },
             defaults: updateData,
+            paranoid: false,
           });
+          if (newDbProfile && newDbProfile.deletedAt) {
+            await newDbProfile.restore();
+          }
           profile = newDbProfile.toJSON();
         } catch (e) {
           return false;
@@ -655,8 +707,14 @@ class CacheManager {
       const cached = await redisManager.getCache(cacheKey);
       if (cached) return cached;
 
-      const [db] = await GuildSettings.findOrCreate({ where: { guildId } });
+      const [db] = await GuildSettings.findOrCreate({
+        where: { guildId },
+        paranoid: false,
+      });
       if (db) {
+        if (db.deletedAt) {
+          await db.restore();
+        }
         const settingsData = db.toJSON();
         await redisManager.setCache(cacheKey, settingsData, GUILD_TTL);
         return settingsData;
@@ -666,7 +724,13 @@ class CacheManager {
     } catch (error) {
       logger.error("[CacheManager] Error getGuildSettings:", error.message);
       try {
-        const [db] = await GuildSettings.findOrCreate({ where: { guildId } });
+        const [db] = await GuildSettings.findOrCreate({
+          where: { guildId },
+          paranoid: false,
+        });
+        if (db && db.deletedAt) {
+          await db.restore();
+        }
         return db ? db.toJSON() : null;
       } catch (dbError) {
         return null;
@@ -729,7 +793,8 @@ class CacheManager {
    * @param {string} userId - ID Discord User
    * @returns {Promise<Object>} Data survival pengguna (JSON)
    */
-  async getUserSurvival(userId) {
+  async getUserSurvival(rawUserId) {
+    const userId = cleanUserId(rawUserId);
     if (!userId) return null;
     const cacheKey = `user:survival:${userId}`;
 
@@ -737,17 +802,33 @@ class CacheManager {
       const cached = await redisManager.getCache(cacheKey);
       if (cached) return cached;
 
-      const [db] = await UserSurvival.findOrCreate({ where: { userId } });
+      const [db] = await UserSurvival.findOrCreate({
+        where: { userId },
+        paranoid: false,
+      });
       if (db) {
+        if (db.deletedAt) {
+          await db.restore();
+        }
         const data = db.toJSON();
         await redisManager.setCache(cacheKey, data, SURVIVAL_TTL);
         return data;
       }
       return null;
     } catch (error) {
-      logger.error("[CacheManager] Error getUserSurvival:", error.message);
+      const errMsg =
+        error?.errors && Array.isArray(error.errors)
+          ? error.errors.map((e) => `${e.path}: ${e.message}`).join(", ")
+          : (error?.message || error);
+      logger.error(`[CacheManager] Error getUserSurvival (${userId}):`, errMsg);
       try {
-        const [db] = await UserSurvival.findOrCreate({ where: { userId } });
+        const [db] = await UserSurvival.findOrCreate({
+          where: { userId },
+          paranoid: false,
+        });
+        if (db && db.deletedAt) {
+          await db.restore();
+        }
         return db ? db.toJSON() : null;
       } catch {
         return null;
@@ -763,7 +844,8 @@ class CacheManager {
    * @param {Object|string} fieldOrData - Data yang diupdate atau nama kolom
    * @param {any} [maybeValue] - Nilai jika parameter kedua adalah nama kolom
    */
-  async updateUserSurvival(userId, fieldOrData, maybeValue) {
+  async updateUserSurvival(rawUserId, fieldOrData, maybeValue) {
+    const userId = cleanUserId(rawUserId);
     if (!userId || fieldOrData === undefined || fieldOrData === null)
       return false;
     let updateData = fieldOrData;
@@ -855,36 +937,6 @@ class CacheManager {
   }
 
   /**
-   * Mengambil data GuildSettings dengan Read-Through cache.
-   * @param {string} guildId
-   */
-  async getGuildSettings(guildId) {
-    if (!guildId) return null;
-    const cacheKey = `guild:settings:${guildId}`;
-
-    try {
-      const cached = await redisManager.getCache(cacheKey);
-      if (cached) return cached;
-
-      const [dbGuild] = await GuildSettings.findOrCreate({ where: { guildId } });
-      if (dbGuild) {
-        const guildData = dbGuild.toJSON();
-        await redisManager.setCache(cacheKey, guildData, GUILD_TTL);
-        return guildData;
-      }
-      return null;
-    } catch (error) {
-      logger.error("[CacheManager] Error getGuildSettings:", error.message);
-      try {
-        const [dbGuild] = await GuildSettings.findOrCreate({ where: { guildId } });
-        return dbGuild ? dbGuild.toJSON() : null;
-      } catch (dbError) {
-        return null;
-      }
-    }
-  }
-
-  /**
    * Alias untuk incrementUserProfile.
    */
   async creditUserProfile(userId, fieldOrDeltas, maybeAmount) {
@@ -923,7 +975,8 @@ class CacheManager {
    * Invalidate UserProfile cache (L1 write-behind flush + Redis purge).
    * @param {string} userId
    */
-  async invalidateUserProfile(userId) {
+  async invalidateUserProfile(rawUserId) {
+    const userId = cleanUserId(rawUserId);
     if (!userId) return;
     await this.flushUser(userId).catch(() => {});
     await redisManager.deleteCache(`user:profile:${userId}`).catch(() => {});
@@ -933,7 +986,8 @@ class CacheManager {
    * Invalidate UserSurvival cache (L1 write-behind flush + Redis purge).
    * @param {string} userId
    */
-  async invalidateUserSurvival(userId) {
+  async invalidateUserSurvival(rawUserId) {
+    const userId = cleanUserId(rawUserId);
     if (!userId) return;
     await this.flushUser(userId).catch(() => {});
     await redisManager.deleteCache(`user:survival:${userId}`).catch(() => {});

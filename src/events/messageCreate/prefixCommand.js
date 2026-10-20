@@ -300,6 +300,23 @@ module.exports = async function handlePrefixCommand(message, client) {
   // Guard Clause 2: Awalan prefix tanpa nama command
   if (!targetCommandName) return true;
 
+  // Guard Clause 2.5: Bot sedang dalam proses shutdown/maintenance
+  const isOwnerUser = env.OWNER_IDS && env.OWNER_IDS.includes(message.author.id);
+  if (client.isShuttingDown || (client.isMaintenance && !isOwnerUser)) {
+    const msg = client.isShuttingDown
+      ? "Naura sedang dalam proses shutdown / restart server. Mohon tunggu beberapa saat ya!"
+      : (client.maintenanceReason || "Naura sedang dalam mode pemeliharaan sistem. Hanya Developer yang dapat berinteraksi saat ini.");
+    const errPayload = buildErrorContainerV2({
+      title: client.isShuttingDown ? "Sedang Restart / Shutdown" : "Mode Pemeliharaan Sistem",
+      errorMessage: msg,
+      description: msg,
+      footerText: "Naura Hoshino Ecosystem • Maintenance Guard",
+      lang: message.localeLang || "id",
+    });
+    await message.reply(errPayload).catch(() => {});
+    return true;
+  }
+
   // Resolusi Shortcut Alias Pengguna
   try {
     const aliasService = require("../../services/aliasService");

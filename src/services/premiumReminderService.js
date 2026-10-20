@@ -14,6 +14,8 @@ const cacheManager = require("../managers/cacheManager");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
 
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 const REMINDER_WINDOW_HOURS = 24;
 const REMINDER_WINDOW_MS = REMINDER_WINDOW_HOURS * 60 * 60 * 1000;
 
@@ -103,7 +105,7 @@ class PremiumReminderService {
    * @returns {Promise<boolean>}
    */
   async sendExpirationReminder(client, userId, expiryDate, tier, username) {
-    if (!client || !userId || !expiryDate) return false;
+    if (!client || !userId || !SNOWFLAKE_REGEX.test(String(userId)) || !expiryDate) return false;
 
     try {
       const user = await client.users.fetch(userId).catch(() => null);
@@ -164,6 +166,10 @@ class PremiumReminderService {
 
       for (const profile of profiles) {
         const userId = profile.userId;
+        if (!userId || !SNOWFLAKE_REGEX.test(String(userId))) {
+          stats.skipped++;
+          continue;
+        }
         const expiryDate = new Date(profile.premiumUntil);
         const expiryIso = expiryDate.toISOString();
 

@@ -71,11 +71,13 @@ const BUILDERS = {
   redeemed: redeemedPayload,
 };
 
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 // Mengembalikan true bila DM benar-benar terkirim, agar pemanggilnya bisa
 // memberi tahu owner ketika DM user tertutup.
 async function sendPremiumDM(client, userId, type, data = {}) {
   const builder = BUILDERS[type];
-  if (!builder || !client) return false;
+  if (!builder || !client || !userId || !SNOWFLAKE_REGEX.test(String(userId))) return false;
 
   try {
     const user = await client.users.fetch(userId).catch(() => null);

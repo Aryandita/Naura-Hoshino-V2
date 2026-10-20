@@ -444,5 +444,9 @@
     "btn_claim_weekly": "Klaim Misi Mingguan",
     "btn_view_weekly": "Papan Mingguan",
     "btn_claim_grand": "Buka Peti Berkah"
+  },
+  "modmail": {
+    "invalid_user_id_title": "ID Pengguna Tidak Valid",
+    "invalid_user_id": "Tiket ini tidak memiliki ID pengguna Discord yang valid, sehingga balasan tidak dapat diteruskan ke DM pengguna."
   }
 }

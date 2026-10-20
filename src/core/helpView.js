@@ -11,6 +11,7 @@ const {
 const fs = require("node:fs");
 
 const ui = require("../config/ui");
+const env = require("../config/env");
 const { getColorInt } = require("../config/tokens/designTokens");
 const languageManager = require("../managers/languageManager");
 const commandRegistry = require("../services/commandRegistry");
@@ -348,6 +349,10 @@ function buildHelpPayload(
         : "• 🎮 **/minigame** : Buka pusat game santai (TicTacToe, RPS, Trivia, Tebak Kata).",
       "",
       isEn
+        ? `⌨️ **Prefix Support:** You can also type commands with the \`${env.PREFIX || "n!"}\` prefix (e.g. \`${env.PREFIX || "n!"}play\`, \`${env.PREFIX || "n!"}help\`, \`${env.PREFIX || "n!"}rank\`, \`${env.PREFIX || "n!"}ping\`).`
+        : `⌨️ **Dukungan Prefix:** Selain Slash Command, kamu juga bisa mengetik langsung dengan prefix \`${env.PREFIX || "n!"}\` (contoh: \`${env.PREFIX || "n!"}play\`, \`${env.PREFIX || "n!"}help\`, \`${env.PREFIX || "n!"}rank\`, \`${env.PREFIX || "n!"}ping\`).`,
+      "",
+      isEn
         ? "💡 *Use the dropdown menu below to explore all 13 modules, or look up any command with `/core help command:<name>`.*"
         : "💡 *Pilih kategori di menu dropdown di bawah untuk menjelajahi 13 modul lengkap, atau cari perintah instan dengan `/core help command:<nama>`.*",
     ].join("\n");
@@ -547,11 +552,12 @@ function handleCommandDetailHelp(query, langInput) {
   const categoryName = (detail.category || "utility").toUpperCase();
   const desc = detail.description || (isEn ? "No description provided." : "Tidak ada deskripsi.");
 
+  const prefix = env.PREFIX || "n!";
   const lines = [
     `**${isEn ? "Description" : "Deskripsi"}:**\n> ${desc}`,
     "",
     `**${isEn ? "Syntax" : "Format Sintaks"}:**`,
-    `\`\`\`bash\n${detail.syntax}\n\`\`\``,
+    `\`\`\`bash\nSlash : ${detail.syntax}\nPrefix: ${prefix}${detail.name}\n\`\`\``,
   ];
 
   if (Array.isArray(detail.options) && detail.options.length > 0) {
@@ -586,14 +592,16 @@ function handleCommandDetailHelp(query, langInput) {
   }
 
   if (Array.isArray(detail.aliases) && detail.aliases.length > 0) {
-    lines.push(`**${isEn ? "Aliases" : "Alias Singkat"}:** ${detail.aliases.map((a) => `\`/${a}\``).join(", ")}`);
+    const aliasSlash = detail.aliases.map((a) => `\`/${a}\``).join(", ");
+    const aliasPrefix = detail.aliases.map((a) => `\`${prefix}${a}\``).join(", ");
+    lines.push(`**${isEn ? "Aliases" : "Alias Singkat"}:** ${aliasSlash} · (Prefix: ${aliasPrefix})`);
     lines.push("");
   }
 
   lines.push(
     isEn
-      ? "-# *Tip: Use `/core help` to return to the interactive guide.*"
-      : "-# *Tips: Gunakan `/core help` untuk kembali ke panduan interaktif.*",
+      ? "-# *Tip: Use `/core help` or `" + prefix + "help` to return to the interactive guide.*"
+      : "-# *Tips: Gunakan `/core help` atau `" + prefix + "help` untuk kembali ke panduan interaktif.*",
   );
 
   return buildContainerV2({

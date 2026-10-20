@@ -6,6 +6,8 @@ const path = require("path");
 const UserTicket = require("../../models/UserTicket");
 const ui = require("../../config/ui");
 
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 module.exports = [
   {
     id: "ticket_close",
@@ -83,27 +85,31 @@ module.exports = [
         await ticket.save({ fields: ["status", "transcriptPath"] });
 
         // DM User
-        try {
-          const user = await interaction.client.users.fetch(ticket.userId);
-          if (user) {
-            const timeline = ui.ux.buildVisualTimeline({
-              steps: [
-                { label: "Isi Formulir" },
-                { label: "Verifikasi Staff" },
-                { label: "Tiket Tuntas" },
-              ],
-              currentStepIndex: 3,
-              user,
-              lang: "id",
-            });
+        if (ticket.userId && SNOWFLAKE_REGEX.test(String(ticket.userId))) {
+          try {
+            const user = await interaction.client.users
+              .fetch(ticket.userId)
+              .catch(() => null);
+            if (user) {
+              const timeline = ui.ux.buildVisualTimeline({
+                steps: [
+                  { label: "Isi Formulir" },
+                  { label: "Verifikasi Staff" },
+                  { label: "Tiket Tuntas" },
+                ],
+                currentStepIndex: 3,
+                user,
+                lang: "id",
+              });
 
-            await user.send({
-              content: `${timeline.timeline}\n*${timeline.message}*\n\nHalo ${user.username}, tiketmu (**${ticket.topic}**) di server **${interaction.guild.name}** telah ditutup. Berikut adalah transkrip percakapan selama tiket berlangsung.\n\nKamu juga bisa melihat riwayat tiketmu melalui Dashboard.`,
-              files: [attachment],
-            });
+              await user.send({
+                content: `${timeline.timeline}\n*${timeline.message}*\n\nHalo ${user.username}, tiketmu (**${ticket.topic}**) di server **${interaction.guild.name}** telah ditutup. Berikut adalah transkrip percakapan selama tiket berlangsung.\n\nKamu juga bisa melihat riwayat tiketmu melalui Dashboard.`,
+                files: [attachment],
+              });
+            }
+          } catch (err) {
+            console.error("[TicketClose] Gagal DM user:", err);
           }
-        } catch (err) {
-          console.error("[TicketClose] Gagal DM user:", err);
         }
 
         await interaction.editReply(

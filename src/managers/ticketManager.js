@@ -8,6 +8,8 @@ const { logger } = require("./logger");
 const ui = require("../config/ui");
 const { buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
 
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 /**
  * Merender daftar pesan menjadi string HTML sederhana (bisa dipercantik dengan CSS Glassmorphism)
  */
@@ -138,21 +140,23 @@ async function closeTicket(interaction, client) {
     });
 
     // 5. Kirim DM ke Pengguna dengan file HTML
-    try {
-      const owner = await client.users.fetch(ticketData.userId);
-      if (owner) {
-        const att = new AttachmentBuilder(Buffer.from(htmlStr), {
-          name: filename,
-        });
-        await owner.send({
-          content: `Halo! Tiket bantuanmu dengan topik **"${ticketData.topic}"** telah ditutup.\nBerikut adalah lampiran transkrip percakapan kita.`,
-          files: [att],
-        });
+    if (ticketData.userId && SNOWFLAKE_REGEX.test(String(ticketData.userId))) {
+      try {
+        const owner = await client.users.fetch(ticketData.userId).catch(() => null);
+        if (owner) {
+          const att = new AttachmentBuilder(Buffer.from(htmlStr), {
+            name: filename,
+          });
+          await owner.send({
+            content: `Halo! Tiket bantuanmu dengan topik **"${ticketData.topic}"** telah ditutup.\nBerikut adalah lampiran transkrip percakapan kita.`,
+            files: [att],
+          });
+        }
+      } catch (e) {
+        logger.warn(
+          `[TICKETING] Gagal mengirim transkrip via DM ke ${ticketData.userId}`,
+        );
       }
-    } catch (e) {
-      logger.warn(
-        `[TICKETING] Gagal mengirim transkrip via DM ke ${ticketData.userId}`,
-      );
     }
 
     // 6. Arsipkan dan Kunci Thread

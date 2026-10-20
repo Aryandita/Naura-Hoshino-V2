@@ -128,7 +128,7 @@ async function ensureDmAuthorized(client, userId, profile) {
   if (prefs.dm_authorized) return true;
 
   try {
-    const user = await client.users.fetch(userId);
+    const user = await client.users.fetch(userId).catch(() => null);
     if (!user) return false;
 
     const welcomePayload = buildContainerV2({
@@ -196,7 +196,7 @@ async function sendDirectNotification(client, userId, type, dataOrPayload = {}) 
     const authorized = await ensureDmAuthorized(client, userId, profile);
     if (!authorized) return false;
 
-    const user = await client.users.fetch(userId);
+    const user = await client.users.fetch(userId).catch(() => null);
     if (!user) return false;
 
     let payload;

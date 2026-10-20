@@ -444,5 +444,9 @@
     "btn_claim_weekly": "Claim Weekly Quest",
     "btn_view_weekly": "Weekly Board",
     "btn_claim_grand": "Open Blessing Chest"
+  },
+  "modmail": {
+    "invalid_user_id_title": "Invalid User ID",
+    "invalid_user_id": "This ticket does not have a valid Discord user ID, so the staff reply cannot be forwarded to the user's DM."
   }
 }

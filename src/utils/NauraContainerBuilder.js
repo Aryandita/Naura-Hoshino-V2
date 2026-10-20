@@ -527,7 +527,16 @@ function buildErrorContainerV2(opts) {
     }
   }
 
-  const title = pick(opts, "title") || t(activeLang, "common.error.title");
+  let title = pick(opts, "title") || t(activeLang, "common.error.title");
+  if (typeof title === "string" && title.trim()) {
+    const trimmedTitle = title.trim();
+    if (trimmedTitle.startsWith("err_sys_") || /^[a-z0-9_.-]+$/i.test(trimmedTitle)) {
+      const translatedTitle = t(activeLang, trimmedTitle);
+      if (translatedTitle && translatedTitle !== trimmedTitle) {
+        title = translatedTitle;
+      }
+    }
+  }
   const authorName =
     pick(opts, "authorName") ||
     t(activeLang, "container.authors.system_guard") ||

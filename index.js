@@ -33,9 +33,6 @@ const RssManager = require("./src/managers/rssManager");
 const { connectToDatabase } = require("./src/managers/dbManager");
 const { seedInitialData } = require("./src/managers/dbSeeder");
 
-// Batas waktu shutdown. Bila salah satu koneksi menggantung, proses tetap harus mati
-// sebelum panel mengirim SIGKILL dan membuang antrean tulis yang belum selesai.
-const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 let Cluster;
 try {
@@ -95,6 +92,8 @@ container.value("cacheManager", require("./src/managers/cacheManager"));
 container.value("client", client);
 container.value("musicManager", client.musicManager);
 container.value("rssManager", client.rssManager);
+const lifecycleManager = require("./src/managers/lifecycleManager");
+container.value("lifecycleManager", lifecycleManager);
 container.singleton("economyContract", () => require("./src/domain/contracts/economyContract"));
 container.singleton("survivalContract", () => require("./src/domain/contracts/survivalContract"));
 container.singleton("musicContract", () => require("./src/domain/contracts/musicContract"));
@@ -208,7 +207,10 @@ async function startBot() {
 
     if (isPrimaryShard) {
       try {
-        require("./dashboard/server.js")(container);
+        const dashboardInstance = require("./dashboard/server.js")(container);
+        if (dashboardInstance) {
+          container.value("dashboardServer", dashboardInstance);
+        }
       } catch (err) {
         logger.error(
           "\x1b[41m\x1b[37m 💥 ERROR \x1b[0m \x1b[31mGagal menjalankan Web Dashboard:\x1b[0m",
@@ -248,87 +250,35 @@ async function startBot() {
 
 startBot();
 
-let isShuttingDown = false;
-
 async function shutdown() {
-  if (isShuttingDown) return;
-  isShuttingDown = true;
-
-  console.log(
-    "\n\x1b[41m\x1b[37m \ud83d\uded1 SHUTDOWN \x1b[0m \x1b[31mMenutup semua koneksi dengan aman...\x1b[0m",
-  );
-  client.isShuttingDown = true; // Flag agar bot menolak interaksi baru
-
-  // Watchdog: apa pun yang terjadi, proses harus berakhir.
-  const forceExit = setTimeout(() => {
-    console.error(
-      `[SHUTDOWN] Melewati batas ${SHUTDOWN_TIMEOUT_MS} ms. Keluar paksa.`,
-    );
-    process.exit(1);
-  }, SHUTDOWN_TIMEOUT_MS);
-  if (forceExit.unref) forceExit.unref();
-
-  try {
-    // Penyangga XP hidup di Redis, jadi harus disetor lebih dulu selagi koneksi
-    // database dan Redis masih terbuka. Bila dilewati, XP dari lima menit
-    // terakhir sebelum restart akan hilang.
-    const xpBuffer = require("./src/leveling/xpBuffer");
-    if (xpBuffer && xpBuffer.flush) {
-      console.log("[-] Menyetorkan penyangga XP ke database...");
-      xpBuffer.stop();
-      await xpBuffer.flush();
-    }
-
-    // Kosongkan antrean tulis cache lebih dulu agar tidak ada data yang hilang.
-    const cacheManager = require("./src/managers/cacheManager");
-    if (cacheManager && cacheManager.pendingWrites > 0) {
-      console.log(
-        `[-] Menyimpan ${cacheManager.pendingWrites} data cache ke database...`,
-      );
-    }
-    if (cacheManager && cacheManager.flushAll) {
-      await cacheManager.flushAll();
-    }
-
-    if (
-      client.musicManager &&
-      client.musicManager.poru &&
-      Array.isArray(client.musicManager.poru.nodes)
-    ) {
-      console.log("[-] Menghancurkan Lavalink node(s)...");
-      client.musicManager.poru.nodes.forEach((node) => node.destroy());
-    }
-
-    console.log("[-] Menutup koneksi Discord Client...");
-    client.destroy();
-
-    const { sequelize } = require("./src/managers/dbManager");
-    if (sequelize) {
-      console.log("[-] Menutup koneksi Database MySQL/SQLite...");
-      await sequelize.close();
-    }
-
-    if (redisManager && redisManager.client) {
-      console.log("[-] Menutup koneksi Redis...");
-      await redisManager.client.quit();
-    }
-
-    if (mongoManager && mongoManager.isReady) {
-      console.log("[-] Menutup koneksi MongoDB Atlas...");
-      await mongoManager.disconnect();
-    }
-
-    clearTimeout(forceExit);
-    console.log(
-      "\x1b[42m\x1b[30m \u2728 SUCCESS \x1b[0m \x1b[32mShutdown selesai dengan aman.\x1b[0m",
-    );
-    process.exit(0);
-  } catch (error) {
-    clearTimeout(forceExit);
-    console.error("Error saat shutdown:", error);
-    process.exit(1);
-  }
+  await lifecycleManager.executeShutdown(client, {
+    user: "OS Signal",
+    reason: "Signal SIGINT/SIGTERM diterima",
+  });
 }
 
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
+
+// Listener sinyal IPC dari manager (ShardingManager / ClusterManager)
+function handleIpcMessage(msg) {
+  if (msg?.type === "MANAGER_SHUTDOWN") {
+    lifecycleManager.executeShutdown(client, {
+      user: "Cluster Manager",
+      reason: "Perintah shutdown terdistribusi dari manager",
+    });
+  } else if (msg?.type === "MAINTENANCE_SYNC") {
+    lifecycleManager.applyMaintenanceLocally(client, msg.enabled, msg.reason);
+  }
+}
+
+if (typeof process.on === "function") {
+  process.on("message", handleIpcMessage);
+}
+
+try {
+  const { parentPort } = require("node:worker_threads");
+  if (parentPort && typeof parentPort.on === "function") {
+    parentPort.on("message", handleIpcMessage);
+  }
+} catch (_) {}

@@ -48,11 +48,11 @@ test("ReportService - Validation & Report Creation", async () => {
 
   // Simulasikan 1 owner ID di env
   const originalOwners = env.OWNER_IDS;
-  env.OWNER_IDS = ["owner_dummy_999"];
+  env.OWNER_IDS = ["999999999999999999"];
 
   try {
     const res = await reportService.createReport({
-      userId: "user_pelapor_1",
+      userId: "111111111111111111",
       userName: "Budi Petualang",
       guildId: "guild_test_101",
       guildName: "Server Nusantara",
@@ -78,12 +78,12 @@ test("ReportService - Validation & Report Creation", async () => {
 
 test("ReportService - Multi-Owner Fallback on DM Error", async () => {
   const originalOwners = env.OWNER_IDS;
-  env.OWNER_IDS = ["owner_closed_dm", "owner_active_dm"];
+  env.OWNER_IDS = ["888888888888888881", "888888888888888882"];
 
   const mockClient = {
     users: {
       fetch: async (id) => {
-        if (id === "owner_closed_dm") {
+        if (id === "888888888888888881") {
           return {
             id,
             send: async () => {
@@ -103,7 +103,7 @@ test("ReportService - Multi-Owner Fallback on DM Error", async () => {
 
   try {
     const res = await reportService.createReport({
-      userId: "user_pelapor_2",
+      userId: "222222222222222222",
       userName: "Siti",
       title: "Bug memancing di danau",
       description: "Ikan tidak muncul saat strike.",
@@ -123,7 +123,7 @@ test("ReportService - Reply and Resolve Workflow", async () => {
   const mockClient = {
     users: {
       fetch: async (id) => {
-        if (id === "user_reporter_3") {
+        if (id === "333333333333333333") {
           return {
             id,
             send: async (payload) => {
@@ -139,7 +139,7 @@ test("ReportService - Reply and Resolve Workflow", async () => {
   };
 
   const created = await reportService.createReport({
-    userId: "user_reporter_3",
+    userId: "333333333333333333",
     userName: "Andi",
     title: "Tombol profile tidak muncul",
     description: "Layar blank putih setelah mengetik /profile",
