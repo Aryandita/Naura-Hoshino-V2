@@ -100,6 +100,12 @@ const survivalBackgrounds = {
   twilight_siang: BG_DIR + "/twilight.png",
   twilight_sore: BG_DIR + "/twilight.png",
   twilight_malam: BG_DIR + "/twilight.png",
+
+  // --- Lokasi Slice of Life (Naura Days: Sukamaju x Pratama) ---
+  sma_cahaya_sukamaju: BG_DIR + "/sma_cahaya_sukamaju.jpg",
+  univ_negeri_pratama: BG_DIR + "/univ_negeri_pratama.jpg",
+  rumah_masak_ningsih: BG_DIR + "/rumah_masak_ningsih.jpg",
+  dermaga_mang_ujang: BG_DIR + "/dermaga_mang_ujang.jpg",
 };
 
 module.exports = {

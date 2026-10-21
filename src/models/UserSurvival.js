@@ -9,22 +9,39 @@ const UserSurvival = sequelize.define(
       primaryKey: true,
       allowNull: false,
     },
-    starFragments: {
+    // Sukamaju Koin (SC), mata uang komunitas desa & pesisir Sukamaju (era Slice of Life).
+    sukamajuCoins: {
       type: DataTypes.INTEGER,
-      defaultValue: 500, // Modal awal 500 Naura Star Fragments
+      defaultValue: 500, // Modal awal 500 Sukamaju Koin (SC)
+    },
+    // Voucher Beasiswa (VB), mata uang prestasi & festival langka (era Slice of Life).
+    scholarshipVouchers: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     clanId: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    // Naura Coupon, mata uang paling langka. Dulu dititipkan di dalam rpg_state,
-    // tetapi kolom JSON tidak bisa dipotong lewat satu UPDATE bersyarat, sehingga
-    // kupon jadi satu-satunya mata uang yang rawan dibelanjakan dua kali.
-    // Migrasi v5 dan v6 memindahkannya ke kolom ini.
+    // Virtual alias agar kode yang memanggil nama lama (starFragments & coupons) tetap 100% kompatibel.
+    starFragments: {
+      type: DataTypes.VIRTUAL,
+      get() {
+        return this.getDataValue("sukamajuCoins");
+      },
+      set(val) {
+        this.setDataValue("sukamajuCoins", val);
+      },
+    },
     coupons: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
+      type: DataTypes.VIRTUAL,
+      get() {
+        return this.getDataValue("scholarshipVouchers");
+      },
+      set(val) {
+        this.setDataValue("scholarshipVouchers", val);
+      },
     },
     lotteryTickets: {
       type: DataTypes.INTEGER,

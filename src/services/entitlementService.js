@@ -146,10 +146,6 @@ class EntitlementService {
                         }
                     }
 
-                    await profile.save({
-                        fields,
-                        transaction: t,
-                    });
                     savedTier = profile.premium_tier || null;
                 });
                 dbSucceeded = true;
@@ -555,18 +551,19 @@ class EntitlementService {
                             profile.premiumUntil = null;
                             if (profile.rawAttributes && profile.rawAttributes.premium_tier) {
                                 profile.premium_tier = "none";
-                                await profile.save({
-                                    fields: ["isPremium", "premiumUntil", "premium_tier"],
-                                    transaction: t,
-                                });
-                            } else {
-                                await profile.save({
-                                    fields: ["isPremium", "premiumUntil"],
-                                    transaction: t,
-                                });
                             }
+                            // Catat perubahan di instance untuk audit, tetapi penulisan
+                            // sebenarnya dilakukan via cacheManager di bawah (write-behind).
                         });
                     } catch (_) {}
+                }
+
+                if (typeof cacheManager.updateUserProfile === "function") {
+                    await cacheManager.updateUserProfile(userId, {
+                        isPremium: false,
+                        premiumUntil: null,
+                        premium_tier: "none",
+                    }).catch(() => {});
                 }
 
                 if (typeof cacheManager.invalidateUserProfile === "function") {

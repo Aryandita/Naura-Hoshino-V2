@@ -23,11 +23,11 @@ const {
 } = require("./currency");
 
 test("tiga mata uang utama terdaftar dengan kolom yang benar", () => {
-  assert.equal(CURRENCIES[FRAGMENT].field, "starFragments");
+  assert.equal(CURRENCIES[FRAGMENT].field, "sukamajuCoins");
   assert.equal(CURRENCIES[FRAGMENT].owner, "survival");
-  assert.equal(CURRENCIES[COIN].field, "economy_wallet");
+  assert.equal(CURRENCIES[COIN].field, "pratamaDollars");
   assert.equal(CURRENCIES[COIN].owner, "profile");
-  assert.equal(CURRENCIES[COUPON].field, "coupons");
+  assert.equal(CURRENCIES[COUPON].field, "scholarshipVouchers");
   assert.equal(CURRENCIES[COUPON].owner, "survival");
 });
 

@@ -20,6 +20,17 @@ const GUILD_TTL = 300; // 5 menit
 // nama kolom dinamis menyusup ke dalam ekspresi SQL.
 const SAFE_COLUMN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
+// Alias nama kolom mata uang lama ke kolom kanonikal era Slice of Life
+const CURRENCY_COLUMN_ALIASES = {
+  starFragments: "sukamajuCoins",
+  coupons: "scholarshipVouchers",
+  economy_wallet: "pratamaDollars",
+};
+
+function resolveCanonicalColumn(field) {
+  return CURRENCY_COLUMN_ALIASES[field] || field;
+}
+
 function quoteColumn(field) {
   try {
     return sequelize.getQueryInterface().quoteIdentifier(field);
@@ -319,6 +330,10 @@ class CacheManager {
       if (current) {
         for (const [field, delta] of Object.entries(cleanDeltas)) {
           current[field] = (Number(current[field]) || 0) + delta;
+          const canonical = CURRENCY_COLUMN_ALIASES[field];
+          if (canonical) {
+            current[canonical] = (Number(current[canonical]) || 0) + delta;
+          }
         }
         await redisManager.setCache(cacheKey, current, ttl);
       }
@@ -347,9 +362,10 @@ class CacheManager {
    *
    * @returns {Promise<{ ok: boolean, amount?: number, reason?: string }>}
    */
-  async _debit(rawUserId, field, amount, { Model, cacheKey, label }) {
+  async _debit(rawUserId, rawField, amount, { Model, cacheKey, label }) {
     const userId = cleanUserId(rawUserId);
     const value = Math.floor(Number(amount) || 0);
+    const field = resolveCanonicalColumn(rawField);
     if (!userId || !field) return { ok: false, reason: "invalid" };
     if (value < 0) return { ok: false, reason: "invalid" };
     if (value === 0) return { ok: true, amount: 0 };

@@ -13,8 +13,17 @@ const UserProfile = sequelize.define(
     afk_reason: { type: DataTypes.STRING, allowNull: true },
     afk_timestamp: { type: DataTypes.DATE, allowNull: true },
 
-    // --- ECONOMY ---
-    economy_wallet: { type: DataTypes.INTEGER, defaultValue: 0 },
+    // --- ECONOMY (Slice of Life: Pratama Dollar & Banking) ---
+    pratamaDollars: { type: DataTypes.INTEGER, defaultValue: 0 },
+    economy_wallet: {
+      type: DataTypes.VIRTUAL,
+      get() {
+        return this.getDataValue("pratamaDollars");
+      },
+      set(val) {
+        this.setDataValue("pratamaDollars", val);
+      },
+    },
     economy_bank: { type: DataTypes.INTEGER, defaultValue: 0 },
     economy_lastInterest: { type: DataTypes.DATE, allowNull: true },
     economy_deposit: {

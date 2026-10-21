@@ -47,32 +47,32 @@ const LEGACY_COUPON_KEY = "coupons";
 const CURRENCIES = {
   [FRAGMENT]: {
     kind: FRAGMENT,
-    name: "Naura Star Fragment",
-    short: "NSF",
-    emojiKey: "nsf",
+    name: "Sukamaju Koin",
+    short: "SC",
+    emojiKey: "sc",
     emojiFallback: EMOJI[FRAGMENT].raw,
-    field: "starFragments",
+    field: "sukamajuCoins",
+    legacyField: "starFragments",
     owner: "survival",
   },
   [COIN]: {
     kind: COIN,
-    name: "Naura Coin",
-    short: "Coin",
-    emojiKey: "coin",
+    name: "Pratama Dollar",
+    short: "PD",
+    emojiKey: "pd",
     emojiFallback: EMOJI[COIN].raw,
-    field: "economy_wallet",
+    field: "pratamaDollars",
+    legacyField: "economy_wallet",
     owner: "profile",
   },
   [COUPON]: {
     kind: COUPON,
-    name: "Naura Coupon",
-    short: "Coupon",
-    emojiKey: "coupon",
+    name: "Voucher Beasiswa",
+    short: "VB",
+    emojiKey: "vb",
     emojiFallback: EMOJI[COUPON].raw,
-    // Sejak migrasi v5, kupon punya kolom angka sendiri di UserSurvivals.
-    // Sebelumnya ia menumpang di dalam rpg_state, dan itu membuatnya jadi
-    // satu-satunya mata uang yang dipotong dengan pola baca-ubah-tulis.
-    field: "coupons",
+    field: "scholarshipVouchers",
+    legacyField: "coupons",
     owner: "survival",
   },
 };
@@ -147,6 +147,8 @@ function stateOf(survival) {
  */
 function couponBalanceOf(survival) {
   const row = survival || {};
+  if (row.scholarshipVouchers !== undefined && row.scholarshipVouchers !== null)
+    return Number(row.scholarshipVouchers) || 0;
   if (row.coupons !== undefined && row.coupons !== null)
     return Number(row.coupons) || 0;
   return Number(stateOf(row)[LEGACY_COUPON_KEY]) || 0;
@@ -157,8 +159,14 @@ function balanceOf(currency, holders = {}) {
   const { survival, profile } = holders;
 
   if (c.kind === COUPON) return couponBalanceOf(survival);
-  if (c.owner === "profile") return Number((profile || {})[c.field]) || 0;
-  return Number((survival || {})[c.field]) || 0;
+  if (c.owner === "profile") {
+    const row = profile || {};
+    const val = row[c.field] !== undefined ? row[c.field] : row[c.legacyField];
+    return Number(val) || 0;
+  }
+  const row = survival || {};
+  const val = row[c.field] !== undefined ? row[c.field] : row[c.legacyField];
+  return Number(val) || 0;
 }
 
 function userIdOf(holders = {}) {

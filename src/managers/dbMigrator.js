@@ -129,6 +129,7 @@ const MIGRATIONS = [
     id: "v19_add_clan_columns",
     description: "Tambah kolom clanId di UserSurvivals",
     sql: "ALTER TABLE UserSurvivals ADD COLUMN clanId INT DEFAULT NULL;",
+    down: "ALTER TABLE UserSurvivals DROP COLUMN clanId;",
   },
   {
     id: "v20_add_clan_quests",
@@ -313,6 +314,14 @@ const MIGRATIONS = [
     description: "Tambah kolom premium_tier ke user_profiles untuk multi-rail VIP tiers",
     sql: "ALTER TABLE user_profiles ADD COLUMN premium_tier VARCHAR(32) DEFAULT 'none';",
     pgSql: 'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "premium_tier" VARCHAR(32) DEFAULT \'none\';',
+  },
+  {
+    id: "v47_rename_currencies_to_slice_of_life",
+    description:
+      "Perbarui nama kolom mata uang ke era Slice of Life: sukamajuCoins, scholarshipVouchers, dan pratamaDollars",
+    sql: "ALTER TABLE UserSurvivals ADD COLUMN sukamajuCoins INT; UPDATE UserSurvivals SET sukamajuCoins = COALESCE(starFragments, 500) WHERE sukamajuCoins IS NULL; ALTER TABLE UserSurvivals ALTER COLUMN sukamajuCoins SET DEFAULT 500; ALTER TABLE UserSurvivals ADD COLUMN scholarshipVouchers INT; UPDATE UserSurvivals SET scholarshipVouchers = COALESCE(coupons, 0) WHERE scholarshipVouchers IS NULL; ALTER TABLE UserSurvivals ALTER COLUMN scholarshipVouchers SET DEFAULT 0; ALTER TABLE user_profiles ADD COLUMN pratamaDollars INT; UPDATE user_profiles SET pratamaDollars = COALESCE(economy_wallet, 0) WHERE pratamaDollars IS NULL; ALTER TABLE user_profiles ALTER COLUMN pratamaDollars SET DEFAULT 0;",
+    pgSql:
+      'ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "sukamajuCoins" INTEGER; UPDATE "UserSurvivals" SET "sukamajuCoins" = COALESCE("starFragments", 500) WHERE "sukamajuCoins" IS NULL; ALTER TABLE "UserSurvivals" ALTER COLUMN "sukamajuCoins" SET DEFAULT 500; ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "scholarshipVouchers" INTEGER; UPDATE "UserSurvivals" SET "scholarshipVouchers" = COALESCE("coupons", 0) WHERE "scholarshipVouchers" IS NULL; ALTER TABLE "UserSurvivals" ALTER COLUMN "scholarshipVouchers" SET DEFAULT 0; ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "pratamaDollars" INTEGER; UPDATE "user_profiles" SET "pratamaDollars" = COALESCE("economy_wallet", 0) WHERE "pratamaDollars" IS NULL; ALTER TABLE "user_profiles" ALTER COLUMN "pratamaDollars" SET DEFAULT 0;',
   },
 ];
 

@@ -203,6 +203,11 @@ if (parentPort) {
           result = await affinityCanvas.renderAffinityCard(payload);
           break;
         }
+        case "renderFishCatch": {
+          const fishCanvas = require("./fishCanvas");
+          result = await fishCanvas.renderFishCatch(payload);
+          break;
+        }
         default:
           throw new SystemError(`Unknown canvas worker task: ${task}`);
       }
