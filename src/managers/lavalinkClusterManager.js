@@ -168,6 +168,16 @@ class LavalinkClusterManager {
 
     cb.lastFailureTime = now;
 
+    // Node yang sedang uji pemulihan (HALF_OPEN) gagal kembali ke karantina segera
+    if (cb.state === "HALF_OPEN") {
+      cb.state = "OPEN";
+      cb.quarantineUntil = now + CB_CONFIG.QUARANTINE_MS;
+      logger.warn(
+        `[41m[37m 🚨 CIRCUIT BREAKER [0m Node "${nodeName}" gagal uji pemulihan dan dikembalikan ke karantina: ${error?.message || error}`,
+      );
+      return;
+    }
+
     // Jika melebihi ambang batas, aktifkan isolasi karantina
     if (cb.failures >= CB_CONFIG.ERROR_THRESHOLD && cb.state !== "OPEN") {
       cb.state = "OPEN";
@@ -209,18 +219,23 @@ class LavalinkClusterManager {
   isNodeQuarantined(nodeName) {
     if (!nodeName) return false;
     const cb = this.circuitBreakers.get(nodeName);
-    if (!cb || cb.state !== "OPEN") return false;
+    if (!cb) return false;
 
-    if (Date.now() > cb.quarantineUntil) {
-      // Masa karantina habis, uji coba pemulihan (HALF_OPEN)
+    if (cb.state === "CLOSED") return false;
+
+    if (cb.state === "OPEN") {
+      if (Date.now() <= cb.quarantineUntil) {
+        return true; // Masih dalam masa karantina
+      }
+      // Masa karantina habis, masuk tahap uji pemulihan (HALF_OPEN)
       cb.state = "HALF_OPEN";
       cb.failures = 0;
       logger.info(
         `\x1b[43m\x1b[30m 🔄 CIRCUIT BREAKER \x1b[0m Masa karantina node "${nodeName}" selesai. Masuk tahap uji pemulihan (HALF_OPEN).`,
       );
-      return false;
     }
 
+    // HALF_OPEN: belum terbukti sehat, jangan route sampai uji pemulihan lulus
     return true;
   }
 
@@ -678,6 +693,14 @@ class LavalinkClusterManager {
         }
       } else {
         this.heartbeatFailures.set(node.name, 0);
+        const cb = this.circuitBreakers.get(node.name);
+        if (cb && cb.state === "HALF_OPEN") {
+          // Uji pemulihan lulus melalui health probe: sembuhkan ke CLOSED
+          this.recordNodeSuccess(node.name);
+          logger.info(
+            `[43m[30m 🔄 CIRCUIT BREAKER [0m Node "${node.name}" lulus uji pemulihan health probe. Kembali ke status CLOSED.`
+          );
+        }
       }
     });
 

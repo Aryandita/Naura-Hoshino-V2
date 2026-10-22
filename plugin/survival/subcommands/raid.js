@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 const { logger } = require("../../../src/managers/logger");
 
 const {
@@ -35,9 +35,10 @@ module.exports = {
         const emptyPayload = buildContainerV2({
           accentColorHex: ui.getColor("info") || "#38BDF8",
           authorName: "World Boss All-Time Hall of Fame",
-          title: "🏆 Papan Peringkat Penakluk Boss",
+          title: "ðŸ† Papan Peringkat Penakluk Boss",
           description:
             "Belum ada catatan penakluk World Boss yang terdata. Jadilah yang pertama menumbangkan sang monster samudra!",
+          buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
           footerText: ui.getFooter("survival"),
         });
         return interaction.editReply({ ...emptyPayload, embeds: [] });
@@ -45,21 +46,22 @@ module.exports = {
 
       const rows = topSurvivors.map((s, idx) => {
         const medal =
-          idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `**#${idx + 1}**`;
-        return `${medal} **${s.username}** • \`${s.totalDamage.toLocaleString("id-ID")} Damage\``;
+          idx === 0 ? "ðŸ¥‡" : idx === 1 ? "ðŸ¥ˆ" : idx === 2 ? "ðŸ¥‰" : `**#${idx + 1}**`;
+        return `${medal} **${s.username}** â€¢ \`${s.totalDamage.toLocaleString("id-ID")} Damage\``;
       });
 
       const lbPayload = buildContainerV2({
         accentColorHex: "#F59E0B",
         authorName: "World Boss All-Time Hall of Fame",
-        title: "🏆 10 Penakluk World Boss Tertinggi",
+        title: "ðŸ† 10 Penakluk World Boss Tertinggi",
         description: [
           "Berikut adalah petualang dengan total kontribusi serangan tertinggi sepanjang sejarah:",
           "",
           rows.join("\n"),
           "",
-          "-# ⚔️ *Terus serang World Boss aktif untuk menaikkan peringkatmu di Hall of Fame!*",
+          "-# âš”ï¸ *Terus serang World Boss aktif untuk menaikkan peringkatmu di Hall of Fame!*",
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -69,25 +71,26 @@ module.exports = {
     if (action === "celestial") {
       const celestialPayload = buildContainerV2({
         accentColorHex: "#A855F7",
-        authorName: "Celestial Raid 2.0 • Co-Op Dungeon",
-        title: "🌌 Ekspedisi Bos Purba Celestial",
+        authorName: "Celestial Raid 2.0 â€¢ Co-Op Dungeon",
+        title: "ðŸŒŒ Ekspedisi Bos Purba Celestial",
         description: [
           "Bentuk pesta petualang 2-4 pemain dan tantang penguasa kosmik bersama!",
           "",
-          `> 🛡️ **Guardian:** Menyerap serangan mematikan & mendirikan barrier tim.`,
-          `> ⚔️ **Vanguard:** Penyerang utama dengan multiplier kombo DPS dahsyat.`,
-          `> 🌿 **Apothecary:** Memulihkan vital HP dan menangkal debuff kegelapan.`,
+          `> ðŸ›¡ï¸ **Guardian:** Menyerap serangan mematikan & mendirikan barrier tim.`,
+          `> âš”ï¸ **Vanguard:** Penyerang utama dengan multiplier kombo DPS dahsyat.`,
+          `> ðŸŒ¿ **Apothecary:** Memulihkan vital HP dan menangkal debuff kegelapan.`,
           "",
           "**Pilihan Bos Kosmik:**",
-          "• **Astral Leviathan 🐋** (15.000 HP) • Hadiah: `800 NSF` + `1 Kupon`",
-          "• **Void Monarch 👑** (20.000 HP) • Hadiah: `1.200 NSF` + `2 Kupon`",
-          "• **Nebula Chimera 🦁** (25.000 HP) • Hadiah: `1.800 NSF` + `3 Kupon`",
+          "â€¢ **Astral Leviathan ðŸ‹** (15.000 HP) â€¢ Hadiah: `800 NSF` + `1 Kupon`",
+          "â€¢ **Void Monarch ðŸ‘‘** (20.000 HP) â€¢ Hadiah: `1.200 NSF` + `2 Kupon`",
+          "â€¢ **Nebula Chimera ðŸ¦** (25.000 HP) â€¢ Hadiah: `1.800 NSF` + `3 Kupon`",
           "",
-          "-# ⚠️ *Hati-hati: Melebihi 8 giliran akan memicu fase Enrage (Amuk Bos).* Hadiah dibagikan secara adil dan merata ke seluruh anggota tim.",
+          "-# âš ï¸ *Hati-hati: Melebihi 8 giliran akan memicu fase Enrage (Amuk Bos).* Hadiah dibagikan secara adil dan merata ke seluruh anggota tim.",
         ].join("\n"),
         expression: "confident",
         allowCleanup: true,
         expiresInSeconds: 120,
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
         footerText: ui.getFooter("survival"),
       });
       return interaction.editReply({ ...celestialPayload, embeds: [] });
@@ -107,10 +110,10 @@ module.exports = {
       const expTs = Math.floor(new Date(boss.endTime).getTime() / 1000);
       const phaseBadge =
         boss.phase === 3
-          ? `${ui.getEmoji("stamina") || "⚡"} ENRAGED`
+          ? `${ui.getEmoji("stamina") || "âš¡"} ENRAGED`
           : boss.phase === 2
-            ? `${ui.getEmoji("shield") || "🛡️"} SHIELDED`
-            : `${ui.getEmoji("battle") || "⚔️"} NORMAL`;
+            ? `${ui.getEmoji("shield") || "ðŸ›¡ï¸"} SHIELDED`
+            : `${ui.getEmoji("battle") || "âš”ï¸"} NORMAL`;
 
       const files = [];
       try {
@@ -126,41 +129,41 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId("wb_act_serang")
           .setLabel("Serang (DPS)")
-          .setEmoji(ui.parseEmoji(ui.getEmoji("battle")) || { name: "⚔️" })
+          .setEmoji(ui.parseEmoji(ui.getEmoji("battle")) || { name: "âš”ï¸" })
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
           .setCustomId("wb_act_shield")
           .setLabel("Shield (Tank)")
-          .setEmoji(ui.parseEmoji(ui.getEmoji("shield")) || { name: "🛡️" })
+          .setEmoji(ui.parseEmoji(ui.getEmoji("shield")) || { name: "ðŸ›¡ï¸" })
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
           .setCustomId("wb_act_heal")
           .setLabel("Heal (Support)")
-          .setEmoji(ui.parseEmoji(ui.getEmoji("heart")) || { name: "💖" })
+          .setEmoji(ui.parseEmoji(ui.getEmoji("heart")) || { name: "ðŸ’–" })
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId("wb_act_buff")
           .setLabel("Buff (Drop Rate)")
-          .setEmoji(ui.parseEmoji(ui.getEmoji("magic")) || { name: "🔮" })
+          .setEmoji(ui.parseEmoji(ui.getEmoji("magic")) || { name: "ðŸ”®" })
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
           .setCustomId("wb_act_lb")
           .setLabel("Top Raid")
-          .setEmoji(ui.parseEmoji(ui.getEmoji("trophy")) || { name: "🏆" })
+          .setEmoji(ui.parseEmoji(ui.getEmoji("trophy")) || { name: "ðŸ†" })
           .setStyle(ButtonStyle.Secondary),
       );
 
       const payload = buildContainerV2({
         accentColorHex: boss.phase === 3 ? "#EF4444" : "#9900EF",
-        authorName: `${ui.getEmoji("battle") || "⚔️"} Global Raid Event 2.0`,
-        title: `${ui.getEmoji("fire") || "🔥"} [WORLD BOSS] ${boss.name}`,
+        authorName: `${ui.getEmoji("battle") || "âš”ï¸"} Global Raid Event 2.0`,
+        title: `${ui.getEmoji("fire") || "ðŸ”¥"} [WORLD BOSS] ${boss.name}`,
         description: [
           `**"${boss.title}"**`,
           ``,
-          `${ui.getEmoji("heart") || "❤️"} **Status Boss:** \`${Number(boss.currentHp).toLocaleString("id-ID")} / ${Number(boss.maxHp).toLocaleString("id-ID")}\` (\`${hpPercent}%\`)`,
-          `${ui.getEmoji("shield") || "🔰"} **Fase Tempur:** \`${phaseBadge}\` | ${ui.getEmoji("translate") || "🌐"} **Elemen:** \`${boss.element || "DARK"}\``,
-          `${ui.getEmoji("clock") || "⏳"} **Batas Waktu:** Berakhir <t:${expTs}:R>`,
-          `${ui.getEmoji("diamond") || "💎"} **Pool Hadiah:** \`${Number(boss.rewardsPool?.starFragments || 5000).toLocaleString("id-ID")}\` ${ui.getEmoji("star") || "⭐"} & \`${boss.rewardsPool?.coupons || 30}\` ${ui.getEmoji("ticket") || "🎟️"}`,
+          `${ui.getEmoji("heart") || "â¤ï¸"} **Status Boss:** \`${Number(boss.currentHp).toLocaleString("id-ID")} / ${Number(boss.maxHp).toLocaleString("id-ID")}\` (\`${hpPercent}%\`)`,
+          `${ui.getEmoji("shield") || "ðŸ”°"} **Fase Tempur:** \`${phaseBadge}\` | ${ui.getEmoji("translate") || "ðŸŒ"} **Elemen:** \`${boss.element || "DARK"}\``,
+          `${ui.getEmoji("clock") || "â³"} **Batas Waktu:** Berakhir <t:${expTs}:R>`,
+          `${ui.getEmoji("diamond") || "ðŸ’Ž"} **Pool Hadiah:** \`${Number(boss.rewardsPool?.starFragments || 5000).toLocaleString("id-ID")}\` ${ui.getEmoji("star") || "â­"} & \`${boss.rewardsPool?.coupons || 30}\` ${ui.getEmoji("ticket") || "ðŸŽŸï¸"}`,
           ``,
           `*Pilih peran dan klik tombol aksi di bawah untuk berkontribusi bersama seluruh server!*`,
         ].join("\n"),
@@ -206,11 +209,11 @@ module.exports = {
           const lines = top10.map((p, idx) => {
             const medal =
               idx === 0
-                ? ui.getEmoji("badge_gold") || "🥇"
+                ? ui.getEmoji("badge_gold") || "ðŸ¥‡"
                 : idx === 1
-                  ? ui.getEmoji("badge_silver") || "🥈"
+                  ? ui.getEmoji("badge_silver") || "ðŸ¥ˆ"
                   : idx === 2
-                    ? ui.getEmoji("badge_bronze") || "🥉"
+                    ? ui.getEmoji("badge_bronze") || "ðŸ¥‰"
                     : `\`#${idx + 1}\``;
             return `${medal} **${p.username}**: \`${p.totalDamage.toLocaleString("id-ID")}\` DMG (${p.hits}x hit)`;
           });
@@ -218,7 +221,7 @@ module.exports = {
           return btnInt.reply({
             ...buildContainerV2({
               accentColorHex: "#F1C40F",
-              title: `${ui.getEmoji("trophy") || "🏆"} Peringkat Kontribusi Raid, ${freshBoss.name}`,
+              title: `${ui.getEmoji("trophy") || "ðŸ†"} Peringkat Kontribusi Raid, ${freshBoss.name}`,
               description:
                 lines.length > 0
                   ? lines.join("\n")
@@ -272,14 +275,14 @@ module.exports = {
         const desc = [
           res.message,
           ``,
-          `${ui.getEmoji("heart") || "❤️"} **Sisa HP Boss:** \`${res.currentHp.toLocaleString("id-ID")} / ${Number(res.maxHp).toLocaleString("id-ID")}\``,
-          `${ui.getEmoji("trophy") || "🏆"} **Total Kontribusi DPS-mu:** \`${res.userTotalDamage.toLocaleString("id-ID")}\` DMG`,
+          `${ui.getEmoji("heart") || "â¤ï¸"} **Sisa HP Boss:** \`${res.currentHp.toLocaleString("id-ID")} / ${Number(res.maxHp).toLocaleString("id-ID")}\``,
+          `${ui.getEmoji("trophy") || "ðŸ†"} **Total Kontribusi DPS-mu:** \`${res.userTotalDamage.toLocaleString("id-ID")}\` DMG`,
         ];
 
         if (res.isDefeated) {
           desc.push(
             ``,
-            `${ui.getEmoji("celebrate") || "🎉"} **WORLD BOSS TELAH DITUMBANGKAN!**`,
+            `${ui.getEmoji("celebrate") || "ðŸŽ‰"} **WORLD BOSS TELAH DITUMBANGKAN!**`,
             `Hadiah dibagikan ke semua pemain yang berpartisipasi (DPS, Tank, Healer, Buffer)!`,
           );
         }
@@ -288,9 +291,10 @@ module.exports = {
           ...buildContainerV2({
             accentColorHex: res.isDefeated ? "#22C55E" : "#9900EF",
             title: res.isDefeated
-              ? `${ui.getEmoji("trophy") || "🏆"} World Boss Ditaklukkan!`
-              : `${ui.getEmoji("battle") || "⚔️"} Aksi Raid Berhasil!`,
+              ? `${ui.getEmoji("trophy") || "ðŸ†"} World Boss Ditaklukkan!`
+              : `${ui.getEmoji("battle") || "âš”ï¸"} Aksi Raid Berhasil!`,
             description: desc.join("\n"),
+            buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
             footerText: ui.getFooter("survival"),
           }),
           flags: MessageFlags.Ephemeral,
@@ -340,14 +344,14 @@ module.exports = {
       const desc = [
         result.message,
         ``,
-        `${ui.getEmoji("heart") || "❤️"} **Sisa HP Boss:** \`${result.currentHp.toLocaleString("id-ID")} / ${Number(result.maxHp).toLocaleString("id-ID")}\``,
-        `${ui.getEmoji("trophy") || "🏆"} **Total Kontribusi DPS-mu:** \`${result.userTotalDamage.toLocaleString("id-ID")}\` DMG`,
+        `${ui.getEmoji("heart") || "â¤ï¸"} **Sisa HP Boss:** \`${result.currentHp.toLocaleString("id-ID")} / ${Number(result.maxHp).toLocaleString("id-ID")}\``,
+        `${ui.getEmoji("trophy") || "ðŸ†"} **Total Kontribusi DPS-mu:** \`${result.userTotalDamage.toLocaleString("id-ID")}\` DMG`,
       ];
 
       if (result.isDefeated) {
         desc.push(
           ``,
-          `${ui.getEmoji("celebrate") || "🎉"} **WORLD BOSS TELAH DITUMBANGKAN!**`,
+          `${ui.getEmoji("celebrate") || "ðŸŽ‰"} **WORLD BOSS TELAH DITUMBANGKAN!**`,
           `Hadiah telah dibagikan secara proporsional ke seluruh peserta raid!`,
         );
       }
@@ -355,8 +359,8 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: result.isDefeated ? "#22C55E" : "#E74C3C",
         title: result.isDefeated
-          ? `${ui.getEmoji("trophy") || "🏆"} World Boss Telah Kalah!`
-          : `${ui.getEmoji("battle") || "⚔️"} Aksi Raid Berhasil!`,
+          ? `${ui.getEmoji("trophy") || "ðŸ†"} World Boss Telah Kalah!`
+          : `${ui.getEmoji("battle") || "âš”ï¸"} Aksi Raid Berhasil!`,
         description: desc.join("\n"),
         buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
         footerText: ui.getFooter("survival"),
@@ -392,18 +396,18 @@ module.exports = {
       const lines = top10.map((p, idx) => {
         const medal =
           idx === 0
-            ? ui.getEmoji("badge_gold") || "🥇"
+            ? ui.getEmoji("badge_gold") || "ðŸ¥‡"
             : idx === 1
-              ? ui.getEmoji("badge_silver") || "🥈"
+              ? ui.getEmoji("badge_silver") || "ðŸ¥ˆ"
               : idx === 2
-                ? ui.getEmoji("badge_bronze") || "🥉"
+                ? ui.getEmoji("badge_bronze") || "ðŸ¥‰"
                 : `\`#${idx + 1}\``;
         return `${medal} **${p.username}**: \`${p.totalDamage.toLocaleString("id-ID")}\` DMG (${p.hits}x hit)`;
       });
 
       const payload = buildContainerV2({
         accentColorHex: "#F1C40F",
-        title: `${ui.getEmoji("trophy") || "🏆"} Peringkat Kontribusi Raid, ${boss.name}`,
+        title: `${ui.getEmoji("trophy") || "ðŸ†"} Peringkat Kontribusi Raid, ${boss.name}`,
         description:
           lines.length > 0
             ? lines.join("\n")
@@ -418,3 +422,7 @@ module.exports = {
     }
   },
 };
+
+
+
+

@@ -103,7 +103,7 @@ test("AiEnsembleRouter - Seamless Failover Logic", async () => {
   assert.equal(router.breakers.gemini.successCount, 1);
 });
 
-test("AiEnsembleRouter - Throws Error When All Providers Fail", async () => {
+test("AiEnsembleRouter - Graceful Degradation Saat Semua Provider Gagal", async () => {
   const router = new AiEnsembleRouter();
   router.isProviderConfigured = (p) => p === "gemini";
 
@@ -111,15 +111,16 @@ test("AiEnsembleRouter - Throws Error When All Providers Fail", async () => {
     throw new Error("Quota exceeded 429");
   };
 
-  await assert.rejects(
-    async () => {
-      await router.generate({
-        taskType: TASK_TYPES.VISION_MULTIMODAL,
-        prompt: "Jelaskan gambar ini",
-      });
-    },
-    /Semua provider AI/,
-  );
+  const result = await router.generate({
+    taskType: TASK_TYPES.VISION_MULTIMODAL,
+    prompt: "Jelaskan gambar ini",
+  });
+
+  assert.ok(result, "Harus mengembalikan balasan fallback");
+  assert.equal(result.provider, "fallback");
+  assert.equal(result.model, null);
+  assert.ok(typeof result.text === "string" && result.text.length > 0);
+  assert.equal(result.toString(), result.text);
 });
 
 test("AiEnsembleRouter - Telemetry Structure", () => {

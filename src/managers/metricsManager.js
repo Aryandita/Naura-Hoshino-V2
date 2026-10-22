@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 const { logger } = require("./logger");
 
 const redisManager = require("./redisManager");
@@ -39,17 +39,59 @@ class MetricsManager {
   }
 
   /**
+   * Catat error per kategori ke Redis hash metrics:errors.
+   * Aman saat Redis offline (tidak melempar).
+   * @param {string} category Nama singkat kategori error
+   */
+  logError(category) {
+    try {
+      if (redisManager.isReady) {
+        redisManager.hIncrBy("metrics:errors", category, 1);
+        redisManager.hIncrBy("metrics:errors", "total", 1);
+      }
+    } catch (err) {
+      logger.warn("[metricsManager:logError] Operasi cache Redis gagal: " + (err?.message || err));
+    }
+  }
+
+  /**
+   * Ambil snapshot health proses dan Redis (data nyata dari Node API).
+   * @returns {{ uptime: number, memory: { rss: number, heapUsed: number, heapTotal: number, usagePercent: number }, pid: number, redis: { connected: boolean } }}
+   */
+  getHealthSnapshot() {
+    const mem = process.memoryUsage();
+    const heapUsedMB = Math.round(mem.heapUsed / 1024 / 1024);
+    const heapTotalMB = Math.round(mem.heapTotal / 1024 / 1024);
+    const usagePct = heapTotalMB > 0 ? Math.round((heapUsedMB / heapTotalMB) * 100) : 0;
+    return {
+      uptime: process.uptime(),
+      memory: {
+        rss: mem.rss,
+        heapUsed: mem.heapUsed,
+        heapTotal: mem.heapTotal,
+        usagePercent: usagePct,
+      },
+      pid: process.pid,
+      redis: {
+        connected: Boolean(redisManager.isReady),
+      },
+    };
+  }
+
+  /**
    * Ambil data metrik saat ini.
+   * @returns {Promise<{ commands: object, components: object, errors: object } | null>}
    */
   async getMetrics() {
     if (!redisManager.isReady) return null;
 
     try {
-      const [commands, components] = await Promise.all([
+      const [commands, components, errors] = await Promise.all([
         redisManager.hGetAll("metrics:commands"),
         redisManager.hGetAll("metrics:components"),
+        redisManager.hGetAll("metrics:errors"),
       ]);
-      return { commands, components };
+      return { commands, components, errors };
     } catch {
       return null;
     }
@@ -57,3 +99,4 @@ class MetricsManager {
 }
 
 module.exports = new MetricsManager();
+

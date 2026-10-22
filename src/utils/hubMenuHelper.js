@@ -11,6 +11,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("./NauraContainerBuilder");
+const designTokens = require("../config/tokens/designTokens");
 
 /**
  * Memvalidasi apakah interaksi komponen dijalankan oleh pemilik pesan.
@@ -59,7 +60,7 @@ function buildInteractiveHubPayload({
   title,
   authorName,
   description,
-  accentColorHex = "#7B68EE",
+  accentColorHex = designTokens.SYSTEMS.hub.hex,
   quickButtons = [],
   selectOptions = [],
   selectPlaceholder = "Pilih fitur atau permainan...",

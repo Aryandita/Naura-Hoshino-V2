@@ -55,8 +55,8 @@ class MusicUIManager {
         return;
       }
 
-      console.log(
-        "\x1b[46m\x1b[30m 🎨 UI ENGINE \x1b[0m \x1b[36mMenggambar Canvas & Merakit Panel untuk:\x1b[0m",
+      logger.debug(
+        "🎨 UI ENGINE Menggambar Canvas & Merakit Panel untuk: %s",
         track.info.title,
       );
 

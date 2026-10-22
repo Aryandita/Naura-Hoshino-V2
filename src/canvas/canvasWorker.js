@@ -1,228 +1,623 @@
-"use strict";
+﻿"use strict";
 
 const { parentPort } = require("node:worker_threads");
 const { SystemError } = require("../errors/DomainError");
 
 if (parentPort) {
-  parentPort.on("message", async ({ id, task, payload }) => {
+  async function safeRender(taskName, fn) {
     try {
-      let result = null;
+      return { ok: true, value: await fn() };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err ? err.message || String(err) : "Renderer " + taskName + " gagal",
+      };
+    }
+  }
 
+  parentPort.on("message", async ({ id, task, payload }) => {
+    let result = null;
+    let failed = false;
+    let errorMessage = null;
+
+    try {
       switch (task) {
         case "renderProfile": {
           const profileCanvas = require("./profileCanvas");
-          result = await profileCanvas.generateProfileCard(payload);
+          const rendered = await safeRender(
+            "renderProfile",
+            function () {
+              return profileCanvas.generateProfileCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderUnifiedProfile": {
           const unifiedProfileCanvas = require("./unifiedProfileCanvas");
-          result = await unifiedProfileCanvas.generateUnifiedProfile(payload);
+          const rendered = await safeRender(
+            "renderUnifiedProfile",
+            function () {
+              return unifiedProfileCanvas.generateUnifiedProfile(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderMinecraftPlayer": {
           const minecraftCanvas = require("./minecraftCanvas");
-          result = await minecraftCanvas.renderMinecraftPlayer(payload);
+          const rendered = await safeRender(
+            "renderMinecraftPlayer",
+            function () {
+              return minecraftCanvas.renderMinecraftPlayer(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderBusinessCard": {
           const profileCanvas = require("./profileCanvas");
-          result = await profileCanvas.generateBusinessCard(payload);
+          const rendered = await safeRender(
+            "renderBusinessCard",
+            function () {
+              return profileCanvas.generateBusinessCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderBattle": {
           const battleCanvas = require("./battleCanvas");
-          result = await battleCanvas.renderBattle(payload);
+          const rendered = await safeRender(
+            "renderBattle",
+            function () {
+              return battleCanvas.renderBattle(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderNowPlaying": {
           const nowplayingCanvas = require("./nowplayingCanvas");
-          result = await nowplayingCanvas.renderNowPlayingCard(payload);
+          const rendered = await safeRender(
+            "renderNowPlaying",
+            function () {
+              return nowplayingCanvas.renderNowPlayingCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderCard": {
           const cardCanvas = require("./cardCanvas");
-          result = await cardCanvas.renderCard(payload);
+          const rendered = await safeRender(
+            "renderCard",
+            function () {
+              return cardCanvas.renderCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderBoss": {
           const bossCanvas = require("./bossCanvas");
-          result = await bossCanvas.renderBossCard(payload);
+          const rendered = await safeRender(
+            "renderBoss",
+            function () {
+              return bossCanvas.renderBossCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderCafe": {
           const cafeCanvas = require("./cafeCanvas");
-          result = await cafeCanvas.renderCafeCard(payload);
+          const rendered = await safeRender(
+            "renderCafe",
+            function () {
+              return cafeCanvas.renderCafeCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderPetHabitat": {
           const petHabitatCanvas = require("./petHabitatCanvas");
-          result = await petHabitatCanvas.renderPetHabitat(payload);
+          const rendered = await safeRender(
+            "renderPetHabitat",
+            function () {
+              return petHabitatCanvas.renderPetHabitat(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderTerritoryMap": {
           const territoryCanvas = require("./territoryCanvas");
-          result = await territoryCanvas.renderTerritoryMap(payload);
+          const rendered = await safeRender(
+            "renderTerritoryMap",
+            function () {
+              return territoryCanvas.renderTerritoryMap(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderGuildHall": {
           const guildHallCanvas = require("./guildHallCanvas");
-          result = await guildHallCanvas.renderGuildHall(payload);
+          const rendered = await safeRender(
+            "renderGuildHall",
+            function () {
+              return guildHallCanvas.renderGuildHall(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderColiseumMatch": {
           const coliseumCanvas = require("./coliseumCanvas");
-          result = await coliseumCanvas.renderColiseumMatch(payload);
+          const rendered = await safeRender(
+            "renderColiseumMatch",
+            function () {
+              return coliseumCanvas.renderColiseumMatch(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderVivarium": {
           const vivariumCanvas = require("./vivariumCanvas");
-          result = await vivariumCanvas.renderVivarium(payload);
+          const rendered = await safeRender(
+            "renderVivarium",
+            function () {
+              return vivariumCanvas.renderVivarium(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderStockMarket": {
           const stockCanvas = require("./stockCanvas");
-          result = await stockCanvas.renderStockMarket(payload);
+          const rendered = await safeRender(
+            "renderStockMarket",
+            function () {
+              return stockCanvas.renderStockMarket(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderGreenhouse": {
           const greenhouseCanvas = require("./greenhouseCanvas");
-          result = await greenhouseCanvas.renderGreenhouseCard(payload);
+          const rendered = await safeRender(
+            "renderGreenhouse",
+            function () {
+              return greenhouseCanvas.renderGreenhouseCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderItemCard": {
           const itemCardCanvas = require("./itemCardCanvas");
-          result = await itemCardCanvas.renderItemCard(payload);
+          const rendered = await safeRender(
+            "renderItemCard",
+            function () {
+              return itemCardCanvas.renderItemCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderBirthdayCard": {
           const birthdayCanvas = require("./birthdayCanvas");
-          result = await birthdayCanvas.renderBirthdayCard(payload);
+          const rendered = await safeRender(
+            "renderBirthdayCard",
+            function () {
+              return birthdayCanvas.renderBirthdayCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderMusicAura": {
           const musicAuraCanvas = require("./musicAuraCanvas");
-          result = await musicAuraCanvas.renderMusicAura(payload);
+          const rendered = await safeRender(
+            "renderMusicAura",
+            function () {
+              return musicAuraCanvas.renderMusicAura(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderInventory": {
           const inventoryCanvas = require("./inventoryCanvas");
-          result = await inventoryCanvas.generateInventoryBackpackImage(
-            payload.user,
-            payload.inventory,
-            payload.profile,
-            payload.options || {},
+          const rendered = await safeRender(
+            "renderInventory",
+            function () {
+              return inventoryCanvas.generateInventoryBackpackImage(
+                payload.user,
+                payload.inventory,
+                payload.profile,
+                payload.options || {},
+              );
+            },
           );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderStoryScene": {
           const storySceneCanvas = require("./storySceneCanvas");
-          result = await storySceneCanvas.renderStoryScene(payload);
+          const rendered = await safeRender(
+            "renderStoryScene",
+            function () {
+              return storySceneCanvas.renderStoryScene(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderDynamicBanner": {
           const dynamicBannerEngine = require("./dynamicBannerEngine");
-          result = await dynamicBannerEngine.generateDynamicMotionBanner(payload);
+          const rendered = await safeRender(
+            "renderDynamicBanner",
+            function () {
+              return dynamicBannerEngine.generateDynamicMotionBanner(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderRoom": {
           const roomCanvas = require("./roomCanvas");
-          result = await roomCanvas.renderRoomCanvas(
-            payload.roomData,
-            payload.user,
-            payload.pet,
-            payload.options || {},
+          const rendered = await safeRender(
+            "renderRoom",
+            function () {
+              return roomCanvas.renderRoomCanvas(
+                payload.roomData,
+                payload.user,
+                payload.pet,
+                payload.options || {},
+              );
+            },
           );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderChronicle": {
           const chronicleCanvas = require("./chronicleCanvas");
-          result = await chronicleCanvas.drawChronicleNewspaper(payload);
+          const rendered = await safeRender(
+            "renderChronicle",
+            function () {
+              return chronicleCanvas.drawChronicleNewspaper(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderAstralOmikuji": {
           const astralCanvas = require("./astralCanvas");
-          result = await astralCanvas.renderOmikujiCard(
-            payload.omikuji,
-            payload.user,
+          const rendered = await safeRender(
+            "renderAstralOmikuji",
+            function () {
+              return astralCanvas.renderOmikujiCard(
+                payload.omikuji,
+                payload.user,
+              );
+            },
           );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderAstralWeather": {
           const astralCanvas = require("./astralCanvas");
-          result = await astralCanvas.renderAstralWeatherBanner(
-            payload.weather,
+          const rendered = await safeRender(
+            "renderAstralWeather",
+            function () {
+              return astralCanvas.renderAstralWeatherBanner(payload.weather);
+            },
           );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderDuel": {
           const duelCanvas = require("./duelCanvas");
-          result = await duelCanvas.drawDuel(
-            payload.p1,
-            payload.p2,
-            payload.roundLog,
-            payload.round,
+          const rendered = await safeRender(
+            "renderDuel",
+            function () {
+              return duelCanvas.drawDuel(
+                payload.p1,
+                payload.p2,
+                payload.roundLog,
+                payload.round,
+              );
+            },
           );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderAchievement": {
           const achievementCanvas = require("./achievementCanvas");
-          result = await achievementCanvas.generateAchievementImage(
-            payload.user,
-            payload.title,
-            payload.subtitle,
-            payload.badgeColor,
+          const rendered = await safeRender(
+            "renderAchievement",
+            function () {
+              return achievementCanvas.generateAchievementImage(
+                payload.user,
+                payload.title,
+                payload.subtitle,
+                payload.badgeColor,
+              );
+            },
           );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderWrapped": {
           const wrappedCanvas = require("./wrappedCanvas");
-          result = await wrappedCanvas.generateWrappedCard(
-            payload.user,
-            payload.stats,
+          const rendered = await safeRender(
+            "renderWrapped",
+            function () {
+              return wrappedCanvas.generateWrappedCard(
+                payload.user,
+                payload.stats,
+              );
+            },
           );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderCardBattle": {
           const cardBattleCanvas = require("./cardBattleCanvas");
-          result = await cardBattleCanvas.drawCardBattleArena(payload);
+          const rendered = await safeRender(
+            "renderCardBattle",
+            function () {
+              return cardBattleCanvas.drawCardBattleArena(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderCarbon":
         case "renderCodeSnippet": {
           const codeCanvas = require("./codeCanvas");
-          result = await codeCanvas.renderCarbonCard(payload);
+          const rendered = await safeRender(
+            task,
+            function () {
+              return codeCanvas.renderCarbonCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderPollChart": {
           const pollCanvas = require("./pollCanvas");
-          result = await pollCanvas.renderPollChart(payload);
+          const rendered = await safeRender(
+            "renderPollChart",
+            function () {
+              return pollCanvas.renderPollChart(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderAffinity": {
           const affinityCanvas = require("./affinityCanvas");
-          result = await affinityCanvas.renderAffinityCard(payload);
+          const rendered = await safeRender(
+            "renderAffinity",
+            function () {
+              return affinityCanvas.renderAffinityCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         case "renderFishCatch": {
           const fishCanvas = require("./fishCanvas");
-          result = await fishCanvas.renderFishCatch(payload);
+          const rendered = await safeRender(
+            "renderFishCatch",
+            function () {
+              return fishCanvas.renderFishCatch(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
           break;
         }
         default:
-          throw new SystemError(`Unknown canvas worker task: ${task}`);
+          throw new SystemError("Unknown canvas worker task: " + task);
       }
+    } catch (err) {
+      failed = true;
+      errorMessage = err ? err.message || String(err) : "Unknown worker error";
+    }
 
-      parentPort.postMessage({ id, success: true, result });
+    if (failed) {
+      parentPort.postMessage({
+        id,
+        success: false,
+        error: errorMessage || "Unknown worker error",
+      });
       result = null;
       if (global.gc) {
         global.gc();
       }
-    } catch (err) {
-      parentPort.postMessage({
-        id,
-        success: false,
-        error: err ? err.message || String(err) : "Unknown worker error",
-      });
+      return;
+    }
+
+    parentPort.postMessage({ id, success: true, result });
+    result = null;
+    if (global.gc) {
+      global.gc();
     }
   });
 }

@@ -113,17 +113,11 @@ module.exports = {
           await record.save({ fields: ["isTempBanned", "tempbanExpiresAt"] });
           continue;
         }
-        try {
-          const guild = await client.guilds.fetch(record.guildId).catch(() => null);
-          if (guild) {
-            await guild.members
-              .unban(record.userId, "Masa Tempban selesai")
-              .catch(() => {});
-          }
-        } catch (err) {
-          logger.error(
-            `[Cron] Gagal unban user ${record.userId}: ${err.message}`,
-          );
+        const guild = await client.guilds.fetch(record.guildId).catch(() => null);
+        if (guild) {
+          await guild.members
+            .unban(record.userId, "Masa Tempban selesai")
+            .catch(() => {});
         }
         record.isTempBanned = false;
         record.tempbanExpiresAt = null;
@@ -150,23 +144,16 @@ module.exports = {
           await lease.destroy();
           continue;
         }
-        try {
-          const guild = await client.guilds.fetch(lease.guildId).catch(() => null);
-          if (guild) {
-            const member = await guild.members
-              .fetch(lease.userId)
-              .catch(() => null);
-            if (member) {
-              await member.roles
-                .remove(lease.roleId, "Masa sewa role selesai")
-                .catch(() => {});
-            }
+        const guild = await client.guilds.fetch(lease.guildId).catch(() => null);
+        if (guild) {
+          const member = await guild.members
+            .fetch(lease.userId)
+            .catch(() => null);
+          if (member) {
+            await member.roles
+              .remove(lease.roleId, "Masa sewa role selesai")
+              .catch(() => {});
           }
-        } catch (err) {
-          logger.error(
-            `[Cron] Gagal memproses kadaluwarsa role lease ${lease.id}:`,
-            err,
-          );
         }
         await lease.destroy();
       }
@@ -404,7 +391,7 @@ module.exports = {
     runGuardedCronJob("Daily Reset Notif Status & Quest Reset", "0 0 * * *", async () => {
       const UserProfile = require("../models/UserProfile");
       const { sendNotification } = require("./notificationManager");
-      const cacheManager = require("./cacheManager");
+
       const profiles = await UserProfile.findAll({
         attributes: ["userId", "notification_prefs"],
         limit: 500,
@@ -1052,12 +1039,11 @@ module.exports = {
           `[Cron Lottery] Jackpot drawn! Winner: ${result.winnerUserId} received ${result.prizeAmount} NSF.`,
         );
         // Siarkan notifikasi penghargaan ke pemenang undian
-        try {
-          if (result.winnerUserId && SNOWFLAKE_REGEX.test(String(result.winnerUserId))) {
-            const winnerUser = await client.users
-              .fetch(result.winnerUserId)
-              .catch(() => null);
-            if (winnerUser) {
+        if (result.winnerUserId && SNOWFLAKE_REGEX.test(String(result.winnerUserId))) {
+          const winnerUser = await client.users
+            .fetch(result.winnerUserId)
+            .catch(() => null);
+          if (winnerUser) {
             const notifPayload = buildContainerV2({
               accentColorHex: "#F59E0B",
               authorName: "Naura Wilds • Astral Lottery",
@@ -1072,13 +1058,12 @@ module.exports = {
               ].join("\n"),
               footerText: "Naura Hoshino Ecosystem • Astral Lottery",
             });
-            await winnerUser.send(notifPayload).catch(() => {});
-            }
+            await winnerUser.send(notifPayload).catch((err) => {
+              logger.warn(
+                `[Cron Lottery] Gagal mengirim notifikasi pemenang: ${err.message}`,
+              );
+            });
           }
-        } catch (notifErr) {
-          logger.warn(
-            `[Cron Lottery] Gagal mengirim notifikasi pemenang: ${notifErr.message}`,
-          );
         }
       }
     });

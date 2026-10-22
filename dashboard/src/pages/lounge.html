@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -29,7 +29,7 @@
         display: grid;
         grid-template-columns: 1fr 380px;
         gap: 20px;
-        height: calc(100vh - 120px);
+        height: calc(100dvh - 120px);
         min-height: 640px;
       }
       @media (max-width: 1080px) {
@@ -224,7 +224,7 @@
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
-            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+            <div class="sidebar-brand-sub">v2.3.0 Â· Online</div>
           </div>
           <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
             <i class="fa-solid fa-xmark"></i>
@@ -389,11 +389,11 @@
               <!-- Bottom Stage Overlay -->
               <div class="stage-bottom-overlay">
                 <div style="font-size:11px;color:var(--text-muted);background:rgba(15,23,42,0.7);padding:6px 12px;border-radius:var(--r-md);border:1px solid rgba(255,255,255,0.08);">
-                  <i class="fa-solid fa-hand-pointer" style="color:var(--accent-cyan);margin-right:4px;"></i> Putar 360° dengan Drag Mouse · Scroll untuk Zoom
+                  <i class="fa-solid fa-hand-pointer" style="color:var(--accent-cyan);margin-right:4px;"></i> Putar 360Â° dengan Drag Mouse Â· Scroll untuk Zoom
                 </div>
                 <div style="display:flex;gap:6px;">
-                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('kawaii')" title="Pencahayaan Studio Kawaii">🌸 Studio</button>
-                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('cyber')" title="Pencahayaan Cyberpunk Neon">⚡ Cyber</button>
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('kawaii')" title="Pencahayaan Studio Kawaii">ðŸŒ¸ Studio</button>
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('cyber')" title="Pencahayaan Cyberpunk Neon">âš¡ Cyber</button>
                 </div>
               </div>
             </div>
@@ -429,16 +429,16 @@
                 <!-- Chat Stream -->
                 <div class="chat-stream" id="loungeChatStream">
                   <div class="chat-bubble-bot">
-                    Halo Sensei! Selamat datang di 3D AI Lounge. Di sini kita bisa mengobrol santai, mendengarkan suaraku via Fish Audio, dan mencoba berbagai pose 3D interaktif! Ada yang ingin kamu bicarakan hari ini? 🌸✨
+                    Halo Sensei! Selamat datang di 3D AI Lounge. Di sini kita bisa mengobrol santai, mendengarkan suaraku via Fish Audio, dan mencoba berbagai pose 3D interaktif! Ada yang ingin kamu bicarakan hari ini? ðŸŒ¸âœ¨
                   </div>
                 </div>
 
                 <!-- Quick Prompt Chips -->
                 <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
-                  <button type="button" class="badge badge-amber" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('👋 Halo Naura!')">👋 Sapa</button>
-                  <button type="button" class="badge badge-cyan" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Ceritakan tentang Naura Wilds dong!')">🌲 Naura Wilds</button>
-                  <button type="button" class="badge badge-purple" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Bagikan tips bertahan hidup terbaik!')">⚔️ Tips RPG</button>
-                  <button type="button" class="badge badge-success" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Beri aku ramalan hoki hari ini!')">✨ Ramalan</button>
+                  <button type="button" class="badge badge-amber" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('ðŸ‘‹ Halo Naura!')">ðŸ‘‹ Sapa</button>
+                  <button type="button" class="badge badge-cyan" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Ceritakan tentang Naura Wilds dong!')">ðŸŒ² Naura Wilds</button>
+                  <button type="button" class="badge badge-purple" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Bagikan tips bertahan hidup terbaik!')">âš”ï¸ Tips RPG</button>
+                  <button type="button" class="badge badge-success" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Beri aku ramalan hoki hari ini!')">âœ¨ Ramalan</button>
                 </div>
 
                 <!-- Input Field -->
@@ -487,11 +487,11 @@
                     Uji Ekspresi Wajah (Blendshape):
                   </div>
                   <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Happy')">😊 Senyum</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Cheers')">😄 Tertawa</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Thinking')">🤔 Berpikir</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Shy')">😳 Malu</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Sleepy')">😴 Mengantuk</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Happy')">ðŸ˜Š Senyum</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Cheers')">ðŸ˜„ Tertawa</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Thinking')">ðŸ¤” Berpikir</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Shy')">ðŸ˜³ Malu</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Sleepy')">ðŸ˜´ Mengantuk</button>
                   </div>
                 </div>
               </div>
@@ -501,10 +501,10 @@
                 <div>
                   <label style="font-size:12px;font-weight:600;color:var(--text-primary);">Sifat & Persona Percakapan</label>
                   <select class="select-input" id="selectLoungePersona" style="width:100%;margin-top:6px;">
-                    <option value="cheerful" selected>🌸 Cheerful Idol Companion (Bawaan)</option>
-                    <option value="cyberpunk">⚡ Cyberpunk Tactical Operator</option>
-                    <option value="maid">🍵 Faithful Maid Protocol</option>
-                    <option value="tactical">🌲 Wilds Survival Commander</option>
+                    <option value="cheerful" selected>ðŸŒ¸ Cheerful Idol Companion (Bawaan)</option>
+                    <option value="cyberpunk">âš¡ Cyberpunk Tactical Operator</option>
+                    <option value="maid">ðŸµ Faithful Maid Protocol</option>
+                    <option value="tactical">ðŸŒ² Wilds Survival Commander</option>
                   </select>
                 </div>
 
@@ -713,7 +713,7 @@
         } catch (_) {
           const errDiv = document.createElement("div");
           errDiv.className = "chat-bubble-bot";
-          errDiv.textContent = "Koneksi AI sedang beristirahat. Coba tanyakan hal lain ya Sensei! 🌸";
+          errDiv.textContent = "Koneksi AI sedang beristirahat. Coba tanyakan hal lain ya Sensei! ðŸŒ¸";
           stream.appendChild(errDiv);
         }
       }
@@ -803,3 +803,4 @@
     </nav>
   </body>
 </html>
+

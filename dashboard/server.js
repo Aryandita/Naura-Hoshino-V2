@@ -181,6 +181,9 @@ module.exports = (containerOrClient) => {
   webApp.use("/vendor", express.static(path.join(__dirname, "public/vendor")));
   webApp.use("/node_modules", express.static(path.join(__dirname, "../node_modules")));
   webApp.get("/health", (req, res) => res.redirect("/api/health"));
+  webApp.get("/health/detailed", (req, res) =>
+    res.redirect("/api/health/detailed"),
+  );
 
   // Sajikan Dashboard Mobile di subpath /mobile
   webApp.use("/mobile", express.static(path.join(__dirname, "mobile/dist")));

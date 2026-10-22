@@ -22,23 +22,23 @@ const colors = {
   rank: designTokens.SYSTEMS.rank.hex,
 
   // --- Systems Lanjutan ---
-  fishing: "#1E90FF",
-  mining: "#8B4513",
-  crafting: "#228B22",
-  welcome: "#00FFFF",
-  leave: "#FF69B4",
-  boost: "#FFD700",
-  announcement: "#001aff",
-  announce_update: "#00FFFF",
-  announce_mt: "#8B4513",
-  announce_event: "#FFD700",
-  announce_warn: "#DC143C",
+  fishing: designTokens.SEMANTIC.fishing.hex,
+  mining: designTokens.SEMANTIC.mining.hex,
+  crafting: designTokens.SEMANTIC.crafting.hex,
+  welcome: designTokens.SEMANTIC.welcome.hex,
+  leave: designTokens.SEMANTIC.leave.hex,
+  boost: designTokens.SEMANTIC.boost.hex,
+  announcement: designTokens.SEMANTIC.announcement.hex,
+  announce_update: designTokens.SEMANTIC.welcome.hex,
+  announce_mt: designTokens.SEMANTIC.mining.hex,
+  announce_event: designTokens.SEMANTIC.boost.hex,
+  announce_warn: designTokens.SYSTEMS.battle.hex,
 
   // --- Status Colors ---
-  success: "#00FF00",
-  error: "#FF0000",
-  warning: "#FFB347",
-  info: "#57C7FF",
+  success: designTokens.SEMANTIC.success.hex,
+  error: designTokens.SEMANTIC.error.hex,
+  warning: designTokens.SEMANTIC.warning.hex,
+  info: designTokens.SEMANTIC.info.hex,
 
   // --- Survival Wilds Tokens ---
   wilds_emerald: designTokens.SURVIVAL.emerald.hex,
@@ -49,13 +49,13 @@ const colors = {
   wilds_danger: designTokens.SURVIVAL.danger.hex,
 
   // --- Premium Tier Colors ---
-  premium_voter: "#F43F5E",
-  premium_starter: "#38bdf8",
-  premium_supporter: "#C0C0C0",
-  premium_friends: "#A855F7",
-  premium_vip: "#FFD700",
-  premium_accent: "#FDE68A",
-  premium_glow: "rgba(255,215,0,0.3)",
+  premium_voter: designTokens.SEMANTIC.premium_voter.hex,
+  premium_starter: designTokens.SEMANTIC.premium_starter.hex,
+  premium_supporter: designTokens.SEMANTIC.premium_supporter.hex,
+  premium_friends: designTokens.SEMANTIC.premium_friends.hex,
+  premium_vip: designTokens.SEMANTIC.premium_vip.hex,
+  premium_accent: designTokens.SEMANTIC.premium_accent.hex,
+  premium_glow: designTokens.SEMANTIC.premium_glow.hex,
 };
 
 const monsters = {

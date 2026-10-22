@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -37,7 +37,7 @@
         font-family: 'Outfit', sans-serif;
         background-color: var(--bg-void);
         color: var(--text-pure);
-        min-height: 100vh;
+        min-height: 100dvh;
         overflow-x: hidden;
         background-image:
           radial-gradient(circle at 15% 20%, rgba(244, 114, 182, 0.12) 0%, transparent 40%),
@@ -54,7 +54,7 @@
         gap: 24px;
       }
 
-      /* ── Top Navigation Bar ── */
+      /* â”€â”€ Top Navigation Bar â”€â”€ */
       .top-bar {
         display: flex;
         align-items: center;
@@ -154,7 +154,7 @@
         box-shadow: 0 0 6px currentColor;
       }
 
-      /* ── Main Layout Grid ── */
+      /* â”€â”€ Main Layout Grid â”€â”€ */
       .main-grid {
         display: grid;
         grid-template-columns: 1fr 380px;
@@ -167,7 +167,7 @@
         }
       }
 
-      /* ── Hero Player Card ── */
+      /* â”€â”€ Hero Player Card â”€â”€ */
       .player-card {
         background: var(--bg-card);
         backdrop-filter: blur(16px);
@@ -242,7 +242,7 @@
         object-fit: cover;
       }
 
-      /* ── Equalizer Bars ── */
+      /* â”€â”€ Equalizer Bars â”€â”€ */
       .eq-container {
         display: flex;
         align-items: flex-end;
@@ -278,7 +278,7 @@
         100% { height: 34px; }
       }
 
-      /* ── Track Meta ── */
+      /* â”€â”€ Track Meta â”€â”€ */
       .track-meta {
         text-align: center;
         margin-bottom: 24px;
@@ -304,7 +304,7 @@
         gap: 8px;
       }
 
-      /* ── Seeker Slider Component ── */
+      /* â”€â”€ Seeker Slider Component â”€â”€ */
       .seeker-container {
         width: 100%;
         max-width: 580px;
@@ -349,7 +349,7 @@
         color: var(--text-sub);
       }
 
-      /* ── Playback Action Buttons ── */
+      /* â”€â”€ Playback Action Buttons â”€â”€ */
       .player-controls {
         display: flex;
         align-items: center;
@@ -394,7 +394,7 @@
         color: #fff;
       }
 
-      /* ── Volume Slider ── */
+      /* â”€â”€ Volume Slider â”€â”€ */
       .volume-group {
         display: flex;
         align-items: center;
@@ -440,7 +440,7 @@
         text-align: right;
       }
 
-      /* ── Side Panel (Sleep Timer & Queue) ── */
+      /* â”€â”€ Side Panel (Sleep Timer & Queue) â”€â”€ */
       .side-panel {
         display: flex;
         flex-direction: column;
@@ -475,7 +475,7 @@
         gap: 8px;
       }
 
-      /* ── Sleep Timer Widget ── */
+      /* â”€â”€ Sleep Timer Widget â”€â”€ */
       .sleep-status-badge {
         display: flex;
         align-items: center;
@@ -547,7 +547,7 @@
         border-color: #ef4444;
       }
 
-      /* ── Queue List ── */
+      /* â”€â”€ Queue List â”€â”€ */
       .queue-items {
         max-height: 280px;
         overflow-y: auto;
@@ -670,7 +670,7 @@
             <h1 id="trackTitle" class="track-title">Menunggu Lagu</h1>
             <div class="track-artist">
               <span id="trackAuthor">Ketik /music play di Discord untuk mulai</span>
-              <span>•</span>
+              <span>â€¢</span>
               <span id="trackSourceBadge" style="font-family:'JetBrains Mono'; font-size:11px; color:var(--neon-cyan);">STANDBY</span>
             </div>
           </div>
@@ -877,7 +877,7 @@
             <span class="queue-idx">${i + 1}</span>
             <div class="queue-info">
               <div class="queue-name">${escapeHtml(track.title || 'Untitled')}</div>
-              <div class="queue-dur">${track.requester ? track.requester + ' • ' : ''}${formatTime(track.duration)}</div>
+              <div class="queue-dur">${track.requester ? track.requester + ' â€¢ ' : ''}${formatTime(track.duration)}</div>
             </div>
           </div>
         `).join('');
@@ -1023,3 +1023,4 @@
     </script>
   </body>
 </html>
+

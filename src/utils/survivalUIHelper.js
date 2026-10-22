@@ -13,7 +13,7 @@
 //   ui.getFooter('survival').
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { colors, footers } = require("../config/ui/palette");
+const { colors, footers, designTokens } = require("../config/ui/palette");
 const { buildGoalGradientBar } = require("./uxHelper");
 const { buildContainerV2 } = require("./NauraContainerBuilder");
 
@@ -22,12 +22,12 @@ const { buildContainerV2 } = require("./NauraContainerBuilder");
  * Harus selalu sinkron dengan tabel "Palet Earth-Tone Survival" di DESIGN.md.
  */
 const survivalColors = {
-  emerald: "#86EFAC", // Aksen utama survival, border panel kaca, glow judul
-  moss: "#34D399", // Bar vital sehat (>50%), status panen siap
-  amber: "#FBBF24", // Peringatan stamina rendah, energi, reward harian
-  bark: "#92400E", // Crafting, kayu/material mentah, workshop
-  river: "#7DD3FC", // Fishing, deep sea, vivarium, elemen air
-  danger: "#F87171", // Dungeon, world boss, duel, coliseum, HP kritis
+  emerald: designTokens.SURVIVAL.emerald.hex,
+  moss: designTokens.SURVIVAL.moss.hex,
+  amber: designTokens.SURVIVAL.amber.hex,
+  bark: designTokens.SURVIVAL.bark.hex,
+  river: designTokens.SURVIVAL.river.hex,
+  danger: designTokens.SURVIVAL.danger.hex,
 };
 
 /**
@@ -44,12 +44,12 @@ const survivalGlass = {
  * Harus selalu sinkron dengan tabel "Skala Rarity Item" di DESIGN.md.
  */
 const rarityColors = {
-  common: "#9CA3AF",
-  uncommon: "#86EFAC",
-  rare: "#93C5FD",
-  epic: "#C084FC",
-  legendary: "#FFD700",
-  mythic: "#F9A8D4",
+  common: designTokens.RARITY.common.hex,
+  uncommon: designTokens.RARITY.uncommon.hex,
+  rare: designTokens.RARITY.rare.hex,
+  epic: designTokens.RARITY.epic.hex,
+  legendary: designTokens.RARITY.legendary.hex,
+  mythic: designTokens.RARITY.mythic.hex,
 };
 
 /**

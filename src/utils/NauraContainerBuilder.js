@@ -4,6 +4,7 @@ const path = require("node:path");
 const ui = new Proxy({}, {
   get: (_, prop) => require("../config/ui")[prop],
 });
+const designTokens = require("../config/tokens/designTokens");
 const nauraExpression = require("./nauraExpression");
 const nauraText = require("./nauraText");
 const uxHelper = require("./uxHelper");
@@ -100,6 +101,22 @@ function isAttachmentPresent(ref, filesList) {
   });
 }
 
+function resolveAttachmentUrl(ref, filesList, context) {
+  if (!ref) return null;
+  const resolved = resolveMediaUrl(ref);
+  if (!resolved.startsWith("attachment://")) return resolved;
+  if (!isAttachmentPresent(resolved, filesList)) {
+    const log = getLogger();
+    if (log) {
+      log.warn(
+        `[ContainerV2] ${context || "attachment"} "${ref}" mereferensikan attachment yang tidak ada di array files. Item diabaikan untuk mencegah DiscordAPIError[50035].`,
+      );
+    }
+    return null;
+  }
+  return resolved;
+}
+
 function buildContainerV2({
   lang,
   interaction,
@@ -133,7 +150,7 @@ function buildContainerV2({
 }) {
   const hasExplicitLang = Boolean(lang || interaction);
   const activeLang = resolveLanguage(lang || interaction);
-  const defaultColor = ui.getColor("primary") || "#FFC0CB";
+  const defaultColor = ui.getColor("primary") || designTokens.BRAND.primary.hex;
   const resolvedColorInput = accentColorHex || color || defaultColor;
   const accentColor =
     typeof resolvedColorInput === "number"
@@ -205,20 +222,7 @@ function buildContainerV2({
 
   if (!headerTitle && cleanAuthor) warnMissingTitle(cleanAuthor);
 
-  // Validasi defensif: cegah DiscordAPIError 50035 jika attachment:// tidak ada di array files
-  if (
-    headerIconURL &&
-    headerIconURL.startsWith("attachment://") &&
-    !isAttachmentPresent(headerIconURL, attachedFiles)
-  ) {
-    const log = getLogger();
-    if (log) {
-      log.warn(
-        `[ContainerV2] headerIconURL "${headerIconURL}" mereferensikan attachment yang tidak ada di array files. Accessory diabaikan untuk mencegah DiscordAPIError[50035].`,
-      );
-    }
-    headerIconURL = null;
-  }
+  headerIconURL = resolveAttachmentUrl(headerIconURL, attachedFiles, "headerIconURL");
 
   const headerLines = [];
   if (cleanAuthor) headerLines.push(`-# ${cleanAuthor}`);
@@ -246,26 +250,19 @@ function buildContainerV2({
     containerComponents.push(separatorComp(true, 1));
   }
 
-  // ── Top Banner (jika bannerPosition === 'top' atau ada topBannerAttachmentName) ──
+  // -- Top Banner (jika bannerPosition === 'top' atau ada topBannerAttachmentName) --
   const topRef =
     topBannerAttachmentName ||
     (bannerPosition === "top" ? bannerAttachmentName : null);
-  if (topRef) {
-    const topMediaUrl = resolveMediaUrl(topRef);
-    if (isAttachmentPresent(topMediaUrl, attachedFiles)) {
-      containerComponents.push({
-        type: 12,
-        items: [{ media: { url: topMediaUrl } }],
-      });
-      containerComponents.push(separatorComp(true, 1));
-    } else {
-      const log = getLogger();
-      if (log) {
-        log.warn(
-          `[ContainerV2] topBanner "${topRef}" mereferensikan attachment yang tidak ada di array files. Banner diabaikan.`,
-        );
-      }
-    }
+  const topMediaUrl = topRef
+    ? resolveAttachmentUrl(topRef, attachedFiles, "topBannerAttachmentName")
+    : null;
+  if (topMediaUrl) {
+    containerComponents.push({
+      type: 12,
+      items: [{ media: { url: topMediaUrl } }],
+    });
+    containerComponents.push(separatorComp(true, 1));
   }
 
   const descriptionAlreadyShown =
@@ -282,7 +279,7 @@ function buildContainerV2({
     });
   }
 
-  // ── Bottom Banner / Media Gallery ──
+  // -- Bottom Banner / Media Gallery --
   const bottomBannerRef =
     bannerPosition !== "top" ? bannerAttachmentName : null;
   const bottomGalleryRefs = [
@@ -291,19 +288,8 @@ function buildContainerV2({
     expressionGalleryRef,
   ]
     .filter(Boolean)
-    .filter((ref) => {
-      const resolved = resolveMediaUrl(ref);
-      const ok = isAttachmentPresent(resolved, attachedFiles);
-      if (!ok) {
-        const log = getLogger();
-        if (log) {
-          log.warn(
-            `[ContainerV2] gallery item "${ref}" mereferensikan attachment yang tidak ada di array files. Item diabaikan.`,
-          );
-        }
-      }
-      return ok;
-    });
+    .map((ref) => resolveAttachmentUrl(ref, attachedFiles, "mediaAttachmentNames"))
+    .filter(Boolean);
 
   if (bottomGalleryRefs.length > 0) {
     containerComponents.push(separatorComp(true, 1));
@@ -318,23 +304,12 @@ function buildContainerV2({
   if (Array.isArray(fileAttachmentNames)) {
     fileAttachmentNames
       .filter(Boolean)
-      .filter((name) => {
-        const resolved = resolveMediaUrl(name);
-        const ok = isAttachmentPresent(resolved, attachedFiles);
-        if (!ok) {
-          const log = getLogger();
-          if (log) {
-            log.warn(
-              `[ContainerV2] file attachment "${name}" mereferensikan attachment yang tidak ada di array files. File diabaikan.`,
-            );
-          }
-        }
-        return ok;
-      })
-      .forEach((name) => {
+      .map((name) => resolveAttachmentUrl(name, attachedFiles, "fileAttachmentNames"))
+      .filter(Boolean)
+      .forEach((url) => {
         containerComponents.push({
           type: 13,
-          file: { url: resolveMediaUrl(name) },
+          file: { url },
         });
       });
   }
@@ -390,7 +365,7 @@ function buildContainerV2({
       style: 2, // SECONDARY
       custom_id: "msg_cleanup",
       label: "Bersihkan (+5 NSF)",
-      emoji: { name: "🧹" },
+      emoji: { name: "??" },
     };
 
     let appended = false;
@@ -419,13 +394,13 @@ function buildContainerV2({
     rowsArray.forEach((rowJson) => containerComponents.push(rowJson));
   }
 
-  // ── Indikator Auto-Delete Countdown ──
+  // -- Indikator Auto-Delete Countdown --
   if (typeof expiresInSeconds === "number" && expiresInSeconds > 0) {
     const expireTimestamp =
       Math.floor(Date.now() / 1000) + Math.round(expiresInSeconds);
     containerComponents.push(
       textDisplay(
-        `-# ⏳ Pesan ini otomatis terhapus <t:${expireTimestamp}:R> atau klik tombol sapu untuk upah +5 NSF.`,
+        `-# ? Pesan ini otomatis terhapus <t:${expireTimestamp}:R> atau klik tombol sapu untuk upah +5 NSF.`,
       ),
     );
   }
@@ -544,7 +519,7 @@ function buildErrorContainerV2(opts) {
   const footerText =
     pick(opts, "footerText") || ui.getFooter(footerCategory, activeLang);
   const errEmoji =
-    nauraExpression.getEmoji("error") || ui.getEmoji("error") || "❌";
+    nauraExpression.getEmoji("error") || ui.getEmoji("error") || "?";
   const expression =
     pick(opts, "expression") !== undefined ? pick(opts, "expression") : "error";
   const errorMessage =
@@ -569,7 +544,7 @@ function buildErrorContainerV2(opts) {
       pick(opts, "accentColorHex") ||
       ui.getColor("danger") ||
       ui.getColor("error") ||
-      "#EF4444",
+      designTokens.STATUS.dnd.hex,
     authorName,
     title: `${errEmoji} ${title}`,
     description: errorMessage,
@@ -610,7 +585,7 @@ function buildLoadingContainerV2(opts) {
   const footerText =
     pick(opts, "footerText") || ui.getFooter(footerCategory, activeLang);
   const loadEmoji =
-    nauraExpression.getEmoji("loading") || ui.getEmoji("loading") || "⏳";
+    nauraExpression.getEmoji("loading") || ui.getEmoji("loading") || "?";
   const expression =
     pick(opts, "expression") !== undefined
       ? pick(opts, "expression")
@@ -635,7 +610,7 @@ function buildLoadingContainerV2(opts) {
       pick(opts, "accentColorHex") ||
       ui.getColor("accent-blue") ||
       ui.getColor("primary") ||
-      "#38BDF8",
+      designTokens.STATUS.syncing.hex,
     authorName,
     title: `${loadEmoji} ${title}`,
     description:
@@ -677,7 +652,7 @@ function buildMaintenanceContainerV2(opts) {
   const footerText =
     pick(opts, "footerText") || ui.getFooter(footerCategory, activeLang);
   const warnEmoji =
-    nauraExpression.getEmoji("warning") || ui.getEmoji("warning") || "🛠️";
+    nauraExpression.getEmoji("warning") || ui.getEmoji("warning") || "???";
   const expression =
     pick(opts, "expression") !== undefined
       ? pick(opts, "expression")
@@ -699,7 +674,7 @@ function buildMaintenanceContainerV2(opts) {
     lang: activeLang,
     footerCategory,
     accentColorHex:
-      pick(opts, "accentColorHex") || ui.getColor("warning") || "#F59E0B",
+      pick(opts, "accentColorHex") || ui.getColor("warning") || designTokens.STATUS.idle.hex,
     authorName,
     title: `${warnEmoji} ${title}`,
     description: rawMaintenance,
@@ -740,11 +715,9 @@ function buildSuccessContainerV2(opts) {
   const footerText =
     pick(opts, "footerText") || ui.getFooter(footerCategory, activeLang);
   const okEmoji =
-    nauraExpression.getEmoji("success") || ui.getEmoji("success") || "✅";
+    nauraExpression.getEmoji("success") || ui.getEmoji("success") || "?";
   const expression =
-    pick(opts, "expression") !== undefined
-      ? pick(opts, "expression")
-      : "success";
+    pick(opts, "expression") !== undefined ? pick(opts, "expression") : "success";
 
   const bannerAttachmentName = pick(opts, "bannerAttachmentName");
   const files = [...(pick(opts, "files") || [])];
@@ -753,7 +726,7 @@ function buildSuccessContainerV2(opts) {
     lang: activeLang,
     footerCategory,
     accentColorHex:
-      pick(opts, "accentColorHex") || ui.getColor("success") || "#22C55E",
+      pick(opts, "accentColorHex") || ui.getColor("success") || designTokens.STATUS.online.hex,
     authorName,
     title: `${okEmoji} ${title}`,
     description:
@@ -806,11 +779,11 @@ function buildPersonaContainerV2({
 
   const chosenExpression = expression || defaultExpressionMap[type] || "smile";
 
-  const eNaura = ui.getEmoji("about") || "🌸";
-  const eWarn = ui.getEmoji("warning") || "⚠️";
-  const eParty = ui.getEmoji("celebrate") || "🎉";
-  const eSparkle = ui.getEmoji("sparkles") || "✨";
-  const eGift = ui.getEmoji("gift") || "🎁";
+  const eNaura = ui.getEmoji("about") || "??";
+  const eWarn = ui.getEmoji("warning") || "??";
+  const eParty = ui.getEmoji("celebrate") || "??";
+  const eSparkle = ui.getEmoji("sparkles") || "?";
+  const eGift = ui.getEmoji("gift") || "??";
 
   const defaultTitleMap = {
     cooldown: `${eNaura} Istirahat Dulu Sebentar`,
@@ -825,7 +798,7 @@ function buildPersonaContainerV2({
     title || defaultTitleMap[type] || `${eNaura} Naura Hoshino`;
 
   return buildContainerV2({
-    accentColorHex: accentColorHex || ui.getColor("primary") || "#FFB6C1",
+    accentColorHex: accentColorHex || ui.getColor("primary") || designTokens.BRAND.primary.hex,
     title: finalTitle,
     description: message,
     expression: chosenExpression,
@@ -835,12 +808,6 @@ function buildPersonaContainerV2({
   });
 }
 
-/**
- * Sanitasi pohon komponen Discord untuk mencegah duplikasi custom_id
- * yang memicu DiscordAPIError[50035] COMPONENT_CUSTOM_ID_DUPLICATED.
- * @param {Array<object>} components
- * @returns {Array<object>}
- */
 function sanitizeComponentCustomIds(components) {
   if (!Array.isArray(components)) return components;
   const seenIds = new Set();
@@ -849,24 +816,27 @@ function sanitizeComponentCustomIds(components) {
     if (!item || typeof item !== "object") return item;
     const raw = typeof item.toJSON === "function" ? item.toJSON() : item;
 
+    // Cegah duplikasi custom_id pada komponen itu sendiri (tombol, select menu,
+    // dan komponen induk yang langsung carries custom_id) sebelum memproses anak.
+    if (raw && raw.custom_id) {
+      if (seenIds.has(raw.custom_id)) {
+        const log = getLogger();
+        if (log) {
+          log.warn(
+            `[ContainerV2] Komponen dengan custom_id duplikat "${raw.custom_id}" disaring agar terhindar dari DiscordAPIError[50035].`,
+          );
+        }
+        return null;
+      }
+      seenIds.add(raw.custom_id);
+    }
+
     if (Array.isArray(raw.components)) {
       const filteredChildren = [];
       for (const child of raw.components) {
         if (!child) continue;
-        const childJson = typeof child.toJSON === "function" ? child.toJSON() : child;
-        if (childJson.custom_id) {
-          if (seenIds.has(childJson.custom_id)) {
-            const log = getLogger();
-            if (log) {
-              log.warn(
-                `[ContainerV2] Komponen dengan custom_id duplikat "${childJson.custom_id}" disaring agar terhindar dari DiscordAPIError[50035].`,
-              );
-            }
-            continue;
-          }
-          seenIds.add(childJson.custom_id);
-        }
-        filteredChildren.push(processComp(childJson));
+        const processed = processComp(child);
+        if (processed) filteredChildren.push(processed);
       }
       return { ...raw, components: filteredChildren };
     }
@@ -876,27 +846,20 @@ function sanitizeComponentCustomIds(components) {
   const sanitized = [];
   for (const rootItem of components) {
     const processed = processComp(rootItem);
-    if (processed) {
-      if (
-        processed.type === 1 &&
-        Array.isArray(processed.components) &&
-        processed.components.length === 0
-      ) {
-        continue;
-      }
-      sanitized.push(processed);
+    if (!processed) continue;
+    if (
+      processed.type === 1 &&
+      Array.isArray(processed.components) &&
+      processed.components.length === 0
+    ) {
+      continue;
     }
+    sanitized.push(processed);
   }
   return sanitized;
 }
 
-/**
- * Membangun tombol tautan navigasi silang ke Web Dashboard.
- * @param {string} [pagePath=""] - Jalur URL (misal: "dashboard.html", "soundboard.html")
- * @param {string} [label="🌐 Buka di Dashboard"]
- * @returns {object} ButtonBuilder
- */
-function buildDashboardLinkButton(pagePath = "", label = "🌐 Buka di Dashboard") {
+function buildDashboardLinkButton(pagePath = "", label = "?? Buka di Dashboard") {
   const { ButtonBuilder, ButtonStyle } = require("discord.js");
   const env = require("../config/env");
   const baseUrl = env.DASHBOARD_ORIGIN || `http://localhost:${env.DASHBOARD_PORT || 3000}`;
@@ -956,6 +919,72 @@ function disableContainerV2(payload) {
   };
 }
 
+/**
+ * Menanggapi interaksi secara defensif untuk mencegah DiscordjsError[40060]
+ * (Interaction has already been acknowledged) dan timeout 10062
+ * (Interaction Not Acknowledged).
+ * Memilih metode tanggapan otomatis berdasarkan status interaksi:
+ * - replied/deferred ? editReply (sunting pesan yang sudah ada)
+ * - komponen pesan belum diakui ? update (perbarui pesan pemicu)
+ * - belum ada tanggapan ? reply (kirim balasan baru)
+ * followUp digunakan sebagai fallback bila editReply/update tidak tersedia atau gagal.
+ * @param {import("discord.js").BaseInteraction} interaction
+ * @param {object} payload
+ * @returns {Promise<*>}
+ */
+async function safeReplyOrEdit(interaction, payload) {
+  if (!interaction || typeof interaction !== "object") {
+    throw new Error("[ContainerV2] safeReplyOrEdit: interaksi tidak valid.");
+  }
+  const log = getLogger();
+
+  const isMessageComponent =
+    (typeof interaction.isButton === "function" && interaction.isButton()) ||
+    (typeof interaction.isAnySelectMenu === "function" &&
+      interaction.isAnySelectMenu()) ||
+    (typeof interaction.isMessageComponent === "function" &&
+      interaction.isMessageComponent());
+
+  const tryMethod = async (name) => {
+    if (typeof interaction[name] !== "function") return undefined;
+    try {
+      return await interaction[name](payload);
+    } catch (error) {
+      if (log) {
+        log.warn(
+          `[ContainerV2] safeReplyOrEdit: ${name} gagal (${String(
+            error && error.message ? error.message : error,
+          )}). Mencoba alternatif.`,
+        );
+      }
+      return undefined;
+    }
+  };
+
+  // Sudah pernah dikirim balasan: sunting pesan tersebut (hindari 40060)
+  if (Boolean(interaction.replied)) {
+    return (await tryMethod("editReply")) ?? (await tryMethod("followUp"));
+  }
+  // Ditunda tetapi belum terkirim: sunting reply yang ditunda (hindari 40060)
+  if (Boolean(interaction.deferred)) {
+    return (await tryMethod("editReply")) ?? (await tryMethod("followUp"));
+  }
+  // Komponen pesan belum diakui: perbarui pesan pemicu (hindari 10062)
+  if (isMessageComponent) {
+    return (
+      (await tryMethod("update")) ??
+      (await tryMethod("reply")) ??
+      (await tryMethod("followUp"))
+    );
+  }
+  // Belum ada tanggapan: kirim balasan baru (mengakui interaksi, hindari 10062)
+  return (
+    (await tryMethod("reply")) ??
+    (await tryMethod("followUp")) ??
+    (await tryMethod("update"))
+  );
+}
+
 module.exports = {
   buildContainerV2,
   buildErrorContainerV2,
@@ -967,6 +996,7 @@ module.exports = {
   sanitizeComponentCustomIds,
   disableComponents,
   disableContainerV2,
+  safeReplyOrEdit,
   textDisplay,
   separatorComp,
   ux: uxHelper,

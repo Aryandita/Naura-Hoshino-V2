@@ -129,7 +129,7 @@ class CanvasWorkerPool {
    * @param {number} timeoutMs
    * @returns {Promise<any>}
    */
-  async runTask(task, payload, timeoutMs = 12000) {
+  async runTask(task, payload, timeoutMs = 30000) {
     if (!this.isInitialized) {
       this.init();
     }
@@ -204,7 +204,7 @@ class CanvasWorkerPool {
    * - execute(task, payload, timeoutMs)
    * - execute({ task, payload, timeoutMs })
    */
-  async execute(taskOrOptions, payload, timeoutMs = 12000) {
+  async execute(taskOrOptions, payload, timeoutMs = 30000) {
     if (typeof taskOrOptions === "object" && taskOrOptions !== null) {
       const task = taskOrOptions.task;
       const data = taskOrOptions.payload || taskOrOptions.data || {};
@@ -246,3 +246,4 @@ class CanvasWorkerPool {
 const canvasWorkerPool = new CanvasWorkerPool(2);
 
 module.exports = canvasWorkerPool;
+

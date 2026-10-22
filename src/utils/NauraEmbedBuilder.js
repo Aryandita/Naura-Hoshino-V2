@@ -122,28 +122,28 @@ class NauraEmbedBuilder extends EmbedBuilder {
 class SuccessEmbed extends NauraEmbedBuilder {
   constructor(data) {
     super(data);
-    this.setColor(ui.colors.success || "#00FF00");
+    this.setColor(ui.colors.success);
   }
 }
 
 class ErrorEmbed extends NauraEmbedBuilder {
   constructor(data) {
     super(data);
-    this.setColor(ui.colors.error || "#FF0000");
+    this.setColor(ui.colors.error);
   }
 }
 
 class WarnEmbed extends NauraEmbedBuilder {
   constructor(data) {
     super(data);
-    this.setColor(ui.colors.warning || "#FFB347");
+    this.setColor(ui.colors.warning);
   }
 }
 
 class InfoEmbed extends NauraEmbedBuilder {
   constructor(data) {
     super(data);
-    this.setColor(ui.colors.info || "#57C7FF");
+    this.setColor(ui.colors.info);
   }
 }
 

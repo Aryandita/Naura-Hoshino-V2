@@ -16,6 +16,14 @@
 
 import * as THREE from "three";
 
+// Warna SSOT: src/config/tokens/designTokens.js (browser ESM bundel Vite;
+// dilarang require() modul CJS designTokens.js. Konstanta lokal namespaced
+// di bawah menampung nilai SSOT agar bundling tidak rusak).
+const BRAND_PINK = 0xffb6c1;     // SSOT: tidak ada token ekak #FFB6C1; BRAND.primary (#FFC0CB) landed terdekat
+const BRAND_PURPLE = 0xc084fc;   // SSOT: RARITY.epic (Celestial Purple)
+const BRAND_GOLD = 0xffd700;     // SSOT: RARITY.legendary (Starlight Gold)
+const BRAND_CYAN = 0x38bdf8;     // SSOT: STATUS.syncing
+
 /**
  * Membuat subsistem elemen 3D khas brand Naura Hoshino.
  * @param {THREE.Scene} scene - Scene Three.js aktif.
@@ -28,10 +36,10 @@ export function createNauraBrand3D(scene, options = {}) {
   scene.add(rootGroup);
 
   // Palet Warna Khas Brand Naura Hoshino (DESIGN.md)
-  const COLOR_PINK = new THREE.Color("#FFB6C1");
-  const COLOR_PURPLE = new THREE.Color("#C084FC");
-  const COLOR_GOLD = new THREE.Color("#FFD700");
-  const COLOR_CYAN = new THREE.Color("#38BDF8");
+  const COLOR_PINK = new THREE.Color(BRAND_PINK);
+  const COLOR_PURPLE = new THREE.Color(BRAND_PURPLE);
+  const COLOR_GOLD = new THREE.Color(BRAND_GOLD);
+  const COLOR_CYAN = new THREE.Color(BRAND_CYAN);
 
   // State reaktivitas
   let isVisible = options.visible ?? true;
@@ -56,6 +64,7 @@ export function createNauraBrand3D(scene, options = {}) {
     color: COLOR_PURPLE,
     transparent: true,
     opacity: 0.85,
+    side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -68,6 +77,7 @@ export function createNauraBrand3D(scene, options = {}) {
     color: COLOR_PINK,
     transparent: true,
     opacity: 0.9,
+    side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -80,6 +90,7 @@ export function createNauraBrand3D(scene, options = {}) {
     color: COLOR_CYAN,
     transparent: true,
     opacity: 0.6,
+    side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -94,6 +105,7 @@ export function createNauraBrand3D(scene, options = {}) {
     color: COLOR_GOLD,
     transparent: true,
     opacity: 0.95,
+    side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -101,6 +113,7 @@ export function createNauraBrand3D(scene, options = {}) {
     color: COLOR_PINK,
     transparent: true,
     opacity: 0.9,
+    side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });

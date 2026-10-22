@@ -13,6 +13,12 @@
       "skillPath": "skills/code-simplification/SKILL.md",
       "computedHash": "7973e746e8e2ea5004d520da970c15a106824b8d6be1bcff48908aec021f3677"
     },
+    "codebase-memory": {
+      "source": "DeusData/codebase-memory-mcp",
+      "sourceType": "github",
+      "skillPath": "skills/codebase-memory/SKILL.md",
+      "computedHash": "cfc9a9a7e8d9cf2435693a379401da451cd877182b003ea7c8d5c11a742a87e1"
+    },
     "design-taste-frontend": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
@@ -36,6 +42,12 @@
       "sourceType": "github",
       "skillPath": "skills/soft-skill/SKILL.md",
       "computedHash": "f730e4132775f13eea19e3dc39afc6bb453cfc0498872b127ad8f0d47cfd802d"
+    },
+    "karpathy-guidelines": {
+      "source": "multica-ai/andrej-karpathy-skills",
+      "sourceType": "github",
+      "skillPath": "skills/karpathy-guidelines/SKILL.md",
+      "computedHash": "e2553e9b66299fbca399804d6c44dfa44b2384b979ca5bf8b933b4916bb3141b"
     },
     "minimalist-ui": {
       "source": "Leonxlnx/taste-skill",

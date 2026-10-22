@@ -15,7 +15,8 @@ const env = require("../config/env");
 const { logger } = require("../managers/logger");
 const { normalizeAiResponse } = require("../adapters/aiBoundaryAdapter");
 const geminiClient = require("./geminiClient");
-const { SystemError, ExternalAPIError } = require("../errors/DomainError");
+const { SystemError, ExternalAPIError, DomainError } = require("../errors/DomainError");
+const languageManager = require("../managers/languageManager");
 
 const TASK_TYPES = Object.freeze({
   GENERAL_CHAT: "GENERAL_CHAT",
@@ -316,10 +317,27 @@ class AiEnsembleRouter {
       }
     }
 
-    // Jika seluruh provider di dalam kandidat gagal
-    throw new SystemError(
-      `Semua provider AI (${candidates.join(", ")}) gagal atau kuota habis: ${lastError ? lastError.message : "Tidak ada provider aktif"}`,
+    // Jika seluruh provider di dalam kandidat gagal atau tidak tersedia,
+    // degrade secara mulus dengan balasan ramah dari kamus i18n lokal.
+    logger.warn(
+      `[AiEnsembleRouter] Semua provider AI gagal untuk ${taskType}. Menggunakan balasan fallback i18n.`,
     );
+
+    const fallbackText = languageManager.translateSync(
+      languageManager.default,
+      "ai_fallback",
+    );
+
+    return {
+      text: fallbackText,
+      provider: "fallback",
+      model: null,
+      latencyMs: 0,
+      taskType,
+      toString() {
+        return this.text;
+      },
+    };
   }
 
   /**
@@ -377,7 +395,8 @@ class AiEnsembleRouter {
     messages.push({ role: "user", content: currentContent });
 
     const executeRequest = async (targetModel) => {
-      return fetch("https://api.groq.com/openai/v1/chat/completions", {
+      try {
+        return await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -390,13 +409,19 @@ class AiEnsembleRouter {
           max_tokens: config.maxOutputTokens ?? 1024,
         }),
       });
+      } catch (err) {
+        throw new ExternalAPIError(
+          `Gagal menghubungi Groq API untuk model ${targetModel}: ${err.message}`,
+          { provider: "groq", model: targetModel },
+          err,
+        );
+      }
     };
 
     const candidateModels = [
       env.GROQ_MODEL || "llama-3.3-70b-versatile",
       "llama-3.1-8b-instant",
       "llama-3.2-3b-preview",
-      "llama-3.2-1b-preview",
     ];
 
     let lastGroqStatus = null;
@@ -502,7 +527,12 @@ class AiEnsembleRouter {
       };
     } catch (err) {
       clearTimeout(timeoutId);
-      throw err;
+      if (err instanceof DomainError) throw err;
+      throw new ExternalAPIError(
+        `Gagal menghubungi Ollama: ${err.message}`,
+        { provider: "ollama", model },
+        err,
+      );
     }
   }
 

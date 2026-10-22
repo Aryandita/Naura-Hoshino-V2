@@ -1,8 +1,9 @@
-const { EmbedBuilder } = require("discord.js");
+﻿const { EmbedBuilder } = require("discord.js");
 const { logger } = require("../managers/logger");
 const env = require("../config/env");
 const ui = require("../config/ui");
 const crypto = require("crypto");
+const metricsManager = require("./metricsManager");
 
 const ERROR_DM_TTL_MS = 10 * 60 * 1000;
 const ERROR_DM_DEDUP_MS = 60 * 1000;
@@ -54,7 +55,7 @@ const sendErrorLog = async (err, type, client) => {
       const webhook = new WebhookClient({ url: env.ERROR_WEBHOOK_URL });
       const errEmbed = new EmbedBuilder()
         .setColor("#FF0000")
-        .setTitle(`⚠️ System Crash: ${type}`)
+        .setTitle(`\u26a0\ufe0f System Crash: ${type}`)
         .setDescription(
           `\`\`\`js\n${String(err?.stack || err).substring(0, 4000)}\n\`\`\``,
         )
@@ -81,7 +82,7 @@ const sendErrorLog = async (err, type, client) => {
         if (owner) {
           const errEmbed = new EmbedBuilder()
             .setColor("#00FFFF")
-            .setTitle(`⚠️ Naura Versi ${env.BOT_VERSION || "2.3.0"} - ${type}`)
+            .setTitle(`\u26a0\ufe0f Naura Versi ${env.BOT_VERSION || "2.3.0"} - ${type}`)
             .setDescription(
               `\`\`\`js\n${String(err?.stack || err).substring(0, 4000)}\n\`\`\``,
             )
@@ -120,6 +121,7 @@ const setupErrorHandlers = (client) => {
       return;
     }
 
+    metricsManager.logError("unhandledRejection");
     sendErrorLog(reason, "Unhandled Rejection", client);
   });
 
@@ -140,8 +142,10 @@ const setupErrorHandlers = (client) => {
       return;
     }
 
+    metricsManager.logError("uncaughtException");
     sendErrorLog(err, "Uncaught Exception", client);
   });
 };
 
 module.exports = { setupErrorHandlers, sendErrorLog };
+

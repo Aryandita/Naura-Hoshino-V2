@@ -22,6 +22,50 @@ const { SystemError, ExternalAPIError, ValidationError } = require("../errors/Do
 const API_BASE = "https://api.fish.audio";
 const CACHE_TTL_SECONDS = 86400; // 24 Jam
 
+/**
+ * Circuit breaker sederhana untuk eksternal API Fish Audio.
+ * Status: CLOSED (normal) -> OPEN (ditolak cepat) -> HALF_OPEN (percobaan probe)
+ * setelah cooldown habis.
+ */
+class CircuitBreaker {
+  constructor(options = {}) {
+    this.STATE_CLOSED = "CLOSED";
+    this.STATE_OPEN = "OPEN";
+    this.STATE_HALF_OPEN = "HALF_OPEN";
+    this.state = this.STATE_CLOSED;
+    this.failureThreshold = options.failureThreshold || 3;
+    this.cooldownMs = options.cooldownMs || 60_000;
+    this.failureCount = 0;
+    this.nextAttemptTime = 0;
+  }
+
+  isAvailable() {
+    const now = Date.now();
+    if (this.state === this.STATE_OPEN && now >= this.nextAttemptTime) {
+      this.state = this.STATE_HALF_OPEN;
+    }
+    return this.state !== this.STATE_OPEN;
+  }
+
+  recordSuccess() {
+    this.failureCount = 0;
+    this.state = this.STATE_CLOSED;
+    this.nextAttemptTime = 0;
+  }
+
+  recordFailure() {
+    this.failureCount += 1;
+    this.nextAttemptTime = Date.now() + this.cooldownMs;
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = this.STATE_OPEN;
+    }
+  }
+
+  getState() {
+    return this.state;
+  }
+}
+
 class FishAudioService {
   constructor() {
     this.tempDir = path.join(os.tmpdir(), "naura-tts-audio");
@@ -39,6 +83,7 @@ class FishAudioService {
     this.windowMs = 10_000;
     this.creditCooldownUntil = 0;
     this.creditWarningLogged = false;
+    this.circuitBreaker = new CircuitBreaker({ failureThreshold: 3, cooldownMs: 60_000 });
   }
 
   /**
@@ -119,6 +164,14 @@ class FishAudioService {
       throw new ValidationError("Teks untuk TTS tidak boleh kosong.");
     }
 
+    // Circuit breaker: tolak cepat saat circuit OPEN (fail fast, tanpa menunggu timeout)
+    if (!this.circuitBreaker.isAvailable()) {
+      throw new ExternalAPIError(
+        "Suara Naura sedang istirahat, coba lagi sebentar.",
+        { service: "FishAudio", circuit: this.circuitBreaker.getState() },
+      );
+    }
+
     const cleanText = text.trim();
     const voiceId = options.referenceId || env.FISH_AUDIO_VOICE_ID || "";
     const format = options.format || "mp3";
@@ -140,10 +193,11 @@ class FishAudioService {
     }
 
     // 2. Request ke Fish Audio API dengan Concurrency Guard & Rate Limiter
-    await this._acquireSlot();
-
     try {
-      const payload = {
+      await this._acquireSlot();
+
+      try {
+        const payload = {
         text: cleanText,
         format: format,
         latency: options.latency || "low",
@@ -189,6 +243,8 @@ class FishAudioService {
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = Buffer.from(arrayBuffer);
 
+      this.circuitBreaker.recordSuccess();
+
       // 3. Simpan ke cache Redis
       try {
         if (
@@ -211,14 +267,16 @@ class FishAudioService {
       }
 
       return audioBuffer;
+      } finally {
+        this._releaseSlot();
+      }
     } catch (err) {
+      this.circuitBreaker.recordFailure();
       logger.error(`[FishAudio] Eksepsi saat generate speech: ${err.message}`);
       if (err.name === "SystemError" || err.name === "ExternalAPIError" || err.name === "ValidationError") {
         throw err;
       }
       throw new ExternalAPIError(`Gagal menghubungi Fish Audio: ${err.message}`, { service: "FishAudio" });
-    } finally {
-      this._releaseSlot();
     }
   }
 
@@ -463,4 +521,5 @@ class FishAudioService {
 }
 
 module.exports = new FishAudioService();
+module.exports.CircuitBreaker = CircuitBreaker;
 

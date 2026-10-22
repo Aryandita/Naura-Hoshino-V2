@@ -1,6 +1,6 @@
 "use strict";
 
-const { colors, footers } = require("../config/ui/palette");
+const { colors, footers, designTokens } = require("../config/ui/palette");
 const emojisBase = require("../config/ui/emojis_base");
 const emojisGame = require("../config/ui/emojis_game");
 const emojisMedia = require("../config/ui/emojis_media");
@@ -331,37 +331,37 @@ function getModuleCategoryColor(category) {
     case "core":
     case "social":
     case "identity":
-      return ui.getColor("primary") || "#FFC0CB";
+return ui.getColor("primary") || designTokens.BRAND.primary.hex;
 
     case "music":
     case "audio":
     case "voice":
-      return ui.getColor("music") || "#8A2BE2";
+return ui.getColor("music") || designTokens.SYSTEMS.music.hex;
 
     case "economy":
     case "shop":
     case "vip":
     case "gacha":
-      return ui.getColor("economy") || "#FFD700";
+return ui.getColor("economy") || designTokens.SYSTEMS.economy.hex;
 
     case "survival":
     case "quest":
     case "craft":
     case "farm":
-      return ui.getColor("crafting") || "#228B22";
+return ui.getColor("crafting") || designTokens.SEMANTIC.crafting.hex;
 
     case "admin":
     case "setup":
     case "moderation":
-      return ui.getColor("rank") || "#9400D3";
+return ui.getColor("rank") || designTokens.SYSTEMS.rank.hex;
 
     case "security":
     case "softban":
     case "emergency":
-      return ui.getColor("error") || "#FF0000";
+return ui.getColor("error") || designTokens.SEMANTIC.error.hex;
 
     default:
-      return ui.getColor("primary") || "#FFC0CB";
+return ui.getColor("primary") || designTokens.BRAND.primary.hex;
   }
 }
 

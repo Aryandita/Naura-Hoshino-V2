@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const fs = require("fs");
 const path = require("path");
@@ -167,3 +167,5 @@ if (hasError) {
   console.log("OK: All local requires and critical methods resolved successfully.");
   process.exit(0);
 }
+
+

@@ -6,6 +6,7 @@
 const gemini = require("../ai/geminiClient");
 const redisManager = require("../managers/redisManager");
 const { logger } = require("../managers/logger");
+const designTokens = require("../config/tokens/designTokens");
 
 // Rate limiter per-guild untuk mencegah spam report (in-memory)
 // Map<guildId, Map<reporterId, lastReportTimestamp>>
@@ -262,7 +263,7 @@ async function handleAIReport(interaction, guildSettings) {
       const scoreEmoji = score >= 70 ? eRed : score >= 30 ? eYellow : eGreen;
       const auditPayload = buildContainerV2({
         accentColorHex:
-          score >= 70 ? "#FF0000" : score >= 30 ? "#FFD700" : "#00FF00",
+          score >= 70 ? ui.colors.error : score >= 30 ? designTokens.SYSTEMS.economy.hex : ui.colors.success,
         authorName: "Naura AI Automod Report",
         title: `${scoreEmoji} Laporan Pesan: Skor ${score}/100`,
         description: [
@@ -316,7 +317,7 @@ async function handleAIReport(interaction, guildSettings) {
 
     return interaction.editReply(
       buildContainerV2({
-        accentColorHex: "#FF0000",
+        accentColorHex: ui.colors.error,
         authorName: "Naura AI Automod, Aksi Diambil",
         title: `${ui.getEmoji("shield_alert") || "🚨"} Pesan Dilaporkan & Ditindak`,
         description: `Pesan dari <@${reportedMessage.author.id}> telah **dihapus** dan user di-**timeout** selama 10 menit.\n\n**Alasan:** ${analysis.reason}\n**Skor Pelanggaran:** ${score}/100`,
@@ -329,7 +330,7 @@ async function handleAIReport(interaction, guildSettings) {
   if (isMarginal || isLearningMode) {
     return interaction.editReply(
       buildContainerV2({
-        accentColorHex: "#FFD700",
+        accentColorHex: designTokens.SYSTEMS.economy.hex,
         authorName: "Naura AI Automod, Perlu Review",
         title: `${ui.getEmoji("warning") || "⚠️"} Laporan Diteruskan ke Admin`,
         description: `Pesan yang kamu laporkan memiliki skor **${score}/100** (batas: ${threshold}).\n\nLaporan telah diteruskan ke admin untuk ditinjau. Terima kasih sudah membantu menjaga server!`,
@@ -341,7 +342,7 @@ async function handleAIReport(interaction, guildSettings) {
   // Skor aman (<30)
   return interaction.editReply(
     buildContainerV2({
-      accentColorHex: "#00FF00",
+      accentColorHex: ui.colors.success,
       authorName: "Naura AI Automod, Hasil Analisis",
       title: `${ui.getEmoji("success") || "✅"} Pesan Tidak Melanggar`,
       description: `AI tidak mendeteksi pelanggaran pada pesan tersebut (skor: **${score}/100**).\n\nJika kamu tetap merasa ada yang salah, hubungi admin server secara langsung.`,

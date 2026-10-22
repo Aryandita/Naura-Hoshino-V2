@@ -68,14 +68,40 @@ const SYSTEMS = Object.freeze({
   music: createToken("#8A2BE2", "--system-music", "Audio DJ"),
   battle: createToken("#DC143C", "--system-battle", "PvP Coliseum"),
   rank: createToken("#9400D3", "--system-rank", "Milestone Tier"),
+  hub: createToken("#7B68EE", "--system-hub", "Hub Central"),
 });
 
+const SEMANTIC = Object.freeze({
+  success: createToken("#00FF00", "--semantic-success", "Success"),
+  error: createToken("#FF0000", "--semantic-error", "Error"),
+  warning: createToken("#FFB347", "--semantic-warning", "Warning"),
+  info: createToken("#57C7FF", "--semantic-info", "Info"),
+  crafting: createToken("#228B22", "--semantic-crafting", "Crafting"),
+  mining: createToken("#8B4513", "--semantic-mining", "Mining"),
+  fishing: createToken("#1E90FF", "--semantic-fishing", "Fishing"),
+  welcome: createToken("#00FFFF", "--semantic-welcome", "Welcome"),
+  leave: createToken("#FF69B4", "--semantic-leave", "Leave"),
+  boost: createToken("#FFD700", "--semantic-boost", "Boost"),
+  announcement: createToken("#001aff", "--semantic-announcement", "Announcement"),
+  premium_voter: createToken("#F43F5E", "--premium-voter", "Premium Voter"),
+  premium_starter: createToken("#38bdf8", "--premium-starter", "Premium Starter"),
+  premium_supporter: createToken("#C0C0C0", "--premium-supporter", "Premium Supporter"),
+  premium_friends: createToken("#A855F7", "--premium-friends", "Premium Friends"),
+  premium_vip: createToken("#FFD700", "--premium-vip", "Premium VIP"),
+  premium_accent: createToken("#FDE68A", "--premium-accent", "Premium Accent"),
+  premium_glow: Object.freeze({
+    hex: "rgba(255,215,0,0.3)",
+    rgb: "",
+    cssVar: "--premium-glow",
+    label: "Premium Glow",
+  }),
+});
 /**
  * Peta pencarian token cepat berdasarkan nama
  */
 const TOKEN_LOOKUP = new Map();
 
-for (const cat of [BRAND, SURVIVAL, RARITY, STATUS, SYSTEMS]) {
+for (const cat of [BRAND, SURVIVAL, RARITY, STATUS, SYSTEMS, SEMANTIC]) {
   for (const [key, token] of Object.entries(cat)) {
     TOKEN_LOOKUP.set(key.toLowerCase(), token);
   }
@@ -111,7 +137,7 @@ function getStatusToken(statusName) {
 
 function generateCssVariables() {
   const lines = [":root {"];
-  for (const cat of [BRAND, SURVIVAL, RARITY, STATUS, SYSTEMS]) {
+  for (const cat of [BRAND, SURVIVAL, RARITY, STATUS, SYSTEMS, SEMANTIC]) {
     for (const token of Object.values(cat)) {
       if (token && token.cssVar && token.hex) {
         lines.push(`  ${token.cssVar}: ${token.hex.toLowerCase()};`);
@@ -129,6 +155,7 @@ module.exports = {
   RARITY,
   STATUS,
   SYSTEMS,
+  SEMANTIC,
   getColorHex,
   getColorInt,
   getColorRgb,

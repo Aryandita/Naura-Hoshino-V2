@@ -349,81 +349,80 @@ Jawablah dalam bahasa Indonesia kasual.`;
           }
         }
 
-        try {
-          // 1. OLLAMA LOKAL (UTAMA)
-          const ollamaSession = (await this.getMemory(userId, "ollama")) || {
-            history: [],
-          };
-          const apiMessages = [
-            { role: "system", content: systemPrompt },
-            ...ollamaSession.history,
-            { role: "user", content: prompt },
-          ];
-
-          const ollamaResponse = await this.getOllama().chat({
-            model: env.OLLAMA_MODEL || "llama3",
-            messages: apiMessages,
-          });
-
-          responseText = ollamaResponse.message.content;
-
-          ollamaSession.history.push({ role: "user", content: prompt });
-          ollamaSession.history.push({
-            role: "assistant",
-            content: responseText,
-          });
-          if (ollamaSession.history.length > 20)
-            ollamaSession.history = ollamaSession.history.slice(-20);
-          await this.saveMemory(userId, "ollama", ollamaSession);
-        } catch (ollamaError) {
-          logger.error("[Ollama Error] Fallback ke Groq:", ollamaError);
-
-          // 2. GROQ API (FALLBACK 1)
-          try {
-            const groqSession = (await this.getMemory(userId, "groq")) || {
-              history: [],
-            };
-            const apiMessages = [
-              { role: "system", content: systemPrompt },
-              ...groqSession.history,
-              { role: "user", content: prompt },
-            ];
-
-            const response = await fetch(GROQ_ENDPOINT, {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${env.GROQ_API_KEY || env.VERBA_API_KEY}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                model: "llama3-8b-8192",
+        const fallbacks = [
+          {
+            label: "[Ollama Error] Fallback ke Groq:",
+            run: async () => {
+              // 1. OLLAMA LOKAL (UTAMA)
+              const ollamaSession = (await this.getMemory(userId, "ollama")) || {
+                history: [],
+              };
+              const apiMessages = [
+                { role: "system", content: systemPrompt },
+                ...ollamaSession.history,
+                { role: "user", content: prompt },
+              ];
+              const ollamaResponse = await this.getOllama().chat({
+                model: env.OLLAMA_MODEL || "llama3",
                 messages: apiMessages,
-                max_tokens: 1500,
-              }),
-            });
-
-            const textResponse = await response.text();
-            if (!response.ok)
-              throw new ExternalAPIError(`Groq API error: HTTP ${response.status}`);
-            const data = JSON.parse(textResponse);
-            responseText = data.choices[0].message.content;
-
-            groqSession.history.push({ role: "user", content: prompt });
-            groqSession.history.push({
-              role: "assistant",
-              content: responseText,
-            });
-            if (groqSession.history.length > 10)
-              groqSession.history = groqSession.history.slice(-10);
-            await this.saveMemory(userId, "groq", groqSession);
-          } catch (groqError) {
-            logger.error("[Groq Error] Fallback ke Gemini Text:", groqError);
-
-            // 3. GEMINI API (FALLBACK 2)
-            try {
+              });
+              responseText = ollamaResponse.message.content;
+              ollamaSession.history.push({ role: "user", content: prompt });
+              ollamaSession.history.push({
+                role: "assistant",
+                content: responseText,
+              });
+              if (ollamaSession.history.length > 20)
+                ollamaSession.history = ollamaSession.history.slice(-20);
+              await this.saveMemory(userId, "ollama", ollamaSession);
+            },
+          },
+          {
+            label: "[Groq Error] Fallback ke Gemini Text:",
+            run: async () => {
+              // 2. GROQ API (FALLBACK 1)
+              const groqSession = (await this.getMemory(userId, "groq")) || {
+                history: [],
+              };
+              const apiMessages = [
+                { role: "system", content: systemPrompt },
+                ...groqSession.history,
+                { role: "user", content: prompt },
+              ];
+              const response = await fetch(GROQ_ENDPOINT, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${env.GROQ_API_KEY || env.VERBA_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "llama3-8b-8192",
+                  messages: apiMessages,
+                  max_tokens: 1500,
+                }),
+              });
+              const textResponse = await response.text();
+              if (!response.ok)
+                throw new ExternalAPIError(`Groq API error: HTTP ${response.status}`);
+              const data = JSON.parse(textResponse);
+              responseText = data.choices[0].message.content;
+              groqSession.history.push({ role: "user", content: prompt });
+              groqSession.history.push({
+                role: "assistant",
+                content: responseText,
+              });
+              if (groqSession.history.length > 10)
+                groqSession.history = groqSession.history.slice(-10);
+              await this.saveMemory(userId, "groq", groqSession);
+            },
+          },
+          {
+            label: "[Gemini Text Error] Semua layanan AI gagal:",
+            run: async () => {
+              // 3. GEMINI API (FALLBACK 2)
               const geminiClient = this.getGenAI();
-              if (!geminiClient) throw new ValidationError("Gemini tidak dikonfigurasi.");
-
+              if (!geminiClient)
+                throw new ValidationError("Gemini tidak dikonfigurasi.");
               const sessionData = (await this.getMemory(userId, "gemini")) || {
                 history: [],
               };
@@ -431,18 +430,15 @@ Jawablah dalam bahasa Indonesia kasual.`;
                 role: "user",
                 parts: [{ text: prompt }],
               });
-
               const gemConfig = {
                 systemInstruction: systemPrompt,
                 maxOutputTokens: 1500,
               };
-
               const gemResult = await geminiClient.models.generateContent({
                 model: this._defaultModel,
                 contents: sessionData.history,
                 config: gemConfig,
               });
-
               responseText = gemResult.text;
               sessionData.history.push({
                 role: "model",
@@ -451,14 +447,21 @@ Jawablah dalam bahasa Indonesia kasual.`;
               if (sessionData.history.length > 10)
                 sessionData.history = sessionData.history.slice(-10);
               await this.saveMemory(userId, "gemini", sessionData);
-            } catch (geminiError) {
-              logger.error(
-                "[Gemini Text Error] Semua layanan AI gagal:",
-                geminiError,
-              );
-              responseText = `${ui.emojis?.error || "\u274c"} Semua layanan AI sedang sibuk atau tidak tersedia. Coba lagi nanti ya!`;
-            }
+            },
+          },
+        ];
+
+        // Coba tiap layanan fallback berurutan; berhenti saat berhasil.
+        for (const { label, run } of fallbacks) {
+          try {
+            await run();
+            break;
+          } catch (err) {
+            logger.error(label, err);
           }
+        }
+        if (!responseText) {
+          responseText = `${ui.emojis?.error || "\u274c"} Semua layanan AI sedang sibuk atau tidak tersedia. Coba lagi nanti ya!`;
         }
       }
 

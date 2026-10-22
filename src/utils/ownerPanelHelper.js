@@ -3,6 +3,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const ui = require("../config/ui");
 const env = require("../config/env");
+const designTokens = require("../config/tokens/designTokens");
 const { buildContainerV2 } = require("./NauraContainerBuilder");
 
 /**
@@ -39,7 +40,7 @@ function buildOwnerPanelPayload() {
   );
 
   const container = buildContainerV2({
-    accentColorHex: "#EF4444",
+    accentColorHex: designTokens.STATUS.dnd.hex,
     authorName: "Naura OS Central Control Desk",
     title: "👑 Panel Operasi Khusus Owner (System Architect)",
     description: [

@@ -2,13 +2,15 @@
 
 /**
  * qa-gate.js - Automated QA Gate Runner (Naura Hoshino V2)
- * Menjalankan 6 tahapan pengujian standar kualitas sesuai AGENTS.md:
+ * Menjalankan 8 tahapan pengujian standar kualitas sesuai AGENTS.md:
  * 1. ESLint linter & styling check
  * 2. Em-dash prohibition check (\u2014)
  * 3. i18n Locales parity strict check (id.json vs en.json)
  * 4. Internal module require graph check
  * 5. Inline <script> syntax check untuk halaman dashboard
- * 6. Automated unit test suite (node --test)
+ * 6. Credential leak scan (kredensial tidak boleh masuk repo)
+ * 7. Drift arsitektur verification
+ * 8. Automated unit test suite (node --test)
  *
  * Penggunaan:
  *   node scripts/qa-gate.js
@@ -78,26 +80,59 @@ async function run() {
   const results = [];
 
   // 1. ESLint
-  results.push(await runStep("1/6 ESLint & Standar Kode", "node", ["node_modules/eslint/bin/eslint.js", "."]));
+  results.push(
+    await runStep("1/8 ESLint & Standar Kode", "node", [
+      "node_modules/eslint/bin/eslint.js",
+      ".",
+    ]),
+  );
 
   // 2. Em dash check
-  results.push(await runStep("2/6 Cek Larangan Karakter Em Dash", "node", ["scripts/check-em-dash.js"]));
+  results.push(
+    await runStep("2/8 Cek Larangan Karakter Em Dash", "node", [
+      "scripts/check-em-dash.js",
+    ]),
+  );
 
   // 3. Paritas Kamus Bahasa
-  results.push(await runStep("3/6 Paritas Kamus Bahasa (Strict)", "node", ["scripts/validate-locales.js", "--strict"]));
+  results.push(
+    await runStep("3/8 Paritas Kamus Bahasa (Strict)", "node", [
+      "scripts/validate-locales.js",
+      "--strict",
+    ]),
+  );
 
   // 4. Resolusi Require
-  results.push(await runStep("4/6 Integritas Resolusi Require", "node", ["scripts/check-requires.js"]));
+  results.push(
+    await runStep("4/8 Integritas Resolusi Require", "node", [
+      "scripts/check-requires.js",
+    ]),
+  );
 
   // 5. Inline script HTML dashboard
-  results.push(await runStep("5/6 Sintaks Script Inline Dashboard", "node", ["scripts/check-inline-scripts.js"]));
-
-  // 6. Drift Arsitektur
-  results.push(await runStep("6/7 Verifikasi Drift Arsitektur", "node", ["scripts/verify-drift.js"]));
-
-  // 7. Automated Unit Tests (100% full coverage across src, dashboard, and plugin)
   results.push(
-    await runStep("7/7 Automated Unit Test Suite", "node", [
+    await runStep("5/8 Sintaks Script Inline Dashboard", "node", [
+      "scripts/check-inline-scripts.js",
+    ]),
+  );
+
+  // 6. Pemindaian kebocoran kredensial
+  results.push(
+    await runStep("6/8 Pemindaian Kebocoran Kredensial", "node", [
+      "scripts/check-secrets.js",
+    ]),
+  );
+
+  // 7. Drift Arsitektur
+  results.push(
+    await runStep("7/8 Verifikasi Drift Arsitektur", "node", [
+      "scripts/verify-drift.js",
+    ]),
+  );
+
+  // 8. Automated Unit Tests (100% full coverage across src, dashboard, and plugin)
+  results.push(
+    await runStep("8/8 Automated Unit Test Suite", "node", [
       "--test",
       "src/**/*.test.js",
       "dashboard/**/*.test.js",

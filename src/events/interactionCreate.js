@@ -76,7 +76,16 @@ async function handleSlashCommand(interaction, client) {
 
   // Guard Clause: Pemeliharaan Darurat Global (Bypass khusus Owner)
   if (isGlobalMaintenanceActive() && !isOwnerUser) {
-    const maintInfo = await getGlobalMaintenance();
+    let maintInfo;
+    try {
+      maintInfo = await getGlobalMaintenance();
+    } catch (error) {
+      logger.error(
+        "[INTERAKSI] Gagal mengambil informasi pemeliharaan global:",
+        error,
+      );
+      maintInfo = { reason: "Pemeliharaan sistem sedang berlangsung." };
+    }
     return interaction
       .reply(
         withEphemeralFlags(
@@ -110,12 +119,20 @@ async function handleSlashCommand(interaction, client) {
   }
 
   // Guard Clause: Rate limit per pengguna
-  const isCommandRateLimited = await rateLimiter.isRateLimited(
-    interaction.user.id,
-    `slash_${interaction.commandName}`,
-    SLASH_LIMIT.max,
-    SLASH_LIMIT.seconds,
-  );
+  let isCommandRateLimited = false;
+  try {
+    isCommandRateLimited = await rateLimiter.isRateLimited(
+      interaction.user.id,
+      `slash_${interaction.commandName}`,
+      SLASH_LIMIT.max,
+      SLASH_LIMIT.seconds,
+    );
+  } catch (error) {
+    logger.error(
+      "[INTERAKSI] Gagal mengecek rate limit perintah:",
+      error,
+    );
+  }
 
   if (isCommandRateLimited) {
     return interaction
@@ -140,10 +157,18 @@ async function handleSlashCommand(interaction, client) {
   } = require("../config/features");
   const featureId = COMMAND_FEATURE_MAP[interaction.commandName];
   if (featureId && interaction.guildId) {
-    const isModuleEnabled = await isFeatureEnabled(
-      interaction.guildId,
-      featureId,
-    );
+    let isModuleEnabled = true;
+    try {
+      isModuleEnabled = await isFeatureEnabled(
+        interaction.guildId,
+        featureId,
+      );
+    } catch (error) {
+      logger.error(
+        "[INTERAKSI] Gagal mengecek status fitur command:",
+        error,
+      );
+    }
     if (!isModuleEnabled) {
       return interaction
         .reply(
@@ -278,7 +303,9 @@ module.exports = {
   async execute(interaction, client) {
     // Guard Clause 1: Autocomplete didahulukan tanpa delay (batas keras 3 detik)
     if (interaction.isAutocomplete()) {
-      return handleAutocomplete(interaction, client);
+      return handleAutocomplete(interaction, client).catch((error) => {
+        logger.error("[INTERAKSI] Galat pada autocomplete:", error);
+      });
     }
 
     wrapInteractionSafe(interaction);
@@ -319,12 +346,20 @@ module.exports = {
 
       // Guard Clause 4: Delegasi Context Menu Command
       if (interaction.isContextMenuCommand()) {
-        const isContextRateLimited = await rateLimiter.isRateLimited(
-          interaction.user.id,
-          `ctx_${interaction.commandName}`,
-          4,
-          10,
-        );
+        let isContextRateLimited = false;
+        try {
+          isContextRateLimited = await rateLimiter.isRateLimited(
+            interaction.user.id,
+            `ctx_${interaction.commandName}`,
+            4,
+            10,
+          );
+        } catch (error) {
+          logger.error(
+            "[INTERAKSI] Gagal mengecek rate limit context menu:",
+            error,
+          );
+        }
         if (isContextRateLimited) {
           return interaction
             .reply(
@@ -407,12 +442,20 @@ module.exports = {
       // Guard Clause 7: Rate limit komponen tombol/select/modal
       const componentRateLimitPolicy =
         registeredComponentHandler.cooldown || COMPONENT_LIMIT;
-      const isComponentRateLimited = await rateLimiter.isRateLimited(
-        interaction.user.id,
-        `component_${registeredComponentHandler.label}`,
-        componentRateLimitPolicy.max,
-        componentRateLimitPolicy.seconds,
-      );
+      let isComponentRateLimited = false;
+      try {
+        isComponentRateLimited = await rateLimiter.isRateLimited(
+          interaction.user.id,
+          `component_${registeredComponentHandler.label}`,
+          componentRateLimitPolicy.max,
+          componentRateLimitPolicy.seconds,
+        );
+      } catch (error) {
+        logger.error(
+          "[INTERAKSI] Gagal mengecek rate limit komponen:",
+          error,
+        );
+      }
 
       if (isComponentRateLimited) {
         return interaction
@@ -433,6 +476,22 @@ module.exports = {
 
       // Jalur Utama (Happy Path): Eksekusi melalui wrapper safeExecute
       return await safeExecute(interaction, registeredComponentHandler, client);
+    } catch (error) {
+      logger.error(
+        "[INTERAKSI CREATE] Galat tak tertangani pada interaksi:",
+        error,
+      );
+      try {
+        await respondError(
+          interaction,
+          "Terjadi kesalahan sistem saat memproses interaksi ini.",
+        );
+      } catch (respondErr) {
+        logger.debug(
+          "[INTERAKSI CREATE] Tidak dapat mengirim balasan galat: " +
+            (respondErr?.message || respondErr),
+        );
+      }
     } finally {
       cleanupGuard();
     }

@@ -38,8 +38,7 @@ function peekCache(userId) {
 function warmCache(userId) {
   if (!userId || warming.has(userId)) return;
   warming.add(userId);
-  Promise.resolve()
-    .then(() => languageManager.getUserLanguage(userId))
+  languageManager.getUserLanguage(userId)
     .catch((error) =>
       logger.warn(
         `[LocalePatch] Gagal memuat bahasa ${userId}: ${error.message}`,
@@ -170,3 +169,4 @@ function applyLocalePatch() {
 }
 
 module.exports = { applyLocalePatch, resolveLanguage, resolveLanguageSync };
+

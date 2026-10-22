@@ -11,6 +11,41 @@ const supabaseManager = require("./supabaseManager");
 const { logger } = require("../managers/logger");
 
 // ==========================================
+// KONFIGURASI RETRY DENGAN EXPONENTIAL BACKOFF
+// 3 percobaan, jeda 2s, 4s, 8s antara percobaan.
+// ==========================================
+const DB_RETRY_MAX = 3;
+const DB_BACKOFF_SEQUENCE_MS = [2000, 4000, 8000];
+
+function dbSleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function dbRetryWithBackoff(fn, options = {}) {
+  const max = options.max ?? DB_RETRY_MAX;
+  const label = options.label ?? "operasi database";
+  let lastErr;
+  for (let attempt = 0; attempt < max; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt < max - 1) {
+        const delay =
+          DB_BACKOFF_SEQUENCE_MS[attempt] ??
+          DB_BACKOFF_SEQUENCE_MS[DB_BACKOFF_SEQUENCE_MS.length - 1];
+        logger.warn(
+          "[DB] " + label + " gagal (percobaan " + (attempt + 1) + "/" + max + "), retry dalam " + delay + "ms: " + err.message,
+        );
+        await dbSleep(delay);
+      }
+    }
+  }
+  throw lastErr;
+}
+
+
+// ==========================================
 // EKSPOR SEQUELIZE
 // ==========================================
 module.exports = { sequelize, supabaseManager };
@@ -162,6 +197,8 @@ function getDbStatus() {
     ready: isDbOnline,
     poolMax: POOL_MAX,
     shardCount: SHARD_COUNT,
+    sqliteFallback: Boolean(env.USE_SQLITE || !hasDatabaseConfig),
+    fallbackFile: "./naura_fallback.sqlite",
   };
 }
 
@@ -177,7 +214,9 @@ const connectToDatabase = async () => {
       supabaseManager.initSupabase();
     }
 
-    await sequelize.authenticate();
+    await dbRetryWithBackoff(() => sequelize.authenticate(), {
+      label: "koneksi database",
+    });
     isDbOnline = true;
     const dbDialect = sequelize.options.dialect.toUpperCase();
     const providerName =
@@ -387,7 +426,10 @@ const healthCheckTimer = setInterval(async () => {
     );
 
     try {
-      await sequelize.authenticate();
+      await dbRetryWithBackoff(() => sequelize.authenticate(), {
+        label: "reconnect database",
+        max: DB_RETRY_MAX,
+      });
       isDbOnline = true;
       logger.success(
         `\x1b[42m\x1b[30m ✨ RECONNECTED \x1b[0m \x1b[32mBerhasil terhubung kembali ke database ${dbType}.\x1b[0m`,

@@ -23,6 +23,13 @@ import { createAnimationController, applyNauraRuntimeFix } from "../NauraViewer/
 import { createParticleSystem } from "../NauraViewer/particles.js";
 import { createNauraBrand3D } from "../NauraViewer/brand3d.js";
 
+// Warna SSOT: src/config/tokens/designTokens.js (browser ESM bundel Vite;
+// dilarang require() modul CJS designTokens.js. Konstanta lokal namespaced
+// di bawah menampung nilai SSOT agar bundling tidak rusak).
+const HERO_KEY_PINK = 0xffb6c1;      // SSOT: tidak ada token ekak #FFB6C1; BRAND.primary (#FFC0CB) landed terdekat
+const HERO_RIM_CYAN = 0x7dd3fc;      // SSOT: SURVIVAL.river (Crystal River)
+const HERO_AMBIENT_WHITE = 0xffffff; // netral; tidak ada token putih di designTokens.js
+
 export class NauraHero3DViewer {
     constructor(canvasElement, options = {}) {
         this.canvas = canvasElement;
@@ -179,11 +186,11 @@ export class NauraHero3DViewer {
         this.renderer.setSize(width, height, false);
 
         // DPR Capping adaptif: 1.5x di mobile, 2x di desktop
-        const maxDpr = window.innerWidth < 768 ? 1.5 : 2;
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDpr));
+        const maxDpr = globalThis.window.innerWidth < 768 ? 1.5 : 2;
+        this.renderer.setPixelRatio(Math.min(globalThis.window.devicePixelRatio, maxDpr));
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.1;
+        this.renderer.toneMappingExposure = 1.05;
 
         // 4. PMREM Environment
         this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
@@ -197,28 +204,18 @@ export class NauraHero3DViewer {
 
     _initLighting() {
         // Soft Ambient Light merata
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.35);
+        const ambientLight = new THREE.AmbientLight(HERO_AMBIENT_WHITE, 1.35);
         this.scene.add(ambientLight);
 
-        // Key Light hangat natural
-        const keyLight = new THREE.DirectionalLight(0xfff8f2, 1.25);
+        // Key Light Cyberpunk - Pink #FFB6C1 (SSOT: tidak ada token ekak #FFB6C1; BRAND.primary #FFC0CB landed terdekat)
+        const keyLight = new THREE.DirectionalLight(HERO_KEY_PINK, 1.25);
         keyLight.position.set(1.4, 2.0, 1.6);
         this.scene.add(keyLight);
 
-        // Soft Front Fill Light (Menerangi wajah dan detail rambut anime secara cerah dan jelas)
-        const frontFillLight = new THREE.DirectionalLight(0xfff5ea, 0.85);
-        frontFillLight.position.set(0, 1.2, 2.2);
-        this.scene.add(frontFillLight);
-
-        // Cyber Neon Rim Light (Cherry Blossom Pink)
-        const rimPink = new THREE.DirectionalLight(0xffb3cb, 0.35);
-        rimPink.position.set(-1.6, 1.2, -1.2);
-        this.scene.add(rimPink);
-
-        // Cyber Accent Light (Cyan Neon)
-        const fillCyan = new THREE.PointLight(0x38bdf8, 0.4, 6);
-        fillCyan.position.set(-1.0, -0.3, 1.2);
-        this.scene.add(fillCyan);
+        // Rim Light Cyberpunk - Neon Cyan #7DD3FC (SSOT: SURVIVAL.river Crystal River)
+        const rimLight = new THREE.DirectionalLight(HERO_RIM_CYAN, 0.35);
+        rimLight.position.set(-1.6, 1.2, -1.2);
+        this.scene.add(rimLight);
     }
 
     _initControls() {
@@ -243,15 +240,15 @@ export class NauraHero3DViewer {
 
     _initEvents() {
         // ResizeObserver pada canvas/parent
-        if (typeof ResizeObserver !== "undefined") {
-            this._resizeObserver = new ResizeObserver(() => this._onResize());
+        if (typeof globalThis.ResizeObserver !== "undefined") {
+            this._resizeObserver = new globalThis.ResizeObserver(() => this._onResize());
             this._resizeObserver.observe(this.canvas);
         } else {
-            window.addEventListener("resize", this._onResize);
+            globalThis.window.addEventListener("resize", this._onResize);
         }
 
         // Pointer tracking
-        window.addEventListener("pointermove", this._onPointerMove);
+        globalThis.window.addEventListener("pointermove", this._onPointerMove);
 
         // Click interaction: trigger burst sparkle
         this.canvas.addEventListener("click", () => {
@@ -261,7 +258,7 @@ export class NauraHero3DViewer {
         });
 
         // IntersectionObserver untuk hemat daya saat scroll keluar layar
-        if (typeof IntersectionObserver !== "undefined") {
+        if (typeof globalThis.IntersectionObserver !== "undefined") {
             this._intersectionObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
                     this.isVisible = entry.isIntersecting;
@@ -521,7 +518,7 @@ export class NauraHero3DViewer {
             return;
         }
 
-        this.animationFrameId = requestAnimationFrame(this._animate);
+        this.animationFrameId = globalThis.requestAnimationFrame(this._animate);
 
         const delta = Math.min(this.clock.getDelta(), 0.1);
         const elapsed = this.clock.getElapsedTime();
@@ -801,7 +798,7 @@ export class NauraHero3DViewer {
         this.currentAnimName = resolvedName;
 
         // Auto update status text if present
-        const statusText = document.getElementById("naura3d-status-text");
+        const statusText = globalThis.document.getElementById("naura3d-status-text");
         if (statusText) {
             const labelMap = {
                 Idle: "🌸 Idle (Bernafas)",
@@ -934,14 +931,14 @@ export class NauraHero3DViewer {
 
         this.canvas.toBlob((blob) => {
             if (!blob) return;
-            const url = URL.createObjectURL(blob);
+            const url = globalThis.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
             a.download = filename;
-            document.body.appendChild(a);
+            globalThis.document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            globalThis.document.body.removeChild(a);
+            setTimeout(() => globalThis.URL.revokeObjectURL(url), 1000);
 
             if (this.particles) {
                 this.particles.burst(40);
@@ -998,7 +995,7 @@ export class NauraHero3DViewer {
      */
     destroy() {
         if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
+            globalThis.cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
 
@@ -1006,7 +1003,7 @@ export class NauraHero3DViewer {
             this._resizeObserver.disconnect();
             this._resizeObserver = null;
         } else {
-            window.removeEventListener("resize", this._onResize);
+            globalThis.window.removeEventListener("resize", this._onResize);
         }
 
         if (this._intersectionObserver) {
@@ -1014,7 +1011,7 @@ export class NauraHero3DViewer {
             this._intersectionObserver = null;
         }
 
-        window.removeEventListener("pointermove", this._onPointerMove);
+        globalThis.window.removeEventListener("pointermove", this._onPointerMove);
 
         if (this.controls) {
             this.controls.dispose();

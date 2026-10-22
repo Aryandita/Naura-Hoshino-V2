@@ -10,6 +10,7 @@
 const redisManager = require("../managers/redisManager");
 const { logger } = require("../managers/logger");
 const { getMarketOverview } = require("../survival/engines/commodityMarketEngine");
+const designTokens = require("../config/tokens/designTokens");
 
 /**
  * Rekam aktivitas pesan chat harian ke buffer Redis.
@@ -291,7 +292,7 @@ async function publishMorningChronicle(client) {
       });
 
       const payload = buildContainerV2({
-        accentColorHex: "#FFB6C1",
+        accentColorHex: designTokens.BRAND.primary.hex,
         title: `📰 THE HOSHINO TIMES - Edisi Pagi ${chronicleData.date}`,
         description: `Selamat pagi warga **${guild.name}**! Edisi harian koran server telah terbit.\n\n👑 **Member of the Day:** **${chronicleData.topUser.username}** (\`${chronicleData.topUser.count} pesan\`)\n⚡ **Headline:** *${chronicleData.headline}*`,
         footerText: ui.getFooter("utility"),

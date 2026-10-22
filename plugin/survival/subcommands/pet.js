@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 const { logger } = require("../../../src/managers/logger");
 
 const {
@@ -81,7 +81,7 @@ function statLines(pet) {
     `**Spesies Alami:** ${species.emoji} **${species.name}** (*${species.latin}*)`,
     `**Tingkatan Rarity:** \`[Tier ${tier.badge}] ${tier.label}\``,
     `**Level Pertumbuhan:** Level ${pet.petLevel || 1} (${pet.petExp || 0}/${XP_PER_LEVEL} XP)`,
-    `🍗 **Kenyang:** \`${hungerBar.bar}\` | 💖 **Afeksi:** \`${affectionBar.bar}\``,
+    `ðŸ **Kenyang:** \`${hungerBar.bar}\` | ðŸ’ **Afeksi:** \`${affectionBar.bar}\``,
     `**Kondisi Mood:** \`${String(pet.mood || "normal").toUpperCase()}\`${buffText}`,
   ].join("\n");
 }
@@ -100,14 +100,14 @@ module.exports = {
     if (pets.length === 0)
       return safeRespond(interaction, [
         choice(
-          "❌ Belum memiliki pet (Ketik /survival rpg pet untuk info)",
+          "âŒ Belum memiliki pet (Ketik /survival rpg pet untuk info)",
           "none",
         ),
       ]);
 
     const available = pets.map((p) =>
       choice(
-        `${ui.getEmoji("cat_pet") || "🐾"} ${p.petName || p.petType} (Lv.${p.petLevel || 1})`,
+        `${ui.getEmoji("cat_pet") || "ðŸ¾"} ${p.petName || p.petType} (Lv.${p.petLevel || 1})`,
         String(p.id),
       ),
     );
@@ -145,15 +145,16 @@ module.exports = {
         const adoptPayload = buildContainerV2({
           accentColorHex: survivalUI.getColor("emerald"),
           authorName: "Adopsi Sahabat Satwa Naura Wilds",
-          title: `🎉 Selamat Mengadopsi ${species.name}!`,
+          title: `ðŸŽ‰ Selamat Mengadopsi ${species.name}!`,
           description: [
             `Kamu telah resmi mengangkat **${species.name}** (*${species.latin}*) sebagai sahabat setia petualanganmu!`,
             ``,
-            `📖 **Profil Satwa:**`,
+            `ðŸ“– **Profil Satwa:**`,
             `*${species.description}*`,
             ``,
-            `💡 **Satu Sahabat Setia:** Di Naura Wilds, pengembara hanya memiliki 1 sahabat setia yang dirawat bersama. Ajak main, beri makan, dan kirim ke ekspedisi untuk menemukan barang berharga!`,
+            `ðŸ’¡ **Satu Sahabat Setia:** Di Naura Wilds, pengembara hanya memiliki 1 sahabat setia yang dirawat bersama. Ajak main, beri makan, dan kirim ke ekspedisi untuk menemukan barang berharga!`,
           ].join("\n"),
+          buttonsRow: [survivalUI.buildSurvivalActionRow("profile", user.id)],
           footerText: ui.getFooter("survival"),
         });
         return interaction.editReply(adoptPayload);
@@ -203,21 +204,22 @@ module.exports = {
         accentColorHex: active.cosmicAura
           ? survivalUI.getRarityColor("epic")
           : survivalUI.getRarityColor("mythic"),
-        authorName: `${ui.getEmoji("home") || "🏡"} Sanctuary & Cosmic Pet Habitat`,
-        title: `${ui.getEmoji("sparkles") || "✨"} Kamar Santai ${active.petName || active.petType}`,
+        authorName: `${ui.getEmoji("home") || "ðŸ¡"} Sanctuary & Cosmic Pet Habitat`,
+        title: `${ui.getEmoji("sparkles") || "âœ¨"} Kamar Santai ${active.petName || active.petType}`,
         description: [
           `Selamat datang di ruang santai habitat peliharaanmu! Di sini kamu bisa merawat dan bermain bersama pet aktif.`,
           ``,
-          `${ui.getEmoji("cat_pet") || "🐾"} **Pet Aktif:** **${active.petName || active.petType}** (Level ${active.petLevel || 1})`,
-          `${ui.getEmoji("heart") || "💖"} **Kasih Sayang:** \`${active.affection || 0}%\` | **Mood:** \`${String(active.mood || "happy").toUpperCase()}\``,
+          `${ui.getEmoji("cat_pet") || "ðŸ¾"} **Pet Aktif:** **${active.petName || active.petType}** (Level ${active.petLevel || 1})`,
+          `${ui.getEmoji("heart") || "ðŸ’–"} **Kasih Sayang:** \`${active.affection || 0}%\` | **Mood:** \`${String(active.mood || "happy").toUpperCase()}\``,
           active.cosmicAura
-            ? `${ui.getEmoji("sparkle") || "🌌"} **Status Khusus:** \`COSMIC ASCENDED ${ui.getEmoji("sparkles") || "✨"}\` (Skill: \`${active.passiveSkill}\`)`
-            : `${ui.getEmoji("magic") || "🔮"} **Evolusi:** \`Stage ${active.evolutionStage || 1}\``,
+            ? `${ui.getEmoji("sparkle") || "ðŸŒŒ"} **Status Khusus:** \`COSMIC ASCENDED ${ui.getEmoji("sparkles") || "âœ¨"}\` (Skill: \`${active.passiveSkill}\`)`
+            : `${ui.getEmoji("magic") || "ðŸ”®"} **Evolusi:** \`Stage ${active.evolutionStage || 1}\``,
           ``,
-          `${ui.getEmoji("arcade") || "🎾"} **Mainan Tersedia:** \`Cyber Laser Pointer\`, \`Sakura Plush Ball\`, \`Catnip Circuit\``,
+          `${ui.getEmoji("arcade") || "ðŸŽ¾"} **Mainan Tersedia:** \`Cyber Laser Pointer\`, \`Sakura Plush Ball\`, \`Catnip Circuit\``,
           ``,
-          `-# ${ui.getEmoji("sparkle") || "💡"} *Untuk melakukan Cosmic Fusion, naikkan 2 pet ke Level 10 lalu jalankan \`/survival life pet aksi:fuse\`!*`,
+          `-# ${ui.getEmoji("sparkle") || "ðŸ’¡"} *Untuk melakukan Cosmic Fusion, naikkan 2 pet ke Level 10 lalu jalankan \`/survival life pet aksi:fuse\`!*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("profile", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -263,17 +265,18 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: survivalUI.getRarityColor("epic"),
-        authorName: `${ui.getEmoji("sparkle") || "🌌"} Ritual Cosmic Pet Ascension`,
-        title: `${ui.getEmoji("celebrate") || "🎉"} COSMIC ASCENSION BERHASIL!`,
+        authorName: `${ui.getEmoji("sparkle") || "ðŸŒŒ"} Ritual Cosmic Pet Ascension`,
+        title: `${ui.getEmoji("celebrate") || "ðŸŽ‰"} COSMIC ASCENSION BERHASIL!`,
         description: [
           `Selamat! Dua energi pet telah menyatu menjadi wujud baru: **${fuseRes.newType.toUpperCase().replace("_", " ")}**!`,
           ``,
-          `${ui.getEmoji("sparkles") || "✨"} **Cosmic Aura:** \`AKTIF ${ui.getEmoji("sparkle") || "🌌"}\``,
-          `${ui.getEmoji("magic") || "🔮"} **Passive Skill Baru:** \`${fuseRes.passiveSkill}\``,
-          `${ui.getEmoji("sparkles") || "💫"} **Mood Abadi:** \`ASCENDED\``,
+          `${ui.getEmoji("sparkles") || "âœ¨"} **Cosmic Aura:** \`AKTIF ${ui.getEmoji("sparkle") || "ðŸŒŒ"}\``,
+          `${ui.getEmoji("magic") || "ðŸ”®"} **Passive Skill Baru:** \`${fuseRes.passiveSkill}\``,
+          `${ui.getEmoji("sparkles") || "ðŸ’«"} **Mood Abadi:** \`ASCENDED\``,
           ``,
-          `-# ${ui.getEmoji("sparkle") || "💡"} *Pet varian Cosmic memberikan bonus drop rate dan damage tertinggi saat ekspedisi dan raid!*`,
+          `-# ${ui.getEmoji("sparkle") || "ðŸ’¡"} *Pet varian Cosmic memberikan bonus drop rate dan damage tertinggi saat ekspedisi dan raid!*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("profile", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -321,16 +324,17 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: survivalUI.getRarityColor("mythic"),
         authorName: "PET BREEDING & GENETICS SANCTUARY",
-        title: "🧬 Kelahiran Pet Hibrida Berhasil!",
+        title: "ðŸ§¬ Kelahiran Pet Hibrida Berhasil!",
         description: [
           `Selamat! Dari perkawinan silang penuh kasih sayang, lahir bayi pet baru: **${baby.petName || baby.petType}**!`,
           "",
-          `🐾 **Spesies Hibrida:** \`${baby.petType.toUpperCase()}\``,
-          `⭐ **Bakat Pasif Terwaris:** \`${baby.passiveSkill || "HYBRID_VITALITY"}\``,
-          `💖 **Status Awal:** Kasih Sayang \`${baby.affection}%\` | Mood \`${String(baby.mood || "happy").toUpperCase()}\``,
+          `ðŸ¾ **Spesies Hibrida:** \`${baby.petType.toUpperCase()}\``,
+          `â­ **Bakat Pasif Terwaris:** \`${baby.passiveSkill || "HYBRID_VITALITY"}\``,
+          `ðŸ’– **Status Awal:** Kasih Sayang \`${baby.affection}%\` | Mood \`${String(baby.mood || "happy").toUpperCase()}\``,
           "",
-          `-# 💡 *Rawat buah hati peliharaan barumu di Pet Habitat dengan mainan dan makanan lezat!*`,
+          `-# ðŸ’¡ *Rawat buah hati peliharaan barumu di Pet Habitat dengan mainan dan makanan lezat!*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("profile", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -423,7 +427,7 @@ module.exports = {
 
       if (evo.evolved) {
         const evoPayload = ephemeral(
-          `${ui.getEmoji("star") || "🌟"} **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`,
+          `${ui.getEmoji("star") || "ðŸŒŸ"} **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`,
         );
         if (asFollowUp) responder.followUp(evoPayload);
         else interaction.followUp(evoPayload);
@@ -504,7 +508,7 @@ module.exports = {
 
       if (evo.evolved) {
         const evoPayload = ephemeral(
-          `${ui.getEmoji("star") || "🌟"} **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`,
+          `${ui.getEmoji("star") || "ðŸŒŸ"} **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`,
         );
         if (asFollowUp) responder.followUp(evoPayload);
         else interaction.followUp(evoPayload);
@@ -531,7 +535,7 @@ module.exports = {
     const processForage = async (responder, asFollowUp = true) => {
       if ((pet.hunger || 0) < 20) {
         const hungryPayload = ephemeral(
-          `${e("cry", "😿")} **${petLabel(pet)}** tampak lesu dan kelaparan (${pet.hunger || 0}/100). Beri makan terlebih dahulu sebelum berangkat ekspedisi!`,
+          `${e("cry", "ðŸ˜¿")} **${petLabel(pet)}** tampak lesu dan kelaparan (${pet.hunger || 0}/100). Beri makan terlebih dahulu sebelum berangkat ekspedisi!`,
         );
         return asFollowUp
           ? responder.followUp(hungryPayload)
@@ -579,17 +583,18 @@ module.exports = {
 
       const foragePayload = buildContainerV2({
         accentColorHex: foraged.tier.color || survivalUI.getColor("emerald"),
-        authorName: `🧭 Ekspedisi Alam: ${foraged.petName}`,
-        title: `🎒 ${foraged.petName} Membawa Temuan Berharga!`,
+        authorName: `ðŸ§­ Ekspedisi Alam: ${foraged.petName}`,
+        title: `ðŸŽ’ ${foraged.petName} Membawa Temuan Berharga!`,
         description: [
           `**${foraged.story}**`,
           ``,
-          `📦 **Temuan Eksklusif Satwa:**`,
-          `• ${foundItem ? foundItem.emoji : "📦"} **${foundItem ? foundItem.name : foraged.itemId}** x${foraged.qty} (\`Tier ${foraged.tier.badge} - ${foraged.tier.rarity}\`)`,
-          `• 🪙 **Koin Ditemukan:** \`+${foraged.bonusCoins.toLocaleString("id-ID")} Coin\``,
-          `• ⭐ **Pertumbuhan Pet:** \`+${foraged.earnedXp} XP\`, \`+5 Kasih Sayang\`${naikLevel ? `\n• 🎉 **Naik ke Level ${pet.petLevel}!**` : ""}`,
-          `• 🍖 **Kondisi:** \`-15 Kenyang\` (Sisa: ${pet.hunger}/100)`,
+          `ðŸ“¦ **Temuan Eksklusif Satwa:**`,
+          `â€¢ ${foundItem ? foundItem.emoji : "ðŸ“¦"} **${foundItem ? foundItem.name : foraged.itemId}** x${foraged.qty} (\`Tier ${foraged.tier.badge} - ${foraged.tier.rarity}\`)`,
+          `â€¢ ðŸª™ **Koin Ditemukan:** \`+${foraged.bonusCoins.toLocaleString("id-ID")} Coin\``,
+          `â€¢ â­ **Pertumbuhan Pet:** \`+${foraged.earnedXp} XP\`, \`+5 Kasih Sayang\`${naikLevel ? `\nâ€¢ ðŸŽ‰ **Naik ke Level ${pet.petLevel}!**` : ""}`,
+          `â€¢ ðŸ– **Kondisi:** \`-15 Kenyang\` (Sisa: ${pet.hunger}/100)`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("profile", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -723,3 +728,8 @@ module.exports = {
     });
   },
 };
+
+
+
+
+

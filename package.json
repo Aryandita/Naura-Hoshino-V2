@@ -32,6 +32,7 @@
     "locales:check": "node scripts/validate-locales.js",
     "locales:check:strict": "node scripts/validate-locales.js --strict",
     "test:requires": "node scripts/check-requires.js",
+    "test:secrets": "node scripts/check-secrets.js",
     "test:inline-scripts": "node scripts/check-inline-scripts.js",
     "qa": "node scripts/qa-gate.js",
     "db:inspect": "node scripts/inspect-db.js",

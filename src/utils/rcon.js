@@ -1,4 +1,4 @@
-const net = require("net");
+﻿const net = require("net");
 const { ExternalAPIError } = require("../errors/DomainError");
 
 class Rcon {
@@ -119,9 +119,10 @@ class Rcon {
     });
   }
 
-  execute(command) {
+  async execute(command) {
     if (!this.authed) {
-      return this.connect().then(() => this.execute(command));
+      await this.connect();
+      return this.execute(command);
     }
     return this.sendPacket(2, command); // Type 2 is Command execution
   }
