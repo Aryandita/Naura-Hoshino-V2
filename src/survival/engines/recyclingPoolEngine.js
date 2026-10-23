@@ -6,9 +6,9 @@ const ClanTerritory = require("../../models/ClanTerritory");
 const cacheManager = require("../../managers/cacheManager");
 const { logger } = require("../../managers/logger");
 
-const TICKET_COST_DIVISOR = 250; // 1 Tiket tiap 250 NSF yang dibayarkan
+const TICKET_COST_DIVISOR = 250; // 1 Tiket tiap 250 SC yang dibayarkan
 const NOVICE_MAX_LEVEL = 10;
-const NOVICE_AID_AMOUNT = 250;
+const NOVICE_AID_AMOUNT = 150; // Dikurangi dari 250 untuk rebalancing inflasi SC
 
 class RecyclingPoolEngine {
   /**
@@ -31,7 +31,7 @@ class RecyclingPoolEngine {
   /**
    * Mengalokasikan dana penarikan (sinks) ke 4 saluran daur ulang secara atomik
    * 40% Infrastruktur, 25% Undian Astral, 20% Subsidi Pemula, 15% Pedagang Keliling
-   * @param {number} amount - Total nominal NSF yang ditarik
+   * @param {number} amount - Total nominal SC yang ditarik
    * @returns {Promise<object>}
    */
   static async allocateSinkFunds(amount) {
@@ -73,7 +73,7 @@ class RecyclingPoolEngine {
       }
 
       logger.info(
-        `[RecyclingPool] Alokasi ${total} NSF: Infra +${infrastructure}, Undian +${lottery}, Subsidi +${noviceAid}, Pedagang +${wanderingMerchant}`,
+        `[RecyclingPool] Alokasi ${total} SC: Infra +${infrastructure}, Undian +${lottery}, Subsidi +${noviceAid}, Pedagang +${wanderingMerchant}`,
       );
 
       return {
@@ -153,11 +153,11 @@ class RecyclingPoolEngine {
       await treasury.save({ fields: ["noviceAidPool", "updatedAt"] });
     }
 
-    await cacheManager.incrementUserSurvival(userId, { starFragments: grantAmount });
+    await cacheManager.incrementUserSurvival(userId, { sukamajuCoins: grantAmount });
     survival.lastNoviceAidClaimAt = now;
     await survival.save({ fields: ["lastNoviceAidClaimAt"] });
 
-    logger.info(`[RecyclingPool] Pemain ${userId} mengklaim subsidi pemula sebesar ${grantAmount} NSF`);
+    logger.info(`[RecyclingPool] Pemain ${userId} mengklaim subsidi pemula sebesar ${grantAmount} SC`);
 
     return {
       ok: true,
@@ -201,7 +201,7 @@ class RecyclingPoolEngine {
       const winnerUserId = rafflePool[winnerIndex];
 
       const prizeAmount = Math.floor(currentJackpot * 0.8); // 80% jackpot untuk pemenang, 20% sisa jadi bibit jackpot berikutnya
-      await cacheManager.incrementUserSurvival(winnerUserId, { starFragments: prizeAmount });
+      await cacheManager.incrementUserSurvival(winnerUserId, { sukamajuCoins: prizeAmount });
 
       treasury.lotteryJackpot = currentJackpot - prizeAmount;
       treasury.lastLotteryDrawAt = new Date();
@@ -231,7 +231,7 @@ class RecyclingPoolEngine {
       }
 
       logger.info(
-        `[RecyclingPool] Pemenang Astral Lottery minggu ini: ${winnerUserId} memenangkan ${prizeAmount} NSF!`,
+        `[RecyclingPool] Pemenang Astral Lottery minggu ini: ${winnerUserId} memenangkan ${prizeAmount} SC!`,
       );
 
       return {

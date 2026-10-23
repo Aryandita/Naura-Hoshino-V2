@@ -18,7 +18,7 @@ module.exports = [
     async handler(interaction) {
       const args = interaction.customId.replace("roleshop_buy_", "").split("_");
       const roleId = args[0];
-      const currency = args[1]; // "nsf", "coin", "coupon"
+      const currency = args[1]; // "SC", "coin", "coupon"
 
       const guildData = await cacheManager.getGuildSettings(
         interaction.guild.id,
@@ -81,18 +81,18 @@ module.exports = [
       let balance = 0;
       let currencyName = "";
 
-      if (currency === "nsf") {
+      if (currency === "SC") {
         price = item.prices.nsf;
-        balance = survival.starFragments || 0;
-        currencyName = "NSF";
+        balance = survival.sukamajuCoins || 0;
+        currencyName = "SC";
       } else if (currency === "coin") {
         price = item.prices.coin;
-        balance = profile.economy_wallet || 0;
-        currencyName = "Naura Coin";
+        balance = profile.pratamaDollars || 0;
+        currencyName = "Pratama Dollar";
       } else if (currency === "coupon") {
         price = item.prices.coupon;
-        balance = survival.coupons || 0;
-        currencyName = "Naura Coupon";
+        balance = survival.scholarshipVouchers || 0;
+        currencyName = "Voucher Beasiswa";
       }
 
       if (balance < price) {
@@ -114,12 +114,12 @@ module.exports = [
 
       // Lakukan pemotongan saldo secara atomik
       let debitResult = { ok: false };
-      if (currency === "nsf") {
-        debitResult = await cacheManager.debitUserSurvival(userId, "starFragments", price);
+      if (currency === "SC") {
+        debitResult = await cacheManager.debitUserSurvival(userId, "sukamajuCoins", price);
       } else if (currency === "coin") {
-        debitResult = await cacheManager.debitUserProfile(userId, "economy_wallet", price);
+        debitResult = await cacheManager.debitUserProfile(userId, "pratamaDollars", price);
       } else if (currency === "coupon") {
-        debitResult = await cacheManager.debitUserSurvival(userId, "coupons", price);
+        debitResult = await cacheManager.debitUserSurvival(userId, "scholarshipVouchers", price);
       }
 
       if (!debitResult || !debitResult.ok) {

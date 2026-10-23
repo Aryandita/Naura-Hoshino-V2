@@ -95,6 +95,12 @@ const COMBAT_LOGS = [
 module.exports = () => {
   const router = express.Router();
 
+  // Default timeout untuk survival route
+  router.use((req, res, next) => {
+    req.timeoutMs = 30000;
+    next();
+  });
+
   // ------------------------------------------------------------------
   // 0. Profil Karakter Survival (Mobile & Web Dashboard)
   // ------------------------------------------------------------------

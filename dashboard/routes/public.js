@@ -242,6 +242,8 @@ module.exports = (client) => {
 
   // --- Leaderboard ---
   router.get("/api/leaderboard", async (req, res) => {
+    // Leaderboard bisa lambat karena query DB + Discord API fetch
+    req.timeoutMs = 90000;
     try {
       const type = String(req.query.type || "wealth");
       const limitNum = Math.min(

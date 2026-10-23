@@ -4,11 +4,11 @@
 // investasi. Dipisah dari subcommand supaya menambah produk bank tidak perlu
 // menyentuh alur antarmuka.
 
-const { FRAGMENT_PER_COIN } = require("../engines/currency");
+const { SC_PER_PD } = require("../engines/currency");
 
-// Batas transaksi. Kurs resminya 1000 NSF = 1 Naura Coin, jadi setoran minimum
+// Batas transaksi. Kurs resminya 1000 SC = 1 PD, jadi setoran minimum
 // disamakan dengan satu keping Coin supaya tidak ada setoran yang hangus.
-const MIN_EXCHANGE_NSF = FRAGMENT_PER_COIN;
+const MIN_EXCHANGE_SC = SC_PER_PD;
 const MIN_DEPOSIT_COIN = 100;
 const MIN_INVEST_COIN = 50;
 const ANSWER_MS = 30000;
@@ -126,7 +126,7 @@ module.exports = {
   DEPOSIT_TERMS,
   INVEST_ASSETS,
   EMPTY_DEPOSIT,
-  MIN_EXCHANGE_NSF,
+  MIN_EXCHANGE_SC,
   MIN_DEPOSIT_COIN,
   MIN_INVEST_COIN,
   ANSWER_MS,

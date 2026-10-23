@@ -11,6 +11,7 @@ const {
 const cacheManager = require("../../../src/managers/cacheManager");
 const currencyHelper = require("../../../src/survival/engines/currency");
 const recyclingPoolEngine = require("../../../src/survival/engines/recyclingPoolEngine");
+const arcadeContract = require("../../../src/domain/contracts/arcadeContract");
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
@@ -26,15 +27,17 @@ module.exports = {
     const survival = await cacheManager.getUserSurvival(user.id);
 
     const holders = { profile, survival };
-    const nsfBal = currencyHelper.balanceOf(currencyHelper.FRAGMENT, holders);
-    const coinBal = currencyHelper.balanceOf(currencyHelper.COIN, holders);
+    const scBal = currencyHelper.balanceOf(currencyHelper.FRAGMENT, holders);
+    const pdBal = currencyHelper.balanceOf(currencyHelper.COIN, holders);
     const bankBal = Number((profile && profile.economy_bank) || 0);
-    const couponBal = currencyHelper.balanceOf(currencyHelper.COUPON, holders);
+    const vbBal = currencyHelper.balanceOf(currencyHelper.COUPON, holders);
+    const baBal = currencyHelper.balanceOf(currencyHelper.DIAMOND, holders);
+    const mpBal = await arcadeContract.getBalance(user.id);
     const tickets = Number(survival.lotteryTickets || 0);
     const playerLevel = Number(survival.survival_level || 1);
 
     const treasury = await recyclingPoolEngine.getOverview();
-    const quote = await currencyHelper.getDynamicRateAndFee(nsfBal);
+    const quote = await currencyHelper.getDynamicRateAndFee(scBal);
 
     // Evaluasi status subsidi pemula (Level 1 s.d. 10)
     let noviceStatus = "❌ Tidak Memenuhi Syarat (Khusus Level 1 - 10)";
@@ -52,16 +55,18 @@ module.exports = {
       if (alreadyClaimed) {
         noviceStatus = "✅ Sudah Diklaim Hari Ini (Kembali besok jam 00:00 UTC)";
       } else {
-        noviceStatus = "🎁 **Tersedia untuk Diklaim!** (Bantuan 250 NSF)";
+        noviceStatus = "🎁 **Tersedia untuk Diklaim!** (Bantuan 150 SC)";
         canClaimNovice = true;
       }
     }
 
-    const eNsf = currencyHelper.emojiOf(currencyHelper.FRAGMENT);
-    const eCoin = currencyHelper.emojiOf(currencyHelper.COIN);
-    const eCoupon = currencyHelper.emojiOf(currencyHelper.COUPON);
+    const eSc = currencyHelper.emojiOf(currencyHelper.FRAGMENT);
+    const ePd = currencyHelper.emojiOf(currencyHelper.COIN);
+    const eVb = currencyHelper.emojiOf(currencyHelper.COUPON);
+    const eBa = currencyHelper.emojiOf(currencyHelper.DIAMOND);
+    const eMp = ui.getEmoji("medali_permainan") || "🏅";
 
-    let currentNsf = nsfBal;
+    let currentSc = scBal;
     let isNoviceClaimable = canClaimNovice;
     let currentNoviceStatus = noviceStatus;
 
@@ -70,16 +75,18 @@ module.exports = {
         `### 💳 Paspor & Dompet Terpadu: ${user.displayName || user.username}`,
         `Level Survival: **Lv. ${playerLevel}** \u2022 Hari ke-**${survival.inGameDay || 1}**`,
         "",
-        `**Saldo Tiga Mata Uang:**`,
-        `> ${eNsf} **Star Fragments (NSF):** \`${n(currentNsf)}\` *(Alam & Survival)*`,
-        `> ${eCoin} **Naura Coin (Dompet):** \`${n(coinBal)}\` | **Bank:** \`${n(bankBal)}\` *(Kota)*`,
-        `> ${eCoupon} **Naura Coupon:** \`${n(couponBal)}\` *(Prestise & Kosmetik)*`,
+        `**Saldo Lima Mata Uang:**`,
+        `> ${eSc} **Sukamaju Koin (SC):** \`${n(currentSc)}\` *(Desa & Alam)*`,
+        `> ${ePd} **Pratama Dollar (PD):** \`${n(pdBal)}\` | **Bank:** \`${n(bankBal)}\` *(Kota)*`,
+        `> ${eVb} **Voucher Beasiswa (VB):** \`${n(vbBal)}\` *(Prestasi & Festival)*`,
+        `> ${eBa} **Berlian Adisha (BA):** \`${n(baBal)}\` *(Legendaris & Endgame)*`,
+        `> ${eMp} **Medali Permainan (MP):** \`${n(mpBal)}\` *(Arcade & Minigame)*`,
         "",
         `**Status Fasilitas Komunitas & Undian:**`,
         `> 🎟️ **Tiket Astral Lottery Anda:** \`${n(tickets)}\` Tiket Aktif`,
-        `> 🏆 **Jackpot Undian Mingguan:** \`${n(treasury.lotteryJackpot)}\` NSF`,
+        `> 🏆 **Jackpot Undian Mingguan:** \`${n(treasury.lotteryJackpot)}\` SC`,
         `> 🔰 **Subsidi Petualang Pemula:** ${currentNoviceStatus}`,
-        `> 📊 **Kurs Central Bank:** 1 Coin = \`${n(quote.rate)}\` NSF *(Pajak Admin: ${quote.feePercent * 100}%)*`,
+        `> 📊 **Kurs Central Bank:** 1 PD = \`${n(quote.rate)}\` SC *(Pajak Admin: ${quote.feePercent * 100}%)*`,
       ].join("\n");
 
       const row = new ActionRowBuilder().addComponents(
@@ -121,7 +128,7 @@ module.exports = {
         await i.deferUpdate().catch(() => {});
         const res = await recyclingPoolEngine.claimNoviceAid(user.id);
         if (res.ok) {
-          currentNsf += res.amount;
+          currentSc += res.amount;
           isNoviceClaimable = false;
           currentNoviceStatus = "✅ Sudah Diklaim Hari Ini (Kembali besok jam 00:00 UTC)";
 
@@ -129,7 +136,7 @@ module.exports = {
           await interaction.editReply(updatedPayload).catch(() => {});
 
           await i.followUp({
-            content: `🎉 **Berhasil!** Kamu telah menerima subsidi harian sebesar **${n(res.amount)} NSF** dari Dana Bantuan Petualang Pemula!`,
+            content: `🎉 **Berhasil!** Kamu telah menerima subsidi harian sebesar **${n(res.amount)} SC** dari Dana Bantuan Petualang Pemula!`,
             flags: MessageFlags.Ephemeral,
           }).catch(() => {});
         } else {
@@ -142,10 +149,10 @@ module.exports = {
         await i.reply({
           content: [
             `🎟️ **Informasi Astral Lottery Mingguan:**`,
-            `• **Total Jackpot Saat Ini:** \`${n(treasury.lotteryJackpot)}\` NSF`,
+            `• **Total Jackpot Saat Ini:** \`${n(treasury.lotteryJackpot)}\` SC`,
             `• **Tiket Anda:** \`${n(tickets)}\` Tiket Aktif`,
             `• **Jadwal Pengundian:** Setiap hari Minggu pukul 20:00 WIB`,
-            `• **Cara Mendapatkan Tiket:** Dapatkan 1 Tiket gratis secara otomatis setiap membelanjakan/membayar 250 NSF untuk biaya perbaikan alat atau administrasi bank!`,
+            `• **Cara Mendapatkan Tiket:** Dapatkan 1 Tiket gratis secara otomatis setiap membelanjakan/membayar 250 SC untuk biaya perbaikan alat atau administrasi bank!`,
           ].join("\n"),
           flags: MessageFlags.Ephemeral,
         }).catch(() => {});

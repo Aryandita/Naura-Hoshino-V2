@@ -134,27 +134,27 @@ async function advanceTime(userId, hoursAdded) {
     await chargeTax(userId, survival.propertyId, rpgState, advancedDays);
 
     let penaltyAmt = 0;
-    let currencyType = "NSF";
+    let currencyType = "SC";
 
     if (clinicType === "RS Kota") {
-      currencyType = "NC";
+      currencyType = "PD";
       let walletNc = 0;
       try {
         const profile = await cacheManager.getUserProfile(userId);
-        walletNc = Math.max(0, Number(profile?.economy_wallet || 0));
+        walletNc = Math.max(0, Number(profile?.pratamaDollars || 0));
       } catch (_) {
         walletNc = 0;
       }
       penaltyAmt = Math.min(50, walletNc);
       if (penaltyAmt > 0) {
-        await cacheManager.debitUserProfile(userId, "economy_wallet", penaltyAmt);
+        await cacheManager.debitUserProfile(userId, "pratamaDollars", penaltyAmt);
       }
     } else {
-      currencyType = "NSF";
-      const walletNsf = survival.starFragments || 0;
+      currencyType = "SC";
+      const walletNsf = survival.sukamajuCoins || 0;
       penaltyAmt = Math.min(500, walletNsf);
       if (penaltyAmt > 0) {
-        await cacheManager.debitUserSurvival(userId, "starFragments", penaltyAmt);
+        await cacheManager.debitUserSurvival(userId, "sukamajuCoins", penaltyAmt);
       }
     }
 

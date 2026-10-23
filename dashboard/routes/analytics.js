@@ -12,6 +12,7 @@ module.exports = (client) => {
 
   // GET /api/analytics/overview (Ringkasan Cepat)
   router.get("/overview", async (req, res) => {
+    req.timeoutMs = 30000;
     try {
       const cacheKey = "analytics:cache:overview";
       const cached = await redisManager.getCache(cacheKey);

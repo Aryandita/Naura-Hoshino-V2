@@ -18,7 +18,15 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "node --test \"src/**/*.test.js\" \"dashboard/**/*.test.js\" \"plugin/**/*.test.js\" \"test/**/*.test.js\"",
-    "build": "npm run dashboard:build && npm run mobile:build",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:visual": "playwright test --project=visual-regression",
+    "test:visual:update": "playwright test --project=visual-regression --update-snapshots",
+    "test:coverage": "vitest run --coverage",
+    "build": "npm run tokens:generate && npm run dashboard:build && npm run mobile:build",
+    "tokens:generate": "node scripts/generate-css-tokens.js",
     "build:css": "tailwindcss -i dashboard/src/css/input.css -o dashboard/public/vendor/tailwind-built.css --minify",
     "dashboard": "node scripts/start-dashboard.js",
     "dashboard:dev": "npm run build:css && vite --config dashboard/vite.config.mjs dashboard",
@@ -116,7 +124,8 @@
     "spotify-url-info": "^3.3.0",
     "sqlite3": "^5.1.7",
     "tailwindcss": "^4.3.3",
-    "three": "^0.177.0"
+    "three": "^0.177.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@vitejs/plugin-legacy": "^6.1.1",

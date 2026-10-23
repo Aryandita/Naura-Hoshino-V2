@@ -33,9 +33,9 @@ async function generateProfileCard(arg1, arg2, arg3, arg4) {
       premiumUntil: arg1.premiumUntil || null,
       premium_tier: arg1.premiumTier || arg1.premium_tier || "none",
       activeBanners: arg1.activeBanners,
-      economy_wallet: arg1.wallet || 0,
+      pratamaDollars: arg1.wallet || 0,
       economy_bank: arg1.bank || 0,
-      starFragments: arg1.starFragments || 0,
+      sukamajuCoins: arg1.sukamajuCoins || 0,
       custom_title: arg1.title || "Adventurer",
       reputation: arg1.reputation || 0,
       clan: arg1.clan || null,
@@ -372,8 +372,8 @@ async function generateProfileCard(arg1, arg2, arg3, arg4) {
     ctx.fillText(`Tata Krama: ${manners}/100`, contentStartX, 144);
 
     // 7. Saldo Ganda Closed-Loop (NC & NSF, tanpa format "Rp")
-    const wallet = userProfile.economy_wallet || 0;
-    const starFragments = userProfile.starFragments || 0;
+    const wallet = userProfile.pratamaDollars || 0;
+    const sukamajuCoins = userProfile.sukamajuCoins || 0;
 
     ctx.font = 'bold 15px "MontserratBold", "EmojiFont"';
     // Naura Coins (NC)
@@ -388,7 +388,7 @@ async function generateProfileCard(arg1, arg2, arg3, arg4) {
     const dotWidth = ctx.measureText("   •   ").width;
     // Naura Star Fragments (NSF)
     ctx.fillStyle = "#F472B6";
-    const nsfText = `✨ ${starFragments.toLocaleString("id-ID")} NSF`;
+    const nsfText = `✨ ${sukamajuCoins.toLocaleString("id-ID")} NSF`;
     ctx.fillText(nsfText, contentStartX + ncWidth + dotWidth, 178);
 
     // 8. Progress Bar XP
@@ -513,7 +513,7 @@ async function generateBusinessCard(payload) {
     ctx.fillStyle = "#b2bec3";
     ctx.font = "20px sans-serif";
     ctx.fillText(
-      `Saldo: ${(profile.economy_wallet || 0).toLocaleString("id-ID")} ${currencySymbol || "NC"}`,
+      `Saldo: ${(profile.pratamaDollars || 0).toLocaleString("id-ID")} ${currencySymbol || "PD"}`,
       230,
       210,
     );

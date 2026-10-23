@@ -323,6 +323,18 @@ const MIGRATIONS = [
     pgSql:
       'ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "sukamajuCoins" INTEGER; UPDATE "UserSurvivals" SET "sukamajuCoins" = COALESCE("starFragments", 500) WHERE "sukamajuCoins" IS NULL; ALTER TABLE "UserSurvivals" ALTER COLUMN "sukamajuCoins" SET DEFAULT 500; ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "scholarshipVouchers" INTEGER; UPDATE "UserSurvivals" SET "scholarshipVouchers" = COALESCE("coupons", 0) WHERE "scholarshipVouchers" IS NULL; ALTER TABLE "UserSurvivals" ALTER COLUMN "scholarshipVouchers" SET DEFAULT 0; ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "pratamaDollars" INTEGER; UPDATE "user_profiles" SET "pratamaDollars" = COALESCE("economy_wallet", 0) WHERE "pratamaDollars" IS NULL; ALTER TABLE "user_profiles" ALTER COLUMN "pratamaDollars" SET DEFAULT 0;',
   },
+  {
+    id: "v48_add_adisha_diamonds",
+    description: "Tambah kolom adishaDiamonds ke UserSurvivals untuk mata uang premium Adisha Diamond",
+    sql: "ALTER TABLE UserSurvivals ADD COLUMN adishaDiamonds INT DEFAULT 0;",
+    pgSql: 'ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "adishaDiamonds" INTEGER DEFAULT 0;',
+  },
+  {
+    id: "v49_add_medali_permainan",
+    description: "Tambah kolom medaliPermainan ke user_profiles untuk Medali Permainan (MP)",
+    sql: "ALTER TABLE user_profiles ADD COLUMN medaliPermainan INT DEFAULT 100;",
+    pgSql: 'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "medaliPermainan" INTEGER DEFAULT 100;',
+  },
 ];
 
 /**
@@ -417,8 +429,12 @@ const PG_SQL_OVERRIDES = {
     'ALTER TABLE "user_cards" ADD COLUMN IF NOT EXISTS "isAwakened" BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS "awakeningLevel" INTEGER DEFAULT 0, ADD COLUMN IF NOT EXISTS "inscription" VARCHAR(128) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "originalMinterId" VARCHAR(191) DEFAULT NULL;',
   v32_upgrade_territories_and_pets:
     'ALTER TABLE "clan_territories" ADD COLUMN IF NOT EXISTS "clanName" VARCHAR(128) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "defenseLevel" INTEGER NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS "maxControlPoints" INTEGER NOT NULL DEFAULT 1000, ADD COLUMN IF NOT EXISTS "lastTaxClaimedAt" TIMESTAMPTZ DEFAULT NULL, ADD COLUMN IF NOT EXISTS "contributingClanIds" JSON DEFAULT NULL; ALTER TABLE "UserPets" ADD COLUMN IF NOT EXISTS "fusionCount" INTEGER NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS "cosmicAura" BOOLEAN NOT NULL DEFAULT FALSE, ADD COLUMN IF NOT EXISTS "habitatRoom" JSON DEFAULT NULL;',
-  v33_create_sprint20_milestone_tables:
+v33_create_sprint20_milestone_tables:
     'ALTER TABLE "GuildClans" ADD COLUMN IF NOT EXISTS "hallLayout" JSON DEFAULT NULL; CREATE TABLE IF NOT EXISTS "coliseum_teams" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL UNIQUE, "teamName" VARCHAR(128) NOT NULL DEFAULT \'Vanguard Squad\', "formation" JSON NOT NULL, "eloRating" INTEGER NOT NULL DEFAULT 1200, "divisionTier" VARCHAR(32) NOT NULL DEFAULT \'BRONZE\', "wins" INTEGER NOT NULL DEFAULT 0, "losses" INTEGER NOT NULL DEFAULT 0, "lastFoughtAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "guild_personas" ("id" SERIAL PRIMARY KEY, "personaId" VARCHAR(64) NOT NULL UNIQUE, "guildId" VARCHAR(64) NOT NULL, "channelId" VARCHAR(64) DEFAULT NULL, "name" VARCHAR(128) NOT NULL, "systemPrompt" TEXT NOT NULL, "voiceTone" VARCHAR(64) NOT NULL DEFAULT \'TSUNDERE\', "avatarUrl" VARCHAR(255) DEFAULT NULL, "isActive" BOOLEAN NOT NULL DEFAULT TRUE, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "server_stocks" ("ticker" VARCHAR(32) PRIMARY KEY, "name" VARCHAR(128) NOT NULL, "guildId" VARCHAR(64) DEFAULT NULL, "clanId" INTEGER DEFAULT NULL, "currentPrice" DOUBLE PRECISION NOT NULL DEFAULT 100.0, "previousPrice" DOUBLE PRECISION NOT NULL DEFAULT 100.0, "totalShares" INTEGER NOT NULL DEFAULT 10000, "availableShares" INTEGER NOT NULL DEFAULT 10000, "dividendYield" DOUBLE PRECISION NOT NULL DEFAULT 0.05, "history24h" JSON NOT NULL, "isHighRisk" BOOLEAN NOT NULL DEFAULT FALSE, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "user_stock_holdings" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL, "ticker" VARCHAR(32) NOT NULL, "sharesOwned" INTEGER NOT NULL DEFAULT 0, "avgBuyPrice" DOUBLE PRECISION NOT NULL DEFAULT 0.0, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL, CONSTRAINT "uk_user_ticker" UNIQUE ("userId", "ticker"));',
+  v48_add_adisha_diamonds:
+    'ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "adishaDiamonds" INTEGER DEFAULT 0;',
+  v49_add_medali_permainan:
+    'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "medaliPermainan" INTEGER DEFAULT 100;',
 };
 
 // Tempelkan override ke entri migrasi yang belum punya pgSql. Entri yang sudah

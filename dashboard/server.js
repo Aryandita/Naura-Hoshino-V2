@@ -152,6 +152,29 @@ module.exports = (containerOrClient) => {
     }),
   );
   webApp.use(express.urlencoded({ extended: true, limit: "256kb" }));
+
+  // --- Request Timeout Middleware ---
+  // Mencegah request menggantung terlalu lama (mis. query DB berat, API eksternal lambat).
+  // Default 60 detik, bisa di-override per-route via req.timeoutMs.
+  webApp.use((req, res, next) => {
+    const timeoutMs = req.timeoutMs || 60000;
+    const timer = setTimeout(() => {
+      if (!res.headersSent) {
+        res.status(504).json({
+          error: "Request timeout",
+          message: `Request melebihi batas waktu ${timeoutMs}ms`,
+          code: "REQUEST_TIMEOUT",
+        });
+      }
+      req.destroy();
+    }, timeoutMs);
+
+    // Hapus timer saat response selesai
+    res.on("finish", () => clearTimeout(timer));
+    res.on("close", () => clearTimeout(timer));
+    next();
+  });
+
   // Static assets: Dashboard dist sebagai prioritas utama, didukung asset publik & bot.
   //
   // PENTING: `index: false` mencegah express.static menyajikan dist/index.html
@@ -721,7 +744,12 @@ webApp.get("/treasury", view("treasury.html"));
     cors: { origin: originChecker, credentials: true },
   });
 
-  // Jembatani event dari eventBus sistem ke Socket.IO klien web
+  const RealtimeBridge = require("./services/realtimeBridge");
+  const CacheInvalidationService = require("./services/cacheInvalidation");
+
+  const realtimeBridge = new RealtimeBridge(io);
+  new CacheInvalidationService({ realtimeBridge });
+
   eventBus.on("system:log", (data) => io.emit("system_log", data));
   eventBus.on("system:broadcast", (data) => io.emit("system_broadcast", data));
   eventBus.on("music:analytics", (data) => io.emit("music_analytics_update", data));

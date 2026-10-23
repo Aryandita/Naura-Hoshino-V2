@@ -73,11 +73,24 @@ export default defineConfig({
     // DILARANG proxy /assets agar bundler internal Vite (JS, CSS, chunk)
     // dan asset statis di public/assets tidak terblokir dengan ECONNREFUSED.
     proxy: {
-      "/api": apiTarget,
-      "/auth": apiTarget,
+      "/api": {
+        target: apiTarget,
+        changeOrigin: true,
+        // Timeout 2 menit untuk operasi berat (leaderboard, analytics, export)
+        proxyTimeout: 120000,
+        timeout: 120000,
+      },
+      "/auth": {
+        target: apiTarget,
+        changeOrigin: true,
+        proxyTimeout: 30000,
+        timeout: 30000,
+      },
       "/socket.io": {
         target: apiTarget,
         ws: true,
+        // WebSocket tidak perlu proxyTimeout, tapi timeout koneksi awal
+        timeout: 30000,
       },
     },
   },

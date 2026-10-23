@@ -11,42 +11,42 @@ const RUSH_COUPON_COST = 1;
 
 class CooldownRushHelper {
   /**
-   * Eksekusi penghapusan cooldown berbayar 1 Naura Coupon secara atomik
+   * Eksekusi penghapusan cooldown berbayar 1 Voucher Beasiswa secara atomik
    * @param {string} userId
    * @param {string} cooldownKey - misal 'work', 'study', 'hunt', 'collect', dll.
-   * @returns {Promise<{ success: boolean, message: string, remainingCoupons: number }>}
+   * @returns {Promise<{ success: boolean, message: string, remainingscholarshipVouchers: number }>}
    */
   static async executeRush(userId, cooldownKey) {
     if (!userId || !cooldownKey) {
       return {
         success: false,
         message: "Parameter pengguna atau cooldown tidak valid.",
-        remainingCoupons: 0,
+        remainingscholarshipVouchers: 0,
       };
     }
 
     const survival = await cacheManager.getUserSurvival(userId);
-    const coupons = Number(survival?.coupons) || 0;
+    const scholarshipVouchers = Number(survival?.scholarshipVouchers) || 0;
 
-    if (coupons < RUSH_COUPON_COST) {
+    if (scholarshipVouchers < RUSH_COUPON_COST) {
       return {
         success: false,
-        message: `Naura Coupon kamu tidak cukup! Butuh ${RUSH_COUPON_COST} Coupon untuk melakukan Rush Cooldown (punyamu: ${coupons} Coupon).`,
-        remainingCoupons: coupons,
+        message: `Voucher Beasiswa kamu tidak cukup! Butuh ${RUSH_COUPON_COST} Coupon untuk melakukan Rush Cooldown (punyamu: ${scholarshipVouchers} Coupon).`,
+        remainingscholarshipVouchers: scholarshipVouchers,
       };
     }
 
     // Debit atomik 1 kupon
     const debitOk = await cacheManager.debitUserSurvival(
       userId,
-      "coupons",
+      "scholarshipVouchers",
       RUSH_COUPON_COST,
     );
     if (!debitOk?.ok) {
       return {
         success: false,
-        message: "Gagal memotong Naura Coupon. Saldo tidak mencukupi atau transaksi bentrok.",
-        remainingCoupons: coupons,
+        message: "Gagal memotong Voucher Beasiswa. Saldo tidak mencukupi atau transaksi bentrok.",
+        remainingscholarshipVouchers: scholarshipVouchers,
       };
     }
 
@@ -69,12 +69,12 @@ class CooldownRushHelper {
     }
 
     const updatedSurvival = await cacheManager.getUserSurvival(userId);
-    const remainingCoupons = Number(updatedSurvival?.coupons) || 0;
+    const remainingscholarshipVouchers = Number(updatedSurvival?.scholarshipVouchers) || 0;
 
     return {
       success: true,
-      message: `⚡ **Rush Berhasil!** Cooldown untuk \`${cooldownKey}\` telah direset seketika! (Sisa Coupon: **${remainingCoupons}**).`,
-      remainingCoupons,
+      message: `⚡ **Rush Berhasil!** Cooldown untuk \`${cooldownKey}\` telah direset seketika! (Sisa Coupon: **${remainingscholarshipVouchers}**).`,
+      remainingscholarshipVouchers,
     };
   }
 
@@ -106,7 +106,7 @@ class CooldownRushHelper {
       description: [
         `Kamu baru saja melakukan **${activityName}**. Silakan tunggu sekitar **${minutes} menit** lagi sebelum bisa melakukannya kembali.`,
         "",
-        `💡 *Tidak sabar menunggu? Tekan tombol **Rush** di bawah untuk melewati masa cooldown seketika dengan 1 Naura Coupon!*`,
+        `💡 *Tidak sabar menunggu? Tekan tombol **Rush** di bawah untuk melewati masa cooldown seketika dengan 1 Voucher Beasiswa!*`,
       ].join("\n"),
       buttonsRow: {
         components: [rushBtn],

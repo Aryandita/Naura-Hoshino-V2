@@ -30,6 +30,9 @@ const { VALID_THEMES, VALID_BG_TYPES, VALID_SECTIONS } = UserPortfolio;
 // Tema yang hanya bisa dipakai pengguna premium.
 const PREMIUM_THEMES = new Set(["sakura", "midnight"]);
 
+// Default timeout untuk route portfolio (query DB agregat bisa lambat)
+const PORTFOLIO_TIMEOUT_MS = 30000;
+
 /** Ambil data agregat satu user dari semua tabel yang relevan. */
 async function aggregateUserData(userId, client) {
   const UserSurvival = require("../../src/models/UserSurvival");
@@ -217,6 +220,12 @@ function formatPortfolioPayload(userId, portfolio, aggregated, discordUser) {
 
 module.exports = (client) => {
   const router = express.Router();
+
+  // Set timeout default untuk semua route portfolio
+  router.use((req, res, next) => {
+    req.timeoutMs = PORTFOLIO_TIMEOUT_MS;
+    next();
+  });
 
   // =====================================================================
   // GET /api/portfolio/me, Portfolio diri sendiri (termasuk draft, butuh login)

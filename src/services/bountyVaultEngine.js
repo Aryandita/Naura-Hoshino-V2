@@ -177,7 +177,7 @@ class BountyVaultEngine {
     }
 
     // Debit reward dari saldo pembuat secara atomik
-    const debitOk = await cacheManager.debitUserSurvival(creatorId, "starFragments", rewardNsf);
+    const debitOk = await cacheManager.debitUserSurvival(creatorId, "sukamajuCoins", rewardNsf);
     const isDebitSuccess = debitOk === true || Boolean(debitOk?.ok);
     if (!isDebitSuccess) {
       return {
@@ -289,7 +289,7 @@ class BountyVaultEngine {
     if (bounty.creatorId !== approverId) return { success: false, error: "Hanya pembuat sayembara yang berhak menyetujui klaim." };
 
     // Cairkan escrow ke claimant secara atomik
-    await cacheManager.incrementUserSurvival(bounty.claimantId, "starFragments", bounty.rewardNsf);
+    await cacheManager.incrementUserSurvival(bounty.claimantId, "sukamajuCoins", bounty.rewardNsf);
 
     bounty.status = "completed";
     bounty.completedAt = new Date().toISOString();
@@ -319,7 +319,7 @@ class BountyVaultEngine {
     if (bounty.creatorId !== requesterId) return { success: false, error: "Hanya pembuat sayembara yang dapat membatalkan sayembara." };
 
     // Kembalikan dana escrow secara atomik
-    await cacheManager.incrementUserSurvival(bounty.creatorId, "starFragments", bounty.rewardNsf);
+    await cacheManager.incrementUserSurvival(bounty.creatorId, "sukamajuCoins", bounty.rewardNsf);
 
     bounty.status = "cancelled";
 

@@ -108,7 +108,7 @@ function addRpgSubcommands(builder) {
                 opt
                   .setName("taruhan")
                   .setDescription(
-                    "Jumlah Star Fragments (NSF) yang dipertaruhkan",
+                    "Jumlah Sukamaju Koin (SC) yang dipertaruhkan",
                   )
                   .setRequired(false)
                   .setMinValue(50)
@@ -186,7 +186,7 @@ function addRpgSubcommands(builder) {
               .addIntegerOption((opt) =>
                 opt
                   .setName("taruhan")
-                  .setDescription("Jumlah Naura Coin taruhan (Opsional)")
+                  .setDescription("Jumlah Pratama Dollar taruhan (Opsional)")
                   .setRequired(false)
                   .setMinValue(100),
               )
@@ -306,7 +306,7 @@ function addRpgSubcommands(builder) {
           .addIntegerOption((opt) =>
             opt
               .setName("jumlah")
-              .setDescription("Jumlah Star Fragments")
+              .setDescription("Jumlah Sukamaju Koin")
               .setRequired(false),
           ),
       )
@@ -325,7 +325,7 @@ function addRpgSubcommands(builder) {
           .addIntegerOption((opt) =>
             opt
               .setName("nsf")
-              .setDescription("Jumlah Star Fragment (NSF)")
+              .setDescription("Jumlah Sukamaju Koin (SC)")
               .setRequired(true)
               .setMinValue(1),
           ),
@@ -522,7 +522,7 @@ function addRpgSubcommands(builder) {
             opt
               .setName("imbalan")
               .setDescription(
-                "Jumlah Star Fragments (NSF) untuk hadiah buronan",
+                "Jumlah Sukamaju Koin (SC) untuk hadiah buronan",
               )
               .setRequired(false)
               .setMinValue(100),

@@ -1,125 +1,135 @@
-/* =====================================================================
- * tokens.css - Sumber kebenaran warna dashboard.
- *
- * Muat SETELAH style.css:
- *   <link rel="stylesheet" href="/css/style.css">
- *   <link rel="stylesheet" href="/css/tokens.css">
- *
- * Alasannya: style.css sudah punya :root sendiri dengan --color-primary
- * #FFB6C1, sedangkan bot memakai #FFC0CB di src/config/ui.js. Dua nilai itu
- * beda tipis tapi cukup terasa kalau embed Discord dan dashboard dibuka
- * berdampingan. Berkas ini menyelaraskannya tanpa perlu membongkar 20 KB
- * style.css yang sudah rapi.
- *
- * Setiap kali kamu mengubah `colors` di src/config/ui.js, ubah juga blok
- * pertama di bawah ini. Hanya sembilan baris.
+﻿/* =====================================================================
+ * tokens.css - Sumber kebenaran warna dashboard (DESIGN.md v2.4.0)
+ * Muat SETELAH style.css. Sinkron dengan src/config/tokens/designTokens.js
  * ===================================================================== */
 
 :root {
-  /* --- Cerminan langsung dari src/config/ui.js `colors` --- */
-  --naura-primary: #ffc0cb;
-  --naura-accent: #00ffff;
-  --naura-economy: #ffd700;
-  --naura-success: #00ff00;
-  --naura-error: #ff0000;
-  --naura-warning: #ffb347;
-  --naura-info: #57c7ff;
-  --naura-dark: #0e1118;
-  --naura-light: #f0f0f0;
+  /* ── Canvas & Layer (R-10: data cards matte) ── */
+  --canvas: #0b0c10;
+  --bg-deep: #0b0c10;
+  --bg-layer: #12151f;
+  --bg-layer-elevated: #171b26;
 
-  /* --- Selaraskan token lama style.css --- */
-  --color-primary: var(--naura-primary);
-  --color-primary-glow: rgba(255, 192, 203, 0.45);
+  /* ── Brand Tier (Karakter) ── */
+  --naura-primary: #FFC0CB;        /* Sakura Pink - brand identity */
+  --naura-rose: #F472B6;           /* Naura Rose - UI chrome */
+  --naura-soft: #FF9EBB;           /* Soft variant */
+  --naura-cyan-neon: #00FFFF;      /* Cyber Cyan - Discord/Canvas accent */
+  --naura-cyan-live: #22D3EE;      /* Signal Cyan - live indicator */
 
-  /* Warna ini dipakai .btn-discord:hover tapi tidak pernah didefinisikan,
-   * jadi tombolnya kehilangan warna saat disentuh kursor. */
-  --color-discord-blurple-hover: #4752c4;
+  /* ── UI Chrome ── */
+  --ui-primary: #F472B6;           /* Naura Rose untuk chrome */
+  --ui-primary-glow: rgba(244, 114, 182, 0.25);
+  --ui-primary-hover: #f472b6;
 
-  /* --- Warna semantik untuk status --- */
-  --color-state-success: #86efac;
-  --color-state-error: #fca5a5;
-  --color-state-warning: var(--naura-warning);
-  --color-state-info: var(--naura-info);
+  /* ── Aksen Fungsional ── */
+  --accent-cyan-live: #22D3EE;     /* Koneksi aktif */
+  --accent-pink: #F9A8D4;
+  --accent-purple: #C084FC;
+  --accent-blue: #93C5FD;
+  --accent-green: #86EFAC;
 
-  --color-danger: #ef4444;
-  --color-danger-glow: rgba(239, 68, 68, 0.25);
-  --color-success: #22c55e;
-  --color-success-glow: rgba(34, 197, 94, 0.25);
-  --color-warn: #f59e0b;
-  --color-warn-glow: rgba(245, 158, 11, 0.25);
-  --color-info: #06b6d4;
-  --color-info-glow: rgba(6, 182, 212, 0.25);
+  /* ── Surfaces ── */
+  --surface-glass: rgba(255, 255, 255, 0.03);
+  --surface-glass-hover: rgba(255, 255, 255, 0.05);
+  --surface-elevated: rgba(0, 0, 0, 0.4);
 
-  /* --- Token Status Service Realtime --- */
-  --status-online: #22c55e;
-  --status-warn: #f59e0b;
-  --status-offline: #ef4444;
-  --status-maintenance: #a855f7;
+  /* ── Text ── */
+  --ink: #ffffff;
+  --body: #9ca3af;
+  --body-strong: #d1d5db;
+  --muted: #6b7280;
+  --on-primary: #0b0c10;
+  --on-dark: #ffffff;
 
-  /* --- Naura Wilds (Survival Sub-Brand - Kontrak DESIGN.md) --- */
-  --wilds-emerald: #86efac;
-  --wilds-moss: #34d399;
-  --wilds-amber: #fbbf24;
-  --wilds-bark: #92400e;
-  --wilds-river: #7dd3fc;
-  --wilds-danger: #f87171;
+  /* ── Hairline & Border ── */
+  --hairline: rgba(255, 192, 203, 0.15);
+  --hairline-strong: rgba(255, 192, 203, 0.3);
+  --hairline-brand: rgba(244, 114, 182, 0.35);
+
+  /* ── Status ── */
+  --status-online: #22C55E;
+  --status-idle: #F59E0B;
+  --status-dnd: #EF4444;
+  --status-maintenance: #A855F7;
+  --status-syncing: #38BDF8;
+
+  /* ── Survival Wilds ── */
+  --wilds-emerald: #86EFAC;
+  --wilds-moss: #34D399;
+  --wilds-amber: #FBBF24;
+  --wilds-bark: #92400E;
+  --wilds-river: #7DD3FC;
+  --wilds-danger: #F87171;
   --surface-glass-wilds: rgba(134, 239, 172, 0.06);
   --hairline-wilds: rgba(134, 239, 172, 0.2);
 
-  /* --- Refraksi Kaca & Aksesibilitas Fokus --- */
+  /* ── Rarity ── */
+  --rarity-common: #9CA3AF;
+  --rarity-uncommon: #86EFAC;
+  --rarity-rare: #93C5FD;
+  --rarity-epic: #C084FC;
+  --rarity-legendary: #FFD700;
+  --rarity-mythic: #F9A8D4;
+
+  /* ── Premium ── */
+  --premium-voter: #F43F5E;
+  --premium-starter: #38BDF8;
+  --premium-supporter: #C0C0C0;
+  --premium-friends: #A855F7;
+  --premium-vip: #FFD700;
+
+  /* ── Glass Specular & Focus ── */
   --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
   --glass-specular-strong: inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
   --glass-specular-primary: inset 0 1px 0 0 rgba(255, 192, 203, 0.25);
-  --focus-ring: 0 0 0 2px #060810, 0 0 0 4px var(--color-primary);
+  --focus-ring: 0 0 0 2px #060810, 0 0 0 4px var(--ui-primary);
 
-  /* --- Token Breakpoint Tata Letak Responsif --- */
+  /* ── Breakpoint ── */
   --bp-mobile: 480px;
   --bp-tablet: 768px;
   --bp-desktop: 1024px;
   --bp-wide: 1280px;
 
-  /* --- Stitch & Modern Web Guidance: Spring Motion & Touch Targets --- */
+  /* ── Motion (Anti-Slop: spring physics) ── */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-tactile: cubic-bezier(0.34, 1.56, 0.64, 1);
   --touch-target-min: 44px;
 
-  /* --- Fluid Typography Scaling (clamp) --- */
+  /* ── Fluid Typography ── */
   --fs-display: clamp(2rem, 4vw + 0.5rem, 3.25rem);
   --fs-h1: clamp(1.625rem, 3vw + 0.25rem, 2.375rem);
   --fs-h2: clamp(1.25rem, 2vw + 0.2rem, 1.625rem);
   --fs-h3: clamp(1.05rem, 1.5vw + 0.15rem, 1.25rem);
   --fs-body: clamp(0.875rem, 0.2vw + 0.825rem, 0.965rem);
 
-  /* --- Higher-Order Density Tokens (Modern Web Guidance) --- */
+  /* ── Density ── */
   --density: comfortable;
   --sp-card-padding: var(--sp-5, 20px);
   --sp-card-gap: var(--sp-3, 12px);
   --r-card-inner: var(--r-lg, 14px);
   --fs-stat-val: 28px;
 
-  /* --- Ekspresi Naura --- */
-  --naura-expression-size: 160px;
-  --naura-expression-size-sm: 96px;
+  /* ── Tabular nums ── */
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* --- Density Modes via Selectors & Container Queries --- */
-:where([data-density="compact"]) {
+/* Density modes */
+[data-density="compact"] {
   --density: compact;
   --sp-card-padding: 12px;
   --sp-card-gap: 8px;
   --r-card-inner: 10px;
   --fs-stat-val: 22px;
 }
-
-:where([data-density="comfortable"]) {
+[data-density="comfortable"] {
   --density: comfortable;
   --sp-card-padding: 20px;
   --sp-card-gap: 12px;
   --r-card-inner: 14px;
   --fs-stat-val: 28px;
 }
-
-:where([data-density="spacious"]) {
+[data-density="spacious"] {
   --density: spacious;
   --sp-card-padding: 28px;
   --sp-card-gap: 16px;
@@ -127,486 +137,134 @@
   --fs-stat-val: 34px;
 }
 
-/* Progressive enhancement with Container Style Queries */
 @container style(--density: compact) {
-  .card-stellar, .stat-card-stellar {
-    padding: var(--sp-card-padding, 12px);
-  }
+  .card-stellar, .stat-card-stellar { padding: var(--sp-card-padding, 12px); }
 }
-
 @container style(--density: spacious) {
-  .card-stellar, .stat-card-stellar {
-    padding: var(--sp-card-padding, 28px);
-  }
+  .card-stellar, .stat-card-stellar { padding: var(--sp-card-padding, 28px); }
 }
 
-/* Tabular figures untuk angka metrik agar tidak bergeser */
-.tabular-nums,
-[data-tabular],
-.stat-card-value,
-.stat-card-delta,
-.metric-value,
-.telemetry-val,
-.badge-mono,
-.feed-time,
-.palette-kbd,
-code,
-pre {
+/* Tabular nums utility */
+.tabular-nums, [data-tabular], .stat-card-value, .stat-card-delta, .metric-value, .telemetry-val, .badge-mono, .feed-time, .palette-kbd, code, pre {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
-/* Aksesibilitas universal untuk keyboard navigation */
+/* Focus visible */
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
 
-/* Aksesibilitas: Skip link untuk pembaca layar & navigasi keyboard */
+/* Skip link */
 .skip-link {
-  position: absolute;
-  top: -100px;
-  left: 16px;
-  background: var(--color-primary, #ffc0cb);
-  color: #060810;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 14px;
-  z-index: 99999;
-  text-decoration: none;
-  transition: top var(--t-fast, 150ms ease);
+  position: absolute; top: -100px; left: 16px;
+  background: var(--ui-primary); color: var(--on-primary);
+  padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 14px;
+  z-index: 99999; text-decoration: none; transition: top 150ms ease;
 }
-
-.skip-link:focus {
-  top: 16px;
-}
+.skip-link:focus { top: 16px; }
 
 /* =====================================================================
- * Ekspresi Naura sebagai state visual
- *
- * PNG transparan di /assets/Naura_Expression dipakai ulang di web supaya
- * halaman kosong, gagal muat, dan sedang memuat tidak terasa seperti error
- * teknis, melainkan seperti Naura yang sedang bereaksi.
- *
- * Pemetaannya sengaja disamakan persis dengan src/utils/nauraExpression.js:
- *   sukses -> Cheers | memuat -> Thinking | galat -> Cry | kosong -> Akward
+ * 6 TEMA DASHBOARD (data-theme)
  * ===================================================================== */
 
-.naura-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm, 0.75rem);
-  padding: var(--spacing-xl, 2rem) var(--spacing-md, 1rem);
-  text-align: center;
-}
-
-.naura-state__figure {
-  width: var(--naura-expression-size);
-  height: var(--naura-expression-size);
-  object-fit: contain;
-  /* PNG-nya transparan, jadi drop-shadow mengikuti siluet karakter,
-     * bukan kotak gambarnya. Inilah untungnya aset transparan. */
-  filter: drop-shadow(0 8px 24px var(--color-primary-glow));
-  animation: naura-float 3.5s ease-in-out infinite;
-}
-
-.naura-state__figure--sm {
-  width: var(--naura-expression-size-sm);
-  height: var(--naura-expression-size-sm);
-}
-
-.naura-state__title {
-  font-family: "Outfit", sans-serif;
-  font-weight: 600;
-  font-size: 1.125rem;
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-  color: var(--color-ink, #fff);
-  margin: 0;
-}
-
-.naura-state__body {
-  font-family: "Outfit", sans-serif;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: var(--color-body, #9ca3af);
-  max-width: 42ch;
-  text-wrap: pretty;
-  margin: 0;
-}
-
-.naura-state__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm, 0.75rem);
-  margin-top: var(--spacing-xs, 0.5rem);
-}
-
-.naura-state__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: var(--rounded-md, 8px);
-  font-family: "Outfit", sans-serif;
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
-}
-
-.naura-state__btn:active {
-  transform: scale(0.97);
-}
-
-.naura-state__btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-.naura-state__btn--primary {
-  background: var(--color-primary);
-  color: var(--color-on-primary, #0b0c10);
-  border: 1px solid transparent;
-  box-shadow: 0 2px 10px rgba(244, 114, 182, 0.25);
-}
-
-.naura-state__btn--primary:hover {
-  filter: brightness(1.08);
-  box-shadow: 0 4px 16px rgba(244, 114, 182, 0.35);
-}
-
-.naura-state__btn--ghost {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-body-strong, #d1d5db);
-  border: 1px solid var(--color-hairline);
-  box-shadow: var(--glass-specular);
-}
-
-.naura-state__btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: var(--color-ink, #fff);
-  border-color: var(--color-hairline-strong);
-}
-
-.naura-state--error .naura-state__title {
-  color: var(--color-state-error);
-}
-
-.naura-state--success .naura-state__title {
-  color: var(--color-state-success);
-}
-
-/* Naura "berpikir" saat data sedang diambil. */
-.naura-state--loading .naura-state__figure {
-  animation:
-    naura-float 3.5s ease-in-out infinite,
-    naura-think 2s ease-in-out infinite;
-}
-
-@keyframes naura-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes naura-think {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.72;
-  }
-}
-
-/* Hormati pengguna yang mematikan animasi di setelan sistemnya. */
-@media (prefers-reduced-motion: reduce) {
-  .naura-state__figure {
-    animation: none !important;
-  }
-}
-
-/* --- Kerangka pemuatan untuk tabel & kartu (Refraction Shimmer) --- */
-.naura-skeleton {
-  position: relative;
-  overflow: hidden;
-  background: var(--color-surface-glass, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
-  border-radius: var(--rounded-md, 0.5rem);
-  box-shadow: var(--glass-specular);
-  min-height: 1rem;
-}
-
-.naura-skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.05) 35%,
-    rgba(255, 192, 203, 0.12) 50%,
-    rgba(255, 255, 255, 0.05) 65%,
-    transparent 100%
-  );
-  animation: naura-shimmer 1.6s ease-in-out infinite;
-}
-
-@keyframes naura-shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .naura-skeleton::after {
-    animation: none;
-  }
-}
-
-/* --- Global Form, Input & Select Dark Theme --- */
-:root {
-  color-scheme: dark;
-}
-
-input[type="text"],
-input[type="search"],
-input[type="number"],
-input[type="password"],
-input[type="email"],
-textarea {
-  color-scheme: dark;
-  background-color: var(--bg-surface-elevated, #0b1120);
-  color: var(--text-primary, #f8fafc);
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
-  border-radius: var(--rounded-md, 8px);
-  padding: 8px 12px;
-  font-family: inherit;
-  font-size: 0.875rem;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
-  box-shadow: var(--glass-specular);
-}
-
-input[type="text"]:focus-visible,
-input[type="search"]:focus-visible,
-input[type="number"]:focus-visible,
-input[type="password"]:focus-visible,
-input[type="email"]:focus-visible,
-textarea:focus-visible {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: var(--focus-ring);
-}
-
-select, .select-input {
-  color-scheme: dark !important;
-  background-color: #0b1120 !important;
-  color: #f8fafc !important;
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
-  border-radius: var(--rounded-md, 8px);
-  padding: 8px 12px;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
-}
-
-select:focus-visible, .select-input:focus-visible {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: var(--focus-ring);
-}
-
-select option, .select-input option {
-  background-color: #0b1120 !important;
-  color: #f8fafc !important;
-  padding: 8px 12px;
-}
-
-select option:hover, select option:checked {
-  background-color: #1e293b !important;
-  color: #38bdf8 !important;
-}
-
-/* =====================================================================
- * Dashboard Multi-Theme Engine (Stellar Glass OS v2)
- * 6 Palet Terkalibrasi: Midnight, Sakura, Cyber Neon, Emerald Wilds, Light Horizon, OLED
- * ===================================================================== */
-
-/* ── 1. Theme: Midnight (Default Stellar Dark) ────────────────────────── */
+/* 1. Midnight (Default), UI Chrome Naura Rose */
 [data-theme="midnight"] {
-  --canvas: #060810;
-  --color-canvas: #060810;
-  --bg-deep: #060810;
-  --bg-layer: #0a0d18;
-  --bg-primary: #060810;
-  --bg-surface: rgba(255, 255, 255, 0.04);
-  --bg-surface-elevated: rgba(255, 255, 255, 0.08);
-  --color-surface-glass: rgba(255, 255, 255, 0.04);
-  --color-surface-elevated: rgba(255, 255, 255, 0.08);
-  --color-hairline: rgba(244, 114, 182, 0.18);
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.18);
-  --naura-primary: #f472b6;
-  --color-primary: #f472b6;
-  --primary: #f472b6;
-  --primary-glow: rgba(244, 114, 182, 0.25);
-  --naura-accent: #22d3ee;
-  --color-ink: #f1f5f9;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --color-body: #94a3b8;
-  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --bg-deep: #0b0c10; --bg-layer: #12151f; --bg-layer-elevated: #171b26;
+  --surface-glass: rgba(255,255,255,0.03); --surface-glass-hover: rgba(255,255,255,0.05);
+  --hairline: rgba(255,192,203,0.15); --hairline-brand: rgba(244,114,182,0.35);
+  --ui-primary: #F472B6; --ui-primary-glow: rgba(244,114,182,0.25);
+  --accent-cyan-live: #22D3EE;
+  --ink: #ffffff; --body: #9ca3af; --body-strong: #d1d5db; --muted: #6b7280;
 }
 
-/* ── 2. Theme: Sakura Blossom ─────────────────────────────────────────── */
+/* 2. Sakura Blossom */
 [data-theme="sakura"] {
-  --canvas: #160f18;
-  --color-canvas: #160f18;
-  --bg-deep: #160f18;
-  --bg-layer: #1f1422;
-  --bg-primary: #160f18;
-  --bg-surface: rgba(255, 200, 220, 0.05);
-  --bg-surface-elevated: rgba(45, 22, 40, 0.85);
-  --color-surface-glass: rgba(255, 192, 215, 0.05);
-  --color-surface-elevated: rgba(40, 18, 35, 0.9);
-  --color-hairline: rgba(255, 182, 193, 0.22);
-  --border-subtle: rgba(255, 182, 193, 0.16);
-  --border-medium: rgba(255, 182, 193, 0.32);
-  --border-strong: rgba(255, 182, 193, 0.45);
-  --naura-primary: #ff9ebb;
-  --color-primary: #ff9ebb;
-  --primary: #ff9ebb;
-  --primary-glow: rgba(255, 158, 187, 0.45);
-  --color-ink: #fff5f8;
-  --text-primary: #fff5f8;
-  --text-secondary: #e2b8cb;
-  --color-body: #d8b4c4;
-  --naura-accent: #f472b6;
-  --glass-specular: inset 0 1px 0 0 rgba(255, 192, 215, 0.14);
+  --bg-deep: #160f18; --bg-layer: #1f1422; --bg-layer-elevated: #2a1a2e;
+  --surface-glass: rgba(255,200,220,0.04); --surface-glass-hover: rgba(255,200,220,0.07);
+  --hairline: rgba(255,182,193,0.2); --hairline-brand: rgba(255,158,187,0.4);
+  --ui-primary: #FF9EBB; --ui-primary-glow: rgba(255,158,187,0.3);
+  --accent-cyan-live: #22D3EE;
+  --ink: #fff5f8; --body: #d8b4c4; --body-strong: #e8c8d4; --muted: #b898a8;
 }
 
-/* ── 3. Theme: Cyber Neon (Cyan & Pink High-Octane) ───────────────────── */
+/* 3. Cyber Neon */
 [data-theme="cyber-neon"] {
-  --canvas: #070913;
-  --color-canvas: #070913;
-  --bg-deep: #070913;
-  --bg-layer: #0c1022;
-  --bg-primary: #070913;
-  --bg-surface: rgba(0, 240, 255, 0.04);
-  --bg-surface-elevated: rgba(14, 22, 44, 0.85);
-  --color-surface-glass: rgba(0, 240, 255, 0.04);
-  --color-surface-elevated: rgba(14, 22, 44, 0.85);
-  --color-hairline: rgba(0, 240, 255, 0.22);
-  --border-subtle: rgba(0, 240, 255, 0.15);
-  --border-medium: rgba(0, 240, 255, 0.28);
-  --border-strong: rgba(255, 0, 127, 0.35);
-  --naura-primary: #00f0ff;
-  --color-primary: #00f0ff;
-  --primary: #00f0ff;
-  --primary-glow: rgba(0, 240, 255, 0.40);
-  --naura-accent: #ff007f;
-  --accent-cyan: #00f0ff;
-  --accent-violet: #ff007f;
-  --color-ink: #f0fdfa;
-  --text-primary: #f0fdfa;
-  --text-secondary: #99f6e4;
-  --color-body: #5eead4;
-  --glass-specular: inset 0 1px 0 0 rgba(0, 240, 255, 0.16);
+  --bg-deep: #070913; --bg-layer: #0c1022; --bg-layer-elevated: #141a3a;
+  --surface-glass: rgba(0,240,255,0.03); --surface-glass-hover: rgba(0,240,255,0.06);
+  --hairline: rgba(0,240,255,0.2); --hairline-brand: rgba(255,0,127,0.35);
+  --ui-primary: #00F0FF; --ui-primary-glow: rgba(0,240,255,0.35);
+  --accent-cyan-live: #00F0FF; --naura-cyan-neon: #00FFFF;
+  --ink: #f0fdfa; --body: #5eead4; --body-strong: #99f6e4; --muted: #2dd4bf;
 }
 
-/* ── 4. Theme: Emerald Wilds (Naura Wilds Nature-Tech) ────────────────── */
-[data-theme="emerald-nature"],
-[data-theme="wilds"] {
-  --canvas: #061209;
-  --color-canvas: #061209;
-  --bg-deep: #061209;
-  --bg-layer: #0b1c11;
-  --bg-primary: #061209;
-  --bg-surface: rgba(134, 239, 172, 0.04);
-  --bg-surface-elevated: rgba(18, 38, 24, 0.85);
-  --color-surface-glass: rgba(134, 239, 172, 0.04);
-  --color-surface-elevated: rgba(18, 38, 24, 0.85);
-  --color-hairline: rgba(134, 239, 172, 0.20);
-  --border-subtle: rgba(134, 239, 172, 0.14);
-  --border-medium: rgba(134, 239, 172, 0.28);
-  --border-strong: rgba(134, 239, 172, 0.40);
-  --naura-primary: #86efac;
-  --color-primary: #86efac;
-  --primary: #86efac;
-  --primary-glow: rgba(134, 239, 172, 0.35);
-  --naura-accent: #34d399;
-  --color-ink: #f0fdf4;
-  --text-primary: #f0fdf4;
-  --text-secondary: #bbf7d0;
-  --color-body: #86efac;
-  --glass-specular: inset 0 1px 0 0 rgba(134, 239, 172, 0.14);
+/* 4. Emerald Wilds (Naura Wilds) */
+[data-theme="emerald-nature"], [data-theme="wilds"] {
+  --bg-deep: #061209; --bg-layer: #0b1c11; --bg-layer-elevated: #122a1a;
+  --surface-glass: rgba(134,239,172,0.03); --surface-glass-hover: rgba(134,239,172,0.06);
+  --hairline: rgba(134,239,172,0.18); --hairline-brand: rgba(52,211,153,0.35);
+  --ui-primary: #86EFAC; --ui-primary-glow: rgba(134,239,172,0.3);
+  --accent-cyan-live: #34D399;
+  --ink: #f0fdf4; --body: #86efac; --body-strong: #bbf7d0; --muted: #4ade80;
 }
 
-/* ── 5. Theme: Light Horizon (Clean Daylight Mode - WCAG AA / AAA) ─────── */
-[data-theme="light-horizon"],
-[data-theme="light"] {
-  --canvas: #f8fafc;
-  --color-canvas: #f8fafc;
-  --bg-deep: #f1f5f9;
-  --bg-layer: #ffffff;
-  --bg-primary: #f8fafc;
-  --bg-surface: rgba(15, 23, 42, 0.04);
-  --bg-surface-elevated: #ffffff;
-  --color-surface-glass: rgba(255, 255, 255, 0.88);
-  --color-surface-elevated: #ffffff;
-  --color-surface-glass-hover: rgba(15, 23, 42, 0.06);
-  --color-hairline: rgba(190, 24, 93, 0.28);
-  --border-subtle: rgba(15, 23, 42, 0.12);
-  --border-medium: rgba(15, 23, 42, 0.22);
-  --border-strong: rgba(15, 23, 42, 0.35);
-  --naura-primary: #be185d;
-  --color-primary: #be185d;
-  --primary: #be185d;
-  --primary-glow: rgba(190, 24, 93, 0.25);
-  --naura-accent: #0284c7;
-  --color-ink: #0f172a;
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --color-body: #334155;
-  --text-muted: #475569;
-  --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px #be185d;
-  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+/* 5. Light Horizon (WCAG AA/AAA) */
+[data-theme="light-horizon"], [data-theme="light"] {
+  --bg-deep: #f8fafc; --bg-layer: #ffffff; --bg-layer-elevated: #f1f5f9;
+  --surface-glass: rgba(15,23,42,0.04); --surface-glass-hover: rgba(15,23,42,0.07);
+  --hairline: rgba(190,24,93,0.25); --hairline-brand: rgba(190,24,93,0.4);
+  --ui-primary: #be185d; --ui-primary-glow: rgba(190,24,93,0.25);
+  --accent-cyan-live: #0284c7;
+  --ink: #0f172a; --body: #334155; --body-strong: #1e293b; --muted: #64748b;
+  --focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px var(--ui-primary);
+  --glass-specular: inset 0 1px 0 0 rgba(255,255,255,0.95);
 }
 
-/* ── 6. Theme: OLED Obsidian (Pure Pitch Black) ───────────────────────── */
+/* 6. OLED Obsidian */
 [data-theme="oled"] {
-  --canvas: #000000;
-  --color-canvas: #000000;
-  --bg-deep: #000000;
-  --bg-layer: #050508;
-  --bg-primary: #000000;
-  --bg-surface: rgba(255, 255, 255, 0.025);
-  --bg-surface-elevated: #0a0a0f;
-  --color-surface-glass: rgba(255, 255, 255, 0.025);
-  --color-surface-elevated: #0a0a0f;
-  --color-hairline: rgba(255, 92, 138, 0.18);
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-medium: rgba(255, 255, 255, 0.14);
-  --border-strong: rgba(255, 255, 255, 0.22);
-  --naura-primary: #ff5c8a;
-  --color-primary: #ff5c8a;
-  --primary: #ff5c8a;
-  --primary-glow: rgba(255, 92, 138, 0.40);
-  --naura-accent: #38bdf8;
-  --color-ink: #ffffff;
-  --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --color-body: #94a3b8;
-  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  --bg-deep: #000000; --bg-layer: #0a0a0f; --bg-layer-elevated: #11111a;
+  --surface-glass: rgba(255,255,255,0.02); --surface-glass-hover: rgba(255,255,255,0.04);
+  --hairline: rgba(255,92,138,0.18); --hairline-brand: rgba(255,92,138,0.35);
+  --ui-primary: #ff5c8a; --ui-primary-glow: rgba(255,92,138,0.35);
+  --accent-cyan-live: #38bdf8;
+  --ink: #ffffff; --body: #94a3b8; --body-strong: #cbd5e1; --muted: #64748b;
 }
 
+/* =====================================================================
+ * Emoji & Expression state (tetap dari versi lama, tanpa em dash)
+ * ===================================================================== */
+.naura-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; padding: 2rem 1rem; text-align: center; }
+.naura-state__figure { width: 160px; height: 160px; object-fit: contain; filter: drop-shadow(0 8px 24px var(--ui-primary-glow)); animation: naura-float 3.5s ease-in-out infinite; }
+.naura-state__figure--sm { width: 96px; height: 96px; }
+.naura-state__title { font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 1.125rem; letter-spacing: -0.01em; text-wrap: balance; color: var(--ink); margin: 0; }
+.naura-state__body { font-family: 'Outfit', sans-serif; font-size: 0.9375rem; line-height: 1.6; color: var(--body); max-width: 42ch; text-wrap: pretty; margin: 0; }
+.naura-state__actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
+.naura-state__btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; font-family: 'Outfit', sans-serif; font-size: 0.875rem; font-weight: 600; line-height: 1; text-decoration: none; cursor: pointer; transition: transform 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease; }
+.naura-state__btn:active { transform: scale(0.97); }
+.naura-state__btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.naura-state__btn--primary { background: var(--ui-primary); color: var(--on-primary); border: 1px solid transparent; box-shadow: 0 2px 10px rgba(244,114,182,0.25); }
+.naura-state__btn--primary:hover { filter: brightness(1.08); box-shadow: 0 4px 16px rgba(244,114,182,0.35); }
+.naura-state__btn--ghost { background: rgba(255,255,255,0.05); color: var(--body-strong); border: 1px solid var(--hairline); box-shadow: var(--glass-specular); }
+.naura-state__btn--ghost:hover { background: rgba(255,255,255,0.09); color: var(--ink); border-color: var(--hairline-strong); }
+.naura-state--error .naura-state__title { color: var(--status-dnd); }
+.naura-state--success .naura-state__title { color: var(--status-online); }
+.naura-state--loading .naura-state__figure { animation: naura-float 3.5s ease-in-out infinite, naura-think 2s ease-in-out infinite; }
+@keyframes naura-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes naura-think { 0%,100% { opacity: 1; } 50% { opacity: 0.72; } }
+@media (prefers-reduced-motion: reduce) { .naura-state__figure { animation: none !important; } }
+
+/* Skeleton shimmer */
+.naura-skeleton { position: relative; overflow: hidden; background: var(--surface-glass); border: 1px solid var(--hairline); border-radius: 8px; box-shadow: var(--glass-specular); min-height: 1rem; }
+.naura-skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 35%, rgba(255,192,203,0.12) 50%, rgba(255,255,255,0.05) 65%, transparent 100%); animation: naura-shimmer 1.6s ease-in-out infinite; }
+@keyframes naura-shimmer { 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .naura-skeleton::after { animation: none; } }
+
+/* Dark form inputs */
+:root { color-scheme: dark; }
+input[type="text"], input[type="search"], input[type="number"], input[type="password"], input[type="email"], textarea { color-scheme: dark; background-color: var(--bg-layer-elevated); color: var(--ink); border: 1px solid var(--hairline); border-radius: 8px; padding: 8px 12px; font-family: inherit; font-size: 0.875rem; transition: border-color 150ms ease, box-shadow 150ms ease; box-shadow: var(--glass-specular); }
+input[type="text"]:focus-visible, input[type="search"]:focus-visible, input[type="number"]:focus-visible, input[type="password"]:focus-visible, input[type="email"]:focus-visible, textarea:focus-visible { outline: none; border-color: var(--ui-primary); box-shadow: var(--focus-ring); }
+select, .select-input { color-scheme: dark !important; background-color: var(--bg-layer-elevated) !important; color: var(--ink) !important; border: 1px solid var(--hairline); border-radius: 8px; padding: 8px 12px; transition: border-color 150ms ease, box-shadow 150ms ease; }
+select:focus-visible, .select-input:focus-visible { outline: none; border-color: var(--ui-primary); box-shadow: var(--focus-ring); }
+select option, .select-input option { background-color: var(--bg-layer-elevated) !important; color: var(--ink) !important; padding: 8px 12px; }
+select option:hover, select option:checked { background-color: var(--bg-layer) !important; color: var(--accent-cyan-live) !important; }

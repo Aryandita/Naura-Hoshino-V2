@@ -237,19 +237,19 @@ async function dispatchFunction(name, rawArgs, message) {
         cacheManager.getUserProfile(userId),
         cacheManager.getUserSurvival(userId),
       ]);
-      const wallet = profile?.economy_wallet || 0;
+      const wallet = profile?.pratamaDollars || 0;
       const bank = profile?.economy_bank || 0;
-      const starFragments = survival?.starFragments || 0;
-      const coupons = survival?.coupons || 0;
+      const sc = survival?.sukamajuCoins || 0;
+      const vb = survival?.scholarshipVouchers || 0;
 
       return {
         username: author.username,
         economyWallet: wallet,
         economyBank: bank,
         totalCoins: wallet + bank,
-        starFragments,
-        coupons,
-        currencyUnit: "Star Fragments (⭐) & Coupons (🎟️)",
+        sukamajuCoins: sc,
+        scholarshipVouchers: vb,
+        currencyUnit: "Sukamaju Koin (SC) & Voucher Beasiswa (VB)",
       };
     }
 
@@ -532,19 +532,19 @@ async function dispatchFunction(name, rawArgs, message) {
 
       const rewardFragments = isVIP ? 350 : 200;
       const rewardXp = isVIP ? 100 : 50;
-      const rewardCoupons = isVIP ? 1 : 0;
+      const rewardVouchers = isVIP ? 1 : 0;
 
       await cacheManager.incrementUserSurvival(
         userId,
-        "starFragments",
+        "sukamajuCoins",
         rewardFragments,
       );
       await cacheManager.incrementUserSurvival(userId, "survival_xp", rewardXp);
-      if (rewardCoupons > 0) {
+      if (rewardVouchers > 0) {
         await cacheManager.incrementUserSurvival(
           userId,
-          "coupons",
-          rewardCoupons,
+          "scholarshipVouchers",
+          rewardVouchers,
         );
       }
 
@@ -563,8 +563,8 @@ async function dispatchFunction(name, rawArgs, message) {
         isVIP,
         rewardFragments,
         rewardXp,
-        rewardCoupons,
-        message: `Hadiah harian berhasil diklaim: +${rewardFragments} Star Fragments ⭐, +${rewardXp} XP 🌟${rewardCoupons > 0 ? `, +${rewardCoupons} Coupon 🎟️` : ""}!`,
+        rewardVouchers,
+        message: `Hadiah harian berhasil diklaim: +${rewardFragments} Sukamaju Koin (SC), +${rewardXp} XP 🌟${rewardVouchers > 0 ? `, +${rewardVouchers} Voucher Beasiswa (VB)` : ""}!`,
       };
     }
 

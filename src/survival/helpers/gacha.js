@@ -52,7 +52,7 @@ module.exports = {
             .setDescription("Pilih banner gacha")
             .setRequired(true)
             .addChoices(
-              { name: "Silver Supply Drop (Naura Coin)", value: "standard" },
+              { name: "Silver Supply Drop (Pratama Dollar)", value: "standard" },
               { name: "Gold Mystic Crate (NFS)", value: "gold" },
               { name: "Diamond Mythic Crate (Naura Coupon)", value: "premium" },
             ),
@@ -107,20 +107,20 @@ module.exports = {
 
       if (currencyType === "coin") {
         profile = await cacheManager.getUserProfile(userId);
-        balance = profile ? profile.economy_wallet : 0;
-      } else if (currencyType === "starFragments") {
-        balance = survival.starFragments;
+        balance = profile ? profile.pratamaDollars : 0;
+      } else if (currencyType === "sukamajuCoins") {
+        balance = survival.sukamajuCoins;
       } else if (currencyType === "coupon") {
-        balance = survival.coupons;
+        balance = survival.scholarshipVouchers;
       }
 
       if (balance < cost) {
         const currName =
           currencyType === "coin"
-            ? "Naura Coin"
-            : currencyType === "starFragments"
-              ? "NFS"
-              : "Naura Coupon";
+            ? "Pratama Dollar"
+            : currencyType === "sukamajuCoins"
+              ? "SC"
+              : "Voucher Beasiswa";
         return interaction.reply({
           ...buildErrorContainerV2({
             title: "Saldo Tidak Cukup",
@@ -134,11 +134,11 @@ module.exports = {
 
       // Deduct balance
       if (currencyType === "coin") {
-        await cacheManager.debitUserProfile(userId, "economy_wallet", cost);
-      } else if (currencyType === "starFragments") {
-        await cacheManager.debitUserSurvival(userId, "starFragments", cost);
+        await cacheManager.debitUserProfile(userId, "pratamaDollars", cost);
+      } else if (currencyType === "sukamajuCoins") {
+        await cacheManager.debitUserSurvival(userId, "sukamajuCoins", cost);
       } else if (currencyType === "coupon") {
-        await cacheManager.debitUserSurvival(userId, "coupons", cost);
+        await cacheManager.debitUserSurvival(userId, "scholarshipVouchers", cost);
       }
 
       // Fetch and Update Pity

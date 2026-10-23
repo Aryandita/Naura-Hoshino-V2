@@ -82,12 +82,12 @@ module.exports = [
         ``,
         `🎁 **HADIAH YANG KAMU DAPATKAN:**`,
         `✨ **Trial VIP Starter (12 Jam)**`,
-        `${couponEmoji} **+${result.coupons} Naura Coupon** (Total: ${result.totalCoupons})`,
-        `${coinEmoji} **+1.500 Naura Coins**`,
+        `${couponEmoji} **+${result.coupons} Voucher Beasiswa** (Total: ${result.totalCoupons})`,
+        `${coinEmoji} **+1.500 Pratama Dollar**`,
       ];
 
       if (result.isWeekend) {
-        descLines.push(``, `⚡ **Weekend Astral Surge Aktif:** Bonus 2x Naura Coupons didapatkan!`);
+        descLines.push(``, `⚡ **Weekend Astral Surge Aktif:** Bonus 2x Voucher Beasiswas didapatkan!`);
       }
 
       if (result.trialDropped) {
@@ -104,7 +104,7 @@ module.exports = [
         `⏳ **Status VIP Aktif Sampai:** <t:${expiryTs}:F> (<t:${expiryTs}:R>)`,
         `🔥 **Streak Vote Saat Ini:** Ke-${result.streak || 1} (Hari ke-${result.daysStreak || 1})`,
         ``,
-        `- # *Tips: Terus kumpulkan Naura Coupon untuk ditukarkan dengan armor & item langka di \`/rpg barter\`!*`,
+        `- # *Tips: Terus kumpulkan Voucher Beasiswa untuk ditukarkan dengan armor & item langka di \`/rpg barter\`!*`,
       );
 
       return interaction.editReply({

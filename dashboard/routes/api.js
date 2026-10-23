@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 /**
  * api.js - Router Pusat API Web Dashboard Naura OS (Modular V2).
@@ -166,7 +166,7 @@ async function checkLavalink(client) {
       });
     }
   }
-  let status =
+  const status =
     total === 0
       ? "standby"
       : connected === total

@@ -29,8 +29,8 @@ class SurvivalContract {
         stamina: 0,
         level: 1,
         xp: 0,
-        starFragments: 0,
-        coupons: 0,
+        sukamajuCoins: 0,
+        scholarshipVouchers: 0,
       });
     }
 
@@ -43,8 +43,8 @@ class SurvivalContract {
       stamina: Math.max(0, Math.min(100, Number(survival?.stamina) || 100)),
       level: Math.max(1, Number(survival?.survival_level) || 1),
       xp: Math.max(0, Number(survival?.survival_xp) || 0),
-      starFragments: Math.max(0, Number(survival?.starFragments) || 0),
-      coupons: Math.max(0, Number(survival?.coupons) || 0),
+      sukamajuCoins: Math.max(0, Number(survival?.sukamajuCoins) || 0),
+      scholarshipVouchers: Math.max(0, Number(survival?.scholarshipVouchers) || 0),
       locationId: survival?.location_id || "town_square",
     });
   }
@@ -79,7 +79,7 @@ class SurvivalContract {
   }
 
   /**
-   * Memotong Naura Star Fragments (NSF) secara atomik.
+   * Memotong Sukamaju Koin (SC) secara atomik.
    * @param {string} userId
    * @param {number} amount
    * @param {object} [options]
@@ -91,13 +91,13 @@ class SurvivalContract {
       return Object.freeze({ ok: false, balance: 0, reason: "invalid_amount" });
     }
 
-    const result = await cacheManager.debitUserSurvival(userId, "starFragments", safeAmount);
+    const result = await cacheManager.debitUserSurvival(userId, "sukamajuCoins", safeAmount);
     const char = await this.getCharacter(userId);
 
     if (!result || !result.ok) {
       return Object.freeze({
         ok: false,
-        balance: char.starFragments,
+        balance: char.sukamajuCoins,
         reason: result?.reason || "insufficient_fragments",
       });
     }
@@ -105,18 +105,18 @@ class SurvivalContract {
     eventBus.emit("survival:fragments_charged", {
       userId,
       amount: safeAmount,
-      balance: char.starFragments,
+      balance: char.sukamajuCoins,
       reason: options.reason || "unspecified",
     });
 
     return Object.freeze({
       ok: true,
-      balance: char.starFragments,
+      balance: char.sukamajuCoins,
     });
   }
 
   /**
-   * Menambah Naura Star Fragments (NSF) secara atomik.
+   * Menambah Sukamaju Koin (SC) secara atomik.
    * @param {string} userId
    * @param {number} amount
    * @param {object} [options]
@@ -126,27 +126,27 @@ class SurvivalContract {
     const safeAmount = Math.floor(Number(amount) || 0);
     if (!userId || safeAmount <= 0) {
       const char = await this.getCharacter(userId);
-      return Object.freeze({ ok: false, balance: char.starFragments });
+      return Object.freeze({ ok: false, balance: char.sukamajuCoins });
     }
 
-    await cacheManager.incrementUserSurvival(userId, { starFragments: safeAmount });
+    await cacheManager.incrementUserSurvival(userId, { sukamajuCoins: safeAmount });
     const char = await this.getCharacter(userId);
 
     eventBus.emit("survival:fragments_rewarded", {
       userId,
       amount: safeAmount,
-      balance: char.starFragments,
+      balance: char.sukamajuCoins,
       source: options.source || "reward",
     });
 
     return Object.freeze({
       ok: true,
-      balance: char.starFragments,
+      balance: char.sukamajuCoins,
     });
   }
 
   /**
-   * Memotong Naura Coupons secara atomik.
+   * Memotong Voucher Beasiswa (VB) secara atomik.
    * @param {string} userId
    * @param {number} amount
    * @returns {Promise<Readonly<{ ok: boolean, balance: number, reason?: string }>>}
@@ -157,42 +157,50 @@ class SurvivalContract {
       return Object.freeze({ ok: false, balance: 0, reason: "invalid_amount" });
     }
 
-    const result = await cacheManager.debitUserSurvival(userId, "coupons", safeAmount);
+    const result = await cacheManager.debitUserSurvival(userId, "scholarshipVouchers", safeAmount);
     const char = await this.getCharacter(userId);
 
     if (!result || !result.ok) {
       return Object.freeze({
         ok: false,
-        balance: char.coupons,
+        balance: char.scholarshipVouchers,
         reason: result?.reason || "insufficient_coupons",
       });
     }
 
     return Object.freeze({
       ok: true,
-      balance: char.coupons,
+      balance: char.scholarshipVouchers,
     });
   }
 
   /**
-   * Menambah Naura Coupons secara atomik.
+   * Menambah Voucher Beasiswa (VB) secara atomik.
    * @param {string} userId
    * @param {number} amount
+   * @param {object} [options]
    * @returns {Promise<Readonly<{ ok: boolean, balance: number }>>}
    */
-  async rewardCoupons(userId, amount) {
+  async rewardCoupons(userId, amount, options = {}) {
     const safeAmount = Math.floor(Number(amount) || 0);
     if (!userId || safeAmount <= 0) {
       const char = await this.getCharacter(userId);
-      return Object.freeze({ ok: false, balance: char.coupons });
+      return Object.freeze({ ok: false, balance: char.scholarshipVouchers });
     }
 
-    await cacheManager.incrementUserSurvival(userId, { coupons: safeAmount });
+    await cacheManager.incrementUserSurvival(userId, { scholarshipVouchers: safeAmount });
     const char = await this.getCharacter(userId);
+
+    eventBus.emit("survival:coupons_rewarded", {
+      userId,
+      amount: safeAmount,
+      balance: char.scholarshipVouchers,
+      source: options.source || "reward",
+    });
 
     return Object.freeze({
       ok: true,
-      balance: char.coupons,
+      balance: char.scholarshipVouchers,
     });
   }
 

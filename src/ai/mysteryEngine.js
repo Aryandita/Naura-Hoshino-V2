@@ -238,7 +238,7 @@ Jawab dalam 1-2 kalimat roleplay singkat, tegas, dan penuh karakter. TANPA EMOJI
     let reward = 0;
     if (isCorrect) {
       reward = 1000;
-      await cacheManager.incrementUserSurvival(userId, "starFragments", reward);
+      await cacheManager.incrementUserSurvival(userId, "sukamajuCoins", reward);
     }
 
     return {

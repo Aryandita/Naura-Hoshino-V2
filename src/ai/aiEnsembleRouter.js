@@ -320,7 +320,7 @@ class AiEnsembleRouter {
     // Jika seluruh provider di dalam kandidat gagal atau tidak tersedia,
     // degrade secara mulus dengan balasan ramah dari kamus i18n lokal.
     logger.warn(
-      `[AiEnsembleRouter] Semua provider AI gagal untuk ${taskType}. Menggunakan balasan fallback i18n.`,
+      `[AiEnsembleRouter] Semua provider AI gagal untuk ${taskType} (${lastError ? lastError.message : "no provider"}). Menggunakan balasan fallback i18n.`,
     );
 
     const fallbackText = languageManager.translateSync(

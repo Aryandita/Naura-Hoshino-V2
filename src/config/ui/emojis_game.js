@@ -36,6 +36,7 @@ module.exports = {
   sparkle: "<a:Sparkle:1492696861440610324>",
   gallery: "🖼️",
   run: "🏃",
+  berlian_adisha: "💎",
 
   // --- RPG Survival Mechanics ---
   diff_easy: "<:6887gdeasy:1523227250831392838>",
@@ -187,4 +188,5 @@ module.exports = {
   card_deck: "🎴",
   gacha_store: "🎰",
   hospital: "<:health:1499612610012643459>",
+  medali_permainan: "🏅",
 };

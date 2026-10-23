@@ -131,7 +131,7 @@ Untuk memastikan setiap fitur dibangun dengan fokus yang tajam, produk ini diran
 └────────────────────────────────────────────────────────┘
 ```
 - **Fase 1 (Survival):** Menjaga tiga indikator vital (Health, Hunger, Energy) agar karakter tidak pingsan.
-- **Fase 2 (Gathering & Exploration):** Melakukan gathering material alam, berburu binatang liar, atau menambang Naura Star Fragments (NSF).
+- **Fase 2 (Gathering & Exploration):** Melakukan gathering material alam, berburu binatang liar, atau menambang Sukamaju Koin (SC).
 - **Fase 3 (Crafting & Cooking):** Mengolah bahan mentah menjadi makanan pemulih atau perlengkapan tempur di workshop.
 - **Fase 4 (Combat & Dungeons):** Menantang dungeon monster bersama rekan satu server dalam mode raid.
 - **Fase 5 (Ekonomi & Sosial):** Menjual hasil jarahan di pasar server, mendonasikan ke kas guild, atau membeli kosmetik profil.
@@ -187,14 +187,15 @@ Untuk memastikan setiap fitur dibangun dengan fokus yang tajam, produk ini diran
   - *Hunger (Rasa Lapar):* Berkurang seiring waktu aktivitas, dipulihkan melalui makanan.
   - *Energy (Energi):* Digunakan untuk berburu, memancing, atau menambang, dipulihkan dengan istirahat/tidur.
   *(Palet earth-tone diatur di [`DESIGN.md`](DESIGN.md#naura-wilds-survival-sub-brand), tata kelola diatur di [`RULES.md`](RULES.md#15-desain-sistem-survival-naura-wilds))*
-- **FR-5.2 (Mata Uang Tri-Tier):**
-  - *NSF (Naura Star Fragments):* Mata uang utama survival untuk belanja perbekalan, makanan di kafe, dan upgrade alat.
-  - *NC (Naura Coins):* Mata uang ekonomi server global untuk transfer antar pemain dan pasar saham.
-  - *Naura Coupon:* Mata uang langka/prestise untuk gacha kosmetik dan Battle Pass.
+- **FR-5.2 (Mata Uang 4-Tier Slice of Life):**
+  - *SC (Sukamaju Koin):* Mata uang utama survival (Desa Sukamaju) untuk belanja perbekalan, makanan di kafe, dan upgrade alat.
+  - *PD (Pratama Dollar):* Mata uang ekonomi server global (Kota Pratama) untuk transfer antar pemain, bursa karir, dan pasar saham.
+  - *VB (Voucher Beasiswa):* Mata uang prestasi & festival langka untuk gacha kosmetik, Battle Pass premium, dan sertifikasi akademi.
+  - *BA (Berlian Adisha):* Mata uang legendaris endgame dari dunia Adisha, hanya didapatkan melalui World Boss Draken, Istana Draken L50+, Clan War, dan Achievement Mythic.
 - **FR-5.3 (Dungeon Raids & Combat Engine):** Sistem dungeon berbasis instans dengan tingkat kesulitan bertingkat (Normal, Heroic, Celestial) yang mendukung pertarungan bersama anggota server.
 - **FR-5.4 (Inventory Locking Helper):** Penambahan atau pengurangan item wajib melalui `addItemsAtomic` atau `takeItemsAtomic` untuk mencegah duplikasi item saat pemain menekan tombol secara berulang. *(Wajib mematuhi [`RULES.md`](RULES.md#16-aturan-transaksi-saldo--penulisan-data-user))*
 - **FR-5.5 (Dynamic Sentiment Astral Weather):** Cuaca kosmik harian server dievaluasi secara dinamis dari sentimen obrolan publik via Gemini, memicu buff global pada jarahan dungeon (`cosmic_storm`) dan diskon kafe (`sakura_breeze`).
-- **FR-5.6 (Currency V2 & Closed-Loop Recycling Pool):** One-Way Bridge restriction (NSF ke Coin sah, Coin ke NSF dibatasi), dynamic spread transaction fee, alokasi 100% kas server `ServerTreasury` (40% Infra, 25% Undian, 20% Subsidi, 15% Merchant), serta sistem keausan alat (`durabilityEngine.js`).
+- **FR-5.6 (Currency V2 & Closed-Loop Recycling Pool):** One-Way Bridge restriction (SC ke PD sah, PD ke SC dibatasi), dynamic spread transaction fee, alokasi 100% kas server `ServerTreasury` (40% Infra, 25% Undian, 20% Subsidi, 15% Merchant), serta sistem keausan alat (`durabilityEngine.js`). VB dan BA non-convertible.
 - **FR-5.7 (Town Square & Living City NPC Simulation):** Alun-alun kota dinamis dengan jadwal harian NPC (Bagas, Luna, Kuro, Sakura), dialog interaktif berhadiah buff, dan event musiman (`/survival town`).
 
 ### Pilar 6: Living AI & Server Memory Engine

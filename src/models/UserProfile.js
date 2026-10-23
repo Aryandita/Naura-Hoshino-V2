@@ -50,6 +50,8 @@ const UserProfile = sequelize.define(
         capitalBuyDay: 0,
       },
     },
+    // --- ARCADE (Medali Permainan - MP) ---
+    medaliPermainan: { type: DataTypes.INTEGER, defaultValue: 100 },
 
     // --- DATA FLEKSIBEL ---
     inventory: {

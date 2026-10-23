@@ -26,6 +26,7 @@ const {
 
 const COIN = currencyHelper.byKind(currencyHelper.COIN);
 const FRAGMENT = currencyHelper.byKind(currencyHelper.FRAGMENT);
+const PD_FIELD = "pratamaDollars"; // Kolom kanonikal untuk Pratama Dollar (wallet)
 
 async function freshData(userId) {
   const survival = await UserSurvival.findOne({ where: { userId } });
@@ -44,7 +45,9 @@ function snapshot({ survival, profile, holders }) {
     fragment: currencyHelper.balanceOf(FRAGMENT, holders),
     coin: currencyHelper.balanceOf(COIN, holders),
     coupon: currencyHelper.balanceOf(currencyHelper.COUPON, holders),
+    diamond: currencyHelper.balanceOf(currencyHelper.DIAMOND, holders),
     bank: Number(profile.economy_bank) || 0,
+    wallet: Number(profile[PD_FIELD]) || 0,
     deposit: profile.economy_deposit || { ...EMPTY_DEPOSIT },
     investments: profile.economy_investments || {},
     day: survival.inGameDay || 1,
@@ -80,8 +83,8 @@ async function moveSavings(userId, rawAmount, toBank) {
   const bank = Number(profile.economy_bank) || 0;
   const wallet = currencyHelper.balanceOf(COIN, holders);
 
-  const source = toBank ? "economy_wallet" : "economy_bank";
-  const target = toBank ? "economy_bank" : "economy_wallet";
+  const source = toBank ? PD_FIELD : "economy_bank";
+  const target = toBank ? "economy_bank" : PD_FIELD;
   const available = toBank ? wallet : bank;
 
   const debit = await cacheManager.debitUserProfile(userId, source, amount);
@@ -100,7 +103,7 @@ async function moveSavings(userId, rawAmount, toBank) {
     amount,
     toBank,
     bank: Number((fresh || {}).economy_bank) || 0,
-    wallet: Number((fresh || {}).economy_wallet) || 0,
+    wallet: Number((fresh || {})[PD_FIELD]) || 0,
   };
 }
 

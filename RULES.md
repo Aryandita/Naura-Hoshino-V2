@@ -26,7 +26,7 @@
 | **Standar Anti-Slop**   | Filter desain & copy AI (R-01 s/d R-38), data jujur, tanpa gradien/orb generik, Delivery Gate | Bagian 1.4.3 |
 | **Desain Survival**     | Sub-brand Naura Wilds, token warna dari `src/utils/survivalUIHelper.js`                   | Bagian 1.5         |
 | **Tulis Data User**     | HANYA via `cacheManager` (increment/debit/mutateJson), bukan model langsung               | Bagian 1.6         |
-| **Currency V2 Moneter** | One-Way Bridge (1000 NSF = 1 NC, Spread Fee 5-25%), 4-Channel Closed-Loop Pool       | Bagian 1.6.3 & 1.6.4 |
+| **Currency V2 Moneter** | One-Way Bridge (1000 SC = 1 PD, Spread Fee 5-25%), 4-Channel Closed-Loop Pool       | Bagian 1.6.3 & 1.6.4 |
 | **Diskon & Modifier NPC** | Single Modifier tertinggi, Hard Cap 50%, Pengecualian Mythic/Bursa, Floor Price 1       | Bagian 1.6.5         |
 | **Tulis GuildSettings** | HANYA via `guildSettingsService.updateGuildSetting()`                                     | Bagian 1.8         |
 | **Render Canvas**       | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (Worker Threads)         | Bagian 1.9         |
@@ -162,7 +162,7 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 - **Copywriting Lugas Tanpa Buzzword AI (R-04)**: Dilarang menggunakan frasa klise AI seperti *"Unlock the power of..."*, *"Next-Gen 2.0 AI"*, atau *"Revolutionize your server"*. Gunakan teks bahasa manusia yang padat, jelas, dan berorientasi manfaat nyata.
 - **Batas Dosis Glassmorphism (R-10)**: Efek blur/glassmorphism dibatasi maksimal 1-2 elemen utama per halaman (misalnya stage kanvas maskot 3D atau navbar utama). Kontainer data lainnya harus berupa permukaan solid matte dengan border 1px presisi.
 - **Skala Radius Terarah (R-11)**: Dilarang menyeragamkan seluruh elemen menjadi bentuk pil (*pill-shaped*). Kartu data memakai sudut tegas (8-12px), tombol interaktif proporsional, dan badge status ringkas.
-- **Pembatasan Palet Aktif (R-29)**: Maksimal 2-3 warna inti netral/gelap + 1 aksen terarah ([`DESIGN.md`](DESIGN.md): Naura Rose `#F472B6` / `#FF7E95` dan Cyan `#22D3EE` untuk indikator koneksi aktif).
+- **Pembatasan Palet Aktif (R-29)**: Maksimal 2-3 warna inti netral/gelap + 1 aksen terarah ([`DESIGN.md`](DESIGN.md): Sakura Pink `#FFC0CB` = identitas brand/karakter, Naura Rose `#F472B6` = chrome UI, dan Cyan `#22D3EE` untuk indikator koneksi aktif).
 - **Liveliness Dials (Part 3)**: Desain antarmuka baru wajib menetapkan skala:
   - *ENERGY (1-3)*: Tingkat fokus fungsional dan karakter.
   - *RHYTHM (1-3)*: Variasi ukuran dan tata letak hierarki visual.
@@ -232,11 +232,14 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 ### 1.6.4 Tata Kelola Multi-Mata Uang Regional & Bank Sentral Pratama
 
 - **Pemisahan Sirkulasi Regional**:
-  - *Naura Star Fragments (NSF)*: Mata uang sirkulasi primer wilayah Desa Sukamaju untuk kebutuhan vital dasar (makanan warung, penginapan, perkakas dasar, bibit pertanian).
-  - *Naura Coins (NC)*: Mata uang ekonomi makro Kota Pratama untuk transaksi bernilai tinggi (bursa karir, layanan medis rumah sakit, balai lelang, pasar saham server).
+  - *Sukamaju Koin (SC)*: Mata uang sirkulasi primer wilayah Desa Sukamaju untuk kebutuhan vital dasar (makanan warung, penginapan, perkakas dasar, bibit pertanian).
+  - *Pratama Dollar (PD)*: Mata uang ekonomi makro Kota Pratama untuk transaksi bernilai tinggi (bursa karir, layanan medis rumah sakit, balai lelang, pasar saham server).
+  - *Voucher Beasiswa (VB)*: Mata uang prestasi & festival langka untuk gacha kosmetik, battle pass premium, dan sertifikasi akademi.
+  - *Berlian Adisha (BA)*: Mata uang legendaris endgame dari dunia Adisha, hanya didapatkan melalui World Boss Draken, Istana Draken L50+, Clan War, dan Achievement Mythic.
 - **Jembatan Satu Arah Terkunci (*One-Way Bridge*)**:
-  - *Penukaran Maju (NSF -> NC)*: Pemain dapat menukarkan 1.000 NSF menjadi 1 NC di Bank Sentral Pratama secara bebas sesuai kecukupan saldo grinding mereka dengan biaya spread fee dinamis (5% hingga 25%).
-  - *Penukaran Balik Terkunci (NC -> NSF)*: Ditolak secara permanen (`one_way_restricted`). Naura Central Bank tidak melayani penukaran Naura Coin kembali ke Star Fragments untuk menjaga integritas ekosistem bertahan hidup dan mencegah inflasi dari ekonomi makro server.
+  - *Penukaran Maju (SC -> PD)*: Pemain dapat menukarkan 1.000 SC menjadi 1 PD di Bank Sentral Pratama secara bebas sesuai kecukupan saldo grinding mereka dengan biaya spread fee dinamis (5% hingga 25%).
+  - *Penukaran Balik Terkunci (PD -> SC)*: Ditolak secara permanen (`one_way_restricted`). Bank Sentral Pratama tidak melayani penukaran Pratama Dollar kembali ke Sukamaju Koin untuk menjaga integritas ekosistem bertahan hidup dan mencegah inflasi dari ekonomi makro server.
+  - *VB & BA Non-Convertible*: Voucher Beasiswa dan Berlian Adisha tidak bisa dikonversi dari/ke mata uang lain.
   - *Alokasi Biaya*: 100% dari biaya spread fee penukaran mata uang wajib disalurkan langsung ke kas `ServerTreasury` (skema 4 alokasi pool).
 
 ### 1.6.5 Batas Pengubah Harga Ekonomi & Diskon Relasi NPC
@@ -503,6 +506,8 @@ Semua penulisan kode baru dan refaktorisasi wajib menerapkan 7 hukum arsitektur 
 | `v44_add_paranoid_deleted_at_to_critical_tables` | Tambah kolom deletedAt untuk Sequelize paranoid soft-delete architecture pada tabel-tabel krusial (UserProfile, GuildSettings, UserSurvival, TradeCaravan, MarketAuction) |
 | `v45_repair_corrupt_vitals_dead_end` | Perbaiki dan pulihkan data vitals (HP, hunger, thirst, stamina) pemain yang korup atau bernilai 0 ke kondisi aman (100) |
 | `v46_add_premium_tier_to_user_profiles` | Tambah kolom premium_tier ke user_profiles untuk sinkronisasi tingkatan VIP/Patron |
+| `v47_rename_currencies_to_slice_of_life` | Perbarui nama kolom mata uang ke era Slice of Life: sukamajuCoins, scholarshipVouchers, dan pratamaDollars |
+| `v48_add_adisha_diamonds` | Tambah kolom adishaDiamonds ke UserSurvivals untuk mata uang premium Berlian Adisha (BA) |
 
 ---
 
@@ -518,3 +523,4 @@ Seluruh kontributor dan agen AI wajib memahami posisi dokumen ini dalam ekosiste
 | [`RULES.md`](RULES.md) | **Konstitusi & Standar Teknis** | "Bagaimana aturan hukum kode, batas transaksi atomik DB, keamanan, dan anti-crash?" |
 | [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | "Di mana letak file-nya, bagaimana alur data interaksi ke database, dan apa checklist QA?" |
 | [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | "Pekerjaan apa yang sedang berlangsung dan apa prioritas berikutnya?" |
+

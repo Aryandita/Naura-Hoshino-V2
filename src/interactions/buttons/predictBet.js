@@ -58,7 +58,7 @@ module.exports = [
 
       const amountInput = new TextInputBuilder()
         .setCustomId("bet_amount")
-        .setLabel(`Jumlah Star Fragments (NSF) [Maks: ${market.maxBetPerUser || 10000}]`)
+        .setLabel(`Jumlah Sukamaju Koin (SC) [Maks: ${market.maxBetPerUser || 10000}]`)
         .setPlaceholder("Contoh: 100")
         .setStyle(TextInputStyle.Short)
         .setRequired(true)

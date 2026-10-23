@@ -414,6 +414,42 @@ class RedisManager {
     return;
   }
 
+  async getKeysByPattern(pattern) {
+    if (this.isReady) {
+      try {
+        const keys = [];
+        for await (const key of this.client.scanIterator({
+          MATCH: pattern,
+          COUNT: 100,
+        })) {
+          keys.push(key);
+        }
+        return keys;
+      } catch (err) {
+        return [];
+      }
+    }
+    const keys = [];
+    const prefix = pattern.replace(/\*$/, "");
+    for (const k of this.memoryCache.keys()) {
+      if (k.startsWith(prefix)) keys.push(k);
+    }
+    return keys;
+  }
+
+  async getTTL(key) {
+    if (this.isReady) {
+      try {
+        return await this.client.ttl(key);
+      } catch {
+        return null;
+      }
+    }
+    const item = this.memoryCache.get(key);
+    if (!item || !item.expiry) return null;
+    return Math.max(0, Math.floor((item.expiry - Date.now()) / 1000));
+  }
+
   async increment(key, expirationInSeconds) {
     if (this.isReady) {
       try {

@@ -2,8 +2,8 @@
 
 /**
  * @file messageCleanup.js
- * @description Handler interaksi tombol "Bersihkan (+5 NSF)" (customId: msg_cleanup).
- * Menghapus pesan di channel, membatalkan timer auto-delete, dan memberikan hadiah 5 NSF secara aman.
+ * @description Handler interaksi tombol "Bersihkan (+3 SC)" (customId: msg_cleanup).
+ * Menghapus pesan di channel, membatalkan timer auto-delete, dan memberikan hadiah 3 SC secara aman.
  */
 
 const { MessageFlags } = require("discord.js");
@@ -51,7 +51,7 @@ module.exports = {
       // Hapus pesan target dari channel
       await message.delete().catch(() => {});
 
-      // Proses klaim hadiah kebersihan 5 NSF
+      // Proses klaim hadiah kebersihan 3 SC
       const claimResult = await messageCleaner.claimCleanupReward(interaction.user.id);
 
       let title = "Pesan Berhasil Dibersihkan";
@@ -59,17 +59,17 @@ module.exports = {
       let expression = "success";
 
       if (claimResult.success) {
-        title = "Pesan Bersih! (+5 NSF)";
+        title = "Pesan Bersih! (+3 SC)";
         desc =
           `Pesan berhasil dibersihkan dari channel!\n\n` +
-          `> ${ui.getEmoji("sparkles") || "✨"} **Upah Kebersihan:** \`+5 NSF\` (Terkumpul: \`${claimResult.currentDaily}/50 NSF\` hari ini)\n` +
+          `> ${ui.getEmoji("sparkles") || "✨"} **Upah Kebersihan:** \`+3 SC\` (Terkumpul: \`${claimResult.currentDaily}/30 SC\` hari ini)\n` +
           `> 🧹 Terima kasih banyak sudah ikut menjaga kebersihan channel ya, Kak!`;
         expression = "happy";
       } else if (claimResult.reason === "DAILY_LIMIT_REACHED") {
         title = "Pesan Berhasil Dibersihkan";
         desc =
           `Pesan sudah dirapikan dari channel!\n\n` +
-          `> ⚠️ **Batas Harian Tercapai:** Jatah hadiah kebersihanmu sudah maksimal (\`${claimResult.currentDaily}/50 NSF\` hari ini).\n` +
+          `> ⚠️ **Batas Harian Tercapai:** Jatah hadiah kebersihanmu sudah maksimal (\`${claimResult.currentDaily}/30 SC\` hari ini).\n` +
           `> 💖 Kebaikanmu menjaga channel tetap rapi sangat diapresiasi! Besok bisa klaim reward lagi yaa.`;
         expression = "smile";
       } else if (claimResult.reason === "COOLDOWN") {

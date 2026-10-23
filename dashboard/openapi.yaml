@@ -1,0 +1,455 @@
+openapi: 3.1.0
+info:
+  title: Naura Hoshino V2 Dashboard API
+  description: |
+    REST API specification for Naura Hoshino V2 Web Dashboard.
+    
+    ## Authentication
+    All protected endpoints require Discord OAuth2 session or API key.
+    
+    ## Rate Limiting
+    - Standard: 100 requests/minute per user
+    - Heavy operations: 10 requests/minute per user
+    
+    ## Error Format
+    All errors follow RFC 7807 Problem Details format.
+  version: 2.3.0
+  contact:
+    name: Naura Hoshino Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:5173/api
+    description: Development server (Vite proxy)
+  - url: https://dashboard.naurahoshino.com/api
+    description: Production server
+
+tags:
+  - name: Economy
+    description: Economy, banking, and marketplace operations
+  - name: Survival
+    description: Naura Wilds survival RPG features
+  - name: Music
+    description: Music player and soundboard controls
+  - name: User
+    description: User profile and settings
+  - name: Admin
+    description: Administrative operations (owner only)
+  - name: Telemetry
+    description: System health and metrics
+
+paths:
+  /economy/deposit:
+    post:
+      tags: [Economy]
+      summary: Deposit funds to bank
+      description: Transfer funds from wallet to bank account
+      operationId: depositFunds
+      security:
+        - discordOAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepositRequest'
+      responses:
+        '200':
+          description: Deposit successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /economy/withdraw:
+    post:
+      tags: [Economy]
+      summary: Withdraw funds from bank
+      description: Transfer funds from bank to wallet
+      operationId: withdrawFunds
+      security:
+        - discordOAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawRequest'
+      responses:
+        '200':
+          description: Withdrawal successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /economy/transfer:
+    post:
+      tags: [Economy]
+      summary: Transfer funds to another user
+      description: Send funds from wallet to another user's wallet
+      operationId: transferFunds
+      security:
+        - discordOAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Transfer successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /realtime/leaderboard:
+    get:
+      tags: [Economy]
+      summary: Get realtime leaderboard
+      description: Fetch leaderboard data for economy, leveling, or survival
+      operationId: getLeaderboard
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [economy, leveling, survival]
+            default: economy
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Leaderboard data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+
+  /music/state:
+    get:
+      tags: [Music]
+      summary: Get music player state
+      description: Current playback state for a guild
+      operationId: getMusicState
+      parameters:
+        - name: guildId
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{17,20}$'
+      responses:
+        '200':
+          description: Music state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MusicState'
+
+  /music/control:
+    post:
+      tags: [Music]
+      summary: Control music playback
+      description: Play, pause, skip, stop, etc.
+      operationId: controlMusic
+      security:
+        - discordOAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MusicControlRequest'
+      responses:
+        '200':
+          description: Control successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MusicState'
+
+  /user/me:
+    get:
+      tags: [User]
+      summary: Get current user profile
+      description: Fetch authenticated user's profile
+      operationId: getCurrentUser
+      security:
+        - discordOAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /health:
+    get:
+      tags: [Telemetry]
+      summary: Health check
+      description: System health status
+      operationId: healthCheck
+      responses:
+        '200':
+          description: System healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+components:
+  securitySchemes:
+    discordOAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://discord.com/api/oauth2/authorize
+          tokenUrl: https://discord.com/api/oauth2/token
+          scopes:
+            identify: Access user identity
+            guilds: Access guild memberships
+
+  schemas:
+    DepositRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: integer
+          minimum: 1
+          maximum: 1000000000
+          description: Amount to deposit
+
+    WithdrawRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: integer
+          minimum: 1
+          maximum: 1000000000
+          description: Amount to withdraw
+
+    TransferRequest:
+      type: object
+      required: [amount, target]
+      properties:
+        amount:
+          type: integer
+          minimum: 1
+          maximum: 1000000000
+        target:
+          type: string
+          description: Target user ID or username
+
+    TransactionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        balance:
+          type: object
+          properties:
+            wallet:
+              type: integer
+            bank:
+              type: integer
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: string
+        username:
+          type: string
+        avatar:
+          type: string
+        value:
+          type: integer
+
+    LeaderboardResponse:
+      type: object
+      properties:
+        type:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+        total:
+          type: integer
+
+    MusicState:
+      type: object
+      properties:
+        playing:
+          type: boolean
+        track:
+          type: object
+          properties:
+            title:
+              type: string
+            artist:
+              type: string
+            duration:
+              type: integer
+            position:
+              type: integer
+        volume:
+          type: integer
+        queue:
+          type: array
+          items:
+            type: object
+
+    MusicControlRequest:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [play, pause, skip, stop, volume, seek]
+        guildId:
+          type: string
+        value:
+          oneOf:
+            - type: integer
+            - type: string
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        avatar:
+          type: string
+        economy:
+          type: object
+          properties:
+            wallet:
+              type: integer
+            bank:
+              type: integer
+        survival:
+          type: object
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        uptime:
+          type: integer
+        services:
+          type: object
+          properties:
+            database:
+              type: string
+            redis:
+              type: string
+            lavalink:
+              type: string
+
+    Error:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: https://api.naurahoshino.com/errors/bad-request
+            title: Bad Request
+            status: 400
+            detail: Invalid amount specified
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: https://api.naurahoshino.com/errors/unauthorized
+            title: Unauthorized
+            status: 401
+            detail: Valid authentication required
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: https://api.naurahoshino.com/errors/not-found
+            title: Not Found
+            status: 404
+            detail: Target user not found
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            type: https://api.naurahoshino.com/errors/internal
+            title: Internal Server Error
+            status: 500
+            detail: An unexpected error occurred

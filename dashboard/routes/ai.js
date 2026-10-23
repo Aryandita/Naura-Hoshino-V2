@@ -50,6 +50,12 @@ function detectMood(text) {
 module.exports = () => {
   const router = express.Router();
 
+  // Default timeout untuk AI route (panggilan API eksternal bisa lambat)
+  router.use((req, res, next) => {
+    req.timeoutMs = 60000;
+    next();
+  });
+
   // ------------------------------------------------------------------
   // 1. Endpoint Percakapan AI Companion
   // ------------------------------------------------------------------

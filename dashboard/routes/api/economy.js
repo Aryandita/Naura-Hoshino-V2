@@ -3,16 +3,14 @@
 const express = require("express");
 const { requireApiLogin, isOwner } = require("../../middleware/auth");
 const { pushState } = require("./helpers");
+const { validate, schemas } = require("../../middleware/validation");
 
 
 function register(router, client) {
   // --- 1. Mutasi Saldo Deposit (Atomic) ---
-  router.post("/economy/deposit", requireApiLogin, async (req, res) => {
+  router.post("/economy/deposit", requireApiLogin, validate(schemas.DepositRequest), async (req, res) => {
     try {
-      const amount = Math.floor(Number(req.body?.amount));
-      if (!amount || amount <= 0) {
-        return res.status(400).json({ error: "Jumlah setoran tidak valid." });
-      }
+      const amount = req.validated.amount;
       const cacheManager = require("../../../src/managers/cacheManager");
       const debitRes = await cacheManager.debitUserProfile(
         req.user.id,
@@ -33,12 +31,9 @@ function register(router, client) {
   });
 
   // --- 2. Mutasi Saldo Withdraw (Atomic) ---
-  router.post("/economy/withdraw", requireApiLogin, async (req, res) => {
+  router.post("/economy/withdraw", requireApiLogin, validate(schemas.WithdrawRequest), async (req, res) => {
     try {
-      const amount = Math.floor(Number(req.body?.amount));
-      if (!amount || amount <= 0) {
-        return res.status(400).json({ error: "Jumlah penarikan tidak valid." });
-      }
+      const amount = req.validated.amount;
       const cacheManager = require("../../../src/managers/cacheManager");
       const debitRes = await cacheManager.debitUserProfile(
         req.user.id,
@@ -59,16 +54,10 @@ function register(router, client) {
   });
 
   // --- 3. Mutasi Saldo Transfer (Atomic & Validated) ---
-  router.post("/economy/transfer", requireApiLogin, async (req, res) => {
+  router.post("/economy/transfer", requireApiLogin, validate(schemas.TransferRequest), async (req, res) => {
     try {
-      const amount = Math.floor(Number(req.body?.amount));
-      const rawTarget = String(req.body?.target || "").trim().replace(/^@/, "");
-      if (!amount || amount <= 0) {
-        return res.status(400).json({ error: "Jumlah transfer tidak valid." });
-      }
-      if (!rawTarget) {
-        return res.status(400).json({ error: "Tujuan transfer harus diisi." });
-      }
+      const amount = req.validated.amount;
+      const rawTarget = String(req.validated.target).trim().replace(/^@/, "");
 
       const UserProfile = require("../../../src/models/UserProfile");
       let targetUserId = null;
@@ -125,6 +114,8 @@ function register(router, client) {
 
   // --- 4. Realtime Leaderboard (Economy, Leveling, Survival) ---
   router.get("/realtime/leaderboard", async (req, res) => {
+    // Leaderboard bisa lambat karena query DB + Discord API fetch
+    req.timeoutMs = 90000;
     try {
       const UserProfile = require("../../../src/models/UserProfile");
       const UserSurvival = require("../../../src/models/UserSurvival");

@@ -510,7 +510,7 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
   });
 
   collector.on("collect", async (i) => {
-    await cacheManager.incrementUserSurvival(userId, "coupons", 1);
+    await cacheManager.incrementUserSurvival(userId, "scholarshipVouchers", 1);
 
     const thxPayload = buildContainerV2({
       accentColorHex: ui.getColor("primary"),

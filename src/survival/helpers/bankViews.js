@@ -19,7 +19,7 @@ const currencyHelper = require("../engines/currency");
 const {
   DEPOSIT_TERMS,
   INVEST_ASSETS,
-  MIN_EXCHANGE_NSF,
+  MIN_EXCHANGE_SC,
   MIN_DEPOSIT_COIN,
   MIN_INVEST_COIN,
 } = require("../data/bankConfig");
@@ -50,7 +50,7 @@ function balanceBlock(snap) {
     `${currencyHelper.emojiOf(FRAGMENT)} **Dompet desa:** \`${n(snap.fragment)}\` ${FRAGMENT.short}`,
     `${currencyHelper.emojiOf(COIN)} **Dompet kota:** \`${n(snap.coin)}\` ${COIN.short}`,
     `${e("bank")} **Rekening bank:** \`${n(snap.bank)}\` ${COIN.short}`,
-    `${currencyHelper.emojiOf(COUPON)} **Kupon:** \`${n(snap.coupon)}\` ${COUPON.short}`,
+    `${currencyHelper.emojiOf(COUPON)} **Voucher:** \`${n(snap.coupon)}\` ${COUPON.short}`,
   ].join("\n");
 }
 
@@ -92,7 +92,7 @@ function mainView(user, snap) {
     description: [
       "Naura yang jaga loket hari ini, jadi santai saja ya~",
       "",
-      `${e("info")} *Kurs resmi: **${n(MIN_EXCHANGE_NSF)} ${FRAGMENT.short} = 1 ${COIN.short}**. Naura Coupon tidak bisa ditukar, itu barang langka!*`,
+      `${e("info")} *Kurs resmi: **${n(MIN_EXCHANGE_SC)} ${FRAGMENT.short} = 1 ${COIN.short}**. Voucher Beasiswa tidak bisa ditukar, itu barang langka!*`,
       "",
       balanceBlock(snap),
       "",
@@ -127,12 +127,12 @@ function exchangeView(snap) {
     expression: "Cheers",
     description: [
       `Loket melayani penjualan hasil panen/alam **${FRAGMENT.short}** ke mata uang kota **${COIN.short}**.`,
-      `${e("info")} Kurs dinamis bergerak sesuai volume pasar harian (Dasar: 1.000 NSF = 1 Coin).`,
+      `${e("info")} Kurs dinamis bergerak sesuai volume pasar harian (Dasar: 1.000 ${FRAGMENT.short} = 1 ${COIN.short}).`,
       `${e("sparkle")} Biaya admin (5% - 15%) didaur ulang 100% untuk fasilitas umum & tiket undian!`,
       "",
       balanceBlock(snap),
       "",
-      `${e("warning")} Penukaran kembali dari Coin ke NSF dikunci demi menjaga tantangan survival.`,
+      `${e("warning")} Penukaran kembali dari ${COIN.short} ke ${FRAGMENT.short} dikunci demi menjaga tantangan survival.`,
     ].join("\n"),
     buttonsRow: row,
     footerText: ui.getFooter("survival"),

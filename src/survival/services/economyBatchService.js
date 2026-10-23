@@ -14,15 +14,33 @@ class EconomyBatchService {
   /**
    * Parse dan pratinjau data spreadsheet tanpa melakukan mutasi saldo
    * @param {Buffer|string} buffer - Buffer file spreadsheet
-   * @returns {{ validRows: Array<{ userId: string, amount: number, currency: string, reason: string }>, totals: { starFragments: number, coins: number, coupons: number }, invalidCount: number }}
+   * @returns {{ validRows: Array<{ userId: string, amount: number, currency: string, reason: string }>, totals: { sukamajupratamaDollars: number, pratamaDollars: number, scholarshipVouchers: number }, invalidCount: number }}
    */
   previewBatch(buffer) {
     const rows = parseSpreadsheet(buffer);
 
     const totals = {
-      starFragments: 0,
-      coins: 0,
-      coupons: 0,
+      sukamajuCoins: 0,
+      pratamaDollars: 0,
+      scholarshipVouchers: 0,
+      get starFragments() {
+        return this.sukamajuCoins;
+      },
+      set starFragments(v) {
+        this.sukamajuCoins = v;
+      },
+      get coins() {
+        return this.pratamaDollars;
+      },
+      set coins(v) {
+        this.pratamaDollars = v;
+      },
+      get coupons() {
+        return this.scholarshipVouchers;
+      },
+      set coupons(v) {
+        this.scholarshipVouchers = v;
+      },
     };
 
     const validRows = [];
@@ -31,19 +49,19 @@ class EconomyBatchService {
       if (!r.userId || isNaN(r.amount) || r.amount <= 0) continue;
 
       const curr = String(r.currency).toLowerCase();
-      if (curr.includes("frag") || curr === "nsf" || curr === "star") {
-        totals.starFragments += r.amount;
-        validRows.push({ ...r, normalizedCurrency: "starFragments" });
-      } else if (curr.includes("coin") || curr === "nc" || curr === "uang") {
-        totals.coins += r.amount;
-        validRows.push({ ...r, normalizedCurrency: "coins" });
-      } else if (curr.includes("coupon") || curr === "kupon") {
-        totals.coupons += r.amount;
-        validRows.push({ ...r, normalizedCurrency: "coupons" });
+      if (curr.includes("frag") || curr === "sc" || curr === "nsf" || curr === "star") {
+        totals.sukamajuCoins += r.amount;
+        validRows.push({ ...r, normalizedCurrency: "sukamajuCoins" });
+      } else if (curr.includes("coin") || curr === "pd" || curr === "nc" || curr === "uang") {
+        totals.pratamaDollars += r.amount;
+        validRows.push({ ...r, normalizedCurrency: "pratamaDollars" });
+      } else if (curr.includes("coupon") || curr === "kupon" || curr === "vb" || curr === "voucher") {
+        totals.scholarshipVouchers += r.amount;
+        validRows.push({ ...r, normalizedCurrency: "scholarshipVouchers" });
       } else {
-        // Default ke Star Fragments
-        totals.starFragments += r.amount;
-        validRows.push({ ...r, normalizedCurrency: "starFragments" });
+        // Default ke Sukamaju Coins (Star Fragments)
+        totals.sukamajuCoins += r.amount;
+        validRows.push({ ...r, normalizedCurrency: "sukamajuCoins" });
       }
     }
 
@@ -60,7 +78,7 @@ class EconomyBatchService {
    * @param {object} [context]
    * @param {string} [context.guildId]
    * @param {string} [context.adminId]
-   * @returns {Promise<{ success: boolean, processedCount: number, failedCount: number, totals: { starFragments: number, coins: number, coupons: number }, failedUsers: string[] }>}
+   * @returns {Promise<{ success: boolean, processedCount: number, failedCount: number, totals: { sukamajuCoins: number, pratamaDollars: number, scholarshipVouchers: number }, failedUsers: string[] }>}
    */
   async executeBatch(validRows, context = {}) {
     if (!Array.isArray(validRows) || validRows.length === 0) {
@@ -68,26 +86,48 @@ class EconomyBatchService {
         success: false,
         processedCount: 0,
         failedCount: 0,
-        totals: { starFragments: 0, coins: 0, coupons: 0 },
+        totals: { sukamajuCoins: 0, pratamaDollars: 0, scholarshipVouchers: 0 },
         failedUsers: [],
       };
     }
 
     let processed = 0;
     const failedUsers = [];
-    const totals = { starFragments: 0, coins: 0, coupons: 0 };
+    const totals = {
+      sukamajuCoins: 0,
+      pratamaDollars: 0,
+      scholarshipVouchers: 0,
+      get starFragments() {
+        return this.sukamajuCoins;
+      },
+      set starFragments(v) {
+        this.sukamajuCoins = v;
+      },
+      get coins() {
+        return this.pratamaDollars;
+      },
+      set coins(v) {
+        this.pratamaDollars = v;
+      },
+      get coupons() {
+        return this.scholarshipVouchers;
+      },
+      set coupons(v) {
+        this.scholarshipVouchers = v;
+      },
+    };
 
     for (const row of validRows) {
       try {
-        if (row.normalizedCurrency === "starFragments") {
-          await cacheManager.incrementUserSurvival(row.userId, "starFragments", row.amount);
-          totals.starFragments += row.amount;
-        } else if (row.normalizedCurrency === "coins") {
+        if (row.normalizedCurrency === "sukamajuCoins" || row.normalizedCurrency === "starFragments") {
+          await cacheManager.incrementUserSurvival(row.userId, "sukamajuCoins", row.amount);
+          totals.sukamajuCoins += row.amount;
+        } else if (row.normalizedCurrency === "pratamaDollars" || row.normalizedCurrency === "coins") {
           await cacheManager.incrementUserProfile(row.userId, "economy_wallet", row.amount);
-          totals.coins += row.amount;
-        } else if (row.normalizedCurrency === "coupons") {
-          await cacheManager.incrementUserSurvival(row.userId, "coupons", row.amount);
-          totals.coupons += row.amount;
+          totals.pratamaDollars += row.amount;
+        } else if (row.normalizedCurrency === "scholarshipVouchers" || row.normalizedCurrency === "coupons") {
+          await cacheManager.incrementUserSurvival(row.userId, "scholarshipVouchers", row.amount);
+          totals.scholarshipVouchers += row.amount;
         }
         processed++;
       } catch (err) {

@@ -97,7 +97,7 @@ describe("NauraContainerBuilder & UI Localization V2", () => {
 
     const str = JSON.stringify(payload);
     assert.ok(str.includes("msg_cleanup"));
-    assert.ok(str.includes("Bersihkan (+5 NSF)"));
+    assert.ok(str.includes("Bersihkan (+3 SC)"));
     assert.ok(str.includes("Pesan ini otomatis terhapus"));
   });
 

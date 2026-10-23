@@ -2,15 +2,15 @@
 
 /**
  * @file messageCleaner.js
- * @description Engine pengelolaan pembersihan pesan sampah otomatis & klaim upah kebersihan (5 NSF).
- * Mengatur timer penghapusan otomatis, mencegah eksploitasi spam reward (daily cap 50 NSF & cooldown 10s),
+ * @description Engine pengelolaan pembersihan pesan sampah otomatis & klaim upah kebersihan (3 SC).
+ * Mengatur timer penghapusan otomatis, mencegah eksploitasi spam reward (daily cap 30 SC & cooldown 10s),
  * dan melakukan mutasi saldo secara atomik via cacheManager.
  */
 
 const { logger } = require("../managers/logger");
 
-const DAILY_LIMIT_NSF = 50;
-const REWARD_PER_CLEANUP = 5;
+const DAILY_LIMIT_SC = 30; // Dikurangi dari 50 untuk rebalancing inflasi
+const REWARD_PER_CLEANUP = 3; // Dikurangi dari 5 untuk rebalancing inflasi
 const COOLDOWN_MS = 10000; // 10 detik
 
 class MessageCleanerEngine {
@@ -122,16 +122,16 @@ class MessageCleanerEngine {
         reward: 0,
         reason: "COOLDOWN",
         waitSeconds,
-        currentDaily: this.getDailyNsf(userId),
+        currentDaily: this.getDailySc(userId),
       };
     }
 
-    // 2. Cek Batas Harian (Maksimal 50 NSF / 10 kali pembersihan per hari)
+    // 2. Cek Batas Harian (Maksimal 30 SC / 10 kali pembersihan per hari)
     const dateKey = this.getTodayDateKey();
     const claimKey = `${userId}:${dateKey}`;
     const currentDaily = this.dailyClaims.get(claimKey) || 0;
 
-    if (currentDaily >= DAILY_LIMIT_NSF) {
+    if (currentDaily >= DAILY_LIMIT_SC) {
       return {
         success: false,
         reward: 0,
@@ -145,16 +145,16 @@ class MessageCleanerEngine {
     const newDaily = currentDaily + REWARD_PER_CLEANUP;
     this.dailyClaims.set(claimKey, newDaily);
 
-    // 4. Mutasi saldo 5 NSF secara atomik via cacheManager (atau custom mock)
+    // 4. Mutasi saldo 3 SC secara atomik via cacheManager (atau custom mock)
     try {
       if (typeof incrementFn === "function") {
-        await incrementFn(userId, "starFragments", REWARD_PER_CLEANUP);
+        await incrementFn(userId, "sukamajuCoins", REWARD_PER_CLEANUP);
       } else {
         const cacheManager = require("../managers/cacheManager");
-        await cacheManager.incrementUserSurvival(userId, "starFragments", REWARD_PER_CLEANUP);
+        await cacheManager.incrementUserSurvival(userId, "sukamajuCoins", REWARD_PER_CLEANUP);
       }
     } catch (err) {
-      logger.error(`[MessageCleaner] Gagal mutasi reward NSF ke user ${userId}:`, err);
+      logger.error(`[MessageCleaner] Gagal mutasi reward SC ke user ${userId}:`, err);
     }
 
     return {
@@ -165,13 +165,17 @@ class MessageCleanerEngine {
   }
 
   /**
-   * Ambil jumlah NSF kebersihan yang sudah didapat user hari ini.
+   * Ambil jumlah SC kebersihan yang sudah didapat user hari ini.
    * @param {string} userId
    * @returns {number}
    */
-  getDailyNsf(userId) {
+  getDailySc(userId) {
     const dateKey = this.getTodayDateKey();
     return this.dailyClaims.get(`${userId}:${dateKey}`) || 0;
+  }
+
+  getDailyNsf(userId) {
+    return this.getDailySc(userId);
   }
 
   /**

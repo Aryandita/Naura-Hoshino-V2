@@ -209,28 +209,28 @@ async function checkAndRescueDeadEnd(userId, survival) {
   const targetLocation = isCity ? "kota" : "desa";
 
   let penalty = 0;
-  let currencyType = "NSF";
+  let currencyType = "SC";
 
   if (isCity) {
-    currencyType = "NC";
+    currencyType = "PD";
     let walletNc = 0;
     try {
       const profile = await cacheManager.getUserProfile(userId);
-      walletNc = Math.max(0, Number(profile?.economy_wallet || 0));
+      walletNc = Math.max(0, Number(profile?.pratamaDollars || 0));
     } catch (_) {
       walletNc = 0;
     }
     penalty = Math.min(50, walletNc);
     if (penalty > 0) {
-      await cacheManager.debitUserProfile(userId, "economy_wallet", penalty);
+      await cacheManager.debitUserProfile(userId, "pratamaDollars", penalty);
     }
   } else {
-    currencyType = "NSF";
-    const walletNsf = Math.max(0, Number(survival.starFragments || 0));
+    currencyType = "SC";
+    const walletNsf = Math.max(0, Number(survival.sukamajuCoins || 0));
     penalty = Math.min(500, walletNsf);
     if (penalty > 0) {
-      await cacheManager.debitUserSurvival(userId, "starFragments", penalty);
-      survival.starFragments = Math.max(0, walletNsf - penalty);
+      await cacheManager.debitUserSurvival(userId, "sukamajuCoins", penalty);
+      survival.sukamajuCoins = Math.max(0, walletNsf - penalty);
     }
   }
 

@@ -83,3 +83,5 @@ tools/apply_skin_fix.*
 scratch/
 .codegraph/
 backups/
+.kilo/
+*.bak

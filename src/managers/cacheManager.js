@@ -25,6 +25,8 @@ const CURRENCY_COLUMN_ALIASES = {
   starFragments: "sukamajuCoins",
   coupons: "scholarshipVouchers",
   economy_wallet: "pratamaDollars",
+  adishaDiamonds: "adishaDiamonds",
+  medaliPermainan: "medaliPermainan",
 };
 
 function resolveCanonicalColumn(field) {

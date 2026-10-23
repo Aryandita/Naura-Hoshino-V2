@@ -20,6 +20,12 @@ const UserSurvival = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
+    // Berlian Adisha (BA), mata uang legendaris endgame dari dunia Adisha.
+    adishaDiamonds: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
     clanId: {
       type: DataTypes.INTEGER,
       allowNull: true,

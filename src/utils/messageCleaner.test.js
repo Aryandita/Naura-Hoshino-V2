@@ -38,8 +38,8 @@ test("messageCleaner: klaim hadiah berhasil dan menghormati cooldown 10s", async
   const mockIncrement = async () => {};
   const res1 = await messageCleaner.claimCleanupReward("user-1", mockIncrement);
   assert.equal(res1.success, true);
-  assert.equal(res1.reward, 5);
-  assert.equal(res1.currentDaily, 5);
+  assert.equal(res1.reward, 3);
+  assert.equal(res1.currentDaily, 3);
 
   // Klaim kedua seketika harus kena cooldown
   const res2 = await messageCleaner.claimCleanupReward("user-1", mockIncrement);
@@ -48,14 +48,14 @@ test("messageCleaner: klaim hadiah berhasil dan menghormati cooldown 10s", async
   assert.ok(res2.waitSeconds > 0);
 });
 
-test("messageCleaner: menghormati batas harian 50 NSF", async () => {
+test("messageCleaner: menghormati batas harian 30 SC", async () => {
   const userId = "user-daily-cap";
-  // Simulasikan akumulasi hingga batas 50 NSF
+  // Simulasikan akumulasi hingga batas 30 SC
   const dateKey = messageCleaner.getTodayDateKey();
-  messageCleaner.dailyClaims.set(`${userId}:${dateKey}`, 50);
+  messageCleaner.dailyClaims.set(`${userId}:${dateKey}`, 30);
 
   const res = await messageCleaner.claimCleanupReward(userId);
   assert.equal(res.success, false);
   assert.equal(res.reason, "DAILY_LIMIT_REACHED");
-  assert.equal(res.currentDaily, 50);
+  assert.equal(res.currentDaily, 30);
 });

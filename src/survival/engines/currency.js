@@ -4,16 +4,20 @@ const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
 const cacheManager = require("../../managers/cacheManager");
 
-// Tiga mata uang Naura.
-// - Naura Star Fragment (NSF) : mata uang desa & seluruh wilayah alam.
-// - Naura Coin              : mata uang kota, akademi, dan penjara.
-// - Naura Coupon            : mata uang langka, tidak bisa ditukar dari uang biasa.
-const FRAGMENT = "fragment";
-const COIN = "coin";
-const COUPON = "coupon";
+// Lima mata uang Naura (Era Slice of Life + Adisha + Arcade).
+// - Sukamaju Koin (SC)       : mata uang desa & seluruh wilayah alam (Tier 1 - Paling Umum).
+// - Pratama Dollar (PD)      : mata uang kota, akademi, dan penjara (Tier 2 - Mid Range).
+// - Voucher Beasiswa (VB)    : mata uang prestasi & festival langka (Tier 3 - Langka).
+// - Berlian Adisha (BA)      : mata uang legendaris endgame (Tier 4 - Legendaris).
+// - Medali Permainan (MP)    : mata uang arcade/minigame global (Tier 5 - Arcade Only).
+const FRAGMENT = "fragment";      // SC
+const COIN = "coin";              // PD
+const COUPON = "coupon";          // VB
+const DIAMOND = "diamond";        // BA
+const MEDAL = "medal";            // MP
 
-// Kurs resmi: 1000 NSF = 1 Naura Coin.
-const FRAGMENT_PER_COIN = 1000;
+// Kurs resmi: 1000 SC = 1 PD.
+const SC_PER_PD = 1000;
 
 // Emoji resmi dari server. Berkas ini jadi satu-satunya sumber kebenaran untuk
 // lambang mata uang, jadi seluruh ekosistem cukup memanggil emojiOf().
@@ -37,6 +41,18 @@ const EMOJI = {
     name: "NauraCoupon",
     animated: false,
   },
+  [DIAMOND]: {
+    raw: "💎",
+    id: null,
+    name: "BerlianAdisha",
+    animated: false,
+  },
+  [MEDAL]: {
+    raw: "🏅",
+    id: null,
+    name: "MedaliPermainan",
+    animated: false,
+  },
 };
 
 // Kunci lama tempat Naura Coupon dulu disimpan di dalam rpg_state. Hanya dipakai
@@ -54,6 +70,7 @@ const CURRENCIES = {
     field: "sukamajuCoins",
     legacyField: "starFragments",
     owner: "survival",
+    convertible: true,
   },
   [COIN]: {
     kind: COIN,
@@ -64,6 +81,7 @@ const CURRENCIES = {
     field: "pratamaDollars",
     legacyField: "economy_wallet",
     owner: "profile",
+    convertible: true,
   },
   [COUPON]: {
     kind: COUPON,
@@ -74,6 +92,31 @@ const CURRENCIES = {
     field: "scholarshipVouchers",
     legacyField: "coupons",
     owner: "survival",
+    convertible: false,
+  },
+  [DIAMOND]: {
+    kind: DIAMOND,
+    name: "Berlian Adisha",
+    short: "BA",
+    emojiKey: "berlian_adisha",
+    emojiFallback: EMOJI[DIAMOND].raw,
+    field: "adishaDiamonds",
+    legacyField: null,
+    owner: "survival",
+    convertible: false,
+    description: "Kristal murni dari jantung dunia Adisha. Hanya didapatkan melalui tantangan tertinggi.",
+  },
+  [MEDAL]: {
+    kind: MEDAL,
+    name: "Medali Permainan",
+    short: "MP",
+    emojiKey: "medali_permainan",
+    emojiFallback: EMOJI[MEDAL].raw,
+    field: "medaliPermainan",
+    legacyField: null,
+    owner: "profile",
+    convertible: false,
+    description: "Medali eksklusif untuk minigame & arcade. Didapat dari bermain, bukan grinding.",
   },
 };
 
@@ -91,6 +134,13 @@ const LOCATION_CURRENCY = {
   city: COIN,
   academy: COIN,
   prison: COIN,
+  istana_draken: DIAMOND,
+  draken: DIAMOND,
+  kastil_draken: DIAMOND,
+  dungeon_draken: DIAMOND,
+  arcade: MEDAL,
+  dm: MEDAL,
+  voice: MEDAL,
 };
 
 function currencyKindFor(location) {
@@ -287,8 +337,8 @@ async function reward(currency, holders = {}, amount) {
   const userId = userIdOf(holders);
   if (!userId) return balance;
 
-  // Buff Kolaboratif Klan (hanya untuk mata uang non-Kupon)
-  if (holders.survival && holders.survival.clanId && c.kind !== COUPON) {
+  // Buff Kolaboratif Klan (hanya untuk mata uang non-Kupon, non-Diamond)
+  if (holders.survival && holders.survival.clanId && c.kind !== COUPON && c.kind !== DIAMOND) {
     try {
       const GuildClan = require("../../models/GuildClan");
       const clan = await GuildClan.findByPk(holders.survival.clanId);
@@ -313,40 +363,42 @@ async function reward(currency, holders = {}, amount) {
 }
 
 // Konversi nominal antar mata uang biasa.
-// Aturan One-Way Bridge: Hanya mengizinkan FRAGMENT -> COIN.
-// Konversi COIN -> FRAGMENT ditolak untuk menjaga integritas survival.
+// Aturan One-Way Bridge: Hanya mengizinkan SC -> PD.
+// Konversi PD -> SC ditolak untuk menjaga integritas survival.
+// VB dan BA TIDAK bisa dikonversi dari/ke mata uang lain.
 function convert(amount, fromKind, toKind) {
   const value = Math.max(0, Math.floor(Number(amount) || 0));
   if (fromKind === toKind) return value;
   if (fromKind === COUPON || toKind === COUPON) return null;
+  if (fromKind === DIAMOND || toKind === DIAMOND) return null;
   if (fromKind === COIN && toKind === FRAGMENT) return null;
   if (fromKind === FRAGMENT && toKind === COIN)
-    return Math.floor(value / FRAGMENT_PER_COIN);
+    return Math.floor(value / SC_PER_PD);
   return null;
 }
 
 /**
  * Menghitung kurs dinamis dan persentase biaya admin progresif
- * @param {number} nsfAmount
+ * @param {number} scAmount - Jumlah Sukamaju Koin (SC)
  * @returns {Promise<{rate: number, feePercent: number, dailyVolume: number}>}
  */
-async function getDynamicRateAndFee(nsfAmount = 0) {
+async function getDynamicRateAndFee(scAmount = 0) {
   let dailyVolume = 0;
   try {
     const redisManager = require("../../managers/redisManager");
     if (redisManager.client && redisManager.client.isReady) {
-      dailyVolume = Number((await redisManager.client.get("economy:volume:nsf:daily")) || 0);
+      dailyVolume = Number((await redisManager.client.get("economy:volume:sc:daily")) || 0);
     }
   } catch (err) {
     dailyVolume = 0;
   }
 
-  // Setiap 1.000.000 NSF yang dicairkan hari ini, kurs melemah +50 NSF per 1 NC (maksimal 1.500 NSF = 1 NC)
+  // Setiap 1.000.000 SC yang dicairkan hari ini, kurs melemah +50 SC per 1 PD (maksimal 1.500 SC = 1 PD)
   const volStep = Math.min(10, Math.floor(dailyVolume / 1000000));
   const rate = Math.min(1500, 1000 + volStep * 50);
 
   // Biaya administrasi progresif: 5% (standar), 10% (>50.000), 15% (>200.000)
-  const val = Number(nsfAmount) || 0;
+  const val = Number(scAmount) || 0;
   let feePercent = 0.05;
   if (val > 200000) {
     feePercent = 0.15;
@@ -362,6 +414,7 @@ async function getDynamicRateAndFee(nsfAmount = 0) {
 }
 
 // Tukar uang di penukaran resmi dengan aturan One-Way Bridge dan Dynamic Spread.
+// Hanya mendukung SC -> PD (Sukamaju Koin ke Pratama Dollar).
 async function exchange(holders, fromKind, toKind, amount) {
   const from = byKind(fromKind);
   const to = byKind(toKind);
@@ -370,14 +423,16 @@ async function exchange(holders, fromKind, toKind, amount) {
   if (from.kind === to.kind) return { ok: false, reason: "same_currency" };
   if (from.kind === COUPON || to.kind === COUPON)
     return { ok: false, reason: "coupon_locked" };
+  if (from.kind === DIAMOND || to.kind === DIAMOND)
+    return { ok: false, reason: "diamond_locked" };
   if (from.kind === COIN && to.kind === FRAGMENT)
     return { ok: false, reason: "one_way_restricted" };
   if (value <= 0) return { ok: false, reason: "invalid_amount" };
 
   const { rate, feePercent, dailyVolume } = await getDynamicRateAndFee(value);
-  const feeNsf = Math.floor(value * feePercent);
-  const netNsf = value - feeNsf;
-  const received = Math.floor(netNsf / rate);
+  const feeSc = Math.floor(value * feePercent);
+  const netSc = value - feeSc;
+  const received = Math.floor(netSc / rate);
 
   if (received <= 0) {
     const minNeeded = Math.ceil(rate / (1 - feePercent));
@@ -399,18 +454,18 @@ async function exchange(holders, fromKind, toKind, amount) {
 
   // Alirkan biaya admin ke sistem daur ulang 4 saluran & berikan tiket undian
   const recyclingPoolEngine = require("./recyclingPoolEngine");
-  await recyclingPoolEngine.allocateSinkFunds(feeNsf);
+  await recyclingPoolEngine.allocateSinkFunds(feeSc);
   const userId = userIdOf(holders);
   let tickets = 0;
   if (userId) {
-    tickets = await recyclingPoolEngine.awardLotteryTickets(userId, feeNsf);
+    tickets = await recyclingPoolEngine.awardLotteryTickets(userId, feeSc);
   }
 
   // Akumulasikan volume harian di Redis
   try {
     const redisManager = require("../../managers/redisManager");
     if (redisManager.client && redisManager.client.isReady) {
-      await redisManager.client.incrBy("economy:volume:nsf:daily", spent);
+      await redisManager.client.incrBy("economy:volume:sc:daily", spent);
     }
   } catch (err) {
     logger.warn("[currency:exchange] Operasi cache Redis gagal: " + (err?.message || err));
@@ -422,7 +477,7 @@ async function exchange(holders, fromKind, toKind, amount) {
     to: to.kind,
     spent,
     received,
-    feeNsf,
+    feeSc,
     rate,
     feePercent,
     dailyVolume,
@@ -437,7 +492,9 @@ module.exports = {
   FRAGMENT,
   COIN,
   COUPON,
-  FRAGMENT_PER_COIN,
+  DIAMOND,
+  MEDAL,
+  SC_PER_PD,
   LEGACY_COUPON_KEY,
   EMOJI,
   CURRENCIES,

@@ -219,11 +219,11 @@ function synthesizeChronicle(data = {}) {
 
   // 1. Headline & Lead Story
   let headline = "KOTA HOSHINO DAMAI & CERAH BERCAHAYA";
-  let leadStory = "Aktivitas kota berjalan tertib, para petualang giat mengumpulkan Star Fragments di rimba Naura Wilds.";
+  let leadStory = "Aktivitas kota berjalan tertib, para petualang giat mengumpulkan Sukamaju Koin di rimba Naura Wilds.";
 
   if (lotteryWinners.length > 0) {
     const topWin = lotteryWinners[0];
-    headline = `PENGUNDIAN LOTRE MEWAH: ${topWin.username || "Seseorang"} MEMBAWA PULANG ${topWin.prize?.toLocaleString("id-ID") || "JUTAAN"} NSF!`;
+    headline = `PENGUNDIAN LOTRE MEWAH: ${topWin.username || "Seseorang"} MEMBAWA PULANG ${topWin.prize?.toLocaleString("id-ID") || "JUTAAN"} SC!`;
     leadStory = `Dewi Keberuntungan Hoshino tersenyum lebar pada ${topWin.username || "seorang warga"} yang sukses menyabet jackpot undian lotre utama pekan ini!`;
   } else if (bossKills.length > 0) {
     const topBoss = bossKills[0];

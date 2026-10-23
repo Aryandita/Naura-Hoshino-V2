@@ -41,7 +41,11 @@ module.exports = [
       "scratch/**",
       "pending_plugin/**",
       ".agents/**",
+      ".kilo/**",
       "android/**",
+      "dashboard/tests/**",
+      "vitest.config.js",
+      "playwright.config.js",
     ],
   },
   {

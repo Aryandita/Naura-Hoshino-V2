@@ -15,7 +15,7 @@ const { logger } = require("../managers/logger");
  * @param {object} params
  * @param {string} params.userId
  * @param {number} params.amount
- * @param {"starFragments"|"coupons"|"economy_wallet"|"economy_bank"} [params.currency="starFragments"]
+ * @param {"sukamajuCoins"|"scholarshipVouchers"|"pratamaDollars"|"economy_bank"|"adishaDiamonds"} [params.currency="sukamajuCoins"]
  * @param {Function} params.action - async () => result
  * @param {string} [params.reason="payment"]
  * @returns {Promise<{ ok: boolean, result?: any, reason?: string }>}
@@ -23,7 +23,7 @@ const { logger } = require("../managers/logger");
 async function executeAtomicPayment({
   userId,
   amount,
-  currency = "starFragments",
+  currency = "sukamajuCoins",
   action,
   reason = "payment",
 }) {

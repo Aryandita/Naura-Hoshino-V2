@@ -197,7 +197,7 @@ function addEconomyGroup(builder) {
               .setRequired(false)
               .addChoices(
                 { name: "Star Fragment (NSF)", value: "nsf" },
-                { name: "Naura Coin", value: "coin" },
+                { name: "Pratama Dollar", value: "coin" },
               ),
           )
           .addIntegerOption((opt) =>

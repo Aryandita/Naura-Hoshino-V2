@@ -39,12 +39,12 @@ test("functionDispatcher - dispatch check_balance", async () => {
   const originalGetSurvival = cacheManager.getUserSurvival;
 
   cacheManager.getUserProfile = async () => ({
-    economy_wallet: 1500,
+    pratamaDollars: 1500,
     economy_bank: 5000,
   });
   cacheManager.getUserSurvival = async () => ({
-    starFragments: 250,
-    coupons: 3,
+    sukamajuCoins: 250,
+    scholarshipVouchers: 3,
   });
 
   const mockMsg = { author: { id: "test_user_1", username: "NauraTester" } };
@@ -53,8 +53,8 @@ test("functionDispatcher - dispatch check_balance", async () => {
   assert.equal(res.economyWallet, 1500);
   assert.equal(res.economyBank, 5000);
   assert.equal(res.totalCoins, 6500);
-  assert.equal(res.starFragments, 250);
-  assert.equal(res.coupons, 3);
+  assert.equal(res.sukamajuCoins, 250);
+  assert.equal(res.scholarshipVouchers, 3);
 
   // Restore
   cacheManager.getUserProfile = originalGetProfile;

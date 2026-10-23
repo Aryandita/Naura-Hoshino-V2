@@ -83,7 +83,7 @@ Area arsitektur utama yang berada dalam cakupan pengawasan keamanan:
 - Endpoint hadiah mini-game arcade (`POST /api/arcade/claim`) dilindungi *rate limiter* server-side dan batas perolehan harian (*daily hard cap*).
 
 ### D. Konsistensi Polyglot Database & Anti-Race Condition
-- Mutasi saldo moneter (NC / NSF) dan inventori JSON wajib dieksekusi secara atomik melalui [`cacheManager.js`](src/managers/cacheManager.js) menggunakan mekanisme *distributed mutex lock* Redis atau transaksi database relasional.
+- Mutasi saldo moneter (PD / SC) dan inventori JSON wajib dieksekusi secara atomik melalui [`cacheManager.js`](src/managers/cacheManager.js) menggunakan mekanisme *distributed mutex lock* Redis atau transaksi database relasional.
 - Seluruh query database relasional Sequelize menggunakan *parameterized bindings* untuk mencegah SQL Injection.
 - Seluruh query MongoDB/Mongoose disanitasi dari injeksi operator NoSQL.
 

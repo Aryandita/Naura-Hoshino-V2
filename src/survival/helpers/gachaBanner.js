@@ -24,7 +24,7 @@ const GACHA_COST_COUPON = 5;
 
 async function showGachaBannerShop(interaction, user) {
   const survival = await cacheManager.getUserSurvival(user.id);
-  const coupons = survival ? survival.coupons || 0 : 0;
+  const scholarshipVouchers = survival ? survival.scholarshipVouchers || 0 : 0;
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
@@ -32,7 +32,7 @@ async function showGachaBannerShop(interaction, user) {
       .setLabel(`Roll Banner (${GACHA_COST_COUPON} Kupon)`)
       .setEmoji(ui.getEmoji("coupon") || "🎫")
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(coupons < GACHA_COST_COUPON),
+      .setDisabled(scholarshipVouchers < GACHA_COST_COUPON),
     new ButtonBuilder()
       .setCustomId("gacha_banner_help")
       .setLabel("Info Banner")
@@ -46,7 +46,7 @@ async function showGachaBannerShop(interaction, user) {
     accentColorHex: ui.getColor("primary") || "#FFB6C1",
     title: `${eGacha} Toko Gacha Luna`,
     authorName: "Luna Gacha",
-    description: `Halo ${user.username}! Selamat datang di Toko Gacha Kosmetik.\n\nKamu bisa mendapatkan **Banner** eksklusif untuk dipasang di Profil dan Music Card milikmu!\n\n**Saldo Kuponmu:** ${coupons} ${eCoupon}\n*Satu kali roll butuh ${GACHA_COST_COUPON} Kupon.*`,
+    description: `Halo ${user.username}! Selamat datang di Toko Gacha Kosmetik.\n\nKamu bisa mendapatkan **Banner** eksklusif untuk dipasang di Profil dan Music Card milikmu!\n\n**Saldo Kuponmu:** ${scholarshipVouchers} ${eCoupon}\n*Satu kali roll butuh ${GACHA_COST_COUPON} Kupon.*`,
     iconURL: "https://i.imgur.com/example.png", // Fallback if no banner
     buttonsRow: row,
     footerText: ui.getFooter("survival"),
@@ -78,7 +78,7 @@ async function showGachaBannerShop(interaction, user) {
       const currentSurvival = await cacheManager.getUserSurvival(user.id);
       if (
         !currentSurvival ||
-        (currentSurvival.coupons || 0) < GACHA_COST_COUPON
+        (currentSurvival.scholarshipVouchers || 0) < GACHA_COST_COUPON
       ) {
         return i.reply({
           content: "Kuponmu tidak cukup!",
@@ -89,7 +89,7 @@ async function showGachaBannerShop(interaction, user) {
       // Potong saldo
       await cacheManager.debitUserSurvival(
         user.id,
-        "coupons",
+        "scholarshipVouchers",
         GACHA_COST_COUPON,
       );
 

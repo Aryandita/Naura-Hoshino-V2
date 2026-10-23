@@ -42,7 +42,7 @@ module.exports = [
 
       if (isCorrect && rewardFrags > 0) {
         await currency.reward(
-          "starFragments",
+          "sukamajuCoins",
           { userId: session.userId },
           rewardFrags,
         );
@@ -109,7 +109,7 @@ module.exports = [
         await redisManager.del(`arcade:rhythm:${sessionId}`);
         const rewardFrags = session.bet > 0 ? session.bet * 2 : 100;
         await currency.reward(
-          "starFragments",
+          "sukamajuCoins",
           { userId: session.userId },
           rewardFrags,
         );

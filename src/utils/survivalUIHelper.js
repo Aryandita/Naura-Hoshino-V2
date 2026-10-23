@@ -410,9 +410,9 @@ function buildStatusDashboardCard({
   const nextXp = level * 100;
   const xpBar = buildVitalsBar({ current: xp, target: nextXp, length: 8 }).bar;
 
-  const nsf = Number(survival?.starFragments || 0).toLocaleString("id-ID");
-  const coupons = Number(survival?.coupons || 0).toLocaleString("id-ID");
-  const walletNc = Number(profile?.economy_wallet || 0).toLocaleString("id-ID");
+  const sc = Number(survival?.sukamajuCoins || 0).toLocaleString("id-ID");
+  const vb = Number(survival?.scholarshipVouchers || 0).toLocaleString("id-ID");
+  const walletPd = Number(profile?.pratamaDollars || 0).toLocaleString("id-ID");
 
   const lines = [
     timeLoc,
@@ -426,7 +426,7 @@ function buildStatusDashboardCard({
     `> Level: **${level}** \u2022 XP: ${xpBar} \`${xp}/${nextXp}\``,
     "",
     "**Dompet & Simpanan:**",
-    `> 🌟 **${nsf}** NSF \u2022 🎟️ **${coupons}** Kupon \u2022 🪙 **${walletNc}** NC`,
+    `> 🌟 **${sc}** SC \u2022 🎟️ **${vb}** VB \u2022 🪙 **${walletPd}** PD`,
   ];
 
   if (Array.isArray(activeBuffs) && activeBuffs.length > 0) {

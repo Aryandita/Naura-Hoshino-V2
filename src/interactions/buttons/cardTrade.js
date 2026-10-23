@@ -103,7 +103,7 @@ module.exports = [
           }
 
           // 2. Verify and transfer Star Fragments if offered
-          if (trade.starFragmentsOffer > 0) {
+          if (trade.sukamajuCoinsOffer > 0) {
             const survivalA = await UserSurvival.findOne({
               where: { userId: trade.initiatorId },
               transaction: t,
@@ -112,7 +112,7 @@ module.exports = [
 
             if (
               !survivalA ||
-              (survivalA.starFragments || 0) < trade.starFragmentsOffer
+              (survivalA.sukamajuCoins || 0) < trade.sukamajuCoinsOffer
             ) {
               await t.rollback();
               return interaction.reply({
@@ -121,16 +121,16 @@ module.exports = [
               });
             }
 
-            survivalA.starFragments -= trade.starFragmentsOffer;
-            await survivalA.save({ transaction: t, fields: ["starFragments"] });
+            survivalA.sukamajuCoins -= trade.sukamajuCoinsOffer;
+            await survivalA.save({ transaction: t, fields: ["sukamajuCoins"] });
 
             const [survivalB] = await UserSurvival.findOrCreate({
               where: { userId: trade.targetUserId },
               transaction: t,
             });
-            survivalB.starFragments =
-              (survivalB.starFragments || 0) + trade.starFragmentsOffer;
-            await survivalB.save({ transaction: t, fields: ["starFragments"] });
+            survivalB.sukamajuCoins =
+              (survivalB.sukamajuCoins || 0) + trade.sukamajuCoinsOffer;
+            await survivalB.save({ transaction: t, fields: ["sukamajuCoins"] });
           }
 
           // 3. Swap Card Ownerships
@@ -149,7 +149,7 @@ module.exports = [
 
           const payload = buildContainerV2({
             title: `${ui.getEmoji("celebrate") || "🎉"} Transaksi Barter Kartu Sukses!`,
-            description: `Selamat! Barter kartu antara <@${trade.initiatorId}> dan <@${trade.targetUserId}> telah selesai dengan aman!\n\n**Pertukaran:**\n- <@${trade.targetUserId}> menerima: **${cardA.characterName}** (\`${cardA.cardCode}\`)${trade.starFragmentsOffer > 0 ? ` + ${ui.getEmoji("star") || "⭐"} **${trade.starFragmentsOffer.toLocaleString()} NSF**` : ""}\n- <@${trade.initiatorId}> menerima: ${cardB ? `**${cardB.characterName}** (\`${cardB.cardCode}\`)` : "*Tanpa kartu tukar*"}`,
+            description: `Selamat! Barter kartu antara <@${trade.initiatorId}> dan <@${trade.targetUserId}> telah selesai dengan aman!\n\n**Pertukaran:**\n- <@${trade.targetUserId}> menerima: **${cardA.characterName}** (\`${cardA.cardCode}\`)${trade.sukamajuCoinsOffer > 0 ? ` + ${ui.getEmoji("star") || "⭐"} **${trade.sukamajuCoinsOffer.toLocaleString()} NSF**` : ""}\n- <@${trade.initiatorId}> menerima: ${cardB ? `**${cardB.characterName}** (\`${cardB.cardCode}\`)` : "*Tanpa kartu tukar*"}`,
             color: "#10B981",
             footerText: ui.getFooter("utility"),
           });

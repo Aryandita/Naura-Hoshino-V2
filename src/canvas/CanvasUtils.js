@@ -366,18 +366,18 @@ async function generateSurvivalProfileImage(
   const WALLET_Y0 = MARGIN + 18;
   const walletItems = [
     {
-      label: "NAURA COIN",
+      label: "PRATAMA DOLLAR",
       value: (profile.economy_wallet || 0).toLocaleString("id-ID"),
       color: "#FFD700",
     },
     {
-      label: "STAR FRAGMENT",
+      label: "SUKAMAJU KOIN",
       value: (survival.starFragments || 0).toLocaleString("id-ID"),
       color: "#00D9FF",
     },
     {
-      label: "COUPON",
-      value: (survival.coupons || 0).toLocaleString("id-ID"),
+      label: "VOUCHER BEASISWA",
+      value: (survival.scholarshipVouchers || 0).toLocaleString("id-ID"),
       color: "#FFB6C1",
     },
   ];

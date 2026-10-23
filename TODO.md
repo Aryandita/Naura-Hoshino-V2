@@ -25,7 +25,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 | **Sumber Kebenaran**     | `package.json` untuk dependensi dan versi. GitHub Issues untuk pekerjaan. `AGENTS.md` untuk aturan governance.                              |
 | **Alur PR**              | Satu PR per sprint. Sprint berikutnya baru dimulai setelah PR sebelumnya di-review dan di-merge.                                            |
 | **Target Deploy**        | Panel Pterodactyl dengan perintah `npm start`; urutan migrasi dijamin oleh lifecycle `prestart`.                                            |
-| **Mata Uang Langka**     | Naura Coupon disimpan di kolom `UserSurvival.coupons` (bukan JSON) agar dapat didebit secara atomik.                                        |
+| **Mata Uang Langka**     | Voucher Beasiswa (VB) disimpan di kolom `UserSurvival.scholarshipVouchers` (bukan JSON) agar dapat didebit secara atomik.                                        |
 | **Komponen UI Discord**  | Respons command wajib Discord Components V2 (`buildContainerV2()`) dengan struktur 5-lapisan.                                               |
 
 ---
@@ -88,7 +88,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] **[TEAMWORK PARALLEL SPRINT: 5 PILAR EKSPANSI - MUSIK, MINIGAMES, DASHBOARD, AUTOMOD & UTILITY] Remote Player & Sleep/Seek, Blackjack & TypeRace Arcade, Soundboard & Automod Studios, Phishing Shield & Ghost Ping Tracker, Canvas Carbon Code & Visual Poll Chart**
   - Mengaudit, mengembangkan, dan memverifikasi 5 pilar inovasi baru Naura Hoshino V2 secara paralel berbasis `/teamwork-preview`, `/i-have-adhd/ponytail`, `/code-simplification`, `/antislop-code`, `/antislop-ui`, `/antislop-copywriting`, `/code-review-and-quality`, dan `/strix-security-audit`:
   - **Pilar 1 (Musik Lanjutan)**: `/music seek <timestamp>` presisi format (`mm:ss`, `hh:mm:ss`, detik), `/music sleep <menit>` dengan graceful fade-out volume 15 detik sebelum auto-disconnect, dan Web Remote Player (`dashboard/public/player.html`) tema Stellar Cyberpunk berdaya Socket.IO live sync.
-  - **Pilar 2 (Arcade Minigames)**: `/minigame blackjack` (`src/services/blackjackEngine.js`) kartu 52-standar, shuffle Fisher-Yates, split, double down, dealer stand 17, soft/hard Ace, payout 3:2, dan taruhan NSF atomik; `/minigame typerace` (`src/services/typeRaceEngine.js`) kompetisi ketik WPM interaktif via Discord Modal dan kalkulasi akurasi Levenshtein.
+  - **Pilar 2 (Arcade Minigames)**: `/minigame blackjack` (`src/services/blackjackEngine.js`) kartu 52-standar, shuffle Fisher-Yates, split, double down, dealer stand 17, soft/hard Ace, payout 3:2, dan taruhan SC atomik; `/minigame typerace` (`src/services/typeRaceEngine.js`) kompetisi ketik WPM interaktif via Discord Modal dan kalkulasi akurasi Levenshtein.
   - **Pilar 3 (Web Dashboard Studios)**: Web Soundboard Studio (`dashboard/public/soundboard.html`) 100% WebSocket real-time dengan 15 SFX preset dan Canvas spectrum visualizer; Visual Automod Studio (`dashboard/public/automod.html`) konfigurasi aturan filter kata, spam, slider mention, dan matriks hukuman.
   - **Pilar 4 (Automod Proaktif)**: Phishing Shield (`src/automod/phishingShield.js`) deteksi typosquatting link Nitro jebakan leksikal berlatensi < 0.2ms tanpa false positive; Ghost Ping Tracker (`src/automod/ghostPingTracker.js`) pelacakan mention yang dihapus cepat dalam < 5 detik dengan buffer TTL 60s.
   - **Pilar 5 (Utilitas Pintar)**: `/carbon` & `/codeview` (`src/canvas/codeCanvas.js`) render cuplikan kode menjadi kartu visual macOS editor 9 bahasa dan 4 tema warna; Visual Poll Chart (`src/canvas/pollCanvas.js`) kartu diagram batang Canvas beresolusi tinggi (1000x620) dengan ekspor tombol interaktif.
@@ -160,7 +160,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Membangun 5 modul penangan tombol dan modal baru yang sebelumnya berstatus yatim (*orphaned components*):
     - `src/interactions/buttons/reactionRole.js`: Penanganan toggle role interaktif permanen (`role_assign_`) dengan validasi otorisasi dan umpan balik ephemeral.
     - `src/interactions/buttons/globalChatFriend.js`: Tombol tambah teman lintas server (`gchat_add_`) langsung terhubung ke database `UserFriend` dengan sistem streak persahabatan.
-    - `src/interactions/buttons/pvpDuel.js`: Penanganan tantangan duel user context menu (`pvp_accept_` dan `pvp_decline_`) dengan resolusi power combat dan reward NSF.
+    - `src/interactions/buttons/pvpDuel.js`: Penanganan tantangan duel user context menu (`pvp_accept_` dan `pvp_decline_`) dengan resolusi power combat dan reward SC.
     - `src/interactions/buttons/predictBet.js` & `src/interactions/modals/predictBetModal.js`: Integrasi tombol pasang prediksi (`pred_bet_`) ke Discord Modal interaktif (`pred_modal_bet_`) dengan validasi nominal dan eksekusi `predictionEngine.placeBet`.
     - `src/interactions/modals/reportMessage.js`: Penanganan modal laporan pesan staff (`report_msg_`) dari context menu pesan dengan penerusan langsung ke channel log moderator.
   - Memasang **Universal Safe Deferral Wrapper (`wrapInteractionSafe`)** di `src/events/interactionCreate.js` yang secara otomatis mengalihkan `interaction.reply` dan `interaction.update` ke `editReply` / `followUp` bila interaksi telah di-defer atau terbalas, mengeliminasi crash runtime `DiscordjsError [InteractionAlreadyReplied]` di seluruh bot.
@@ -171,7 +171,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] **[SECURITY AUDIT & MOBILE DASHBOARD V2] Strix Security Audit Remediation & Mobile Web Dashboard Feature Parity**
   - Mengaudit seluruh direktori `dashboard/` menggunakan framework `/strix-security-audit` dan mereparasi celah keamanan:
     - Melindungi endpoint pemeliharaan server `POST /api/admin/flush-cache` dan `POST /api/admin/backup` dengan otorisasi ketat `requireOwner`.
-    - Mencegah eksploitasi infinite token farming pada mini-game arcade dengan rate limit cooldown server-side (20s) dan batas klaim harian (500 NSF/hari) di `POST /api/arcade/claim`.
+    - Mencegah eksploitasi infinite token farming pada mini-game arcade dengan rate limit cooldown server-side (20s) dan batas klaim harian (500 SC/hari) di `POST /api/arcade/claim`.
     - Menutup celah SSRF (Server-Side Request Forgery) pada `GET/POST /survival/farm/webhook` menggunakan validasi ketat anti-SSRF `isSafeWebhookUrl()` dan otorisasi login Discord.
     - Menutup celah pengambilalihan voice channel (Voice Channel Hijacking) pada `POST /soundboard/play` dengan validasi keanggotaan guild pengguna dan login Discord.
     - Mengamankan mutasi saldo pada `POST /territory/contribute` dengan verifikasi debit atomik dan login pengguna.
@@ -187,7 +187,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 - [x] **[WEB DASHBOARD & ACCESSIBILITY] Dynamic Data Refactoring, Universal Page Navigation, and Zero-Hardcoded State Audit**
   - Mengaudit seluruh 29 halaman web dashboard Naura OS, menyingkirkan baris mock/placeholder statis dan menyambungkannya ke database backend live.
-  - Membangun 6 endpoint RESTful baru di Express backend: `GET /api/inventory` (inventaris tas petualang, tools, daya tahan dan kapasitas), `GET /api/clan/info` (sindikat klan, vault, dan daftar anggota nyata dari Discord API), `GET /api/marketplace/items` (balai lelang aktif dari `MarketAuction`), `POST /api/arcade/claim` & `GET /api/arcade/leaderboard` (mini games arcade dengan reward mutasi atomik NSF & skor tertinggi), serta `POST /api/admin/flush-cache` & `POST /api/admin/backup` (pemeliharaan arsitektur dan paksa flush cache).
+  - Membangun 6 endpoint RESTful baru di Express backend: `GET /api/inventory` (inventaris tas petualang, tools, daya tahan dan kapasitas), `GET /api/clan/info` (sindikat klan, vault, dan daftar anggota nyata dari Discord API), `GET /api/marketplace/items` (balai lelang aktif dari `MarketAuction`), `POST /api/arcade/claim` & `GET /api/arcade/leaderboard` (mini games arcade dengan reward mutasi atomik SC & skor tertinggi), serta `POST /api/admin/flush-cache` & `POST /api/admin/backup` (pemeliharaan arsitektur dan paksa flush cache).
   - Merombak arsitektur navigasi global `sharedNav.js`: mendaftarkan seluruh 28 rute pada `ROUTE_GROUPS`, menginjeksi sticky header `.shared-top-nav` dengan quick-links lengkap (`Dashboard`, `Profil`, `Ransel`, `Dunia`, `Klan`, `Pasar`, `Arcade`, `Musik`, `Settings`, `Admin`), user avatar chip dari `/api/me`, drawer mobile nav di bagian bawah layar, dan reconciler tautan sidebar dinamis.
   - Menyelaraskan navigasi sidebar desktop statis pada `index.html` dengan tautan langsung ke `/clan`, `/marketplace`, `/inventory`, `/arcade`, dan `/admin`.
   - Memverifikasi 100% kelulusan QA Gate (503 unit test lulus, 0 error linter, 0 em-dash, 100% paritas bahasa ID/EN, dan 29/29 halaman merespons HTTP 200).
@@ -207,9 +207,9 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Audio ducking volume hanya aktif bila suara Fish Audio benar-benar diputar, menjaga volume musik tetap stabil saat mode teks fallback.
   - File: [`src/music/genreClassifier.js`](src/music/genreClassifier.js), [`src/music/genreClassifier.test.js`](src/music/genreClassifier.test.js), [`src/managers/aiDjManager.js`](src/managers/aiDjManager.js), [`src/managers/aiDjManager.test.js`](src/managers/aiDjManager.test.js), [`src/music/MusicUIManager.js`](src/music/MusicUIManager.js).
 
-- [x] **[UTILITY & SURVIVAL] Universal Message Cleaner & 5 NSF Garbage Collection Reward Engine**
-  - Menambahkan tombol interaksi `🧹 Bersihkan (+5 NSF)` pada Discord Components V2 sebelum baris footer dengan proteksi anti-farming (Daily Cap 50 NSF per hari & Cooldown 10 detik).
-  - Mutasi saldo kebersihan 5 NSF diproses secara atomik via `cacheManager.incrementUserSurvival`.
+- [x] **[UTILITY & SURVIVAL] Universal Message Cleaner & 3 SC Garbage Collection Reward Engine**
+  - Menambahkan tombol interaksi `🧹 Bersihkan (+3 SC)` pada Discord Components V2 sebelum baris footer dengan proteksi anti-farming (Daily Cap 30 SC per hari & Cooldown 10 detik).
+  - Mutasi saldo kebersihan 3 SC diproses secara atomik via `cacheManager.incrementUserSurvival`.
   - Mengimplementasikan sistem timer auto-delete universal dengan visualisasi hitung mundur Discord dinamis `<t:TIMESTAMP:R>` dan pengecualian mutlak pada log owner/admin, pengingat (*reminder*), dan penundaan timer pada pesan interaktif berbasis input pengguna.
   - File: [`src/utils/messageCleaner.js`](src/utils/messageCleaner.js), [`src/utils/messageCleaner.test.js`](src/utils/messageCleaner.test.js), [`src/interactions/buttons/messageCleanup.js`](src/interactions/buttons/messageCleanup.js), [`src/utils/NauraContainerBuilder.js`](src/utils/NauraContainerBuilder.js), [`src/utils/NauraContainerBuilder.test.js`](src/utils/NauraContainerBuilder.test.js).
 
@@ -220,7 +220,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 - [x] **[CO-OP GAMEPLAY] The Celestial Raid 2.0 Engine (Multiplayer Party 2-4 Players)**
   - Menghadirkan engine dungeon kooperatif berbasis giliran (turn-based) tanpa ketergantungan API AI dengan 3 peran sinergis: Guardian (Shield/Tank), Vanguard (Combo DPS), dan Apothecary (Heal/Support).
-  - Mekanik bos kosmik bertingkat (Astral Leviathan, Void Monarch, Nebula Chimera) dengan fase amarah (Enrage Phase) setelah 8 giliran dan pembagian hadiah NSF serta kupon secara atomik dan merata.
+  - Mekanik bos kosmik bertingkat (Astral Leviathan, Void Monarch, Nebula Chimera) dengan fase amarah (Enrage Phase) setelah 8 giliran dan pembagian hadiah SC serta VB secara atomik dan merata.
   - File: [`src/survival/engines/celestialRaidEngine.js`](src/survival/engines/celestialRaidEngine.js), [`src/survival/engines/celestialRaidEngine.test.js`](src/survival/engines/celestialRaidEngine.test.js), [`plugin/survival/subcommands/raid.js`](plugin/survival/subcommands/raid.js).
 
 - [x] **[AI DORMANT ARTIFACTS] Pengarsipan Modul AI Dormant ke pending_plugin/**
@@ -281,7 +281,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Mengatasi kondisi jalan buntu (*dead end*) saat pemain menyentuh HP 0 atau seluruh status fisik drop ke angka 0.
   - Mengotomatiskan evakuasi ke Rumah Sakit Umum Pratama jika lokasi berada di Kota, atau ke Klinik Darurat jika berada di Wilayah Pedesaan/Wilds.
   - Memulihkan status vital darurat pemain ke HP 25 (min 25% max HP), Lapar 30, Haus 30, dan Stamina 30.
-  - Menerapkan pemotongan biaya perawatan proporsional dan aman anti-minus (*clamped*): jika di Kota memotong 50 NC dari `UserProfile.economy_wallet`, sedangkan jika di Desa memotong 500 NSF dari `UserSurvival.starFragments`.
+  - Menerapkan pemotongan biaya perawatan proporsional dan aman anti-minus (*clamped*): jika di Kota memotong 50 PD dari `UserProfile.pratamaDollars`, sedangkan jika di Desa memotong 500 SC dari `UserSurvival.sukamajuCoins`.
   - File: [`src/survival/helpers/survivalVitals.js`](src/survival/helpers/survivalVitals.js), [`src/survival/helpers/survivalTime.js`](src/survival/helpers/survivalTime.js), [`src/survival/helpers/survivalVitals.test.js`](src/survival/helpers/survivalVitals.test.js).
 - [x] **[BUG - MUSIC_INVALID_ARRAY_LENGTH] Pemulihan Batas Subcommand & Separasi Radio Host (`plugin/music/music.js`)**
   - Mengatasi galat fatal `💥 ERROR [COMMANDS] Gagal memuat file command music.js: Invalid Array length`.
@@ -291,7 +291,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 - [x] **[BUG - PROFILE_SIDEBAR_LEADERBOARD_DESYNC] Sinkronisasi Akun Discord Sesi Web & Leaderboard Realtime Database**
   - Mengatasi display profil sidebar (pojok kiri bawah) yang tetap berstatus "Guest" dengan avatar default Naura meskipun pengguna telah berhasil login melalui Discord OAuth.
-  - Mengintegrasikan fungsi `initServerSync()` pada `authManager.js` yang menyinkronkan data profil dari endpoint `/api/me` (nama akun, avatar CDN Discord, peran server, saldo NC dompet & bank, NSF, dan kupon survival).
+  - Mengintegrasikan fungsi `initServerSync()` pada `authManager.js` yang menyinkronkan data profil dari endpoint `/api/me` (nama akun, avatar CDN Discord, peran server, saldo PD dompet & bank, SC, dan VB survival).
   - Memperbaiki tombol login modal Discord (`btnDiscordDirect`) agar mengarahkan pengguna secara langsung ke endpoint OAuth2 resmi `/auth/discord`.
   - Memperbaiki ketidaksesuaian ID elemen kontainer di `leaderboard.html` (`lbList` vs `leaderboardList`), merestrukturisasi fungsi `updatePodium()` agar merender juara top 3 secara dinamis berbasis data aktif, serta membersihkan seluruh data hardcoded statis.
   - Memperbarui endpoint `/api/realtime/leaderboard` di `dashboard/routes/api.js` untuk membaca akumulasi kekayaan murni `(economy_wallet + economy_bank)`, menyelesaikan nama pengguna & avatar Discord secara asinkron via `resolveDiscordUser`, dan mengeliminasi array mock fallback.
@@ -340,7 +340,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - File: [`src/music/poru_events/trackStart.js`](src/music/poru_events/trackStart.js), [`src/music/poru_events/trackEnd.js`](src/music/poru_events/trackEnd.js), [`src/services/soundboardService.js`](src/services/soundboardService.js).
 - [x] **Algorithmic Anti-Inflation Circuit Breaker & Economy Guard**
   - Layanan `src/services/economyGuardEngine.js` untuk memantau kecepatan sirkulasi mata uang (_Velocity of Money_) dan mendeteksi anomali transfer saldo antar akun alt (`/pay` abuse).
-  - Dynamic Market Tax (pajak pasar dinamis 3% s.d. 12%) yang menyesuaikan secara otomatis berdasarkan total suplai Star Fragments aktif di server untuk menjaga stabilitas moneter.
+  - Dynamic Market Tax (pajak pasar dinamis 3% s.d. 12%) yang menyesuaikan secara otomatis berdasarkan total suplai Sukamaju Koin aktif di server untuk menjaga stabilitas moneter.
   - Integrasi pencatatan audit log otomatis ke MongoDB saat terjadi lonjakan transaksi mencurigakan.
   - Unit test `src/services/economyGuardEngine.test.js` lulus 100%.
 - [x] **Audio Guard & WebSocket Conflict Hardening**
@@ -400,7 +400,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - File: [`src/survival/engines/familyEngine.js`](src/survival/engines/familyEngine.js), [`src/models/UserChild.js`](src/models/UserChild.js), [`plugin/survival/subcommands/family.js`](plugin/survival/subcommands/family.js) (NEW).
 - [x] **[FITUR BARU] Ancient Relic Tower Sieges & Dynamic Territory Control (`territoryWarEngine.js` Phase 2 / `/clan siege`)**
   - Mengembangkan sistem perebutan Menara Relik Kuno (*Ancient Relic Towers*) antar federasi klan menjadi perang wilayah GvG terjadwal mingguan.
-  - Aliansi pengontrol menara berhak mengklaim dividen kas aliansi harian dan mengaktifkan status buff regional pasif untuk seluruh anggota klan (Tower of Vitality: +15% HP, Tower of Greed: +10% NSF yield). Dilengkapi visual perang di Web Dashboard war room.
+  - Aliansi pengontrol menara berhak mengklaim dividen kas aliansi harian dan mengaktifkan status buff regional pasif untuk seluruh anggota klan (Tower of Vitality: +15% HP, Tower of Greed: +10% SC yield). Dilengkapi visual perang di Web Dashboard war room.
   - File: [`src/survival/engines/territoryWarEngine.js`](src/survival/engines/territoryWarEngine.js), [`src/survival/engines/guildFederationEngine.js`](src/survival/engines/guildFederationEngine.js), [`plugin/survival/subcommands/siege.js`](plugin/survival/subcommands/siege.js) (NEW), [`dashboard/src/pages/war-room.html`](dashboard/src/pages/war-room.html).
 - [x] **[PERFORMA] WebP Streaming Compression & Memory Pooling on Canvas Worker (`canvasWorkerPool.js`)**
   - Mengonversi keluaran renderer grafis berat (ransel inventaris, koran chronicle mingguan, kamar cyber-pod) dari format PNG mentah ke WebP kompresi adaptif (kualitas 90% lossless).
@@ -447,7 +447,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Memperbarui payload kontainer di `plugin/survival/subcommands/wallet.js` saat tombol `wallet_claim_novice` ditekan agar status tombol langsung dinonaktifkan (*disabled: true*) dan angka saldo diperbarui secara instan tanpa memicu error double claim.
   - File: [`plugin/survival/subcommands/wallet.js`](plugin/survival/subcommands/wallet.js).
 - [x] **[ANTI-EXPLOIT] Cooldown Proteksi Sapaan Warga Alun-Alun Kota (`townEngine.js`)**
-  - Menerapkan batasan per-user atau cooldown di Redis (`town:greet:${userId}`) pada `talkToTownNpc` di `src/survival/engines/townEngine.js` untuk mencegah eksploitasi perolehan Star Fragments berulang dalam durasi menu aktif.
+  - Menerapkan batasan per-user atau cooldown di Redis (`town:greet:${userId}`) pada `talkToTownNpc` di `src/survival/engines/townEngine.js` untuk mencegah eksploitasi perolehan Sukamaju Koin berulang dalam durasi menu aktif.
   - File: [`src/survival/engines/townEngine.js`](src/survival/engines/townEngine.js), [`plugin/survival/subcommands/town.js`](plugin/survival/subcommands/town.js).
 - [x] **🏆 Pemenang Astral Lottery Ledger & Notifikasi Publik (`v42_create_lottery_winners_ledger`)**
   - Menambahkan pencatatan riwayat pemenang undian mingguan di database PostgreSQL (`recyclingPoolEngine.js`) dan siaran otomatis hasil undian ke announcement channel server / DM pemenang.
@@ -630,7 +630,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Diperbaiki: Diterapkan akumulasi skor kerusakan pemain ke sorted set Redis persisten `boss:leaderboard:alltime` saat boss tumbang, serta perintah `/survival raid aksi:leaderboard` untuk menampilkannya.
   - File: [`src/survival/engines/worldBossEngine.js`](src/survival/engines/worldBossEngine.js), [`plugin/survival/subcommands/raid.js`](plugin/survival/subcommands/raid.js).
 - [x] **[PENINGKATAN] Cooldown Survival: Tambah Sistem "Rush" Berbayar Kupon**
-  - Diperbaiki: Dibangun modul `cooldownRushHelper.js` dan interaksi tombol `rush.js` yang memungkinkan pemain membayar 1 Naura Coupon untuk melewati cooldown aktif secara atomik.
+  - Diperbaiki: Dibangun modul `cooldownRushHelper.js` dan interaksi tombol `rush.js` yang memungkinkan pemain membayar 1 Voucher Beasiswa (VB) untuk melewati cooldown aktif secara atomik.
   - File: [`src/survival/helpers/cooldownRushHelper.js`](src/survival/helpers/cooldownRushHelper.js), [`src/interactions/buttons/rush.js`](src/interactions/buttons/rush.js), [`src/survival/helpers/cooldownRushHelper.test.js`](src/survival/helpers/cooldownRushHelper.test.js).
 - [x] **[PENINGKATAN] Inventaris Canvas: Integrasi Filter & Sort**
   - Diperbaiki: Ditambahkan Select Menu interaktif di bawah visualisasi backpack inventaris dengan opsi filter (Semua, Senjata, Armor, Konsumabel, Material) dan sort (Tier Tertinggi, Jumlah Terbanyak).
@@ -721,7 +721,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] **[OPSIONAL] AI Music Aura & Signature Personality Card (`/music aura`)**
   - Analisis selera musik bertenaga Gemini AI yang merangkai persona resonansi kosmik serta kartu kanvas visual glassmorphism 800x450 (`src/services/musicAuraService.js`, `src/canvas/musicAuraCanvas.js`, `plugin/music/music.js`).
 - [x] **[OPSIONAL] Pembuatan Kartu Ucapan Ulang Tahun Otomatis & Kado Atomik**
-  - Integrasi perayaan harian di `cronManager.js` dengan custom canvas birthday card 800x450, dikirim personal via DM lengkap dengan kado atomik (1.000 NSF, 3 Kupon, 1 Kue Tart) dan disiarkan ke announcement channel server.
+  - Integrasi perayaan harian di `cronManager.js` dengan custom canvas birthday card 800x450, dikirim personal via DM lengkap dengan kado atomik (1.000 SC, 3 VB, 1 Kue Tart) dan disiarkan ke announcement channel server.
 
 ---
 
@@ -746,7 +746,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] Pengaman batas Discord Components V2 (`componentBudget.js`) mencegah error `Invalid Form Body`.
 - [x] Migrasi `ephemeral: true` ke `flags: MessageFlags.Ephemeral`.
 - [x] Penulisan ekonomi & inventory atomik (`increment*`, `debit*`, `mutateUser*Json`, `addItemsAtomic`, `takeItemsAtomic`).
-- [x] Pemindahan Naura Coupon ke kolom tabel `UserSurvival.coupons`.
+- [x] Pemindahan Voucher Beasiswa ke kolom tabel `UserSurvival.scholarshipVouchers`.
 - [x] Penguatan CI: `check-em-dash.js`, `locales:check:strict`, `check-requires.js`, dan test suite lengkap.
 
 ### 🟡 Sprint 2: Performa & Kesiapan Skala
@@ -842,14 +842,14 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] Pelacakan item spesifik pada dungeon drop quest tracker (`collect_specific_item`).
 - [x] Riwayat audit transaksi ekonomi pemain via slash command `/history` dan `/survival economy history`.
 - [x] Papan peringkat World Boss All-Time persisten (`boss:leaderboard:alltime`) dan menu `/survival raid leaderboard`.
-- [x] Fitur "Rush" cooldown survival berbasis Naura Coupon dengan modal konfirmasi dan unit test terverifikasi.
+- [x] Fitur "Rush" cooldown survival berbasis Voucher Beasiswa (VB) dengan modal konfirmasi dan unit test terverifikasi.
 - [x] Select Menu interaktif filter kategori dan pengurutan inventaris backpack Canvas.
 - [x] Implementasi kustomisasi tema dan upgrade fasilitas Guild Hall (`hallLayout` v33) pada `/clan hall`.
 - [x] Verifikasi stabilitas test suite: **246 passing tests (100%)**, 0 error lint, dan 0 pelanggaran em dash.
 
 ### 💎 Sprint 27: Currency V2 Closed-Loop, AI Ensemble Router, Lavalink Cluster, Soundboard & 3D Mascot (v2.2.0 Milestone)
 
-- [x] **Currency V2 One-Way Bridge & Dynamic Spread**: Penukaran NSF ke Coin sah, Coin ke NSF dibatasi (`one_way_restricted`), fee transaksi progresif (`currency.js`, `currencyV2.test.js`).
+- [x] **Currency V2 One-Way Bridge & Dynamic Spread**: Penukaran SC ke PD sah, PD ke SC dibatasi (`one_way_restricted`), fee transaksi progresif (`currency.js`, `currencyV2.test.js`).
 - [x] **Closed-Loop 4-Channel Recycling Pool (`ServerTreasury.js` & `recyclingPoolEngine.js`)**: Alokasi otomatis 40% Kas Infrastruktur Klan, 25% Pool Undian Lotre, 20% Subsidi Pemula, 15% Merchant Incentive.
 - [x] **Durability & Wear/Tear Surcharge Engine (`durabilityEngine.js`)**: Sistem ketahanan alat, aus tempur, dan biaya perbaikan dinamis.
 - [x] **Cross-Model AI Ensemble Router (`aiEnsembleRouter.js`)**: Multi-LLM failover cerdas (Gemini 2.5 Flash, Groq LLaMA 3.3, Ollama) dengan Circuit Breaker otomatis (Unit test terverifikasi 100%).
@@ -889,7 +889,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] **[FITUR] Mobile Touch Gestures pada 3D Floating Mascot (`viewer3d.js`)**:
   - Dukungan interaksi sentuh alami: cubit untuk zoom (*pinch-to-zoom*) dan dua jari untuk rotasi (*two-finger rotation*) pada perangkat mobile dan tablet.
 - [x] **[RPG & EKONOMI] Dynamic Seasonal Battle Pass & Star Path Milestones (`src/survival/engines/seasonPassEngine.js`, `/survival pass`)**:
-  - Progresi level musiman (Tier 1-50, Jalur Gratis & Jalur Premium) dengan klaim hadiah atomik (NSF, Kupon, Blueprints, Aksesoris) via `cacheManager`.
+  - Progresi level musiman (Tier 1-50, Jalur Gratis & Jalur Premium) dengan klaim hadiah atomik (SC, VB, Blueprints, Aksesoris) via `cacheManager`.
 - [x] **[RPG & EKONOMI] Automated Dynamic Commodity Market Fluctuations (`src/survival/engines/commodityMarketEngine.js`)**:
   - Algoritma dinamis penawaran-permintaan untuk harga jual/beli ikan laut dalam, mineral langka, dan hasil panen dengan elastisitas harga terkalibrasi.
 - [x] **[LIVING AI] Autonomous Server Chronicle Newspaper Generator (`src/ai/serverChronicleEngine.js`)**:
@@ -1016,8 +1016,8 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
   - Menampilkan Main Campaign Objective aktif langsung di profil petualang (`/survival info`).
 - [x] **[WORLD MAP EXPANSION] 4 Official World Regions & Sub-Zone POIs**:
   - Merealisasikan 4 Wilayah Resmi di `src/survival/data/worldMapData.js`:
-    1. **Desa Sukamaju:** Distrik awal terpadu menyatukan pemukiman warga, ladang kebun Ningsih, pesisir dermaga nelayan Mang Ujang & Tari, hutan rimba satwa, dan gua pertambangan bijih. Mata uang: Naura Star Fragments (NSF).
-    2. **Kota Pratama:** Megapolitan modern pusat ekonomi, bursa kerja, RS Pratama, balai lelang, dan Bank Sentral Pratama untuk penukaran 1.000 NSF -> 1 NC (Naura Coin).
+    1. **Desa Sukamaju:** Distrik awal terpadu menyatukan pemukiman warga, ladang kebun Ningsih, pesisir dermaga nelayan Mang Ujang & Tari, hutan rimba satwa, dan gua pertambangan bijih. Mata uang: Sukamaju Koin (SC).
+    2. **Kota Pratama:** Megapolitan modern pusat ekonomi, bursa kerja, RS Pratama, balai lelang, dan Bank Sentral Pratama untuk penukaran 1.000 SC -> 1 PD (Pratama Dollar).
     3. **Desa Khul'Khas:** Wilayah tersembunyi beriklim gurun pasir dan kuil mistik kuno yang menuntut penjelajahan mandiri (self-exploration).
     4. **Istana Draken:** Benteng kegelapan multi-floor dungeon (Lantai 1-50+) dengan drop artefak Mythic dan penjaga gerbang Gargoyle Malakor.
   - Subcommand `/survival town` dan `/survival travel` diperbarui untuk navigasi antar 4 wilayah dan inspeksi titik fasilitas POI.
@@ -1182,7 +1182,7 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 - [x] **[EMERGENCY OPS] Incident Response Desk, Key-Gated Code Runner & Anti-Raid Panic (#52)**: Alat mitigasi insiden operasional khusus DM Owner (`/owner doctor`, `/owner maintenance`, `/owner killswitch`, `/owner logs`, `/owner repair`, `/owner keygen`, `/owner keylist`, `/owner keyrevoke`), tombol diagnostik cepat (`incident_flush_cache`, `incident_release_locks`), mode karantina anti-serbuan raid server (`/moderation panic aksi:<enable|restore>`), dan runner kode publik terisolasi sandbox dengan verifikasi kunci akses pengembang (`/run code:<script> key:<key>`). File: [`plugin/admin/ownerOps.js`](plugin/admin/ownerOps.js), [`plugin/utility/runCode.js`](plugin/utility/runCode.js), [`plugin/admin/moderation.js`](plugin/admin/moderation.js), [`src/services/incidentService.js`](src/services/incidentService.js), [`src/services/sandboxService.js`](src/services/sandboxService.js), [`src/services/accessKeyService.js`](src/services/accessKeyService.js), [`src/models/mongo/DevAccessKey.js`](src/models/mongo/DevAccessKey.js), [`src/interactions/buttons/incidentButtons.js`](src/interactions/buttons/incidentButtons.js), [`src/events/interactionCreate.js`](src/events/interactionCreate.js).
 
 ##### 2. Kategori: Web Dashboard V2 (Front End)
-- [x] **[MINIGAME] Web-Based Mini Games Arcade Connected to Bot Economy (#13)**: Mini-game HTML5 ringan di browser (fishing arcade, puzzle) yang memberikan hadiah NSF/NC ke akun Discord pemain. File: [`dashboard/src/pages/arcade.html`](dashboard/src/pages/arcade.html), [`dashboard/server.js`](dashboard/server.js).
+- [x] **[MINIGAME] Web-Based Mini Games Arcade Connected to Bot Economy (#13)**: Mini-game HTML5 ringan di browser (fishing arcade, puzzle) yang memberikan hadiah SC/PD ke akun Discord pemain. File: [`dashboard/src/pages/arcade.html`](dashboard/src/pages/arcade.html), [`dashboard/server.js`](dashboard/server.js).
 - [x] **[WEB INVENTORY] Drag-and-Drop Visual Inventory Management (#15)**: Halaman web untuk mengatur tata letak dan menyortir isi ransel inventaris petualang dengan antarmuka seret-lepas. File: [`dashboard/src/pages/inventory.html`](dashboard/src/pages/inventory.html), [`dashboard/server.js`](dashboard/server.js).
 - [x] **[THEME] Dynamic Multi-Theme Switcher on Stellar Glass OS (#17)**: Pilihan tema tampilan dashboard (Stellar Dark, Cyber Neon, Emerald Nature, Light Horizon) berbasis CSS variables. File: [`dashboard/src/css/stellar.css`](dashboard/src/css/stellar.css), [`dashboard/public/js/theme-switcher.js`](dashboard/public/js/theme-switcher.js), [`dashboard/src/pages/index.html`](dashboard/src/pages/index.html).
 - [x] **[3D / 2D] Virtual Achievement Showcase & Trophy Room (#20)**: Ruang pameran piala virtual di web dashboard untuk memajang medali dan gelar langka pemain. File: [`dashboard/src/pages/achievements.html`](dashboard/src/pages/achievements.html), [`dashboard/server.js`](dashboard/server.js).

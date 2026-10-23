@@ -101,12 +101,12 @@ async function generateUnifiedProfile(payload) {
     const survivalLvl = survival ? (survival.level || 1) : 1;
     const chatLvl = profile.leveling_level || 1;
     
-    const ncWallet = profile.economy_wallet || 0;
+    const ncWallet = profile.pratamaDollars || 0;
     const ncBank = profile.economy_bank || 0;
     const totalNc = ncWallet + ncBank;
     
-    const nsf = survival ? (survival.starFragments || 0) : 0;
-    const coupons = survival ? (survival.coupons || 0) : 0;
+    const nsf = survival ? (survival.sukamajuCoins || 0) : 0;
+    const scholarshipVouchers = survival ? (survival.scholarshipVouchers || 0) : 0;
     const tracksListened = profile.music_tracksListened || 0;
 
     const minigamePts = (profile.minigame_mathScore || 0) +
@@ -133,9 +133,9 @@ async function generateUnifiedProfile(payload) {
     drawStat(cols[1], rows[0], "Chat Level", `Lv. ${chatLvl}`, "💬");
     drawStat(cols[2], rows[0], "Minigame Points", minigamePts.toLocaleString("id-ID"), "🎮");
 
-    drawStat(cols[0], rows[1], "Total NC", totalNc.toLocaleString("id-ID"), "🪙");
-    drawStat(cols[1], rows[1], "Star Fragments", nsf.toLocaleString("id-ID"), "💠");
-    drawStat(cols[2], rows[1], "Naura Coupons", coupons.toLocaleString("id-ID"), "🎟️");
+    drawStat(cols[0], rows[1], "Total PD", totalNc.toLocaleString("id-ID"), "🪙");
+    drawStat(cols[1], rows[1], "Sukamaju Koin", nsf.toLocaleString("id-ID"), "💠");
+    drawStat(cols[2], rows[1], "Naura scholarshipVouchers", scholarshipVouchers.toLocaleString("id-ID"), "🎟️");
 
     drawStat(cols[0], rows[2], "Tracks Listened", tracksListened.toLocaleString("id-ID"), "🎧");
 

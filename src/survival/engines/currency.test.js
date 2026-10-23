@@ -11,7 +11,7 @@ const {
   FRAGMENT,
   COIN,
   COUPON,
-  FRAGMENT_PER_COIN,
+  SC_PER_PD,
   CURRENCIES,
   byKind,
   currencyKindFor,
@@ -32,7 +32,7 @@ test("tiga mata uang utama terdaftar dengan kolom yang benar", () => {
 });
 
 test("kurs resmi 1000 NSF per 1 Coin", () => {
-  assert.equal(FRAGMENT_PER_COIN, 1000);
+  assert.equal(SC_PER_PD, 1000);
 });
 
 test("currencyKindFor memetakan lokasi ke mata uang wilayah", () => {
@@ -65,8 +65,8 @@ test("convert menolak pasangan yang melibatkan Coupon", () => {
 
 test("balanceOf membaca kolom sesuai pemilik mata uang", () => {
   const holders = {
-    survival: { starFragments: 250, coupons: 3 },
-    profile: { economy_wallet: 900 },
+    survival: { sukamajuCoins: 250, scholarshipVouchers: 3 },
+    profile: { pratamaDollars: 900 },
   };
   assert.equal(balanceOf(FRAGMENT, holders), 250);
   assert.equal(balanceOf(COIN, holders), 900);
@@ -84,7 +84,7 @@ test("couponBalanceOf membaca legacy rpg_state saat kolom belum ada", () => {
 });
 
 test("canAfford membandingkan saldo dengan biaya", () => {
-  const holders = { survival: { starFragments: 200 } };
+  const holders = { survival: { sukamajuCoins: 200 } };
   assert.ok(canAfford(FRAGMENT, holders, 200));
   assert.ok(canAfford(FRAGMENT, holders, 199));
   assert.equal(canAfford(FRAGMENT, holders, 201), false);
@@ -96,7 +96,7 @@ test("byKind jatuh ke NSF untuk kind tak dikenal", () => {
 });
 
 test("exchange menolak jalur tidak valid sebelum menyentuh database", async () => {
-  const holders = { survival: { starFragments: 5000 }, profile: {} };
+  const holders = { survival: { sukamajuCoins: 5000 }, profile: {} };
 
   await assert.deepEqual(await exchange(holders, FRAGMENT, FRAGMENT, 100), {
     ok: false,

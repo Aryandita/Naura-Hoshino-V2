@@ -40,7 +40,7 @@ const SYSTEM_KNOWLEDGE_BASE = [
       "• **Combat & Hunting:** `/survival dungeon` (lawan monster lantai), `/survival abyss` (tower tantangan tanpa batas), `/survival raid` (world boss multiplayer).\n" +
       "• **Stats & Vitals:** HP, Stamina, STR, AGI, INT, LCK. Konsumsi makanan via `/survival consume` atau istirahat via `/survival rest`.\n" +
       "• **Rebirth:** Capai Level 100 untuk melakukan `/survival rebirth` membuka bonus stat multiplier permanen.\n" +
-      "• **Mata Uang:** Star Fragments (mata uang RPG) dan Naura Coupon (mata uang terlangka).",
+      "• **Mata Uang:** Sukamaju Koin (mata uang RPG) dan Voucher Beasiswa (mata uang terlangka).",
   },
   {
     topic: "economy_finance",
@@ -64,7 +64,7 @@ const SYSTEM_KNOWLEDGE_BASE = [
     ],
     summary:
       "Sistem Finansial & Pasar Naura:\n" +
-      "• **Daily Login Streak:** Gunakan `/daily` setiap hari untuk mendapatkan Gold, Star Fragments, dan Naura Coupons di Day 5 & 7.\n" +
+      "• **Daily Login Streak:** Gunakan `/daily` setiap hari untuk mendapatkan Gold, Sukamaju Koin, dan Voucher Beasiswa di Day 5 & 7.\n" +
       "• **Bank & Bunga:** Simpan uang di `/survival bank` atau deposito dengan bunga harian.\n" +
       "• **Pasar Saham ($NRA):** Beli saham server di `/stock buy` dengan harga fluktuatif real-time.\n" +
       "• **Prediction Market:** Taruhan hasil event komunitas di `/predict`.\n" +

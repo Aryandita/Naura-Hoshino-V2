@@ -93,7 +93,7 @@ module.exports = [
 
             if (session.betAmount > 0) {
               await currency.reward(
-                "starFragments",
+                "sukamajuCoins",
                 { userId: winnerId },
                 session.betAmount * 2,
               );
@@ -244,7 +244,7 @@ module.exports = [
           // Bet reward payout
           if (session.betAmount > 0) {
             await currency.reward(
-              "starFragments",
+              "sukamajuCoins",
               { userId: winnerId },
               session.betAmount * 2,
             );
@@ -261,7 +261,7 @@ module.exports = [
           // Tower floor reward
           const frags = session.towerFloor * 50;
           await currency.reward(
-            "starFragments",
+            "sukamajuCoins",
             { userId: winnerId },
             frags,
           );

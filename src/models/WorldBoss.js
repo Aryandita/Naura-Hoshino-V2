@@ -97,8 +97,8 @@ const WorldBoss = sequelize.define(
       type: DataTypes.JSON,
       allowNull: false,
       defaultValue: {
-        starFragments: 5000,
-        coupons: 50,
+        sukamajuCoins: 5000,
+        scholarshipVouchers: 50,
       },
     },
     spawnTime: {

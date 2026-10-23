@@ -381,17 +381,17 @@ p {
   width: 18px;
   height: 18px;
   display: flex;
-
-.nav-item:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   font-size: 14px;
   color: var(--text-muted);
   transition: color var(--t-base);
+}
+
+.nav-item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .nav-item:hover .nav-icon {
@@ -875,12 +875,12 @@ p {
   border-radius: 9999px;
   text-decoration: none;
   transition: all var(--t-fast);
+  color: inherit;
+}
 
 .shared-nav-link:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
-}
-  color: inherit;
 }
 
 .header-user-chip:hover {

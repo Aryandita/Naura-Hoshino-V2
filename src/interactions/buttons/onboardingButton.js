@@ -76,7 +76,7 @@ module.exports = [
           "Gunakan `/survival chop` di hutan dan `/survival mine` di gua untuk mengumpulkan bahan baku dan tempa peralatan yang lebih kuat di `/survival forge`.",
           "",
           "**3. Berkebun & Berdagang** 🌾💰",
-          "Tanam benih di perkebunan `/survival farm` dan jual hasil panen ke pasar komoditas `/survival shop` untuk mendapatkan Star Fragments (NSF).",
+          "Tanam benih di perkebunan `/survival farm` dan jual hasil panen ke pasar komoditas `/survival shop` untuk mendapatkan Sukamaju Koin (SC).",
           "",
           "**4. Eksplorasi & Abyss** ⚔️🌀",
           "Setelah siap, masuki The Neo-Abyss (`/survival abyss`) untuk memburu relik kuno dan harta karun langka!",

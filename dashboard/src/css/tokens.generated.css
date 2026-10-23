@@ -1,0 +1,215 @@
+/* ==========================================================================
+ * AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
+ * Generated from: src/config/tokens/designTokens.js
+ * Timestamp: 2026-10-23T04:48:17.578Z
+ * ========================================================================== */
+
+:root {
+  /* ── Brand Tokens ── */
+  --naura-primary: #ffc0cb;
+  --naura-primary-rgb: 255, 192, 203;
+  --naura-primary-int: 16761035;
+  --naura-secondary: #f472b6;
+  --naura-secondary-rgb: 244, 114, 182;
+  --naura-secondary-int: 16020150;
+  --naura-accent: #00ffff;
+  --naura-accent-rgb: 0, 255, 255;
+  --naura-accent-int: 65535;
+  --canvas-deep: #060810;
+  --canvas-deep-rgb: 6, 8, 16;
+  --canvas-deep-int: 395280;
+  --text-light: #f0f0f0;
+  --text-light-rgb: 240, 240, 240;
+  --text-light-int: 15790320;
+
+  /* ── Survival/Wilds Tokens ── */
+  --wilds-emerald: #86efac;
+  --wilds-emerald-rgb: 134, 239, 172;
+  --wilds-moss: #34d399;
+  --wilds-moss-rgb: 52, 211, 153;
+  --wilds-amber: #fbbf24;
+  --wilds-amber-rgb: 251, 191, 36;
+  --wilds-bark: #92400e;
+  --wilds-bark-rgb: 146, 64, 14;
+  --wilds-river: #7dd3fc;
+  --wilds-river-rgb: 125, 211, 252;
+  --wilds-danger: #f87171;
+  --wilds-danger-rgb: 248, 113, 113;
+
+  /* ── Rarity Tokens ── */
+  --rarity-common: #9ca3af;
+  --rarity-common-rgb: 156, 163, 175;
+  --rarity-common-emoji: "⚪";
+  --rarity-common-tier: 1;
+  --rarity-uncommon: #86efac;
+  --rarity-uncommon-rgb: 134, 239, 172;
+  --rarity-uncommon-emoji: "🟢";
+  --rarity-uncommon-tier: 2;
+  --rarity-rare: #93c5fd;
+  --rarity-rare-rgb: 147, 197, 253;
+  --rarity-rare-emoji: "🔵";
+  --rarity-rare-tier: 3;
+  --rarity-epic: #c084fc;
+  --rarity-epic-rgb: 192, 132, 252;
+  --rarity-epic-emoji: "🟣";
+  --rarity-epic-tier: 4;
+  --rarity-legendary: #ffd700;
+  --rarity-legendary-rgb: 255, 215, 0;
+  --rarity-legendary-emoji: "🟡";
+  --rarity-legendary-tier: 5;
+  --rarity-mythic: #f9a8d4;
+  --rarity-mythic-rgb: 249, 168, 212;
+  --rarity-mythic-emoji: "🔴";
+  --rarity-mythic-tier: 6;
+
+  /* ── Status Tokens ── */
+  --status-online: #22c55e;
+  --status-online-rgb: 34, 197, 94;
+  --status-online-badge: "🟢 AKTIF";
+  --status-warn: #f59e0b;
+  --status-warn-rgb: 245, 158, 11;
+  --status-warn-badge: "🟡 ISTIRAHAT";
+  --status-offline: #ef4444;
+  --status-offline-rgb: 239, 68, 68;
+  --status-offline-badge: "🔴 SIBUK";
+  --status-maintenance: #a855f7;
+  --status-maintenance-rgb: 168, 85, 247;
+  --status-maintenance-badge: "🟣 PEMELIHARAAN";
+  --status-info: #38bdf8;
+  --status-info-rgb: 56, 189, 248;
+  --status-info-badge: "⚡ SINKRON";
+
+  /* ── System Tokens ── */
+  --system-economy: #ffd700;
+  --system-economy-rgb: 255, 215, 0;
+  --system-music: #8a2be2;
+  --system-music-rgb: 138, 43, 226;
+  --system-battle: #dc143c;
+  --system-battle-rgb: 220, 20, 60;
+  --system-rank: #9400d3;
+  --system-rank-rgb: 148, 0, 211;
+  --system-hub: #7b68ee;
+  --system-hub-rgb: 123, 104, 238;
+
+  /* ── Semantic Tokens ── */
+  --semantic-success: #00ff00;
+  --semantic-success-rgb: 0, 255, 0;
+  --semantic-error: #ff0000;
+  --semantic-error-rgb: 255, 0, 0;
+  --semantic-warning: #ffb347;
+  --semantic-warning-rgb: 255, 179, 71;
+  --semantic-info: #57c7ff;
+  --semantic-info-rgb: 87, 199, 255;
+  --semantic-crafting: #228b22;
+  --semantic-crafting-rgb: 34, 139, 34;
+  --semantic-mining: #8b4513;
+  --semantic-mining-rgb: 139, 69, 19;
+  --semantic-fishing: #1e90ff;
+  --semantic-fishing-rgb: 30, 144, 255;
+  --semantic-welcome: #00ffff;
+  --semantic-welcome-rgb: 0, 255, 255;
+  --semantic-leave: #ff69b4;
+  --semantic-leave-rgb: 255, 105, 180;
+  --semantic-boost: #ffd700;
+  --semantic-boost-rgb: 255, 215, 0;
+  --semantic-announcement: #001aff;
+  --semantic-announcement-rgb: 0, 26, 255;
+  --premium-voter: #f43f5e;
+  --premium-voter-rgb: 244, 63, 94;
+  --premium-starter: #38bdf8;
+  --premium-starter-rgb: 56, 189, 248;
+  --premium-supporter: #c0c0c0;
+  --premium-supporter-rgb: 192, 192, 192;
+  --premium-friends: #a855f7;
+  --premium-friends-rgb: 168, 85, 247;
+  --premium-vip: #ffd700;
+  --premium-vip-rgb: 255, 215, 0;
+  --premium-accent: #fde68a;
+  --premium-accent-rgb: 253, 230, 138;
+  --premium-glow: rgba(255,215,0,0.3);
+
+  /* ── UI Chrome Tokens ── */
+  --ui-primary: var(--naura-secondary, #f472b6);
+  --ui-primary-glow: rgba(244, 114, 182, 0.25);
+  --ui-primary-hover: #f472b6;
+  --accent-cyan-live: var(--wilds-moss, #34d399);
+  --accent-pink: #f9a8d4;
+  --accent-purple: #c084fc;
+  --accent-blue: #93c5fd;
+  --accent-green: var(--wilds-emerald, #86efac);
+
+  /* ── Surface Tokens ── */
+  --surface-glass: rgba(255, 255, 255, 0.03);
+  --surface-glass-hover: rgba(255, 255, 255, 0.05);
+  --surface-elevated: rgba(0, 0, 0, 0.4);
+
+  /* ── Text Tokens ── */
+  --ink: #ffffff;
+  --body: #9ca3af;
+  --body-strong: #d1d5db;
+  --muted: #6b7280;
+  --on-primary: #0b0c10;
+  --on-dark: #ffffff;
+
+  /* ── Hairline & Border Tokens ── */
+  --hairline: rgba(255, 192, 203, 0.15);
+  --hairline-strong: rgba(255, 192, 203, 0.3);
+  --hairline-brand: rgba(244, 114, 182, 0.35);
+
+  /* ── Glass Specular & Focus ── */
+  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --glass-specular-strong: inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
+  --glass-specular-primary: inset 0 1px 0 0 rgba(255, 192, 203, 0.25);
+  --focus-ring: 0 0 0 2px #060810, 0 0 0 4px var(--ui-primary);
+
+  /* ── Breakpoints ── */
+  --bp-mobile: 480px;
+  --bp-tablet: 768px;
+  --bp-desktop: 1024px;
+  --bp-wide: 1280px;
+
+  /* ── Motion (Anti-Slop: spring physics) ── */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-tactile: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --touch-target-min: 44px;
+
+  /* ── Fluid Typography ── */
+  --fs-display: clamp(2rem, 4vw + 0.5rem, 3.25rem);
+  --fs-h1: clamp(1.625rem, 3vw + 0.25rem, 2.375rem);
+  --fs-h2: clamp(1.25rem, 2vw + 0.2rem, 1.625rem);
+  --fs-h3: clamp(1.05rem, 1.5vw + 0.15rem, 1.25rem);
+  --fs-body: clamp(0.875rem, 0.2vw + 0.825rem, 0.965rem);
+
+  /* ── Density ── */
+  --density: comfortable;
+  --sp-card-padding: var(--sp-5, 20px);
+  --sp-card-gap: var(--sp-3, 12px);
+  --r-card-inner: var(--r-lg, 14px);
+  --fs-stat-val: 28px;
+
+  /* ── Tabular Nums ── */
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ── Density Modes ── */
+[data-density="compact"] {
+  --density: compact;
+  --sp-card-padding: 12px;
+  --sp-card-gap: 8px;
+  --r-card-inner: 10px;
+  --fs-stat-val: 22px;
+}
+[data-density="comfortable"] {
+  --density: comfortable;
+  --sp-card-padding: 20px;
+  --sp-card-gap: 12px;
+  --r-card-inner: 14px;
+  --fs-stat-val: 28px;
+}
+[data-density="spacious"] {
+  --density: spacious;
+  --sp-card-padding: 28px;
+  --sp-card-gap: 16px;
+  --r-card-inner: 18px;
+  --fs-stat-val: 34px;
+}

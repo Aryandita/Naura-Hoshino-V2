@@ -136,14 +136,14 @@ test("survivalUIHelper - Patterns A, B, and C Components V2", () => {
     thirst: 75,
     survival_level: 3,
     survival_xp: 150,
-    starFragments: 1200,
-    coupons: 5,
+    sukamajuCoins: 1200,
+    scholarshipVouchers: 5,
     inGameDay: 4,
     inGameHour: 10,
     currentLocation: "desa_sukamaju",
   };
   const mockProfile = {
-    economy_wallet: 500,
+    pratamaDollars: 500,
   };
 
   // Pattern A: Status Dashboard Card

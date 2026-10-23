@@ -83,8 +83,8 @@ module.exports = [
         const losePower = challengerWins ? tgPower : chPower;
 
         // Hadiah partisipasi persahabatan duel
-        await cacheManager.incrementUserSurvival(winnerId, "starFragments", 25).catch(() => {});
-        await cacheManager.incrementUserSurvival(loserId, "starFragments", 5).catch(() => {});
+        await cacheManager.incrementUserSurvival(winnerId, "sukamajuCoins", 25).catch(() => {});
+        await cacheManager.incrementUserSurvival(loserId, "sukamajuCoins", 5).catch(() => {});
 
         const resultPayload = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#10B981",

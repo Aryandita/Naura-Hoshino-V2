@@ -359,12 +359,12 @@ function buildContainerV2({
   }
   rowsArray = sanitizedRows;
 
-  if (allowCleanup && !seenCustomIds.has("msg_cleanup")) {
+if (allowCleanup && !seenCustomIds.has("msg_cleanup")) {
     const cleanupBtn = {
       type: 2, // BUTTON
       style: 2, // SECONDARY
       custom_id: "msg_cleanup",
-      label: "Bersihkan (+5 NSF)",
+      label: "Bersihkan (+3 SC)",
       emoji: { name: "??" },
     };
 
@@ -394,13 +394,13 @@ function buildContainerV2({
     rowsArray.forEach((rowJson) => containerComponents.push(rowJson));
   }
 
-  // -- Indikator Auto-Delete Countdown --
+// -- Indikator Auto-Delete Countdown --
   if (typeof expiresInSeconds === "number" && expiresInSeconds > 0) {
     const expireTimestamp =
       Math.floor(Date.now() / 1000) + Math.round(expiresInSeconds);
     containerComponents.push(
       textDisplay(
-        `-# ? Pesan ini otomatis terhapus <t:${expireTimestamp}:R> atau klik tombol sapu untuk upah +5 NSF.`,
+        `-# ? Pesan ini otomatis terhapus <t:${expireTimestamp}:R> atau klik tombol sapu untuk upah +3 SC.`,
       ),
     );
   }

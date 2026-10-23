@@ -227,7 +227,7 @@ async function renderBirthdayCard(data) {
     // Three Reward Badges
     const rewardPills = [
       { icon: "✨", text: "1.000 Star Fragments", color: "#38BDF8" },
-      { icon: "🎟️", text: "3 Naura Coupons", color: "#FCD34D" },
+      { icon: "🎟️", text: "3 Voucher Beasiswa", color: "#FCD34D" },
       { icon: "🎂", text: "1 Kue Tart Kafe", color: "#F472B6" },
     ];
 

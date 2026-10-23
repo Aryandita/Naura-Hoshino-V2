@@ -2,10 +2,15 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+  ButtonBuilder,
+} = require("discord.js");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
-const { buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const { buildErrorContainerV2, buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const {
   getUserPremiumTier,
   getMinigameMultiplier,
@@ -76,11 +81,11 @@ async function runMinigameLogic(interaction) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("minigame")
-    .setDescription("🎮 Buka Arena Minigame dan Arcade interaktif Naura Hoshino")
+    .setDescription("🎮 [DEPRECATED] Gunakan /arcade untuk bermain game dengan Medali Permainan (MP)")
     .addSubcommand((sub) =>
       sub
         .setName("blackjack")
-        .setDescription("🃏 Bermain Blackjack 21 kartu standar melawan dealer Naura")
+        .setDescription("🃏 [DEPRECATED] Bermain Blackjack - gunakan /arcade play blackjack")
         .addIntegerOption((opt) =>
           opt
             .setName("taruhan")
@@ -93,7 +98,7 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("typerace")
-        .setDescription("⌨️ Uji kecepatan mengetik WPM berbatas waktu")
+        .setDescription("⌨️ [DEPRECATED] Type Race - gunakan /arcade play typerace")
         .addStringOption((opt) =>
           opt
             .setName("kesulitan")
@@ -115,50 +120,49 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    const subcommand = interaction.options?.getSubcommand?.(false);
-    if (subcommand) {
-      if (!interaction.deferred && !interaction.replied) {
-        await interaction.deferReply();
-      }
-      return runMinigameLogic(interaction);
-    }
-
-    const { buildInteractiveHubPayload } = require("../../src/utils/hubMenuHelper");
-    const payload = buildInteractiveHubPayload({
-      title: "🎮 Naura Arcade dan Minigame Arena",
-      authorName: "Naura Minigames Hub",
+    // Show deprecation notice and redirect to /arcade
+    const payload = buildContainerV2({
+      accentColorHex: "#F59E0B",
+      authorName: "Naura Arcade",
+      title: "⚠️ Perintah /minigame Telah Dipindahkan",
+      iconURL: interaction.user.displayAvatarURL(),
       description: [
-        "Selamat datang di **Arena Minigame Naura**! ✨",
-        "Pilih tantangan asah otak, game refleks, atau adu insting bersama pemain lain untuk memenangkan hadiah **NSF** dan skor peringkat.",
+        `Halo **${interaction.user.displayName || interaction.user.username}**! 👋`,
         "",
-        "💡 *Gunakan tombol pintas atau pilih game dari menu dropdown di bawah untuk mulai bermain.*",
+        `Perintah \`/minigame\` telah **dikonsolidasikan** ke dalam sistem **Arcade** baru! 🎮`,
+        "",
+        `### ✨ Apa yang Baru?`,
+        `- Semua game sekarang menggunakan **Medali Permainan (MP)** sebagai mata uang`,
+        `- Biaya main: **5 MP** per game`,
+        `- Menang: **+25 MP** | Seri: **+5 MP** | Kalah: **0 MP**`,
+        `- Klaim **50 MP gratis** setiap hari dengan \`/arcade daily\``,
+        "",
+        `### 🎯 Cara Menggunakan`,
+        `\`/arcade hub\`, Buka menu pilih game`,
+        `\`/arcade play <game>\`, Main game langsung`,
+        `\`/arcade daily\`, Klaim hadiah harian`,
+        `\`/arcade leaderboard\`, Lihat peringkat`,
+        `\`/arcade profile\`, Cek saldo & status`,
+        "",
+        `-# Command ini akan dihapus di versi mendatang. Segera beralih ke /arcade!`,
       ].join("\n"),
-      accentColorHex: "#9B59B6",
-      quickButtons: [
-        { id: "minesweeper", label: "Minesweeper", emoji: "💣", style: ButtonStyle.Danger },
-        { id: "arcade", label: "Arcade Games", emoji: "🕹️", style: ButtonStyle.Primary },
-        { id: "math", label: "Kuis Matematika", emoji: "🧮", style: ButtonStyle.Success },
+      buttonsRow: [
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("redirect_arcade_hub")
+            .setLabel("🎮 Buka Arcade Hub")
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji("🕹️"),
+          new ButtonBuilder()
+            .setCustomId("redirect_arcade_daily")
+            .setLabel("🎁 Klaim Daily (+50 MP)")
+            .setStyle(ButtonStyle.Success)
+            .setEmoji("🏅"),
+        ),
       ],
-      selectOptions: [
-        { value: "blackjack", label: "Blackjack 21", emoji: "🃏", description: "Bermain kartu 21 melawan dealer Naura" },
-        { value: "typerace", label: "TypeRacer", emoji: "⌨️", description: "Uji kecepatan mengetik WPM berbatas waktu" },
-        { value: "minesweeper", label: "Minesweeper", emoji: "💣", description: "Bongkar papan ranjau klasik tanpa meledak" },
-        { value: "arcade", label: "Arcade Suite", emoji: "🕹️", description: "Kumpulan mini games seru dan refleks cepat" },
-        { value: "math", label: "Matematika Cepat", emoji: "🧮", description: "Uji kecepatan berhitung di bawah tekanan waktu" },
-        { value: "trivia", label: "Kuis Trivia AI", emoji: "🧠", description: "Kuis pengetahuan umum dari berbagai topik" },
-        { value: "akinator", label: "Akinator AI", emoji: "🧞", description: "Tebak karakter yang sedang kamu pikirkan" },
-        { value: "hangman", label: "Hangman", emoji: "🔤", description: "Tebak kata huruf per huruf sebelum tali terpasang" },
-        { value: "memory", label: "Memory Match", emoji: "🎴", description: "Cocokkan pasangan emoji yang tersembunyi" },
-        { value: "tebakkata", label: "Tebak Kata Anagram", emoji: "🔠", description: "Susun kembali huruf yang teracak menjadi kata benar" },
-        { value: "rps", label: "Batu Gunting Kertas", emoji: "✂️", description: "Adu insting klasik melawan AI atau teman" },
-        { value: "tictactoe", label: "Tic-Tac-Toe", emoji: "❌", description: "Adu taktik 3x3 PvP atau lawan Bot" },
-        { value: "tod", label: "Truth or Dare", emoji: "🎭", description: "Permainan kejujuran dan tantangan seru" },
-        { value: "leaderboard", label: "Papan Peringkat", emoji: "🏆", description: "Lihat pemain terbaik di server" },
-      ],
-      category: "minigame",
-      userId: interaction.user.id,
-      lang: interaction.localeLang,
+      footerText: "Naura Hoshino Ecosystem • Migrasi ke Arcade System v2",
     });
+
     return interaction.reply(payload);
   },
 

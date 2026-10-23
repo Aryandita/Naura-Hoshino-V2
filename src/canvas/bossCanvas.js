@@ -179,11 +179,11 @@ async function drawBossCard(bossData) {
     ctx.fillText(`⚔️ DPS Strike: ${dpsCount} petualang`, 55, cardY + 125);
     ctx.fillText(`🔮 Buffers: ${buffersCount} petualang`, 55, cardY + 155);
 
-    const pool = bossData.rewardsPool || { starFragments: 5000, coupons: 30 };
+    const pool = bossData.rewardsPool || { sukamajuCoins: 5000, scholarshipVouchers: 30 };
     ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
     ctx.fillStyle = "#FFD700";
     ctx.fillText(
-      `💎 Pool: ${Number(pool.starFragments || 5000).toLocaleString("id-ID")} ⭐ | ${pool.coupons || 30} 🎟️`,
+      `💎 Pool: ${Number(pool.sukamajuCoins || 5000).toLocaleString("id-ID")} ⭐ | ${pool.scholarshipVouchers || 30} 🎟️`,
       55,
       cardY + 190,
     );

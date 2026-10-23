@@ -1745,5 +1745,36 @@
       }
     </script>
 
+    <!-- Floating Draggable Avatar -->
+    <script type="module">
+      import '/src/components/naura-floating-avatar.js';
+      
+      // Initialize floating avatar after page load
+      window.addEventListener('DOMContentLoaded', () => {
+        const floatingAvatar = document.createElement('naura-floating-avatar');
+        document.body.appendChild(floatingAvatar);
+        
+        // Update avatar from user data if available
+        const updateAvatarFromUser = () => {
+          const sidebarAvatar = document.getElementById('sidebarAvatar');
+          if (sidebarAvatar && sidebarAvatar.src && !sidebarAvatar.src.includes('data:image/svg')) {
+            floatingAvatar.setAvatar(sidebarAvatar.src);
+          }
+        };
+        
+        // Check periodically for user login
+        const checkInterval = setInterval(() => {
+          const userName = document.getElementById('sidebarUserName');
+          if (userName && userName.textContent !== 'Guest') {
+            updateAvatarFromUser();
+            clearInterval(checkInterval);
+          }
+        }, 1000);
+        
+        // Stop checking after 30 seconds
+        setTimeout(() => clearInterval(checkInterval), 30000);
+      });
+    </script>
+
   </body>
 </html>
