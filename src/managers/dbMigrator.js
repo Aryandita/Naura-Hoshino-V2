@@ -335,6 +335,14 @@ const MIGRATIONS = [
     sql: "ALTER TABLE user_profiles ADD COLUMN medaliPermainan INT DEFAULT 100;",
     pgSql: 'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "medaliPermainan" INTEGER DEFAULT 100;',
   },
+  {
+    id: "v50_create_story_progress_and_user_npcs",
+    description:
+      "Buat tabel user_npcs, story_progress, dan kolom storyProgress serta roamStats pada UserSurvivals",
+    sql: "CREATE TABLE IF NOT EXISTS user_npcs (userId VARCHAR(191) NOT NULL, npcId VARCHAR(191) NOT NULL, affection INT DEFAULT 0, relationshipLevel INT DEFAULT 0, lastInteraction DATETIME DEFAULT NULL, dailyGifts INT DEFAULT 0, PRIMARY KEY (userId, npcId)); CREATE TABLE IF NOT EXISTS story_progress (userId VARCHAR(191) NOT NULL PRIMARY KEY, currentArc INT DEFAULT 1, currentChapter INT DEFAULT 1, alignment VARCHAR(32) DEFAULT 'neutral', unlockedLore JSON DEFAULT NULL, completedScenes JSON DEFAULT NULL, flags JSON DEFAULT NULL, choices JSON DEFAULT NULL, unlockedBackstories JSON DEFAULT NULL, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP); ALTER TABLE UserSurvivals ADD COLUMN storyProgress JSON DEFAULT NULL; ALTER TABLE UserSurvivals ADD COLUMN roamStats JSON DEFAULT NULL;",
+    pgSql:
+      'CREATE TABLE IF NOT EXISTS "user_npcs" ("userId" VARCHAR(191) NOT NULL, "npcId" VARCHAR(191) NOT NULL, "affection" INTEGER DEFAULT 0, "relationshipLevel" INTEGER DEFAULT 0, "lastInteraction" TIMESTAMPTZ DEFAULT NULL, "dailyGifts" INTEGER DEFAULT 0, PRIMARY KEY ("userId", "npcId")); CREATE TABLE IF NOT EXISTS "story_progress" ("userId" VARCHAR(191) NOT NULL PRIMARY KEY, "currentArc" INTEGER DEFAULT 1, "currentChapter" INTEGER DEFAULT 1, "alignment" VARCHAR(32) DEFAULT \'neutral\', "unlockedLore" JSON DEFAULT NULL, "completedScenes" JSON DEFAULT NULL, "flags" JSON DEFAULT NULL, "choices" JSON DEFAULT NULL, "unlockedBackstories" JSON DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP); ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "storyProgress" JSON DEFAULT NULL; ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "roamStats" JSON DEFAULT NULL;',
+  },
 ];
 
 /**

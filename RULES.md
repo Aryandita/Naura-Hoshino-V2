@@ -1,6 +1,6 @@
 # 📜 NAURA HOSHINO, Repository Governance & Architecture Rules
 
-> **Versi:** 2.3.0 · **Engine:** 2.3.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
+> **Versi:** 2.4.0 · **Engine:** 2.4.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!IMPORTANT]
@@ -10,7 +10,7 @@
 > - [`RULES.md`](RULES.md) (Dokumen ini): Sumber kebenaran untuk arsitektur teknis, hukum rekayasa kode, dan standar keamanan (*How & Governance*).
 > - [`AGENTS.md`](AGENTS.md): Sumber kebenaran untuk navigasi repositori, alur eksekusi, dan SOP agen AI (*Workflow & Navigation*).
 > - [`README.md`](README.md): Sumber kebenaran untuk gambaran umum publik dan panduan instalasi (*Portal & Quickstart*).
-> - `package.json`: Sumber kebenaran versi dan daftar dependensi. `src/config/env.js`: Sumber kebenaran variabel environment. `TODO.md`: Sumber kebenaran prioritas sprint. [`SECURITY.md`](SECURITY.md): Kebijakan pelaporan kerentanan dan standar keamanan GitHub.
+> - `package.json`: Sumber kebenaran mutlak versi ekosistem (`version: 2.4.0`) dan dependensi. `src/config/env.js`: Sumber kebenaran variabel environment. `TODO.md`: Sumber kebenaran prioritas sprint. [`SECURITY.md`](SECURITY.md): Kebijakan pelaporan kerentanan dan standar keamanan GitHub.
 
 ---
 
@@ -18,7 +18,7 @@
 
 | Topik                   | Aturan Pokok                                                                              | Referensi / Lokasi |
 | ----------------------- | ----------------------------------------------------------------------------------------- | ------------------ |
-| **Format Versi**        | Standar X.Y.Z (X=Era/Generasi, Y=Major Update, Z=Minor Update/Patch)                      | Bagian 1.1         |
+| **Format & SSOT Versi** | Versi dipusatkan di `package.json`, format X.Y.Z (X=Era, Y=Major, Z=Patch)                | Bagian 1.1         |
 | **Gaya Kode**           | CommonJS, indentasi 4 spasi, semicolon wajib, tanpa em dash (`\u2014`)                    | Bagian 1.1         |
 | **Commit & Branch**     | `<emoji> <tipe>: <deskripsi singkat>`, branch `main` (prod), `dev`, `feature/*`           | Bagian 1.2         |
 | **Keamanan**            | Jangan pernah commit `.env`, timingSafeEqual untuk webhook, batasi eval                   | Bagian 1.3         |
@@ -37,7 +37,7 @@
 | **Interaction Pipeline**| Managed collector & pagination (`interactionPipeline.js`), atomic rollback (`transactionHelper.js`) | Bagian 1.15 |
 | **SSOT Design Tokens**  | Unified tokens (`src/config/tokens/designTokens.js`) untuk Discord Int, Hex, RGB, dan CSS Var | Bagian 1.16 |
 | **Fitur Premium Non-P2W** | Ingestion Dual-Rail (Saweria/Trakteer QRIS + Discord Native), constant-time HMAC, etika non-P2W | Bagian 1.17 |
-| **Polyglot DB**         | Supabase (PostgreSQL relasional), MongoDB (dokumen/log), Redis (cache), SQLite (fallback) | Bagian 1.7         |
+| **Polyglot DB & Live Data**| Supabase PG, MongoDB, Redis. Wajib data riil di dashboard produksi tanpa mock override  | Bagian 1.7         |
 | **Migrasi Skema**       | Eksklusif di `dbMigrator.js` bernomor (46 migrasi) + ledger; DILARANG ALTER TABLE manual | Bagian 1.7.1 & 3.2 |
 | **Pterodactyl Panel**   | `CMD_RUN` tetap `npm start`, migrasi via `prestart` di `package.json`                     | Bagian 3.1         |
 | **Senior Laws**         | 7 Coding Laws of Senior Developer (Clean Architecture & Flat Flow)                        | Bagian 2.1         |
@@ -51,6 +51,7 @@
 | Aturan                   | Penjelasan                                                                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
 | **Standar Versi X.Y.Z**  | X = Generasi Platform (2), Y = Major Architecture Update, Z = Minor Update/Patch. Seragam di seluruh repo dan dokumen.        |
+| **Pemusatan Versi SSOT** | `package.json` adalah Single Source of Truth mutlak untuk nomor versi rilis (`2.4.0`). Modul `src/config/version.js` dan `src/config/env.js` membaca versi secara dinamis dari `package.json`. Update versi berikutnya cukup dilakukan di `package.json`. |
 | **Bahasa Kode**          | JavaScript (CommonJS `require` / `module.exports`). Tidak menggunakan TypeScript atau ESM pada bot runtime.                    |
 | **Dynamic Import**       | `await import()` diizinkan dan dianjurkan untuk lazy-load dependensi berat atau library ESM-only (seperti Three.js addons).    |
 | **Bahasa Komentar**      | Bahasa Indonesia untuk komentar inline, docstring, dan pesan log. Bahasa Inggris untuk nama variabel, fungsi, dan kelas.       |
@@ -283,6 +284,12 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 
 - Menggunakan modul bawaan `node:sqlite` di Node 24.
 - Dipakai secara otomatis jika Supabase dan Redis tidak dapat dijangkau. Data darurat disinkronkan kembali saat koneksi cloud pulih via `syncFallbackToMySQL()`.
+
+### 1.7.5 Konektivitas Database Produksi & Zero-Mock Guarantee
+
+- Seluruh endpoint API dashboard (`/api/realtime/*`, `/api/health`, `/api/economy/*`, `/api/stats/live`, dll.) WAJIB terhubung langsung dan menyajikan data riil hasil query database PostgreSQL (Supabase / Sequelize), MongoDB, dan Redis saat berjalan di lingkungan produksi (GitHub CI/CD, Pterodactyl VPS, atau cloud hosting).
+- Dilarang menimpa hasil query database yang valid dengan data tiruan (mock) atau angka hardcoded statis.
+- Nilai fallback tiruan hanya diizinkan bekerja secara defensif ketika database fisik dalam kondisi terputus (`!dbConnected`) atau saat isolasi pengujian sandbox lokal.
 
 ## 1.8 Caching & Akses Pengaturan Server
 

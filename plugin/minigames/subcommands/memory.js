@@ -113,7 +113,7 @@ module.exports = {
               ),
             );
           }
-        }, 1000);
+        }, 1000).unref?.();
       } else {
         await i.update(
           renderMemory(

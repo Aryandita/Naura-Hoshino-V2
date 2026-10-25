@@ -122,6 +122,7 @@ export async function loadModel(modelPath = "/models/naura.glb", onProgress = nu
   const isVrm = String(modelPath).toLowerCase().endsWith(".vrm");
   const candidates = [
     modelPath,
+    "/models/naura_animated.glb",
     "/models/naura.glb",
     "/models/naura%20NEW.glb",
     "/models/naura%20NEW.vrm",

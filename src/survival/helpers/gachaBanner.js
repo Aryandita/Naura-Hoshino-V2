@@ -121,7 +121,7 @@ async function showGachaBannerShop(interaction, user) {
         footerText: ui.getFooter("survival"),
       });
 
-      await i.update({ ...rewardPayload, components: [] });
+      await i.update(rewardPayload);
     }
   });
 }

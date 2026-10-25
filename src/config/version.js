@@ -6,8 +6,15 @@
  * @copyright (c) 2026 Aryandita Praftian
  */
 
-const BOT_VERSION = "2.3.0";
-const ENGINE_VERSION = "2.3.0";
+let packageJson = {};
+try {
+  packageJson = require("../../package.json");
+} catch {
+  packageJson = { version: "2.4.0" };
+}
+
+const BOT_VERSION = packageJson.version || "2.4.0";
+const ENGINE_VERSION = packageJson.version || "2.4.0";
 const CODENAME = "Celestial Bloom";
 const AUTHOR = "Aryandita";
 

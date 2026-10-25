@@ -314,7 +314,7 @@ function addRpgSubcommands(builder) {
         sub
           .setName("trade")
           .setDescription(
-            "\ud83e\udd1d P2P Transfer Star Fragment dengan pemain lain",
+            "\ud83e\udd1d P2P Transfer Sukamaju Koin (SC) dengan pemain lain",
           )
           .addUserOption((opt) =>
             opt

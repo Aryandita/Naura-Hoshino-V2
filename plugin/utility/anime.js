@@ -5,185 +5,281 @@ const {
   ButtonStyle,
   ComponentType,
   MessageFlags,
+  AttachmentBuilder,
 } = require("discord.js");
 const axios = require("axios");
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const {
   buildContainerV2,
   buildErrorContainerV2,
+  buildLoadingContainerV2,
+  disableContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
+const { getOrCreateBreaker, CircuitBreakerOpenError } = require("../../src/utils/circuitBreaker");
+const { ApiResponseCache } = require("../../src/utils/apiResponseCache");
+
+const jikanBreaker = getOrCreateBreaker("anime-jikan", {
+  failureThreshold: 3,
+  resetTimeout: 120000,
+  halfOpenMaxAttempts: 2,
+});
+
+const anilistBreaker = getOrCreateBreaker("anime-anilist", {
+  failureThreshold: 5,
+  resetTimeout: 60000,
+  halfOpenMaxAttempts: 3,
+});
+
+const kitsuBreaker = getOrCreateBreaker("anime-kitsu", {
+  failureThreshold: 5,
+  resetTimeout: 60000,
+  halfOpenMaxAttempts: 3,
+});
+
+const animeCache = new ApiResponseCache({ ttl: 300000, maxSize: 200 });
 
 /**
- * Fetch anime dari Jikan (MyAnimeList)
+ * Fetch anime dari Jikan (MyAnimeList) dengan Circuit Breaker
  */
 async function fetchFromJikan(query) {
-  const response = await axios.get(
-    `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=5`,
-    { timeout: 5000 },
-  );
+  return jikanBreaker.execute(async () => {
+    const response = await axios.get(
+      `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=5`,
+      { timeout: 5000 },
+    );
 
-  if (
-    !response.data ||
-    !response.data.data ||
-    response.data.data.length === 0
-  ) {
-    return null;
-  }
+    if (
+      !response.data ||
+      !response.data.data ||
+      response.data.data.length === 0
+    ) {
+      return null;
+    }
 
-  return response.data.data.map((item) => ({
-    title: item.title_english || item.title,
-    titleJapanese: item.title_japanese || "",
-    synopsis: item.synopsis || "Tidak ada sinopsis.",
-    genres:
-      item.genres && item.genres.length > 0
-        ? item.genres.map((g) => g.name).join(", ")
+    return response.data.data.map((item) => ({
+      title: item.title_english || item.title,
+      titleJapanese: item.title_japanese || "",
+      synopsis: item.synopsis || "Tidak ada sinopsis.",
+      genres:
+        item.genres && item.genres.length > 0
+          ? item.genres.map((g) => g.name).join(", ")
+          : "Anime",
+      score: item.score
+        ? `${ui.getEmoji("star") || "⭐"} **${item.score}** / 10`
         : "N/A",
-    score: item.score
-      ? `${ui.getEmoji("star") || "⭐"} **${item.score}** / 10`
-      : "N/A",
-    type: item.type || "N/A",
-    episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
-    status: item.status || "N/A",
-    ageRating: item.rating || "N/A",
-    url: item.url || null,
-    sourceName: "MyAnimeList",
-  }));
+      rawScore: item.score || "8.5",
+      type: item.type || "TV",
+      episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
+      status: item.status || "N/A",
+      ageRating: item.rating || "N/A",
+      url: item.url || null,
+      posterURL:
+        item.images?.jpg?.large_image_url ||
+        item.images?.webp?.large_image_url ||
+        item.images?.jpg?.image_url ||
+        null,
+      studio:
+        item.studios && item.studios.length > 0
+          ? item.studios.map((s) => s.name).join(", ")
+          : "N/A",
+      seasonYear:
+        item.season && item.year
+          ? `${item.season.toUpperCase()} ${item.year}`
+          : item.year
+            ? String(item.year)
+            : "N/A",
+      sourceName: "MyAnimeList",
+    }));
+  });
 }
 
 /**
- * Fetch anime dari AniList (GraphQL)
+ * Fetch anime dari AniList (GraphQL) dengan Circuit Breaker
  */
 async function fetchFromAniList(query) {
-  const graphqlQuery = `
-    query ($search: String) {
-      Page(page: 1, perPage: 5) {
-        media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
-          id
-          title {
-            romaji
-            english
-            native
+  return anilistBreaker.execute(async () => {
+    const graphqlQuery = `
+      query ($search: String) {
+        Page(page: 1, perPage: 5) {
+          media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+            id
+            title {
+              romaji
+              english
+              native
+            }
+            description(asHtml: false)
+            averageScore
+            format
+            episodes
+            status
+            genres
+            siteUrl
+            coverImage {
+              extraLarge
+              large
+            }
+            studios(isMain: true) {
+              nodes {
+                name
+              }
+            }
+            season
+            seasonYear
           }
-          description(asHtml: false)
-          averageScore
-          format
-          episodes
-          status
-          genres
-          siteUrl
         }
       }
-    }
-  `;
+    `;
 
-  const response = await axios.post(
-    "https://graphql.anilist.co",
-    {
-      query: graphqlQuery,
-      variables: { search: query },
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const response = await axios.post(
+      "https://graphql.anilist.co",
+      {
+        query: graphqlQuery,
+        variables: { search: query },
       },
-      timeout: 5000,
-    },
-  );
-
-  const mediaList = response.data?.data?.Page?.media;
-  if (!mediaList || mediaList.length === 0) return null;
-
-  return mediaList.map((item) => {
-    const rawSynopsis = (item.description || "Tidak ada sinopsis.").replace(
-      /<[^>]*>?/gm,
-      "",
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        timeout: 5000,
+      },
     );
-    const scoreVal = item.averageScore
-      ? (item.averageScore / 10).toFixed(1)
-      : null;
-    return {
-      title: item.title.english || item.title.romaji,
-      titleJapanese: item.title.native || "",
-      synopsis: rawSynopsis,
-      genres:
-        item.genres && item.genres.length > 0 ? item.genres.join(", ") : "N/A",
-      score: scoreVal
-        ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10`
-        : "N/A",
-      type: item.format || "ANIME",
-      episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
-      status: item.status ? item.status.replace("_", " ") : "N/A",
-      ageRating: "General",
-      url: item.siteUrl || `https://anilist.co/anime/${item.id}`,
-      sourceName: "AniList",
-    };
+
+    const mediaList = response.data?.data?.Page?.media;
+    if (!mediaList || mediaList.length === 0) return null;
+
+    return mediaList.map((item) => {
+      const rawSynopsis = (item.description || "Tidak ada sinopsis.").replace(
+        /<[^>]*>?/gm,
+        "",
+      );
+      const scoreVal = item.averageScore
+        ? (item.averageScore / 10).toFixed(1)
+        : null;
+      return {
+        title: item.title.english || item.title.romaji,
+        titleJapanese: item.title.native || "",
+        synopsis: rawSynopsis,
+        genres:
+          item.genres && item.genres.length > 0 ? item.genres.join(", ") : "Anime",
+        score: scoreVal
+          ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10`
+          : "N/A",
+        rawScore: scoreVal || "8.5",
+        type: item.format || "TV",
+        episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
+        status: item.status ? item.status.replace("_", " ") : "N/A",
+        ageRating: "General",
+        url: item.siteUrl || `https://anilist.co/anime/${item.id}`,
+        posterURL: item.coverImage?.extraLarge || item.coverImage?.large || null,
+        studio: item.studios?.nodes?.[0]?.name || "N/A",
+        seasonYear:
+          item.season && item.seasonYear
+            ? `${item.season} ${item.seasonYear}`
+            : item.seasonYear
+              ? String(item.seasonYear)
+              : "N/A",
+        sourceName: "AniList",
+      };
+    });
   });
 }
 
 /**
- * Fetch anime dari Kitsu.io (REST)
+ * Fetch anime dari Kitsu.io (REST) dengan Circuit Breaker
  */
 async function fetchFromKitsu(query) {
-  const response = await axios.get(
-    `https://kitsu.io/api/edge/anime?filter[text]=${encodeURIComponent(query)}&page[limit]=5`,
-    { timeout: 5000 },
-  );
+  return kitsuBreaker.execute(async () => {
+    const response = await axios.get(
+      `https://kitsu.io/api/edge/anime?filter[text]=${encodeURIComponent(query)}&page[limit]=5`,
+      { timeout: 5000 },
+    );
 
-  const data = response.data?.data;
-  if (!data || data.length === 0) return null;
+    const data = response.data?.data;
+    if (!data || data.length === 0) return null;
 
-  return data.map((item) => {
-    const attr = item.attributes;
-    const scoreVal = attr.averageRating
-      ? (parseFloat(attr.averageRating) / 10).toFixed(1)
-      : null;
-    return {
-      title: attr.titles?.en || attr.titles?.en_jp || attr.canonicalTitle,
-      titleJapanese: attr.titles?.ja_jp || "",
-      synopsis: attr.synopsis || "Tidak ada sinopsis.",
-      genres: "Anime",
-      score: scoreVal
-        ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10`
-        : "N/A",
-      type: (attr.subtype || "TV").toUpperCase(),
-      episodes: attr.episodeCount ? `${attr.episodeCount} Ep` : "Unknown",
-      status: (attr.status || "N/A").toUpperCase(),
-      ageRating: attr.ageRatingGuide || attr.ageRating || "N/A",
-      url: `https://kitsu.io/anime/${item.id}`,
-      sourceName: "Kitsu",
-    };
+    return data.map((item) => {
+      const attr = item.attributes;
+      const scoreVal = attr.averageRating
+        ? (parseFloat(attr.averageRating) / 10).toFixed(1)
+        : null;
+      return {
+        title: attr.titles?.en || attr.titles?.en_jp || attr.canonicalTitle,
+        titleJapanese: attr.titles?.ja_jp || "",
+        synopsis: attr.synopsis || "Tidak ada sinopsis.",
+        genres: "Anime",
+        score: scoreVal
+          ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10`
+          : "N/A",
+        rawScore: scoreVal || "8.5",
+        type: (attr.subtype || "TV").toUpperCase(),
+        episodes: attr.episodeCount ? `${attr.episodeCount} Ep` : "Unknown",
+        status: (attr.status || "N/A").toUpperCase(),
+        ageRating: attr.ageRatingGuide || attr.ageRating || "N/A",
+        url: `https://kitsu.io/anime/${item.id}`,
+        posterURL:
+          attr.posterImage?.large ||
+          attr.posterImage?.original ||
+          attr.posterImage?.medium ||
+          null,
+        studio: "Kitsu Registry",
+        seasonYear: attr.startDate
+          ? String(new Date(attr.startDate).getFullYear())
+          : "N/A",
+        sourceName: "Kitsu",
+      };
+    });
   });
 }
 
 /**
- * Cascade waterfall pencarian anime
+ * Parallel race pencarian anime dengan Cache & Circuit Breaker
+ * Mencoba semua provider secara paralel, ambil yang tercepat berhasil.
+ * Fallback ke waterfall jika semua gagal bersamaan.
  */
 async function searchAnimeWaterfall(query) {
-  try {
-    const jikanResults = await fetchFromJikan(query);
-    if (jikanResults && jikanResults.length > 0) return jikanResults;
-  } catch (err) {
-    logger.warn(
-      `[Anime Search] Jikan API error (${err.message}), beralih ke AniList...`,
-    );
+  const cacheKey = query.toLowerCase().trim();
+  
+  const cached = animeCache.get("anime", { query: cacheKey });
+  if (cached) {
+    logger.debug(`[Anime] Cache hit for "${query}"`);
+    return cached;
   }
 
-  try {
-    const aniListResults = await fetchFromAniList(query);
-    if (aniListResults && aniListResults.length > 0) return aniListResults;
-  } catch (err) {
-    logger.warn(
-      `[Anime Search] AniList API error (${err.message}), beralih ke Kitsu...`,
-    );
-  }
+  const wrapFetch = async (fn, name) => {
+    try {
+      const result = await fn(query);
+      if (result && result.length > 0) {
+        logger.info(`[Anime] ${name} berhasil (parallel race)`);
+        return result;
+      }
+      throw new Error(`${name}: no results`);
+    } catch (err) {
+      if (err instanceof CircuitBreakerOpenError) {
+        logger.warn(`[Anime] ${name} circuit OPEN`);
+      } else {
+        logger.debug(`[Anime] ${name} failed: ${err.message}`);
+      }
+      throw err;
+    }
+  };
 
   try {
-    const kitsuResults = await fetchFromKitsu(query);
-    if (kitsuResults && kitsuResults.length > 0) return kitsuResults;
-  } catch (err) {
-    logger.warn(`[Anime Search] Kitsu API error (${err.message}).`);
+    const result = await Promise.any([
+      wrapFetch(fetchFromJikan, "Jikan"),
+      wrapFetch(fetchFromAniList, "AniList"),
+      wrapFetch(fetchFromKitsu, "Kitsu"),
+    ]);
+    
+    if (result && result.length > 0) {
+      animeCache.set("anime", { query: cacheKey }, result);
+      return result;
+    }
+  } catch {
+    logger.debug(`[Anime] All parallel fetches failed, returning null`);
   }
 
   return null;
@@ -204,7 +300,17 @@ module.exports = {
     ),
 
   async execute(interaction) {
+    const loadingPayload = buildLoadingContainerV2({
+      interaction,
+      authorName: "Naura Anime Intelligence",
+      title: "Mencari Anime...",
+      description: `${ui.getEmoji("loading") || "⏳"} ${ui.getEmoji("naura_thinking") || "🤔"} *Naura sedang mencari anime "${interaction.options.getString("judul")}" di database global...*`,
+      expression: "thinking",
+      withBanner: true,
+      footerText: ui.getFooter("utility"),
+    });
     await interaction.deferReply();
+    await interaction.editReply(loadingPayload);
 
     const query = interaction.options.getString("judul");
 
@@ -213,11 +319,45 @@ module.exports = {
 
       if (!results || results.length === 0) {
         const emptyPayload = buildErrorContainerV2({
-          title: "Tidak Ditemukan",
-          description: `${ui.getEmoji("error") || "❌"} Anime dengan judul **"${query}"** tidak ditemukan di MyAnimeList, AniList, maupun Kitsu.`,
-          footerText: ui.getFooter("core"),
+          interaction,
+          title: "Anime Tidak Ditemukan",
+          description: `${ui.getEmoji("naura_akward") || "😅"} Maaf ya, Naura sudah mencari di MyAnimeList, AniList, dan Kitsu tapi tidak menemukan anime **"${query}"**.\n\n${ui.getEmoji("sparkle") || "✨"} *Coba periksa ejaan judulnya atau gunakan judul bahasa Inggris/Jepang yang lebih umum, ya!*`,
+          expression: "akward",
+          withBanner: true,
+          footerText: ui.getFooter("utility"),
         });
         return interaction.editReply(emptyPayload);
+      }
+
+      const cardCache = new Map();
+
+      async function renderCardForIndex(idx) {
+        if (cardCache.has(idx)) return cardCache.get(idx);
+        const item = results[idx];
+        if (!item) return null;
+        try {
+          const buffer = await canvasWorkerPool.execute("renderAnimeCard", {
+            title: item.title,
+            titleJapanese: item.titleJapanese,
+            posterURL: item.posterURL,
+            score: item.rawScore || item.score,
+            type: item.type,
+            episodes: item.episodes,
+            status: item.status,
+            genres: item.genres,
+            studio: item.studio,
+            seasonYear: item.seasonYear,
+            synopsis: item.synopsis,
+            sourceName: item.sourceName,
+          });
+          if (buffer) {
+            cardCache.set(idx, buffer);
+            return buffer;
+          }
+        } catch (err) {
+          logger.warn("[Anime] Canvas spotlight error: " + (err?.message || err));
+        }
+        return null;
       }
 
       let currentIndex = 0;
@@ -254,7 +394,7 @@ module.exports = {
         return row;
       };
 
-      const buildPayload = (index, disabledButtons = false) => {
+      const buildPayload = (index, disabledButtons = false, buffer = null) => {
         const anime = results[index];
         const japaneseTitle = anime.titleJapanese
           ? `\n*${anime.titleJapanese}*`
@@ -291,18 +431,27 @@ module.exports = {
           },
         ];
 
+        const attachment = buffer
+          ? new AttachmentBuilder(buffer, { name: "anime-spotlight.png" })
+          : null;
+
         return buildContainerV2({
+          interaction,
           accentColorHex: ui.getColor("primary") || "#FFB6C1",
           authorName: `${anime.sourceName} Intelligence (Hasil ${index + 1}/${results.length})`,
           title: anime.title,
-          description: `${japaneseTitle}\n\n${cleanSynopsis}`,
+          description: `${japaneseTitle}\n\n${cleanSynopsis}\n\n> ${ui.getEmoji("naura_happy") || "✨"} *Naura menemukan ${results.length} hasil untuk pencarianmu!*`,
           fields,
+          mediaAttachmentNames: attachment ? ["anime-spotlight.png"] : [],
+          files: attachment ? [attachment] : [],
           buttonsRow: buildButtonsRow(index, disabledButtons),
           footerText: ui.getFooter("utility"),
         });
       };
 
-      const message = await interaction.editReply(buildPayload(currentIndex));
+      const initialBuffer = await renderCardForIndex(currentIndex);
+      const initialPayload = buildPayload(currentIndex, false, initialBuffer);
+      const message = await interaction.editReply(initialPayload);
 
       const collector = message.createMessageComponentCollector({
         componentType: ComponentType.Button,
@@ -311,10 +460,14 @@ module.exports = {
 
       collector.on("collect", async (i) => {
         if (i.user.id !== interaction.user.id) {
-          return i.reply({
-            content: `${ui.getEmoji("cross")} Perintah ini dibuat oleh orang lain. Ketik \`/anime\` untuk mencari anime favoritmu sendiri!`,
-            flags: MessageFlags.Ephemeral,
+          const errPayload = buildErrorContainerV2({
+            interaction: i,
+            title: "Akses Ditolak",
+            description:
+              "Ketik `/anime` untuk mencari anime favoritmu sendiri!",
+            footerText: ui.getFooter("utility"),
           });
+          return i.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
         }
 
         if (i.customId === "anime_prev") {
@@ -323,18 +476,29 @@ module.exports = {
           currentIndex = Math.min(results.length - 1, currentIndex + 1);
         }
 
-        await i.update(buildPayload(currentIndex));
+        const currentBuf = await renderCardForIndex(currentIndex);
+        const nextPayload = buildPayload(currentIndex, false, currentBuf);
+        await i.update(nextPayload);
       });
 
-      collector.on("end", () => {
-        interaction.editReply(buildPayload(currentIndex, true)).catch(() => {});
+      collector.on("end", (_collected, reason) => {
+        if (reason === "time") {
+          const disabledPayload = disableContainerV2(buildPayload(currentIndex, true, null));
+          interaction.editReply(disabledPayload).catch(() => {});
+        }
       });
     } catch (error) {
       logger.error("[Anime Search Error]", error);
+      const isCircuitOpen = error instanceof CircuitBreakerOpenError;
       const errPayload = buildErrorContainerV2({
-        title: "Gagal Koneksi",
-        description: `${ui.getEmoji("error") || "❌"} Terjadi kegagalan saat menghubungkan ke database Anime. Coba lagi nanti.`,
-        footerText: ui.getFooter("core"),
+        interaction,
+        title: isCircuitOpen ? "Server Database Sedang Istirahat" : "Gagal Koneksi",
+        description: isCircuitOpen
+          ? `${ui.getEmoji("naura_sleepy") || "😴"} Server database anime sedang terlalu sibuk dan butuh istirahat sebentar. Coba lagi dalam 1-2 menit ya, Naura tungguin!`
+          : `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, terjadi kegagalan saat menghubungkan ke database Anime. Jaringan mungkin sedang tidak stabil.\n\n${ui.getEmoji("sparkle") || "✨"} *Coba lagi beberapa saat lagi, Naura yakin akan berhasil!*`,
+        expression: isCircuitOpen ? "sleepy" : "cry",
+        withBanner: true,
+        footerText: ui.getFooter("utility"),
       });
       await interaction.editReply(errPayload);
     }

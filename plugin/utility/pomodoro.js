@@ -284,7 +284,7 @@ module.exports = {
         if (i.user.id !== userId) {
           return i.reply({
             content: "❌ Ini bukan sesi Pomodoro milikmu.",
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -298,7 +298,7 @@ module.exports = {
           session.timeLeft = 0;
           return i.reply({
             content: "⏭️ Fase saat ini dilewati!",
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
 

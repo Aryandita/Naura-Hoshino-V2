@@ -219,9 +219,17 @@ module.exports = {
 
   /**
    * Jalankan task berat Canvas dengan mematuhi batas konkurensi (2-3).
-   * @param {Function} task - Fungsi async yang memuat operasi Canvas
+   * Menerima format:
+   * - runWithLimit(taskFn)
+   * - runWithLimit(taskName, taskFn)
+   * @param {string|Function} taskOrName - Nama task atau fungsi task
+   * @param {Function} [maybeTask] - Fungsi async jika argumen pertama adalah string
    */
-  runWithLimit: async function (task) {
+  runWithLimit: async function (taskOrName, maybeTask) {
+    const task = typeof maybeTask === "function" ? maybeTask : taskOrName;
+    if (typeof task !== "function") {
+      throw new TypeError("runWithLimit: expected task function but received " + typeof task);
+    }
     registerFontsOnce();
     await renderSemaphore.acquire();
     try {

@@ -3,7 +3,7 @@ const path = require("path");
 const { logger } = require("../managers/logger");
 
 // Bahasa yang didukung ekosistem Naura. Tambahkan di sini bila ada bahasa baru.
-const SUPPORTED_LANGUAGES = ["id", "en"];
+const SUPPORTED_LANGUAGES = ["id", "en", "ja", "es"];
 const DEFAULT_LANGUAGE = "id";
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 menit
 
@@ -15,6 +15,8 @@ class LanguageManager {
     this.strings = {
       id: {},
       en: {},
+      ja: {},
+      es: {},
     };
 
     // Cache pilihan bahasa per user agar tidak query database di setiap balasan.
@@ -48,7 +50,7 @@ class LanguageManager {
 
   /** Muat ulang seluruh kamus tanpa merestart bot. */
   reload() {
-    this.strings = { id: {}, en: {} };
+    this.strings = { id: {}, en: {}, ja: {}, es: {} };
     this.loadLanguages();
     return this.strings;
   }

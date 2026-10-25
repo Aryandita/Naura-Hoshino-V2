@@ -31,6 +31,152 @@ async function getAuditChannelId(guildId) {
   }
 }
 
+async function executePurge(interaction, amount, targetUser, guild) {
+  try {
+    let deletedCount = 0;
+    let skippedOldCount = 0;
+    let fetchAmount = amount;
+    let lastMessageId = null;
+
+    const statusPayload = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      title: "🧹 Pembersihan Pesan (Purge)",
+      expression: "thinking",
+      description: `${ui.getEmoji("loading") || "⏳"} Sedang menghapus pesan dari channel... Mohon tunggu (0/${amount})`,
+      footerText: ui.getFooter("core"),
+    });
+    await interaction.editReply(statusPayload);
+
+    while (fetchAmount > 0) {
+      const fetchLimit = Math.min(fetchAmount, 100);
+      const options = { limit: fetchLimit };
+      if (lastMessageId) options.before = lastMessageId;
+
+      let messages = await interaction.channel.messages.fetch(options);
+      if (messages.size === 0) break;
+
+      lastMessageId = messages.last().id;
+
+      if (targetUser) {
+        messages = messages.filter((m) => m.author.id === targetUser.id);
+      }
+
+      if (messages.size > 0) {
+        const deleted = await interaction.channel.bulkDelete(
+          messages,
+          true,
+        );
+        deletedCount += deleted.size;
+
+        if (deleted.size < messages.size) {
+          skippedOldCount += (messages.size - deleted.size);
+          break;
+        }
+      }
+
+      fetchAmount -= fetchLimit;
+
+      if (fetchAmount > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const updatePayload = buildContainerV2({
+          accentColorHex: ui.getColor("primary") || "#FFB6C1",
+          title: "🧹 Pembersihan Pesan (Purge)",
+          expression: "thinking",
+          description: `${ui.getEmoji("loading") || "⏳"} Sedang menghapus pesan... (${deletedCount}/${amount})`,
+          footerText: ui.getFooter("core"),
+        });
+        await interaction.editReply(updatePayload).catch(() => {});
+      }
+    }
+
+    const auditChannelId = await getAuditChannelId(guild.id);
+
+    const finalPayload = buildContainerV2({
+      accentColorHex: ui.getColor("success") || "#22c55e",
+      title: "✅ Pembersihan Pesan (Purge) Selesai",
+      expression: "success",
+      description: [
+        `Proses pembersihan riwayat pesan selesai dilaksanakan.`,
+        ``,
+        `🗑️ **Pesan Terhapus:** **${deletedCount}** pesan`,
+        targetUser ? `🎯 **Filter Pengguna:** <@${targetUser.id}> (\`${targetUser.tag || targetUser.username}\`)` : null,
+        skippedOldCount > 0 ? `⚠️ **Dilewati (>14 hari):** ${skippedOldCount} pesan` : null,
+        `📍 **Channel:** <#${interaction.channel.id}>`,
+        `🛡️ **Moderator:** <@${interaction.user.id}>`,
+        `⏱️ **Waktu Selesai:** <t:${Math.floor(Date.now() / 1000)}:R>`,
+        auditChannelId ? `\n-# 📝 Log moderasi terkirim ke <#${auditChannelId}>` : null,
+      ].filter(Boolean).join("\n"),
+      footerText: ui.getFooter("core"),
+    });
+
+    await interaction.editReply(finalPayload);
+    await sendModLog(guild, finalPayload);
+  } catch (error) {
+    logger.error("[Purge Error]:", error);
+    const errPayload = buildErrorContainerV2({
+      title: "Gagal Melakukan Purge",
+      description: `${ui.getEmoji("error") || "❌"} Terjadi kesalahan saat menghapus pesan: ${error.message}`,
+      footerText: ui.getFooter("core"),
+    });
+    await interaction.editReply(errPayload);
+  }
+}
+
+async function executeRoleAll(interaction, targetRole, action, members) {
+  let successCount = 0;
+  let skipCount = 0;
+
+  const processingPayload = buildContainerV2({
+    accentColorHex: ui.getColor("primary") || "#FFB6C1",
+    title: `${ui.getEmoji("loading") || "⏳"} Memproses Role All`,
+    description: `${ui.getEmoji("loading") || "⏳"} Sedang memproses ${action === "add" ? "penambahan" : "pencabutan"} role **${targetRole.name}** ke ${members.size} member...`,
+    footerText: ui.getFooter("core"),
+  });
+
+  await interaction.editReply(processingPayload);
+
+  for (const [, member] of members) {
+    try {
+      if (action === "add") {
+        if (!member.roles.cache.has(targetRole.id)) {
+          await member.roles.add(targetRole);
+          successCount++;
+        } else skipCount++;
+      } else {
+        if (member.roles.cache.has(targetRole.id)) {
+          await member.roles.remove(targetRole);
+          successCount++;
+        } else skipCount++;
+      }
+    } catch (e) {
+      if (e?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(e.code)) {
+        // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+      } else {
+        logger.debug("[moderation:executeRoleAll] Pemanggilan Discord API gagal: " + (e?.message || e));
+      }
+    }
+  }
+
+  const finalPayload = buildContainerV2({
+    accentColorHex: ui.getColor("success") || "#22c55e",
+    title: `${ui.getEmoji("success") || "✅"} Operasi Role-All Selesai`,
+    description: [
+      `Operasi massal role telah selesai dilaksanakan.`,
+      "",
+      `🎯 **Role:** <@&${targetRole.id}>`,
+      `📋 **Aksi:** ${action === "add" ? "Penambahan" : "Pencabutan"}`,
+      `✅ **Berhasil:** ${successCount} member`,
+      `⏭️ **Dilewati:** ${skipCount} member`,
+      `🛡️ **Moderator:** <@${interaction.user.id}>`,
+      `⏱️ **Waktu Selesai:** <t:${Math.floor(Date.now() / 1000)}:R>`,
+    ].join("\n"),
+    footerText: ui.getFooter("core"),
+  });
+
+  await interaction.editReply(finalPayload);
+  await sendModLog(interaction.guild, finalPayload);
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("moderation")
@@ -341,96 +487,89 @@ module.exports = {
       const amount = interaction.options.getInteger("jumlah");
       const targetUser = interaction.options.getUser("user");
 
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      // Konfirmasi wajib untuk purge > 100 pesan
+      if (amount > 100) {
+        const confirmRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`confirm_purge_${amount}_${targetUser?.id || "all"}`)
+            .setLabel(`Ya, Hapus ${amount} Pesan`)
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji("🗑️"),
+          new ButtonBuilder()
+            .setCustomId("cancel_purge")
+            .setLabel("Batalkan")
+            .setStyle(ButtonStyle.Secondary),
+        );
 
-      try {
-        let deletedCount = 0;
-        let skippedOldCount = 0;
-        let fetchAmount = amount;
-        let lastMessageId = null;
-
-        const statusPayload = buildContainerV2({
-          accentColorHex: ui.getColor("primary") || "#FFB6C1",
-          title: "🧹 Pembersihan Pesan (Purge)",
-          expression: "thinking",
-          description: `${ui.getEmoji("loading") || "⏳"} Sedang menghapus pesan dari channel... Mohon tunggu (0/${amount})`,
+        const confirmPayload = buildContainerV2({
+          accentColorHex: "#F97316",
+          title: "⚠️ Konfirmasi Pembersihan Massal",
+          expression: "warning",
+          description: [
+            `Anda akan menghapus **${amount} pesan** dari channel ini.`,
+            targetUser ? `🎯 **Filter:** Hanya pesan dari <@${targetUser.id}>` : "🎯 **Filter:** Semua pesan",
+            "",
+            "⚠️ **Peringatan:**",
+            "- Pesan lebih dari 14 hari tidak bisa dihapus via bulk delete",
+            "- Tindakan ini tidak dapat dibatalkan",
+            "- Pastikan jumlah sudah benar sebelum konfirmasi",
+            "",
+            "Klik tombol di bawah dalam 30 detik untuk melanjutkan.",
+          ].join("\n"),
+          buttonsRow: confirmRow,
           footerText: ui.getFooter("core"),
         });
-        await interaction.editReply(statusPayload);
 
-        while (fetchAmount > 0) {
-          const fetchLimit = Math.min(fetchAmount, 100);
-          const options = { limit: fetchLimit };
-          if (lastMessageId) options.before = lastMessageId;
+        const reply = await interaction.reply({
+          ...confirmPayload,
+          flags: MessageFlags.Ephemeral,
+          fetchReply: true,
+        });
 
-          let messages = await interaction.channel.messages.fetch(options);
-          if (messages.size === 0) break;
+        const collector = reply.createMessageComponentCollector({
+          componentType: ComponentType.Button,
+          time: 30000,
+          max: 1,
+        });
 
-          lastMessageId = messages.last().id;
+        collector.on("collect", async (i) => {
+          if (i.user.id !== interaction.user.id) return;
 
-          if (targetUser) {
-            messages = messages.filter((m) => m.author.id === targetUser.id);
-          }
-
-          if (messages.size > 0) {
-            const deleted = await interaction.channel.bulkDelete(
-              messages,
-              true,
-            );
-            deletedCount += deleted.size;
-
-            if (deleted.size < messages.size) {
-              skippedOldCount += (messages.size - deleted.size);
-              break;
-            }
-          }
-
-          fetchAmount -= fetchLimit;
-
-          if (fetchAmount > 0) {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            const updatePayload = buildContainerV2({
-              accentColorHex: ui.getColor("primary") || "#FFB6C1",
-              title: "🧹 Pembersihan Pesan (Purge)",
-              expression: "thinking",
-              description: `${ui.getEmoji("loading") || "⏳"} Sedang menghapus pesan... (${deletedCount}/${amount})`,
+          if (i.customId === "cancel_purge") {
+            const cancelPayload = buildContainerV2({
+              accentColorHex: ui.getColor("neutral") || "#64748B",
+              title: "Pembersihan Dibatalkan",
+              expression: "neutral",
+              description: "Operasi pembersihan pesan telah dibatalkan oleh Anda.",
               footerText: ui.getFooter("core"),
             });
-            await interaction.editReply(updatePayload).catch(() => {});
+            return i.update(cancelPayload);
           }
-        }
 
-        const auditChannelId = await getAuditChannelId(interaction.guild.id);
-
-        const finalPayload = buildContainerV2({
-          accentColorHex: ui.getColor("success") || "#22c55e",
-          title: "✅ Pembersihan Pesan (Purge) Selesai",
-          expression: "success",
-          description: [
-            `Proses pembersihan riwayat pesan selesai dilaksanakan.`,
-            ``,
-            `🗑️ **Pesan Terhapus:** **${deletedCount}** pesan`,
-            targetUser ? `🎯 **Filter Pengguna:** <@${targetUser.id}> (\`${targetUser.tag || targetUser.username}\`)` : null,
-            skippedOldCount > 0 ? `⚠️ **Dilewati (>14 hari):** ${skippedOldCount} pesan` : null,
-            `📍 **Channel:** <#${interaction.channel.id}>`,
-            `🛡️ **Moderator:** <@${interaction.user.id}>`,
-            `⏱️ **Waktu Selesai:** <t:${Math.floor(Date.now() / 1000)}:R>`,
-            auditChannelId ? `\n-# 📝 Log moderasi terkirim ke <#${auditChannelId}>` : null,
-          ].filter(Boolean).join("\n"),
-          footerText: ui.getFooter("core"),
+          // Lanjutkan purge setelah konfirmasi
+          await i.deferUpdate();
+          await executePurge(i, amount, targetUser, interaction.guild);
         });
 
-        await interaction.editReply(finalPayload);
-        await sendModLog(interaction.guild, finalPayload);
-      } catch (error) {
-        logger.error("[Purge Error]:", error);
-        const errPayload = buildErrorContainerV2({
-          title: "Gagal Melakukan Purge",
-          description: `${ui.getEmoji("error") || "❌"} Terjadi kesalahan saat menghapus pesan: ${error.message}`,
-          footerText: ui.getFooter("core"),
+        collector.on("end", async (collected) => {
+          if (collected.size === 0) {
+            const timeoutPayload = buildContainerV2({
+              accentColorHex: ui.getColor("neutral") || "#64748B",
+              title: "Waktu Konfirmasi Habis",
+              expression: "neutral",
+              description: "Operasi pembersihan dibatalkan otomatis karena tidak ada konfirmasi dalam 30 detik.",
+              footerText: ui.getFooter("core"),
+            });
+            await interaction.editReply(timeoutPayload).catch(() => {});
+          }
         });
-        await interaction.editReply(errPayload);
+
+        return;
       }
+
+      // Purge <= 100 langsung dieksekusi
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await executePurge(interaction, amount, targetUser, interaction.guild);
     } else if (subcommand === "nuke") {
       if (
         !interaction.member.permissions.has(
@@ -473,6 +612,37 @@ module.exports = {
           const channel = interaction.channel;
           const position = channel.position;
 
+          // Backup transcript sebelum nuke
+          let transcriptSaved = false;
+          try {
+            const messages = await channel.messages.fetch({ limit: 100 });
+            const orderedMessages = Array.from(messages.values()).reverse();
+            const transcriptLines = orderedMessages.map(
+              (m) => `[${new Date(m.createdTimestamp).toISOString()}] ${m.author.tag}: ${m.content || "[attachment/embed]"}`
+            );
+            
+            const mongoManager = require("../../src/managers/mongoManager");
+            if (mongoManager?.isReady) {
+              const DisasterSnapshot = require("../../src/models/mongo/DisasterSnapshot");
+              await DisasterSnapshot.create({
+                guildId: interaction.guild.id,
+                type: "channel_backup",
+                data: {
+                  channelId: channel.id,
+                  channelName: channel.name,
+                  messageCount: orderedMessages.length,
+                  transcript: transcriptLines.join("\n"),
+                },
+                createdBy: interaction.user.tag,
+                createdAt: new Date(),
+                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              });
+              transcriptSaved = true;
+            }
+          } catch (backupErr) {
+            logger.warn("[Nuke] Gagal backup transcript:", backupErr.message);
+          }
+
           const newChannel = await channel.clone();
           await newChannel.setPosition(position);
           await channel.delete();
@@ -480,7 +650,13 @@ module.exports = {
           const successPayload = buildContainerV2({
             accentColorHex: "#00FFFF",
             title: `${ui.getEmoji("radioactive") || "☢️"} Channel Di-nuke`,
-            description: `${ui.getEmoji("radioactive") || "☢️"} **Channel berhasil di-nuke oleh ${interaction.user.username}**`,
+            description: [
+              `${ui.getEmoji("radioactive") || "☢️"} **Channel berhasil di-nuke oleh ${interaction.user.username}**`,
+              "",
+              transcriptSaved 
+                ? "📝 **Transcript tersimpan** - Gunakan `/recovery list-snapshots` untuk melihat backup."
+                : "⚠️ Transcript tidak tersimpan (MongoDB offline atau error).",
+            ].join("\n"),
             footerText: ui.getFooter("core"),
           });
 
@@ -535,51 +711,95 @@ module.exports = {
         });
       }
 
-      await interaction.deferReply();
-
+      // Fetch members untuk preview jumlah
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const members = await interaction.guild.members.fetch();
-      let successCount = 0;
-      let skipCount = 0;
-
-      const processingPayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: `${ui.getEmoji("loading") || "⏳"} Memproses Role All`,
-        description: `${ui.getEmoji("loading") || "⏳"} Sedang memproses pemberian/pencabutan role **${targetRole.name}** ke ${members.size} member...`,
-        footerText: ui.getFooter("core"),
-      });
-
-      await interaction.editReply(processingPayload);
-
+      
+      let affectedCount = 0;
       for (const [, member] of members) {
-        try {
-          if (action === "add") {
-            if (!member.roles.cache.has(targetRole.id)) {
-              await member.roles.add(targetRole);
-              successCount++;
-            } else skipCount++;
-          } else {
-            if (member.roles.cache.has(targetRole.id)) {
-              await member.roles.remove(targetRole);
-              successCount++;
-            } else skipCount++;
-          }
-        } catch (e) {
-          if (e?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(e.code)) {
-            // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
-          } else {
-            logger.debug("[moderation:execute] Pemanggilan Discord API gagal: " + (e?.message || e));
-          }
+        if (action === "add" && !member.roles.cache.has(targetRole.id)) {
+          affectedCount++;
+        } else if (action === "remove" && member.roles.cache.has(targetRole.id)) {
+          affectedCount++;
         }
       }
 
-      const finalPayload = buildContainerV2({
-        accentColorHex: ui.getColor("success") || "#22c55e",
-        title: `${ui.getEmoji("success") || "✅"} Operasi Role-All Selesai`,
-        description: `**Aksi:** ${action === "add" ? "Penambahan" : "Pencabutan"} Role <@&${targetRole.id}>\n\n**Berhasil:** ${successCount} member\n**Dilewati (Sudah sesuai/Gagal):** ${skipCount} member`,
+      const confirmRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`confirm_roleall_${action}_${targetRole.id}`)
+          .setLabel(`Ya, ${action === "add" ? "Tambahkan" : "Cabut"} Role`)
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji(action === "add" ? "➕" : "➖"),
+        new ButtonBuilder()
+          .setCustomId("cancel_roleall")
+          .setLabel("Batalkan")
+          .setStyle(ButtonStyle.Secondary),
+      );
+
+      const confirmPayload = buildContainerV2({
+        accentColorHex: "#F97316",
+        title: `⚠️ Konfirmasi Massal Role ${action === "add" ? "Assignment" : "Removal"}`,
+        expression: "warning",
+        description: [
+          `Anda akan **${action === "add" ? "menambahkan" : "mencabut"}** role <@&${targetRole.id}> dari server ini.`,
+          "",
+          `👥 **Total Member Server:** ${members.size}`,
+          `🎯 **Member yang Akan Terpengaruh:** **${affectedCount}**`,
+          `📋 **Aksi:** ${action === "add" ? "Tambah Role" : "Cabut Role"}`,
+          "",
+          "⚠️ **Peringatan:**",
+          "- Tindakan ini akan memproses semua member secara berurutan",
+          "- Proses dapat memakan waktu tergantung jumlah member",
+          "- Pastikan target role dan aksi sudah benar",
+          "",
+          "Klik tombol di bawah dalam 60 detik untuk melanjutkan.",
+        ].join("\n"),
+        buttonsRow: confirmRow,
         footerText: ui.getFooter("core"),
       });
 
-      await interaction.editReply(finalPayload);
+      const reply = await interaction.editReply({
+        ...confirmPayload,
+        components: confirmPayload.components,
+      });
+
+      const collector = reply.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 60000,
+        max: 1,
+      });
+
+      collector.on("collect", async (i) => {
+        if (i.user.id !== interaction.user.id) return;
+
+        if (i.customId === "cancel_roleall") {
+          const cancelPayload = buildContainerV2({
+            accentColorHex: ui.getColor("neutral") || "#64748B",
+            title: "Operasi Role-All Dibatalkan",
+            expression: "neutral",
+            description: "Operasi massal role telah dibatalkan oleh Anda.",
+            footerText: ui.getFooter("core"),
+          });
+          return i.update(cancelPayload);
+        }
+
+        // Lanjutkan roleall setelah konfirmasi
+        await i.deferUpdate();
+        await executeRoleAll(i, targetRole, action, members);
+      });
+
+      collector.on("end", async (collected) => {
+        if (collected.size === 0) {
+          const timeoutPayload = buildContainerV2({
+            accentColorHex: ui.getColor("neutral") || "#64748B",
+            title: "Waktu Konfirmasi Habis",
+            expression: "neutral",
+            description: "Operasi role-all dibatalkan otomatis karena tidak ada konfirmasi dalam 60 detik.",
+            footerText: ui.getFooter("core"),
+          });
+          await interaction.editReply(timeoutPayload).catch(() => {});
+        }
+      });
     } else if (subcommand === "timeout") {
       if (!interaction.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) {
         const errPayload = buildErrorContainerV2({
@@ -777,6 +997,15 @@ module.exports = {
         return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
       }
 
+      if (targetUser.id === interaction.client.user.id) {
+        const errPayload = buildErrorContainerV2({
+          title: "Tindakan Tidak Sah",
+          description: `${ui.getEmoji("error") || "❌"} Naura tidak bisa mengeluarkan diri sendiri!`,
+          footerText: ui.getFooter("core"),
+        });
+        return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
+      }
+
       const targetMember = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
       if (!targetMember) {
         const errPayload = buildErrorContainerV2({
@@ -924,6 +1153,15 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           title: "Tindakan Tidak Sah",
           description: `${ui.getEmoji("error") || "❌"} Anda tidak bisa memblokir diri sendiri.`,
+          footerText: ui.getFooter("core"),
+        });
+        return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
+      }
+
+      if (targetUser.id === interaction.client.user.id) {
+        const errPayload = buildErrorContainerV2({
+          title: "Tindakan Tidak Sah",
+          description: `${ui.getEmoji("error") || "❌"} Naura tidak bisa memblokir diri sendiri!`,
           footerText: ui.getFooter("core"),
         });
         return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });

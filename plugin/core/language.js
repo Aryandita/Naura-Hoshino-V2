@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const languageManager = require("../../src/managers/languageManager");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
@@ -21,7 +21,7 @@ module.exports = {
 
   async execute(interaction) {
     // Tampilkan pesan loading terlebih dahulu (agar tidak timeout)
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const lang = interaction.localeLang;
     const pilihan = interaction.options.getString("pilihan");

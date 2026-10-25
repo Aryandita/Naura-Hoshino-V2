@@ -325,6 +325,52 @@ class StockMarketEngine {
       });
     }
   }
+
+  /**
+   * Analyze market trends and detect inflation/deflation (from pending_plugin/marketTrendAnalyzer)
+   * @param {string} guildId
+   * @returns {Promise<{ alerts: Array, recommendations: Array, analysis: object, readyForAiActivation: boolean }>}
+   */
+  static async analyzeMarketHealth(guildId) {
+    try {
+      const overview = await StockMarketEngine.getMarketOverview();
+      const alerts = [];
+      const recommendations = [];
+
+      for (const stock of (overview || [])) {
+        const history = stock.history24h || [];
+        if (history.length < 2) continue;
+
+        const prices = history.map((h) => h.price || h);
+        const oldest = prices[0];
+        const newest = prices[prices.length - 1];
+        const changePercent = oldest > 0 ? ((newest - oldest) / oldest) : 0;
+
+        if (changePercent > 0.15) {
+          alerts.push({ type: "inflation_warning", ticker: stock.ticker, changePercent: Math.round(changePercent * 100), severity: "high" });
+          recommendations.push({ action: "increase_supply", ticker: stock.ticker, description: `Harga ${stock.ticker} naik ${Math.round(changePercent * 100)}%. Tambah supply atau kurangi demand.` });
+        } else if (changePercent < -0.10) {
+          alerts.push({ type: "deflation_warning", ticker: stock.ticker, changePercent: Math.round(changePercent * 100), severity: "medium" });
+          recommendations.push({ action: "reduce_supply", ticker: stock.ticker, description: `Harga ${stock.ticker} turun ${Math.abs(Math.round(changePercent * 100))}%. Kurangi supply atau tambah demand.` });
+        }
+      }
+
+      let promptTemplate = `Analisis kondisi pasar saham server:\n`;
+      promptTemplate += `Total saham: ${(overview || []).length}. Alert ditemukan: ${alerts.length}.\n`;
+      promptTemplate += `Berikan rekomendasi balancing ekonomi dalam format JSON.`;
+
+      return {
+        alerts,
+        recommendations: recommendations.length > 0 ? recommendations : [{ action: "maintain", description: "Pasar dalam kondisi stabil." }],
+        analysis: { totalStocks: (overview || []).length, alertCount: alerts.length },
+        promptPrepared: promptTemplate,
+        readyForAiActivation: true,
+      };
+    } catch (error) {
+      logger.error("[StockMarket:Analysis] Error:", error);
+      return { alerts: [], recommendations: [], analysis: {}, readyForAiActivation: false };
+    }
+  }
 }
 
 module.exports = StockMarketEngine;

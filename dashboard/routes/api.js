@@ -22,6 +22,7 @@ const { getDbStatus, sequelize } = require("../../src/managers/dbManager");
 const redisManager = require("../../src/managers/redisManager");
 const mongoManager = require("../../src/managers/mongoManager");
 const metricsManager = require("../../src/managers/metricsManager");
+const { logger } = require("../../src/managers/logger");
 
 const HEALTH_CHECK_TIMEOUT_MS = 5000;
 
@@ -363,6 +364,31 @@ module.exports = function (client) {
     response.process = healthSnapshot;
 
     res.json(response);
+  });
+
+  // ------------------------------------------------------------------
+  // External API Health Check
+  // ------------------------------------------------------------------
+  router.get("/api/health/external", async (req, res) => {
+    try {
+      const apiHealthService = require("../../src/services/apiHealthService");
+      const report = await apiHealthService.runHealthCheck();
+      res.json(report);
+    } catch (err) {
+      logger.error("[API External Health] Error:", err);
+      res.status(500).json({ error: "Failed to run health check" });
+    }
+  });
+
+  router.get("/api/health/circuit-breakers", async (req, res) => {
+    try {
+      const { getAllBreakers } = require("../../src/utils/circuitBreaker");
+      const breakers = getAllBreakers();
+      res.json({ circuitBreakers: breakers });
+    } catch (err) {
+      logger.error("[API Circuit Breakers] Error:", err);
+      res.status(500).json({ error: "Failed to get circuit breaker status" });
+    }
   });
 
   return router;

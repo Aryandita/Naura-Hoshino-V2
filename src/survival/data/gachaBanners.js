@@ -6,7 +6,7 @@ const BANNERS = {
   standard: {
     id: "standard",
     name: "Silver Supply Drop",
-    description: "Peti perbekalan standar. Memerlukan Naura Coin.",
+    description: "Peti perbekalan standar. Memerlukan Pratama Dollar (PD).",
     currency: "coin",
     cost: 3000,
     pityMax: 50, // Pity di 50 roll = Guarantee Legendary
@@ -21,7 +21,7 @@ const BANNERS = {
     id: "gold",
     name: "Gold Mystic Crate",
     description:
-      "Peti perlengkapan berkelas. Memerlukan Naura Star Fragments (NFS).",
+      "Peti perlengkapan berkelas. Memerlukan Sukamaju Koin (SC).",
     currency: "starFragments",
     cost: 150,
     pityMax: 40, // Pity di 40 roll = Guarantee Legendary (Higher Rate)
@@ -35,7 +35,7 @@ const BANNERS = {
   premium: {
     id: "premium",
     name: "Diamond Mythic Crate",
-    description: "Peti harta magis misterius. Memerlukan Naura Coupon.",
+    description: "Peti harta magis misterius. Memerlukan Voucher Beasiswa (VB).",
     currency: "coupon",
     cost: 5,
     pityMax: 30, // Pity di 30 roll = Guarantee Mythic

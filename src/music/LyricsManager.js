@@ -3,6 +3,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
   Collection,
+  MessageFlags,
 } = require("discord.js");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const { logger } = require("../managers/logger");
@@ -132,7 +133,7 @@ class LyricsManager {
 
   async sendLyrics(interaction, manager, player, track, isEphemeral = false) {
     if (!interaction.deferred) {
-      const options = isEphemeral ? { flags: 64 } : {};
+      const options = isEphemeral ? { flags: MessageFlags.Ephemeral } : {};
       await interaction.deferReply(options).catch(() => {});
     }
 
@@ -233,7 +234,7 @@ class LyricsManager {
           if (btnInteraction.user.id !== interaction.user.id) {
             return btnInteraction.reply({
               content: "❌ Hanya pengirim yang bisa menavigasi halaman ini.",
-              flags: 64,
+              flags: MessageFlags.Ephemeral,
             });
           }
 

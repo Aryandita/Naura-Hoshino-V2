@@ -497,7 +497,7 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
     .followUp({
       ...payload,
       embeds: [],
-      flags: 64, // Ephemeral
+      flags: MessageFlags.Ephemeral,
     })
     .catch(() => {});
 
@@ -519,7 +519,7 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
       iconURL: interaction.client.user.displayAvatarURL(),
       expression: "cheers",
       description:
-        "Makasih banyak ucapannya! Ini aku kasih 1 Naura Coupon buat kamu. Semoga petualanganmu hari ini menyenangkan!",
+        "Makasih banyak ucapannya! Ini aku kasih 1 Voucher Beasiswa (VB) buat kamu. Semoga petualanganmu hari ini menyenangkan!",
       footerText: ui.getFooter("survival"),
     });
 

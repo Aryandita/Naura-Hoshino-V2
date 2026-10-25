@@ -174,7 +174,7 @@ const bannerRow = (bannerStr, bannerVis, rightStr, rightVis) => {
  */
 const displayBootScreen = (client, sysStatus) => {
   // ── Data runtime ──────────────────────────────────────────────────────
-  const botVer = env.BOT_VERSION || "2.3.0";
+  const botVer = env.BOT_VERSION || "2.4.0";
   const botTag = client.user ? client.user.tag : "Naura Hoshino#0000";
   const nodeVer = process.version;
   const cpuRaw = os.cpus()[0].model.trim().replace(/\s+/g, " ");
@@ -351,7 +351,7 @@ const displayBootScreen = (client, sysStatus) => {
  */
 const displayDashboardBootScreen = (options = {}) => {
   const port = options.port || env.DASHBOARD_PORT || 3000;
-  const botVer = env.BOT_VERSION || "2.3.0";
+  const botVer = env.BOT_VERSION || "2.4.0";
   const nodeVer = process.version;
   const bootTime = nowStr();
   const dbStatus =
@@ -469,7 +469,7 @@ const displayDashboardBootScreen = (options = {}) => {
  * @param {string|number} [options.totalShards="auto"]
  */
 const displayClusterBootScreen = (options = {}) => {
-  const botVer = env.BOT_VERSION || "2.3.0";
+  const botVer = env.BOT_VERSION || "2.4.0";
   const nodeVer = process.version;
   const bootTime = nowStr();
   const engineType = options.useClustering

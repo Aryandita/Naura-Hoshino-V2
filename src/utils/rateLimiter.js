@@ -1,3 +1,6 @@
+"use strict";
+
+const { logger } = require("../managers/logger");
 const redisManager = require("../managers/redisManager");
 
 // In-memory fallback store, dipakai hanya bila Redis tidak tersedia.
@@ -30,11 +33,6 @@ function reportSpike(commandName, userId) {
 class RateLimiter {
   /**
    * Memeriksa sekaligus mencatat satu pemakaian kuota.
-   *
-   * Sebelumnya jalur Redis memakai getCache lalu setCache. Dua langkah itu tidak
-   * atomik sehingga burst request bisa lolos bersamaan, dan setCache menulis ulang
-   * TTL pada setiap hit sehingga window ikut mundur terus. Sekarang memakai INCR
-   * dengan EXPIRE yang hanya dipasang pada hit pertama.
    *
    * @param {string} userId
    * @param {string} commandName
@@ -103,6 +101,73 @@ class RateLimiter {
     );
     return limited;
   }
+
+  /**
+   * Token bucket rate limiter per-user
+   * @param {string} userId
+   * @param {string} actionKey - Identifier aksi (misal: "command:survival")
+   * @param {object} options - { maxTokens, refillRate, refillIntervalMs }
+   * @returns {Promise<{ allowed: boolean, remaining: number, retryAfterMs: number }>}
+   */
+  static async check(userId, actionKey, options = {}) {
+    const maxTokens = options.maxTokens || 5;
+    const refillRate = options.refillRate || 1;
+    const refillIntervalMs = options.refillIntervalMs || 2000;
+
+    const key = `ratelimit:${userId}:${actionKey}`;
+
+    try {
+      const raw = await redisManager.get(key);
+      const now = Date.now();
+
+      let tokens = maxTokens;
+      let lastRefill = now;
+
+      if (raw) {
+        const data = JSON.parse(raw);
+        const elapsed = now - data.lastRefill;
+        const refilled = Math.floor(elapsed / refillIntervalMs) * refillRate;
+        tokens = Math.min(maxTokens, data.tokens + refilled);
+        lastRefill = data.lastRefill + Math.floor(elapsed / refillIntervalMs) * refillIntervalMs;
+      }
+
+      if (tokens >= 1) {
+        tokens -= 1;
+        await redisManager.set(key, JSON.stringify({ tokens, lastRefill }), "EX", 60);
+        return { allowed: true, remaining: tokens, retryAfterMs: 0 };
+      }
+
+      const timeUntilRefill = refillIntervalMs - (now - lastRefill);
+      return { allowed: false, remaining: 0, retryAfterMs: Math.max(0, timeUntilRefill) };
+    } catch (error) {
+      logger.error(`[RateLimiter] Check error for ${userId}:${actionKey}:`, error);
+      return { allowed: true, remaining: maxTokens, retryAfterMs: 0 };
+    }
+  }
+
+  /**
+   * Reset rate limit untuk user tertentu
+   * @param {string} userId
+   * @param {string} actionKey
+   */
+  static async reset(userId, actionKey) {
+    try {
+      await redisManager.del(`ratelimit:${userId}:${actionKey}`);
+    } catch (error) {
+      logger.error(`[RateLimiter] Reset error:`, error);
+    }
+  }
+
+  /**
+   * Build feedback message saat rate limited
+   * @param {number} retryAfterMs
+   * @returns {string}
+   */
+  static buildFeedbackMessage(retryAfterMs) {
+    const seconds = Math.ceil(retryAfterMs / 1000);
+    return `Terlalu cepat! Tunggu **${seconds} detik** sebelum mencoba lagi.`;
+  }
 }
 
+RateLimiter.RateLimiter = RateLimiter;
 module.exports = RateLimiter;

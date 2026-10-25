@@ -285,8 +285,8 @@ const REGIONS = {
         icon: "fa-solid fa-vault",
         emoji: "🏦",
         atmosphere:
-          "Aula perbankan berteknologi tinggi tempat penukaran resmi Naura Star Fragments (NSF) ke Naura Coin (NC).",
-        facilities: ["konversi_nsf_ke_nc", "deposito_bunga", "audit_keuangan"],
+          "Aula perbankan berteknologi tinggi tempat penukaran resmi Sukamaju Koin (SC) ke Pratama Dollar (PD).",
+        facilities: ["konversi_sc_ke_pd", "deposito_bunga", "audit_keuangan"],
       },
       {
         id: "bursa_kerja",

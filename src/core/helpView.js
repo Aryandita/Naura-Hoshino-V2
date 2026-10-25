@@ -155,6 +155,16 @@ function buildHelpCategories(langInput) {
       desc: lang.HELP_CAT_ADMIN_DESC || "Setup dan moderasi server.",
       content: formatHelpContent(lang.HELP_CONTENT_ADMIN),
     },
+    recovery: {
+      emoji: "♻️",
+      label: lang.HELP_CAT_RECOVERY_LABEL || (isEn ? "Disaster Recovery" : "Pemulihan Bencana"),
+      desc:
+        lang.HELP_CAT_RECOVERY_DESC ||
+        (isEn
+          ? "Emergency recovery tools for mass ban, role restore, and channel backup."
+          : "Alat pemulihan darurat untuk unban massal, restore role, dan backup channel."),
+      content: formatHelpContent(lang.HELP_CONTENT_RECOVERY),
+    },
     modmail: {
       emoji: "📬",
       label: lang.HELP_CAT_MODMAIL_LABEL || (isEn ? "Modmail & Tickets" : "Modmail & Tiket"),

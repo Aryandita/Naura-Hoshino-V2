@@ -219,6 +219,6 @@ module.exports = {
     setTimeout(
       () => interaction.channel.delete().catch(() => {}),
       DELETE_DELAY_MS,
-    );
+    ).unref?.();
   },
 };

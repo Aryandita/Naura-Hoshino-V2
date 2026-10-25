@@ -34,7 +34,7 @@ export class NauraHero3DViewer {
     constructor(canvasElement, options = {}) {
         this.canvas = canvasElement;
         this.options = {
-            modelPath: options.modelPath || "/models/naura.vrm",
+            modelPath: options.modelPath || "/models/naura_animated.glb",
             cameraFov: options.cameraFov || 34,
             cameraZ: options.cameraZ || 1.25,
             cameraY: options.cameraY || 0.22,
@@ -783,16 +783,11 @@ export class NauraHero3DViewer {
      */
     playAnimation(name, options = {}) {
         const validNames = [
-            "Idle",
-            "Wave",
-            "Thinking",
-            "Dizzy",
-            "Cheers",
-            "Shy",
-            "Sleepy",
-            "BlowKiss",
-            "AstralCast",
-            "StarPose",
+            "Idle", "Wave", "Thinking", "NodYes", "ShakeNo", "WalkForward", "WalkBackward", "Sit",
+            "Type", "DanceLoop1", "DanceLoop2", "Cheers", "Shy", "Sleepy", "BlowKiss",
+            "AstralCast", "StarPose", "Dizzy", "Read", "HoldItem", "Salute", "Bow",
+            "Yawn", "Stretch", "CombatStance", "Craft", "Drink", "Eat", "Point",
+            "TurnLeft", "TurnRight"
         ];
         const resolvedName = validNames.find(n => n.toLowerCase() === (name || "").toLowerCase()) || "Idle";
         this.currentAnimName = resolvedName;
@@ -804,13 +799,34 @@ export class NauraHero3DViewer {
                 Idle: "🌸 Idle (Bernafas)",
                 Wave: "👋 Melambai Hangat",
                 Thinking: "🤔 Berpikir Kritis",
+                NodYes: "✅ Mengangguk Setuju",
+                ShakeNo: "❌ Menggeleng Tidak",
+                WalkForward: "🚶 Berjalan Maju",
+                WalkBackward: "🔙 Melangkah Mundur",
+                Sit: "🪑 Duduk Anggun",
+                Type: "💻 Mengetik Cepat",
+                DanceLoop1: "💃 Tari Upbeat Hoshino",
+                DanceLoop2: "🎵 Gerakan Tari Halus",
+                Cheers: "🎉 Bersorak Gembira",
+                Shy: "😳 Tersipu Malu",
+                Sleepy: "💤 Mengantuk Rileks",
+                BlowKiss: "😘 Tiupan Sayang",
+                AstralCast: "✨ Sihir Astral Halo",
+                StarPose: "⭐ Pose Idol Bintang",
                 Dizzy: "💫 Pusing / Bingung",
-                Cheers: "🎉 Ceria",
-                Shy: "😳 Malu-malu",
-                Sleepy: "💤 Mengantuk",
-                BlowKiss: "😘 Tiup Ciuman",
-                AstralCast: "✨ Sihir Bintang Hoshino",
-                StarPose: "⭐ Pose Idol Hoshino",
+                Read: "📖 Membaca Buku",
+                HoldItem: "🎁 Memegang Benda",
+                Salute: "🫡 Hormat Disiplin",
+                Bow: "🙇 Membungkuk Hormat",
+                Yawn: "🥱 Menguap Santai",
+                Stretch: "🙆 Peregangan Tubuh",
+                CombatStance: "⚔️ Kuda-kuda Bertarung",
+                Craft: "🔨 Menempa & Meracik",
+                Drink: "🍵 Menikmati Minuman",
+                Eat: "🍰 Menikmati Camilan",
+                Point: "👉 Menunjuk Arah",
+                TurnLeft: "↩️ Berputar Kiri",
+                TurnRight: "↪️ Berputar Kanan",
             };
             statusText.textContent = labelMap[resolvedName] || resolvedName;
         }
@@ -843,7 +859,13 @@ export class NauraHero3DViewer {
         }
 
         if (this.animController && this.animController.playClip) {
-            const isLoop = options.loop ?? (resolvedName === "Idle" || resolvedName === "Dizzy" || resolvedName === "Sleepy" || resolvedName === "Thinking" || resolvedName === "Shy");
+            const loopingAnims = new Set([
+                "Idle", "Thinking", "Dizzy", "Sleepy", "Shy",
+                "WalkForward", "WalkBackward", "Sit", "Type",
+                "DanceLoop1", "DanceLoop2", "Read", "HoldItem",
+                "CombatStance", "Craft"
+            ]);
+            const isLoop = options.loop ?? loopingAnims.has(resolvedName);
             return this.animController.playClip(resolvedName, {
                 loop: isLoop,
                 fadeDuration: options.fadeDuration || 0.45,

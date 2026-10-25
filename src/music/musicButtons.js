@@ -64,6 +64,35 @@ module.exports = async (interaction, client) => {
     }
   }
 
+  if (!player) {
+    const errPayload = buildErrorContainerV2({
+      title: "Pemutar Tidak Aktif",
+      description: "Tidak ada pemutar musik yang sedang aktif di server ini.",
+      footerText: ui.getFooter("music"),
+    });
+    return interaction.editReply(errPayload);
+  }
+
+  const memberVoice = interaction.member?.voice?.channel;
+  if (interaction.customId !== "music_save" && interaction.customId !== "music_lyrics") {
+    if (!memberVoice) {
+      const errPayload = buildErrorContainerV2({
+        title: "Voice Channel Dibutuhkan",
+        description: "Anda harus berada di Voice Channel untuk mengontrol pemutar musik.",
+        footerText: ui.getFooter("music"),
+      });
+      return interaction.editReply(errPayload);
+    }
+    if (player.voiceChannel && player.voiceChannel !== memberVoice.id) {
+      const errPayload = buildErrorContainerV2({
+        title: "Voice Channel Berbeda",
+        description: "Anda harus berada di Voice Channel yang sama dengan Naura.",
+        footerText: ui.getFooter("music"),
+      });
+      return interaction.editReply(errPayload);
+    }
+  }
+
   // Handle Select Menus
   if (interaction.isStringSelectMenu()) {
     switch (interaction.customId) {

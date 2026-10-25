@@ -11,7 +11,7 @@ async function handleLanguage(interaction, client, currentLang) {
     interaction.options?.getString("pilihan");
 
   if (!newLang || !locales[newLang]) {
-    const msg = `${face("warning", "⚠️")} Pilihan bahasa tidak valid. Pilih \`id\` atau \`en\`.`;
+    const msg = `${face("warning", "⚠️")} Pilihan bahasa tidak valid. Pilih \`id\`, \`en\`, \`ja\`, atau \`es\`.`;
     if (interaction.reply && !interaction.deferred) {
       return interaction.reply({ content: msg });
     }

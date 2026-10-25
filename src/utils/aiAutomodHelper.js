@@ -351,9 +351,49 @@ async function handleAIReport(interaction, guildSettings) {
   );
 }
 
+/**
+ * Analisis pesan dengan konteks budaya gaming Indonesia (from pending_plugin/intelligentModerator)
+ * Membedakan candaan slang lokal dari toxic asli
+ * @param {string} messageContent
+ * @param {object} contextData - { channelType, recentMessages, violationHistory }
+ * @returns {{ isViolation: boolean, violationType: string|null, confidence: number, suggestedAction: string, promptPrepared: string, readyForAiActivation: boolean }}
+ */
+function analyzeCulturalContext(messageContent, contextData = {}) {
+  const channelType = contextData.channelType || "general";
+  const violationCount = contextData.violationHistory?.length || 0;
+
+  let promptTemplate = `Analisis pesan untuk potensi pelanggaran komunitas gaming Indonesia:\n`;
+  promptTemplate += `Pesan: "${(messageContent || "").substring(0, 200)}"\n`;
+  promptTemplate += `Channel: ${channelType}. Riwayat pelanggaran: ${violationCount} kali.\n`;
+  promptTemplate += `Perhatikan slang lokal dan candaan khas Indonesia. Format JSON: { isToxic, type, confidence, reason }.`;
+
+  const localJokes = ["anjay", "wkwk", "sok", "gokil", "mantul", "kere"];
+  const toxicPatterns = [/\bbego\b/i, /\bbodoh\b/i, /\bkontol/i, /\bgoblok\b/i];
+  const spamPatterns = [/(.)\1{5,}/, /https?:\/\/\S+\.(xyz|tk|ml)/i];
+
+  const isLocalJoke = localJokes.some((j) => messageContent?.toLowerCase().includes(j));
+  const hasToxic = toxicPatterns.some((p) => p.test(messageContent || ""));
+  const hasSpam = spamPatterns.some((p) => p.test(messageContent || ""));
+
+  if (hasSpam) {
+    return { isViolation: true, violationType: "spam", confidence: 0.85, suggestedAction: "warn", promptPrepared: promptTemplate, readyForAiActivation: true };
+  }
+
+  if (hasToxic && !isLocalJoke && violationCount >= 3) {
+    return { isViolation: true, violationType: "toxicity", confidence: 0.75, suggestedAction: "mute_temporary", promptPrepared: promptTemplate, readyForAiActivation: true };
+  }
+
+  if (hasToxic && isLocalJoke) {
+    return { isViolation: false, violationType: null, confidence: 0.8, suggestedAction: "allow_casual_banter", promptPrepared: promptTemplate, readyForAiActivation: true };
+  }
+
+  return { isViolation: false, violationType: null, confidence: 0.9, suggestedAction: "allow", promptPrepared: promptTemplate, readyForAiActivation: true };
+}
+
 module.exports = {
   analyzeMessageWithAI,
   handleAIReport,
   checkReportCooldown,
   setReportCooldown,
+  analyzeCulturalContext,
 };

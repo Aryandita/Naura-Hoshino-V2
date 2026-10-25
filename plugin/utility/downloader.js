@@ -1,15 +1,5 @@
 "use strict";
 
-// ==========================================
-// PERINTAH /downloader
-// ==========================================
-// Berkas ini hanya mengatur alur. Seluruh pekerjaan berat ada di:
-//   src/downloader/downloaderCore.js      konstanta, cache, validasi content-type
-//   src/downloader/downloaderChain.js     urutan provider + penyaringan hasil
-//   src/downloader/downloaderFetch.js     unduh berkas tunggal + kompresi
-//   src/downloader/downloaderPicker.js    menu resolusi manual
-//   src/downloader/downloaderRender.js    seluruh kartu yang dilihat pengguna
-
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -28,6 +18,7 @@ const {
   getUploadLimitBytes,
   getUploadLimitMB,
 } = require("../../src/downloader/downloaderCompress");
+const { buildLoadingContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
   isSubcommand: true,
@@ -59,12 +50,22 @@ module.exports = {
     );
     if (limited) return ui.sendError(interaction, "err_sys_30", true);
 
-    await interaction.deferReply();
-
     const url = String(interaction.options.getString("url"))
       .replace(/[<>]/g, "")
       .trim();
     const qualityChoice = interaction.options.getString("quality") || "auto";
+
+    const loadingPayload = buildLoadingContainerV2({
+      interaction,
+      authorName: "Naura Media Downloader Engine",
+      title: "Memeriksa Tautan...",
+      description: `${ui.getEmoji("loading") || "⏳"} ${ui.getEmoji("naura_thinking") || "🤔"} *Naura sedang memeriksa tautan dan menyiapkan media terbaik untukmu...*`,
+      expression: "thinking",
+      withBanner: true,
+      footerText: ui.getFooter("utility"),
+    });
+    await interaction.deferReply();
+    await interaction.editReply(loadingPayload);
 
     if (!url.startsWith("http")) {
       return interaction.editReply(render.invalidUrlCard());
@@ -82,10 +83,12 @@ module.exports = {
     );
 
     try {
-      // Cache hanya berisi hasil yang sudah lolos validasi.
       let data = core.getCachedResult(url);
 
       if (!data) {
+        const fetchingPayload = render.inspectingCard(interaction.client);
+        await interaction.editReply(fetchingPayload).catch(() => {});
+        
         const outcome = await runChain(url, platform, cleanup);
         data = outcome.data;
         if (data && !data.isLocalFile) core.setCachedResult(url, data);
@@ -95,7 +98,6 @@ module.exports = {
 
       const actionRow = new ActionRowBuilder();
 
-      // Tambahkan tombol link postingan asli jika valid
       if (url.length <= 512) {
         const btn = new ButtonBuilder()
           .setLabel("Lihat Postingan")
@@ -106,14 +108,10 @@ module.exports = {
         actionRow.addComponents(btn);
       }
 
-      // ==========================================
-      // KASUS 1: ALBUM MULTI-FOTO / PICKER
-      // ==========================================
       if (data.status === "picker" && Array.isArray(data.picker)) {
         const totalItems = data.picker.length;
         const usableRows = actionRow.components.length > 0 ? [actionRow] : [];
 
-        // Bila foto <= 10, kirim langsung dalam 1 fase
         if (totalItems <= core.MAX_ATTACHMENTS) {
           const payload = render.multiPhotoPhaseCard({
             client: interaction.client,
@@ -131,7 +129,6 @@ module.exports = {
           return await interaction.editReply(payload);
         }
 
-        // Bila foto > 10, bagi menjadi 2 fase pengiriman agar tidak terpotong batas Discord
         const phase1Items = data.picker.slice(0, 10);
         const phase2Items = data.picker.slice(10, 20);
 
@@ -167,9 +164,6 @@ module.exports = {
         return await interaction.followUp(phase2Payload);
       }
 
-      // ==========================================
-      // KASUS 2: MEDIA TUNGGAL (VIDEO / SINGLE FOTO)
-      // ==========================================
       if (data.url) {
         const mediaGalleryRefs = [];
         const otherFileRefs = [];
@@ -177,6 +171,9 @@ module.exports = {
         let linkManualText = "";
         let primaryAttachmentName = null;
         let resolutionPickerSource = null;
+
+        const downloadingPayload = render.fetchingCard(interaction.client, "sedang diproses");
+        await interaction.editReply(downloadingPayload).catch(() => {});
 
         const prepared = await prepareSingleMedia({
           interaction,
@@ -193,8 +190,6 @@ module.exports = {
         primaryAttachmentName = prepared.primaryAttachmentName;
         resolutionPickerSource = prepared.resolutionPickerSource;
 
-        // Berkas sumber untuk menu resolusi harus lolos dari pembersihan
-        // di blok finally, kalau tidak menunya akan selalu gagal.
         if (resolutionPickerSource)
           cleanup.files.delete(resolutionPickerSource);
 
@@ -260,10 +255,13 @@ module.exports = {
           extraText: linkManualText,
           mediaNames: mediaGalleryRefs,
           fileNames: otherFileRefs,
+          files: attachments,
           rows: usableRows,
         });
 
-        if (attachments.length > 0) payload.files = attachments;
+        if (attachments.length > 0 && (!payload.files || payload.files.length === 0)) {
+          payload.files = attachments;
+        }
 
         const sentMessage = await interaction.editReply(payload);
 
@@ -286,7 +284,28 @@ module.exports = {
       return interaction.editReply(render.unsupportedCard());
     } catch (error) {
       logger.error(`[Downloader] Kesalahan tak terduga: ${error.message}`);
-      await interaction.editReply(render.failureCard(platform)).catch(() => {});
+      const isRateLimit = error.message?.includes("rate") || error.message?.includes("429");
+      const isTimeout = error.message?.includes("timeout") || error.message?.includes("ETIMEDOUT");
+      
+      let errorDesc;
+      if (isRateLimit) {
+        errorDesc = `${ui.getEmoji("naura_sleepy") || "😴"} Server penyedia media sedang membatasi akses karena terlalu banyak permintaan.\n\n${ui.getEmoji("sparkle") || "✨"} *Tunggu 1-2 menit lalu coba lagi ya, Naura tungguin!*`;
+      } else if (isTimeout) {
+        errorDesc = `${ui.getEmoji("naura_cry") || "😢"} Koneksi ke server penyedia media terputus karena waktu habis.\n\n${ui.getEmoji("sparkle") || "✨"} *Jaringan mungkin sedang tidak stabil. Coba lagi beberapa saat lagi!*`;
+      } else {
+        errorDesc = `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, terjadi kesalahan saat mengunduh media.\n\n**Detail:** ${error.message}\n\n${ui.getEmoji("sparkle") || "✨"} *Coba lagi nanti atau gunakan tautan lain, ya!*`;
+      }
+      
+      const errPayload = render.failureCard(platform);
+      if (errPayload.components && errPayload.components[0]) {
+        const container = errPayload.components[0];
+        if (container.components) {
+          const descComp = container.components.find(c => c.type === 10 && c.content);
+          if (descComp) descComp.content = errorDesc;
+        }
+      }
+      
+      await interaction.editReply(errPayload).catch(() => {});
     } finally {
       await cleanup.cleanup();
     }

@@ -16,9 +16,26 @@
   }
 
   let deferredPrompt = null;
+
+  window.dismissPwaBanner = function () {
+    const banner = document.getElementById("pwa-install-banner");
+    if (banner) {
+      banner.style.display = "none";
+    }
+    try {
+      localStorage.setItem("naura_pwa_dismissed", "true");
+    } catch (_) {}
+  };
+
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPrompt = e;
+
+    try {
+      if (localStorage.getItem("naura_pwa_dismissed") === "true") {
+        return;
+      }
+    } catch (_) {}
 
     const banner = document.getElementById("pwa-install-banner");
     if (banner) {
@@ -37,4 +54,24 @@
       banner.style.display = "none";
     }
   };
+
+  function initPwaDismiss() {
+    try {
+      if (localStorage.getItem("naura_pwa_dismissed") === "true") {
+        const banner = document.getElementById("pwa-install-banner");
+        if (banner) banner.style.display = "none";
+      }
+    } catch (_) {}
+
+    const closeBtn = document.getElementById("pwaCloseBtn");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", window.dismissPwaBanner);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initPwaDismiss);
+  } else {
+    initPwaDismiss();
+  }
 })();

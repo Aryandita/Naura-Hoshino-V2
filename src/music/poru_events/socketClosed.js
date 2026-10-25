@@ -2,18 +2,25 @@ const { logger } = require("../../managers/logger");
 const cacheManager = require("../../managers/cacheManager");
 const { clearTransitionTimers } = require("./autoplayUtils");
 
+const MAX_RETRY_ATTEMPTS = 8;
+const BASE_BACKOFF_MS = 2000;
+const MAX_BACKOFF_MS = 60000;
+
+function calculateBackoff(attempt) {
+  const jitter = Math.random() * 1000;
+  return Math.min(MAX_BACKOFF_MS, BASE_BACKOFF_MS * Math.pow(2, attempt - 1) + jitter);
+}
+
 module.exports = {
   name: "socketClosed",
   async execute(manager, player, payload) {
-    if (!player || !player.is247) return;
+    if (!player) return;
 
-    // Kode 4014 artinya terputus (bisa karena region shift atau ditendang).
-    // Kode 1000/1006 artinya terputus normal/abnormal dari websocket.
-    console.warn(
-      `\x1b[43m\x1b[30m ⚠️ VOICE DISCONNECT \x1b[0m Bot terputus dari Voice (Code: ${payload?.code || "Unknown"}). Memeriksa mode 24/7...`,
-    );
+    const code = payload?.code || "Unknown";
+    const is247 = player.is247 || false;
+    
+    logger.warn(`[SocketClosed] Guild ${player.guildId} disconnected (Code: ${code}, 24/7: ${is247})`);
 
-    // Helper: bersihkan uiCache dan transition timers sebelum destroy
     const cleanupPlayer = () => {
       const oldCache = manager.uiCache.get(player.guildId);
       if (oldCache) {
@@ -24,44 +31,61 @@ module.exports = {
     };
 
     player.socketRetryCount = (player.socketRetryCount || 0) + 1;
-    if (player.socketRetryCount > 5) {
-      console.error(
-        `\x1b[41m\x1b[37m ⚠️ VOICE RECONNECT FAILED \x1b[0m Gagal menghubungkan 24/7 setelah 5 percobaan. Menghentikan player.`,
-      );
+    
+    if (player.socketRetryCount > MAX_RETRY_ATTEMPTS) {
+      logger.error(`[SocketClosed] Max retries (${MAX_RETRY_ATTEMPTS}) exceeded for guild ${player.guildId}. Destroying player.`);
       player.socketRetryCount = 0;
       cleanupPlayer();
       player.destroy();
       return;
     }
 
-    const backoffMs = Math.min(
-      30000,
-      3000 * Math.pow(2, player.socketRetryCount - 1),
-    );
+    const backoffMs = calculateBackoff(player.socketRetryCount);
 
     try {
-      // Gunakan cacheManager sesuai aturan AGENTS.md 1.9 (bukan GuildSettings.findOrCreate langsung)
       const guildData = await cacheManager.getGuildSettings(player.guildId);
+      const shouldReconnect = is247 || (guildData?.music?.twentyFourSeven === true);
 
-      // Jika 24/7 diaktifkan di server ini
-      if (guildData && guildData.music && guildData.music.twentyFourSeven) {
-        const voiceChannelId = guildData.music.voiceChannel;
+      if (shouldReconnect) {
+        const voiceChannelId = player.voiceChannel || guildData?.music?.voiceChannel;
+        const textChannelId = player.textChannel || guildData?.music?.textChannel;
 
-        // Delay bertahap (backoff) untuk menghindari loop spam
-        setTimeout(() => {
+        if (!voiceChannelId) {
+          logger.warn(`[SocketClosed] No voice channel configured for guild ${player.guildId}. Cannot reconnect.`);
+          cleanupPlayer();
+          player.destroy();
+          return;
+        }
+
+        setTimeout(async () => {
           const guild = manager.client.guilds.cache.get(player.guildId);
-          if (guild && guild.channels.cache.has(voiceChannelId)) {
-            console.log(
-              `\x1b[42m\x1b[30m ♻️ AUTO RECONNECT \x1b[0m Percobaan #${player.socketRetryCount}: Mengembalikan Naura ke Voice Channel (24/7 Mode)...`,
-            );
+          if (!guild) {
+            logger.warn(`[SocketClosed] Guild ${player.guildId} not found in cache. Skipping reconnect.`);
+            return;
+          }
+
+          const voiceChannel = guild.channels.cache.get(voiceChannelId);
+          if (!voiceChannel) {
+            logger.warn(`[SocketClosed] Voice channel ${voiceChannelId} not found. Skipping reconnect.`);
+            return;
+          }
+
+          try {
+            logger.info(`[SocketClosed] Reconnect attempt #${player.socketRetryCount} for guild ${player.guildId}...`);
+            
             const newPlayer = manager.poru.createConnection({
               guildId: player.guildId,
               voiceChannel: voiceChannelId,
-              textChannel: player.textChannel || guildData.music.textChannel,
+              textChannel: textChannelId,
               deaf: true,
             });
-            newPlayer.is247 = true;
+            
+            newPlayer.is247 = is247;
             newPlayer.socketRetryCount = player.socketRetryCount;
+            
+            logger.info(`[SocketClosed] Successfully reconnected to guild ${player.guildId}`);
+          } catch (reconnectErr) {
+            logger.error(`[SocketClosed] Reconnect failed for guild ${player.guildId}:`, reconnectErr.message);
           }
         }, backoffMs);
       } else {
@@ -69,7 +93,7 @@ module.exports = {
         player.destroy();
       }
     } catch (e) {
-      logger.error("[SocketClosed] Gagal memulihkan 24/7:", e);
+      logger.error(`[SocketClosed] Error processing disconnect for guild ${player.guildId}:`, e);
       cleanupPlayer();
       player.destroy();
     }

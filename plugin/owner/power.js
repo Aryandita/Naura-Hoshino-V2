@@ -200,7 +200,7 @@ async function attachPowerCollector(replyMessage, authorUser, client) {
           withBanner: false,
           footerText: ui.getFooter("core"),
         });
-        await interaction.update({ ...loadingPayload, components: [] });
+        await interaction.update(loadingPayload);
 
         // Beri jeda 800ms agar Discord REST selesai memperbarui pesan sebelum koneksi ditutup
         setTimeout(() => {
@@ -208,7 +208,7 @@ async function attachPowerCollector(replyMessage, authorUser, client) {
             user: interaction.user.tag,
             reason: "Restart via Discord Power Panel",
           });
-        }, 800);
+        }, 800).unref?.();
         return;
       }
 
@@ -220,14 +220,14 @@ async function attachPowerCollector(replyMessage, authorUser, client) {
           description: "Seluruh data telah disimpan ke database dan koneksi ditutup secara bersih. Naura Hoshino kini telah nonaktif.",
           footerText: ui.getFooter("core"),
         });
-        await interaction.update({ ...shutdownSuccessPayload, components: [] });
+        await interaction.update(shutdownSuccessPayload);
 
         setTimeout(() => {
           lifecycleManager.executeShutdown(client, {
             user: interaction.user.tag,
             reason: "Shutdown via Discord Power Panel",
           });
-        }, 800);
+        }, 800).unref?.();
       }
     },
     async onEnd(_, reason) {

@@ -181,21 +181,6 @@ module.exports = {
         reason,
       });
 
-      await interaction.reply(
-        buildContainerV2({
-          accentColorHex: ui.getColor("warning") || ui.getColor("error"),
-          authorName: "Peringatan Diberikan",
-          title: `Peringatan untuk ${user.username}`,
-          iconURL: user.displayAvatarURL(),
-          expression: "warning",
-          description:
-            `**Anggota:** ${user} (${user.tag})\n` +
-            `**Moderator:** ${interaction.user}\n` +
-            `**Alasan:** ${reason}`,
-          footerText: ui.getFooter("core"),
-        }),
-      );
-
       // Tambahkan sistem Strike
       let strikeAction = null;
       let currentStrikes = 1;
@@ -446,7 +431,7 @@ module.exports = {
           buttonsRow: [],
           footerText: ui.getFooter("core"),
         });
-        return i.update({ ...cancelPayload, components: [] });
+        return i.update(cancelPayload);
       }
 
       if (i.customId.startsWith("confirm_clear_warn_")) {
@@ -467,7 +452,7 @@ module.exports = {
           footerText: ui.getFooter("core"),
         });
 
-        return i.editReply({ ...successPayload, components: [] });
+        return i.editReply(successPayload);
       }
     });
 
@@ -480,7 +465,7 @@ module.exports = {
           description: "Operasi pembersihan dibatalkan otomatis karena tidak ada respons.",
           footerText: ui.getFooter("core"),
         });
-        await interaction.editReply({ ...timeoutPayload, components: timeoutPayload.components }).catch(() => {});
+        await interaction.editReply(timeoutPayload).catch(() => {});
       }
     });
   },

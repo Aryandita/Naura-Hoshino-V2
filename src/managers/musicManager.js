@@ -20,6 +20,16 @@ function loadPoru() {
 class MusicManager {
   constructor(client) {
     this.client = client;
+    if (client) {
+      client.musicManager = this;
+      if (!client.poru) {
+        Object.defineProperty(client, "poru", {
+          get: () => this.poru,
+          configurable: true,
+          enumerable: true,
+        });
+      }
+    }
     this.ui = ui;
     this.uiCache = new Collection();
     this._poru = null;
@@ -202,11 +212,12 @@ class MusicManager {
    * @returns {boolean}
    */
   isDuplicateFilterEnabled(guildId) {
-    if (!guildId) return true;
-    if (this.duplicateFilterStates.has(guildId)) {
-      return this.duplicateFilterStates.get(guildId);
+    if (!guildId) return false;
+    const gid = String(guildId);
+    if (this.duplicateFilterStates.has(gid)) {
+      return this.duplicateFilterStates.get(gid);
     }
-    return true; // Default aktif demi menjaga keragaman musik
+    return false;
   }
 
   /**
@@ -216,7 +227,8 @@ class MusicManager {
    */
   setDuplicateFilterEnabled(guildId, enabled) {
     if (!guildId) return;
-    this.duplicateFilterStates.set(guildId, Boolean(enabled));
+    const gid = String(guildId);
+    this.duplicateFilterStates.set(gid, Boolean(enabled));
   }
 
   /**
@@ -264,7 +276,7 @@ class MusicManager {
   }
 
   /**
-   * Menyimpan antrean aktif ke Redis dan fallback memori.
+   * Menyimpan antrean aktif ke Redis (backup) dan memori (primary).
    * @param {string} guildId
    * @param {object} player
    */
@@ -274,21 +286,25 @@ class MusicManager {
       return;
     }
 
+    const serializeTrack = (t) => {
+      const info = t.info || {};
+      return {
+        title: info.title,
+        author: info.author,
+        uri: info.uri,
+        length: info.length,
+        identifier: info.identifier,
+        sourceName: info.sourceName,
+      };
+    };
+
     const payload = {
       guildId,
       voiceChannel: player.voiceChannel,
       textChannel: player.textChannel,
-      currentTrack: player.currentTrack
-        ? {
-            track: player.currentTrack.track,
-            info: player.currentTrack.info,
-          }
-        : null,
+      currentTrack: player.currentTrack ? serializeTrack(player.currentTrack) : null,
       position: player.position || 0,
-      queue: (player.queue || []).map((t) => ({
-        track: t.track,
-        info: t.info,
-      })),
+      queue: (player.queue || []).map(serializeTrack),
       volume: player.volume || 100,
       savedAt: Date.now(),
     };
@@ -296,43 +312,44 @@ class MusicManager {
     this.savedQueues.set(guildId, payload);
 
     try {
-      const redis = require("./redisManager").client;
-      if (redis?.isReady) {
-        await redis.set(
-          `lavalink:queue:${guildId}`,
-          JSON.stringify(payload),
-          "EX",
-          3600,
-        );
+      const redisManager = require("./redisManager");
+      if (redisManager.isReady) {
+        await redisManager.setCache(`music:queue:${guildId}`, payload, 3600);
       }
     } catch (err) {
-      logger.warn("[musicManager:saveQueueState] Operasi cache Redis gagal: " + (err?.message || err));
+      logger.warn("[musicManager:saveQueueState] Gagal persist antrean ke Redis: " + (err?.message || err));
     }
   }
 
   /**
-   * Mengambil antrean tersimpan dari Redis atau memori.
+   * Mengambil antrean tersimpan dari memori (primary) atau Redis (fallback).
    * @param {string} guildId
    * @returns {Promise<object|null>}
    */
   async getSavedQueueState(guildId) {
     if (!guildId) return null;
 
+    const saved = this.savedQueues.get(guildId);
+    if (saved) return saved;
+
     try {
-      const redis = require("./redisManager").client;
-      if (redis?.isReady) {
-        const raw = await redis.get(`lavalink:queue:${guildId}`);
-        if (raw) return JSON.parse(raw);
+      const redisManager = require("./redisManager");
+      if (redisManager.isReady) {
+        const cached = await redisManager.getCache(`music:queue:${guildId}`);
+        if (cached) {
+          this.savedQueues.set(guildId, cached);
+          return cached;
+        }
       }
     } catch (err) {
-      logger.warn("[musicManager:getSavedQueueState] Operasi cache Redis gagal: " + (err?.message || err));
+      logger.debug("[musicManager:getSavedQueueState] Redis queue restore gagal: " + (err?.message || err));
     }
 
-    return this.savedQueues.get(guildId) || null;
+    return null;
   }
 
   /**
-   * Menghapus antrean tersimpan setelah musik selesai atau dihentikan.
+   * Menghapus antrean tersimpan dari memori dan Redis.
    * @param {string} guildId
    */
   async clearSavedQueueState(guildId) {
@@ -340,12 +357,12 @@ class MusicManager {
     this.savedQueues.delete(guildId);
 
     try {
-      const redis = require("./redisManager").client;
-      if (redis?.isReady) {
-        await redis.del(`lavalink:queue:${guildId}`);
+      const redisManager = require("./redisManager");
+      if (redisManager.isReady) {
+        await redisManager.deleteCache(`music:queue:${guildId}`);
       }
-    } catch (err) {
-      logger.warn("[musicManager:clearSavedQueueState] Operasi cache Redis gagal: " + (err?.message || err));
+    } catch (_) {
+      // Abaikan error Redis saat cleanup
     }
   }
 
@@ -396,12 +413,18 @@ class MusicManager {
    * @returns {object|null} Informasi timer yang terdaftar.
    */
   setSleepTimer(guildId, minutes, options = {}) {
-    if (!guildId) return null;
+    let gid = typeof guildId === "object" && guildId !== null ? guildId.id : guildId;
+    if (!gid) return null;
+    gid = String(gid);
+
+    let numMinutes = Number(minutes);
+    if (isNaN(numMinutes) && typeof options === "number") {
+      numMinutes = Number(options);
+    }
 
     // Bersihkan timer sebelumnya jika ada
-    this.cancelSleepTimer(guildId);
+    this.cancelSleepTimer(gid);
 
-    const numMinutes = Number(minutes);
     if (isNaN(numMinutes) || numMinutes <= 0) {
       return { success: true, cancelled: true };
     }
@@ -411,12 +434,12 @@ class MusicManager {
     const normalDurationMs = totalMs - fadeDurationMs;
     const endsAt = Date.now() + totalMs;
 
-    const player = this._poru?.players?.get(guildId);
+    const player = this._poru?.players?.get(gid);
     const initialVolume =
       player && typeof player.volume === "number" ? player.volume : 100;
 
     const entry = {
-      guildId,
+      guildId: gid,
       minutes: numMinutes,
       endsAt,
       totalMs,
@@ -447,7 +470,7 @@ class MusicManager {
 
       entry.fadeIntervalId = setInterval(() => {
         currentStep--;
-        const activePlayer = this._poru?.players?.get(guildId);
+        const activePlayer = this._poru?.players?.get(gid);
         if (activePlayer && typeof activePlayer.setVolume === "function") {
           const newVol = Math.max(
             0,
@@ -461,9 +484,9 @@ class MusicManager {
             clearInterval(entry.fadeIntervalId);
             entry.fadeIntervalId = null;
           }
-          this.sleepTimers.delete(guildId);
+          this.sleepTimers.delete(gid);
 
-          const finalPlayer = this._poru?.players?.get(guildId);
+          const finalPlayer = this._poru?.players?.get(gid);
           if (finalPlayer) {
             const textChannelId = finalPlayer.textChannel;
             if (typeof finalPlayer.destroy === "function") {
@@ -510,26 +533,27 @@ class MusicManager {
       }, normalDurationMs);
       if (entry.timeoutId.unref) entry.timeoutId.unref();
     }
-
-    this.sleepTimers.set(guildId, entry);
+ 
+    this.sleepTimers.set(gid, entry);
     return entry;
   }
 
   /**
    * Membatalkan sleep timer aktif pada suatu guild dan memulihkan volume jika perlu.
-   * @param {string} guildId - ID server discord.
+   * @param {string|object} guildId - ID server discord atau objek guild.
    * @returns {boolean} True jika ada timer yang berhasil dibatalkan.
    */
   cancelSleepTimer(guildId) {
-    if (!guildId || !this.sleepTimers.has(guildId)) return false;
+    const gid = typeof guildId === "object" && guildId !== null ? guildId.id : String(guildId || "");
+    if (!gid || !this.sleepTimers.has(gid)) return false;
 
-    const entry = this.sleepTimers.get(guildId);
+    const entry = this.sleepTimers.get(gid);
     if (entry.timeoutId) clearTimeout(entry.timeoutId);
     if (entry.fadeIntervalId) clearInterval(entry.fadeIntervalId);
 
     // Pulihkan volume jika sebelumnya sedang dalam fase fade
     if (entry.isFading && typeof entry.initialVolume === "number") {
-      const player = this._poru?.players?.get(guildId);
+      const player = this._poru?.players?.get(gid);
       if (
         player &&
         typeof player.setVolume === "function" &&
@@ -539,23 +563,24 @@ class MusicManager {
       }
     }
 
-    this.sleepTimers.delete(guildId);
+    this.sleepTimers.delete(gid);
     return true;
   }
 
   /**
    * Mengambil status sleep timer aktif di guild.
-   * @param {string} guildId - ID server discord.
+   * @param {string|object} guildId - ID server discord atau objek guild.
    * @returns {object|null} Status timer tidur atau null jika tidak aktif.
    */
   getSleepTimer(guildId) {
-    if (!guildId || !this.sleepTimers.has(guildId)) return null;
+    const gid = typeof guildId === "object" && guildId !== null ? guildId.id : String(guildId || "");
+    if (!gid || !this.sleepTimers.has(gid)) return null;
 
-    const entry = this.sleepTimers.get(guildId);
+    const entry = this.sleepTimers.get(gid);
     const remainingMs = Math.max(0, entry.endsAt - Date.now());
 
     return {
-      guildId,
+      guildId: gid,
       minutes: entry.minutes,
       endsAt: entry.endsAt,
       remainingMs,
@@ -614,4 +639,5 @@ MusicManager.getPreferredNode = function (poru, options = {}) {
   return lavalinkClusterManager.getPreferredNode(poru, options);
 };
 
+MusicManager.MusicManager = MusicManager;
 module.exports = MusicManager;

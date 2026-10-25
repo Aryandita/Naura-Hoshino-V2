@@ -11,6 +11,8 @@ const languageManager = require("../../../src/managers/languageManager");
 const locales = {
   id: require("../../../assets/language/id.json"),
   en: require("../../../assets/language/en.json"),
+  ja: require("../../../assets/language/ja.json"),
+  es: require("../../../assets/language/es.json"),
 };
 
 const rawDashboard = ui.dashboards || "http://92.118.206.166:30398";

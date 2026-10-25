@@ -13,7 +13,7 @@ info:
     
     ## Error Format
     All errors follow RFC 7807 Problem Details format.
-  version: 2.3.0
+  version: 2.4.0
   contact:
     name: Naura Hoshino Team
   license:

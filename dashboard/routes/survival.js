@@ -438,7 +438,7 @@ module.exports = () => {
         terrain: "Plains",
         structure: { type: "castle", tier: 1, name: "Frontier Outpost" },
         defensePower: 500,
-        buffs: ["+10% Star Fragment Yield", "+5% Fortress Shield"],
+        buffs: ["+10% Sukamaju Koin (SC) Yield", "+5% Fortress Shield"],
         claimedAt: Date.now(),
       };
 
@@ -454,6 +454,495 @@ module.exports = () => {
         success: true,
         message: `Berhasil mengklaim kapling (${parsedX}, ${parsedY}) untuk klan ${newPlot.clanName}!`,
         plot: newPlot,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // 6. Endpoint Peta Dunia Adisha & Roam Interaktif
+  // ------------------------------------------------------------------
+  const {
+    ADISHA_REGIONS,
+    ADISHA_VEHICLES,
+    getVehicleInfo,
+    calculateResaleValue,
+    canAccessArea,
+    calculateRoamCost,
+    evaluateWorkEligibility,
+  } = require("../../src/survival/data/adishaWorldData");
+  const cacheManager = require("../../src/managers/cacheManager");
+  const { getTimeState } = require("../../src/survival/helpers/survivalTime");
+
+  // Helper untuk membaca / menginisialisasi status pemain
+  async function resolvePlayerSurvivalState(req) {
+    const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user;
+    if (isAuth) {
+      try {
+        const [survival, profile] = await Promise.all([
+          cacheManager.getUserSurvival(req.user.id),
+          cacheManager.getUserProfile(req.user.id),
+        ]);
+        const currentAreaId = survival.currentLocation || "desa_sukamaju";
+        const currentLocId = survival.currentSubLocation || "warung";
+        const vehicleId = survival.vehicle || null;
+        return {
+          isLoggedIn: true,
+          userId: req.user.id,
+          displayName: req.user.username || req.user.displayName || "Petualang",
+          avatar: req.user.avatar
+            ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png`
+            : "/assets/core/avatar.png",
+          currentAreaId,
+          currentLocationId: currentLocId,
+          vehicle: vehicleId,
+          activeVehicle: getVehicleInfo(vehicleId),
+          hp: Number(survival.hp ?? 100),
+          stamina: Number(survival.stamina ?? 85),
+          hunger: Number(survival.hunger ?? 80),
+          thirst: Number(survival.thirst ?? 80),
+          sukamajuCoins: Number(survival.sukamajuCoins || survival.starFragments || 0),
+          pratamaDollars: Number(profile?.pratamaDollars || profile?.coins || profile?.balance || 0),
+          scholarshipVouchers: Number(survival.scholarshipVouchers || survival.coupons || 0),
+          stats: {
+            strength: Number(survival.strength || 5),
+            intelligence: Number(survival.intelligence || 6),
+            agility: Number(survival.agility || 5),
+            charisma: Number(survival.charisma || 7),
+            luck: Number(survival.luck || 5),
+          },
+        };
+      } catch (err) {
+        logger.warn(`[AdishaMap] Gagal mengambil data user live: ${err.message}`);
+      }
+    }
+
+    // Fallback Guest Session
+    if (!req.session.guestSurvival) {
+      req.session.guestSurvival = {
+        isLoggedIn: false,
+        userId: "guest_adventurer",
+        displayName: "Guest Adventurer",
+        avatar: "/assets/core/avatar.png",
+        currentAreaId: "desa_sukamaju",
+        currentLocationId: "warung",
+        vehicle: null,
+        hp: 100,
+        stamina: 85,
+        hunger: 80,
+        thirst: 80,
+        sukamajuCoins: 350,
+        pratamaDollars: 120,
+        scholarshipVouchers: 2,
+        stats: {
+          strength: 7,
+          intelligence: 8,
+          agility: 6,
+          charisma: 7,
+          luck: 5,
+        },
+      };
+    }
+    const guestState = req.session.guestSurvival;
+    return {
+      ...guestState,
+      activeVehicle: getVehicleInfo(guestState.vehicle),
+    };
+  }
+
+  // 6.1 Data Peta Dunia Adisha Lengkap
+  router.get("/world/adisha-map", (req, res) => {
+    try {
+      const now = new Date();
+      const inGameHour = Math.floor((now.getHours() * 60 + now.getMinutes()) / 60);
+      const timeState = getTimeState(inGameHour);
+
+      return res.json({
+        success: true,
+        worldName: "Benua Adisha",
+        tagline: "Ekosistem Kehidupan & Petualangan Naura Wilds",
+        inGameHour,
+        timeState,
+        regions: ADISHA_REGIONS,
+        vehicles: ADISHA_VEHICLES,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 6.2 Status & Vitalitas Pemain
+  router.get("/world/player-status", async (req, res) => {
+    try {
+      const player = await resolvePlayerSurvivalState(req);
+      return res.json({ success: true, player });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 6.3 Berpindah Tempat (Roam)
+  router.post("/world/roam", async (req, res) => {
+    try {
+      const { targetAreaId, targetLocationId } = req.body || {};
+      if (!targetAreaId || !targetLocationId) {
+        return res.status(400).json({ success: false, error: "Target wilayah dan sub-lokasi wajib diisi." });
+      }
+
+      const area = ADISHA_REGIONS[targetAreaId];
+      if (!area) {
+        return res.status(404).json({ success: false, error: `Wilayah ${targetAreaId} tidak ditemukan.` });
+      }
+
+      const location = area.locations?.[targetLocationId];
+      if (!location) {
+        return res.status(404).json({ success: false, error: `Sub-lokasi ${targetLocationId} tidak ditemukan di wilayah ini.` });
+      }
+
+      const player = await resolvePlayerSurvivalState(req);
+
+      // Cek izin akses wilayah (Kawasan Tambang Raksasa wajib kendaraan)
+      const accessCheck = canAccessArea(targetAreaId, player.vehicle);
+      if (!accessCheck.canAccess) {
+        return res.status(403).json({
+          success: false,
+          error: accessCheck.reason,
+          requiresVehicle: true,
+        });
+      }
+
+      const roamCost = calculateRoamCost(player.currentAreaId, targetAreaId, targetLocationId, player.vehicle);
+
+      if (player.stamina < roamCost) {
+        return res.status(400).json({
+          success: false,
+          error: `Stamina tidak mencukupi untuk menjelajah ke ${location.name}. Butuh ${roamCost} Stamina, sisa staminamu ${player.stamina}.`,
+        });
+      }
+
+      const newStamina = Math.max(0, player.stamina - roamCost);
+
+      if (player.isLoggedIn) {
+        await cacheManager.updateUserSurvival(player.userId, {
+          stamina: newStamina,
+          currentLocation: targetAreaId,
+          currentSubLocation: targetLocationId,
+        });
+      } else {
+        req.session.guestSurvival.stamina = newStamina;
+        req.session.guestSurvival.currentAreaId = targetAreaId;
+        req.session.guestSurvival.currentLocationId = targetLocationId;
+      }
+
+      const isCrossRegion = player.currentAreaId !== targetAreaId;
+      const vehicleBonusText = player.activeVehicle
+        ? ` Mengendarai ${player.activeVehicle.name} (diskon stamina aktif).`
+        : "";
+      const message = isCrossRegion
+        ? `Kamu menempuh perjalanan jauh dan tiba di ${location.name} (${area.name})! Terpakai ${roamCost} Stamina.${vehicleBonusText}`
+        : `Kamu melangkah santai dan sampai di ${location.name}. Terpakai ${roamCost} Stamina.${vehicleBonusText}`;
+
+      return res.json({
+        success: true,
+        message,
+        roamCost,
+        currentAreaId: targetAreaId,
+        currentLocationId: targetLocationId,
+        newStamina,
+        location,
+        vehicleUsed: player.activeVehicle?.name || null,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 6.4 Bekerja di Sub-Lokasi
+  router.post("/world/work", async (req, res) => {
+    try {
+      const { areaId, locationId } = req.body || {};
+      const area = ADISHA_REGIONS[areaId];
+      if (!area) return res.status(404).json({ success: false, error: "Wilayah tidak ditemukan." });
+
+      const location = area.locations?.[locationId];
+      if (!location || !location.workAvailable) {
+        return res.status(400).json({ success: false, error: "Tidak ada lowongan pekerjaan di tempat ini." });
+      }
+
+      const player = await resolvePlayerSurvivalState(req);
+
+      // Cek kelayakan statistik
+      const eligibility = evaluateWorkEligibility(location, player.stats);
+      if (!eligibility.canWork) {
+        return res.status(400).json({
+          success: false,
+          error: `Syarat fisik belum terpenuhi untuk pekerjaan ini: ${eligibility.missing.join(", ")}.`,
+          missing: eligibility.missing,
+        });
+      }
+
+      const workStaminaCost = 10;
+      if (player.stamina < workStaminaCost) {
+        return res.status(400).json({
+          success: false,
+          error: `Stamina kamu terlalu lelah untuk bekerja. Butuh ${workStaminaCost} Stamina, sisa ${player.stamina}.`,
+        });
+      }
+
+      const reward = location.workReward || { currency: "SC", amount: 30, exp: 5 };
+      const newStamina = Math.max(0, player.stamina - workStaminaCost);
+      let newBalance = 0;
+
+      if (player.isLoggedIn) {
+        await cacheManager.updateUserSurvival(player.userId, { stamina: newStamina });
+        if (reward.currency === "SC") {
+          await cacheManager.incrementUserSurvival(player.userId, { sukamajuCoins: reward.amount });
+          const fresh = await cacheManager.getUserSurvival(player.userId);
+          newBalance = fresh.sukamajuCoins || fresh.starFragments || 0;
+        } else if (reward.currency === "PD") {
+          await cacheManager.incrementUserProfile(player.userId, { pratamaDollars: reward.amount });
+          const fresh = await cacheManager.getUserProfile(player.userId);
+          newBalance = fresh.pratamaDollars || fresh.coins || 0;
+        } else if (reward.currency === "VB") {
+          await cacheManager.incrementUserSurvival(player.userId, { scholarshipVouchers: reward.amount });
+          const fresh = await cacheManager.getUserSurvival(player.userId);
+          newBalance = fresh.scholarshipVouchers || fresh.coupons || 0;
+        }
+        try {
+          const leveling = require("../../src/survival/engines/survivalLeveling");
+          await leveling.addPlayerXP(player.userId, reward.exp || 5);
+        } catch (_) {}
+      } else {
+        req.session.guestSurvival.stamina = newStamina;
+        if (reward.currency === "SC") {
+          req.session.guestSurvival.sukamajuCoins += reward.amount;
+          newBalance = req.session.guestSurvival.sukamajuCoins;
+        } else if (reward.currency === "PD") {
+          req.session.guestSurvival.pratamaDollars += reward.amount;
+          newBalance = req.session.guestSurvival.pratamaDollars;
+        } else if (reward.currency === "VB") {
+          req.session.guestSurvival.scholarshipVouchers += reward.amount;
+          newBalance = req.session.guestSurvival.scholarshipVouchers;
+        }
+      }
+
+      return res.json({
+        success: true,
+        message: `Selesai bekerja sebagai "${location.jobTitle || 'Pekerja'}"! Kamu menerima upah ${reward.amount} ${reward.currency} dan +${reward.exp} EXP.`,
+        reward,
+        newStamina,
+        newBalance,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 6.5 Belanja di Toko / Warung
+  router.post("/world/shop/buy", async (req, res) => {
+    try {
+      const { areaId, locationId, itemId } = req.body || {};
+      const area = ADISHA_REGIONS[areaId];
+      if (!area) return res.status(404).json({ success: false, error: "Wilayah tidak ditemukan." });
+
+      const location = area.locations?.[locationId];
+      if (!location || !Array.isArray(location.shopItems)) {
+        return res.status(400).json({ success: false, error: "Bukan tempat berbelanja." });
+      }
+
+      const item = location.shopItems.find((it) => it.itemId === itemId);
+      if (!item) {
+        return res.status(404).json({ success: false, error: "Barang tidak tersedia di toko ini." });
+      }
+
+      const player = await resolvePlayerSurvivalState(req);
+      const currencyType = item.currency || "SC";
+      let currentBal = 0;
+
+      if (currencyType === "SC") currentBal = player.sukamajuCoins;
+      else if (currencyType === "PD") currentBal = player.pratamaDollars;
+      else if (currencyType === "VB") currentBal = player.scholarshipVouchers;
+
+      if (currentBal < item.price) {
+        return res.status(400).json({
+          success: false,
+          error: `Saldo tidak cukup! Butuh ${item.price} ${currencyType}, saldo kamu saat ini ${currentBal} ${currencyType}.`,
+        });
+      }
+
+      const newBal = currentBal - item.price;
+      const restores = item.restores || {};
+      const newStamina = Math.min(100, player.stamina + (restores.stamina || 0));
+      const newHunger = Math.min(100, player.hunger + (restores.hunger || 0));
+      const newThirst = Math.min(100, player.thirst + (restores.thirst || 0));
+      const newHp = Math.min(100, player.hp + (restores.hp || 0));
+
+      if (player.isLoggedIn) {
+        const patch = {
+          stamina: newStamina,
+          hunger: newHunger,
+          thirst: newThirst,
+          hp: newHp,
+        };
+        if (currencyType === "SC") patch.sukamajuCoins = newBal;
+        else if (currencyType === "VB") patch.scholarshipVouchers = newBal;
+        await cacheManager.updateUserSurvival(player.userId, patch);
+
+        if (currencyType === "PD") {
+          await cacheManager.updateUserProfile(player.userId, { pratamaDollars: newBal });
+        }
+
+        if (item.isTicket) {
+          const { addItemsAtomic } = require("../../src/survival/engines/inventoryHelper");
+          await addItemsAtomic(player.userId, [{ id: item.itemId, amount: 1, name: item.name }]);
+        }
+      } else {
+        req.session.guestSurvival.stamina = newStamina;
+        req.session.guestSurvival.hunger = newHunger;
+        req.session.guestSurvival.thirst = newThirst;
+        req.session.guestSurvival.hp = newHp;
+        if (currencyType === "SC") req.session.guestSurvival.sukamajuCoins = newBal;
+        else if (currencyType === "PD") req.session.guestSurvival.pratamaDollars = newBal;
+        else if (currencyType === "VB") req.session.guestSurvival.scholarshipVouchers = newBal;
+      }
+
+      return res.json({
+        success: true,
+        message: item.isTicket
+          ? `Berhasil membeli ${item.name}! Tiket disimpan di tas untuk kencan.`
+          : `Berhasil membeli dan mengonsumsi ${item.name}! Vitalitasmu pulih.`,
+        item,
+        newBalance: newBal,
+        vitality: {
+          hp: newHp,
+          stamina: newStamina,
+          hunger: newHunger,
+          thirst: newThirst,
+        },
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 6.6 Pembelian Kendaraan Bermotor di Dealer
+  router.post("/world/vehicle/buy", async (req, res) => {
+    try {
+      const { vehicleId } = req.body || {};
+      const vehicle = getVehicleInfo(vehicleId);
+      if (!vehicle) {
+        return res.status(404).json({ success: false, error: "Kendaraan tidak terdaftar di dealer Adisha." });
+      }
+
+      const player = await resolvePlayerSurvivalState(req);
+
+      // Aturan: Hanya boleh memiliki 1 kendaraan aktif
+      if (player.vehicle) {
+        const currentV = getVehicleInfo(player.vehicle);
+        const resale = calculateResaleValue(player.vehicle);
+        return res.status(400).json({
+          success: false,
+          error: `Kamu sudah memiliki ${currentV?.name || "kendaraan"}! User hanya bisa memiliki 1 kendaraan. Jual kendaraan lamamu terlebih dahulu seharga ${resale?.resalePrice} ${resale?.currency} (70% harga beli) sebelum membeli motor baru.`,
+          hasActiveVehicle: true,
+          currentVehicle: currentV,
+          resaleInfo: resale,
+        });
+      }
+
+      const currencyType = vehicle.currency || "SC";
+      let currentBal = 0;
+      if (currencyType === "SC") currentBal = player.sukamajuCoins;
+      else if (currencyType === "PD") currentBal = player.pratamaDollars;
+      else if (currencyType === "VB") currentBal = player.scholarshipVouchers;
+
+      if (currentBal < vehicle.price) {
+        return res.status(400).json({
+          success: false,
+          error: `Saldo tidak mencukupi untuk membeli ${vehicle.name}! Butuh ${vehicle.price} ${currencyType}, saldo kamu ${currentBal} ${currencyType}.`,
+        });
+      }
+
+      const newBal = currentBal - vehicle.price;
+
+      if (player.isLoggedIn) {
+        const patch = { vehicle: vehicle.id };
+        if (currencyType === "SC") patch.sukamajuCoins = newBal;
+        else if (currencyType === "VB") patch.scholarshipVouchers = newBal;
+        await cacheManager.updateUserSurvival(player.userId, patch);
+
+        if (currencyType === "PD") {
+          await cacheManager.updateUserProfile(player.userId, { pratamaDollars: newBal });
+        }
+      } else {
+        req.session.guestSurvival.vehicle = vehicle.id;
+        if (currencyType === "SC") req.session.guestSurvival.sukamajuCoins = newBal;
+        else if (currencyType === "PD") req.session.guestSurvival.pratamaDollars = newBal;
+        else if (currencyType === "VB") req.session.guestSurvival.scholarshipVouchers = newBal;
+      }
+
+      return res.json({
+        success: true,
+        message: `Selamat! Kamu resmi memiliki ${vehicle.name} (${vehicle.vehicleType})! Diskon stamina roam aktif dan izin akses Kawasan Tambang Raksasa kini terbuka.`,
+        vehicle,
+        newBalance: newBal,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 6.7 Penjualan Kendaraan Lama ke Dealer (Refund 70% dengan Currency yang Sama)
+  router.post("/world/vehicle/sell", async (req, res) => {
+    try {
+      const player = await resolvePlayerSurvivalState(req);
+
+      if (!player.vehicle) {
+        return res.status(400).json({ success: false, error: "Kamu tidak memiliki kendaraan untuk dijual." });
+      }
+
+      const resale = calculateResaleValue(player.vehicle);
+      if (!resale) {
+        return res.status(400).json({ success: false, error: "Data kendaraan tidak dapat diverifikasi." });
+      }
+
+      const currencyType = resale.currency;
+      let newBal = 0;
+
+      if (player.isLoggedIn) {
+        await cacheManager.updateUserSurvival(player.userId, { vehicle: null });
+        if (currencyType === "SC") {
+          await cacheManager.incrementUserSurvival(player.userId, { sukamajuCoins: resale.resalePrice });
+          const fresh = await cacheManager.getUserSurvival(player.userId);
+          newBal = fresh.sukamajuCoins || 0;
+        } else if (currencyType === "PD") {
+          await cacheManager.incrementUserProfile(player.userId, { pratamaDollars: resale.resalePrice });
+          const fresh = await cacheManager.getUserProfile(player.userId);
+          newBal = fresh.pratamaDollars || 0;
+        } else if (currencyType === "VB") {
+          await cacheManager.incrementUserSurvival(player.userId, { scholarshipVouchers: resale.resalePrice });
+          const fresh = await cacheManager.getUserSurvival(player.userId);
+          newBal = fresh.scholarshipVouchers || 0;
+        }
+      } else {
+        req.session.guestSurvival.vehicle = null;
+        if (currencyType === "SC") {
+          req.session.guestSurvival.sukamajuCoins += resale.resalePrice;
+          newBal = req.session.guestSurvival.sukamajuCoins;
+        } else if (currencyType === "PD") {
+          req.session.guestSurvival.pratamaDollars += resale.resalePrice;
+          newBal = req.session.guestSurvival.pratamaDollars;
+        } else if (currencyType === "VB") {
+          req.session.guestSurvival.scholarshipVouchers += resale.resalePrice;
+          newBal = req.session.guestSurvival.scholarshipVouchers;
+        }
+      }
+
+      return res.json({
+        success: true,
+        message: `Berhasil menjual ${resale.vehicleName} ke dealer! Kamu menerima refund sebesar ${resale.resalePrice} ${resale.currency} (70% dari harga asli). Sekarang kamu dapat membeli kendaraan baru.`,
+        resale,
+        newBalance: newBal,
       });
     } catch (err) {
       return res.status(500).json({ success: false, error: err.message });

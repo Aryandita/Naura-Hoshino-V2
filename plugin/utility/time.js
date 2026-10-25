@@ -141,7 +141,7 @@ module.exports = {
         } catch (error) {
           logger.debug("[time:execute] Galat pada rutinitas aplikasi: " + (error?.message || error));
         }
-      }, durationMs);
+      }, durationMs).unref?.();
     }
   },
 

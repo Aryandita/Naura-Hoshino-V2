@@ -118,7 +118,7 @@ module.exports = {
             description: "Permainan Akinator dihentikan.",
             footerText: ui.getFooter("core"),
           });
-          return i.editReply({ ...errPayload, components: [] });
+          return i.editReply(errPayload);
         }
 
         if (i.customId === "aki_back") {
@@ -139,7 +139,7 @@ module.exports = {
                 "Akinator menyerah! Dia tidak bisa menebak karaktermu.",
               footerText: ui.getFooter("core"),
             });
-            return i.editReply({ ...errPayload, components: [] });
+            return i.editReply(errPayload);
           }
 
           const winPayload = buildContainerV2({
@@ -156,7 +156,7 @@ module.exports = {
           });
 
           collector.stop("win");
-          return i.editReply({ ...winPayload, components: [] });
+          return i.editReply(winPayload);
         }
 
         await i.editReply(buildAkiUI());
@@ -167,7 +167,7 @@ module.exports = {
           description: "Terjadi kesalahan koneksi ke server Akinator.",
           footerText: ui.getFooter("core"),
         });
-        return i.editReply({ ...errPayload, components: [] });
+        return i.editReply(errPayload);
       }
     });
 
@@ -180,7 +180,7 @@ module.exports = {
           footerText: ui.getFooter("core"),
         });
         interaction
-          .editReply({ ...errPayload, components: [] })
+          .editReply(errPayload)
           .catch(() => {});
       }
     });

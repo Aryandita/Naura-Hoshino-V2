@@ -10,6 +10,34 @@ const { parseSpreadsheet } = require("../../ai/documentParser");
 const cacheManager = require("../../managers/cacheManager");
 const { logger } = require("../../managers/logger");
 
+const BATCH_SIZE_LIMIT = 1000;
+
+function createTotalsObject() {
+  return {
+    sukamajuCoins: 0,
+    pratamaDollars: 0,
+    scholarshipVouchers: 0,
+    get starFragments() {
+      return this.sukamajuCoins;
+    },
+    set starFragments(v) {
+      this.sukamajuCoins = v;
+    },
+    get coins() {
+      return this.pratamaDollars;
+    },
+    set coins(v) {
+      this.pratamaDollars = v;
+    },
+    get coupons() {
+      return this.scholarshipVouchers;
+    },
+    set coupons(v) {
+      this.scholarshipVouchers = v;
+    },
+  };
+}
+
 class EconomyBatchService {
   /**
    * Parse dan pratinjau data spreadsheet tanpa melakukan mutasi saldo
@@ -19,29 +47,7 @@ class EconomyBatchService {
   previewBatch(buffer) {
     const rows = parseSpreadsheet(buffer);
 
-    const totals = {
-      sukamajuCoins: 0,
-      pratamaDollars: 0,
-      scholarshipVouchers: 0,
-      get starFragments() {
-        return this.sukamajuCoins;
-      },
-      set starFragments(v) {
-        this.sukamajuCoins = v;
-      },
-      get coins() {
-        return this.pratamaDollars;
-      },
-      set coins(v) {
-        this.pratamaDollars = v;
-      },
-      get coupons() {
-        return this.scholarshipVouchers;
-      },
-      set coupons(v) {
-        this.scholarshipVouchers = v;
-      },
-    };
+    const totals = createTotalsObject();
 
     const validRows = [];
 
@@ -86,50 +92,39 @@ class EconomyBatchService {
         success: false,
         processedCount: 0,
         failedCount: 0,
-        totals: { sukamajuCoins: 0, pratamaDollars: 0, scholarshipVouchers: 0 },
+        totals: createTotalsObject(),
         failedUsers: [],
       };
     }
 
+    if (validRows.length > BATCH_SIZE_LIMIT) {
+      logger.warn(
+        `[EconomyBatch] Batch size ${validRows.length} exceeds limit ${BATCH_SIZE_LIMIT}, truncating.`,
+      );
+      validRows = validRows.slice(0, BATCH_SIZE_LIMIT);
+    }
+
     let processed = 0;
     const failedUsers = [];
-    const totals = {
-      sukamajuCoins: 0,
-      pratamaDollars: 0,
-      scholarshipVouchers: 0,
-      get starFragments() {
-        return this.sukamajuCoins;
-      },
-      set starFragments(v) {
-        this.sukamajuCoins = v;
-      },
-      get coins() {
-        return this.pratamaDollars;
-      },
-      set coins(v) {
-        this.pratamaDollars = v;
-      },
-      get coupons() {
-        return this.scholarshipVouchers;
-      },
-      set coupons(v) {
-        this.scholarshipVouchers = v;
-      },
-    };
+    const totals = createTotalsObject();
 
     for (const row of validRows) {
       try {
         if (row.normalizedCurrency === "sukamajuCoins" || row.normalizedCurrency === "starFragments") {
-          await cacheManager.incrementUserSurvival(row.userId, "sukamajuCoins", row.amount);
+          await cacheManager.incrementUserSurvival(row.userId, { sukamajuCoins: row.amount });
           totals.sukamajuCoins += row.amount;
         } else if (row.normalizedCurrency === "pratamaDollars" || row.normalizedCurrency === "coins") {
-          await cacheManager.incrementUserProfile(row.userId, "economy_wallet", row.amount);
+          await cacheManager.incrementUserProfile(row.userId, { economy_wallet: row.amount });
           totals.pratamaDollars += row.amount;
         } else if (row.normalizedCurrency === "scholarshipVouchers" || row.normalizedCurrency === "coupons") {
-          await cacheManager.incrementUserSurvival(row.userId, "scholarshipVouchers", row.amount);
+          await cacheManager.incrementUserSurvival(row.userId, { scholarshipVouchers: row.amount });
           totals.scholarshipVouchers += row.amount;
         }
         processed++;
+        
+        if (processed % 100 === 0) {
+          logger.info(`[EconomyBatch] Progress: ${processed}/${validRows.length} users processed...`);
+        }
       } catch (err) {
         logger.error(`[EconomyBatch] Gagal menambahkan saldo ke user ${row.userId}: ${err.message}`);
         failedUsers.push(row.userId);

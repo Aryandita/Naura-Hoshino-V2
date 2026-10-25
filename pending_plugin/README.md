@@ -18,9 +18,14 @@ Direktori ini berisi modul dan rancangan fitur bertenaga AI yang sengaja dipisah
 | `ai_vision_loot/visionLootAppraiser.js` | Multimodal AI Vision pengubah foto barang dunia nyata menjadi item Naura Wilds dengan stat acak. | Gemini 2.5 Flash (Vision) |
 | `ai_storyteller/dreamWeaverStoryteller.js` | Pemicu alur cerita interaktif dan quest mini rahasia otomatis pada channel Discord saat sepi. | Groq LLaMA 3.3 |
 | `ai_voice_clone/voiceCloneCompanion.js` | Jembatan integrasi TTS kustom / Voice Cloning berbasis Fish Audio API (`/v1/tts`). | Fish Audio S1 |
-| `ai_radio_podcast/dailyChroniclePodcast.js` | Perangkum obrolan server dan peristiwa RPG menjadi naskah siaran radio/podcast harian. | Gemini 2.5 Flash |
-| `ai_chat_function_calling/chatFunctionCalling.js` | Function Calling percakapan bebas untuk memetakan bahasa alami ke eksekusi command bot. | Gemini 2.5 Flash / Groq |
-| `ai_server_lore/serverLoreService.js` | Sistem ingatan budaya, sejarah, dan peristiwa unik server berbasis vector embeddings (RAG). | text-embedding-004 |
+| `ai_merchant_trader/dynamicMerchantTrader.js` | NPC pedagang dinamis dengan memori transaksi, preferensi pemain, dan penyesuaian harga berbasis reputasi. | Gemini 2.5 Flash / Groq |
+| `ai_music_generator/ambientMusicGenerator.js` | Generator musik/ambient sound berbasis konteks RPG, cuaca, waktu, dan aktivitas server. | Gemini 2.5 Flash |
+| `ai_moderator/intelligentModerator.js` | Moderator AI cerdas dengan deteksi toxic/spam berbasis konteks budaya gaming Indonesia. | Gemini 2.5 Flash / Groq |
+| `ai_crafting_advisor/smartCraftingAdvisor.js` | Sistem crafting cerdas yang menyarankan resep optimal berdasarkan inventory dan tren server. | Gemini 2.5 Flash |
+| `ai_translator/realtimeTranslator.js` | Penerjemah real-time untuk percakapan multilingual di channel Discord dengan cache efisien. | Gemini 2.5 Flash |
+| `ai_economy_analyst/marketTrendAnalyzer.js` | Analis ekonomi AI untuk prediksi inflasi/deflasi mata uang SC/PD/VB/BA dan rekomendasi balancing otomatis. | Gemini 2.5 Flash |
+| `ai_raid_coordinator/raidStrategyPlanner.js` | Koordinator raid AI yang menganalisis komposisi party dan merekomendasikan formasi serta strategi boss fight. | Gemini 2.5 Flash |
+| `ai_lore_narrator/worldEventNarrator.js` | Narator peristiwa dunia yang mengubah log transaksi/server events menjadi narasi sinematik untuk pengumuman channel. | Groq LLaMA 3.3 |
 
 ---
 

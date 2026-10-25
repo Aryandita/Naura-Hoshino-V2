@@ -2,13 +2,23 @@
 
 const { Sequelize } = require("sequelize");
 const env = require("./env");
+const { logger } = require("../managers/logger");
 
 const isSupabaseConfig = Boolean(
   (env.DB_HOST && env.DB_HOST.includes("supabase")) ||
-  (env.DATABASE_URL && env.DATABASE_URL.includes("supabase")) ||
-  env.SUPABASE_URL ||
-  env.SUPABASE_KEY,
+    (env.DATABASE_URL && env.DATABASE_URL.includes("supabase")) ||
+    env.SUPABASE_URL ||
+    env.SUPABASE_KEY,
 );
+
+const poolMetrics = {
+  totalAcquired: 0,
+  totalReleased: 0,
+  currentUsed: 0,
+  peakUsed: 0,
+  acquireErrors: 0,
+  lastAcquireTime: null,
+};
 
 const isExternalDb =
   !env.USE_SQLITE &&
@@ -117,8 +127,20 @@ const createSequelizeInstance = () => {
 
   const dialectOptions = getDialectOptions();
 
+  let instance;
   if (env.DATABASE_URL) {
-    return new Sequelize(env.DATABASE_URL, {
+    instance = new Sequelize(env.DATABASE_URL, {
+      dialect,
+      logging: false,
+      dialectOptions,
+      pool: poolConfig,
+      retry: retryConfig,
+    });
+  } else {
+    const defaultPort = dialect === "postgres" ? 5432 : 3306;
+    instance = new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASS, {
+      host: env.DB_HOST,
+      port: env.DB_PORT || defaultPort,
       dialect,
       logging: false,
       dialectOptions,
@@ -127,19 +149,44 @@ const createSequelizeInstance = () => {
     });
   }
 
-  const defaultPort = dialect === "postgres" ? 5432 : 3306;
-  return new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASS, {
-    host: env.DB_HOST,
-    port: env.DB_PORT || defaultPort,
-    dialect,
-    logging: false,
-    dialectOptions,
-    pool: poolConfig,
-    retry: retryConfig,
-  });
+  try {
+    if (instance.connectionManager?.pool && typeof instance.connectionManager.pool.on === "function") {
+      instance.connectionManager.pool.on("acquire", () => {
+        poolMetrics.totalAcquired++;
+        poolMetrics.currentUsed++;
+        poolMetrics.lastAcquireTime = Date.now();
+        if (poolMetrics.currentUsed > poolMetrics.peakUsed) {
+          poolMetrics.peakUsed = poolMetrics.currentUsed;
+        }
+      });
+
+      instance.connectionManager.pool.on("release", () => {
+        poolMetrics.totalReleased++;
+        poolMetrics.currentUsed = Math.max(0, poolMetrics.currentUsed - 1);
+      });
+
+      instance.connectionManager.pool.on("error", (err) => {
+        poolMetrics.acquireErrors++;
+        logger.error("[Database] Pool acquire error: " + (err?.message || err));
+      });
+    }
+  } catch (err) {
+    logger.debug("[Database] Gagal memasang pool metrics listener: " + (err?.message || err));
+  }
+
+  return instance;
 };
 
 const sequelize = createSequelizeInstance();
+
+function getPoolMetrics() {
+  return {
+    ...poolMetrics,
+    poolMax: POOL_MAX,
+    utilizationPercent:
+      POOL_MAX > 0 ? Math.round((poolMetrics.currentUsed / POOL_MAX) * 100) : 0,
+  };
+}
 
 module.exports = {
   sequelize,
@@ -149,4 +196,5 @@ module.exports = {
   isSupabaseConfig,
   SHARD_COUNT,
   POOL_MAX,
+  getPoolMetrics,
 };

@@ -261,6 +261,19 @@ async function handleEquip(interaction, userId) {
   });
 
   collector.on("end", () => {
-    interaction.editReply({ components: [] }).catch(() => {});
+    row.components.forEach((c) => c.setDisabled(true));
+    btnRow.components.forEach((c) => c.setDisabled(true));
+    interaction
+      .editReply(
+        buildContainerV2({
+          accentColorHex: "#00d9ff",
+          title: "👗 Inventori Kosmetik (Selesai)",
+          description:
+            "Sesi pemilihan kosmetik telah berakhir. Gunakan `/cosmetic equip` kembali untuk mengubah pakaian.",
+          buttonsRow: [row, btnRow],
+          footerText: "Naura Cosmetic System",
+        }),
+      )
+      .catch(() => {});
   });
 }

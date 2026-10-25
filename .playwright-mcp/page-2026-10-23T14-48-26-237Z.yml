@@ -1,0 +1,458 @@
+- generic [active] [ref=e1]:
+  - link "Lewati ke konten utama" [ref=e2] [cursor=pointer]:
+    - /url: "#mainContent"
+  - generic [ref=e3]:
+    - complementary "Navigasi utama" [ref=e4]:
+      - generic [ref=e5]:
+        - img "Naura" [ref=e7]
+        - generic [ref=e8]:
+          - generic [ref=e9]: Naura Hoshino
+          - generic [ref=e10]: v2.3.0 · Online
+        - button "Toggle Compact Sidebar" [ref=e11] [cursor=pointer]:
+          - generic [ref=e12]: 
+        - text: 
+      - button " Cari modul... Ctrl+K" [ref=e13] [cursor=pointer]:
+        - generic [ref=e14]: 
+        - generic [ref=e15]: Cari modul...
+        - generic [ref=e16]: Ctrl+K
+      - navigation [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: Overview
+          - link " Dashboard" [ref=e20] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e21]: 
+            - generic [ref=e23]: Dashboard
+          - link " Live Status Live" [ref=e24] [cursor=pointer]:
+            - /url: /status
+            - generic [ref=e25]: 
+            - generic [ref=e27]: Live Status
+            - generic [ref=e28]: Live
+          - link " Activity Feed" [ref=e29] [cursor=pointer]:
+            - /url: /feed
+            - generic [ref=e30]: 
+            - generic [ref=e32]: Activity Feed
+        - generic [ref=e33]:
+          - generic [ref=e34]: Community
+          - link " Leaderboard" [ref=e35] [cursor=pointer]:
+            - /url: /leaderboard
+            - generic [ref=e36]: 
+            - generic [ref=e38]: Leaderboard
+          - link " Economy" [ref=e39] [cursor=pointer]:
+            - /url: /economy
+            - generic [ref=e40]: 
+            - generic [ref=e42]: Economy
+          - link " Sindikat & Klan" [ref=e43] [cursor=pointer]:
+            - /url: /clan
+            - generic [ref=e44]: 
+            - generic [ref=e46]: Sindikat & Klan
+          - link " Pasar Galaksi" [ref=e47] [cursor=pointer]:
+            - /url: /marketplace
+            - generic [ref=e48]: 
+            - generic [ref=e50]: Pasar Galaksi
+          - link " Guild Topology" [ref=e51] [cursor=pointer]:
+            - /url: /topology
+            - generic [ref=e52]: 
+            - generic [ref=e54]: Guild Topology
+        - generic [ref=e55]:
+          - generic [ref=e56]: Media & Audio
+          - link " Music Hub" [ref=e57] [cursor=pointer]:
+            - /url: /music
+            - generic [ref=e58]: 
+            - generic [ref=e60]: Music Hub
+          - link " Soundboard" [ref=e61] [cursor=pointer]:
+            - /url: /soundboard
+            - generic [ref=e62]: 
+            - generic [ref=e64]: Soundboard
+          - link " Jam Session" [ref=e65] [cursor=pointer]:
+            - /url: /jam
+            - generic [ref=e66]: 
+            - generic [ref=e68]: Jam Session
+          - link " Karaoke" [ref=e69] [cursor=pointer]:
+            - /url: /karaoke
+            - generic [ref=e70]: 
+            - generic [ref=e72]: Karaoke
+        - generic [ref=e73]:
+          - generic [ref=e74]: Naura Wilds RPG
+          - link " World Map" [ref=e75] [cursor=pointer]:
+            - /url: /world
+            - generic [ref=e76]: 
+            - generic [ref=e78]: World Map
+          - link " Survival Map" [ref=e79] [cursor=pointer]:
+            - /url: /survival-map
+            - generic [ref=e80]: 
+            - generic [ref=e82]: Survival Map
+          - link "Tas & Ransel" [ref=e83] [cursor=pointer]:
+            - /url: /inventory
+          - link " Retro Arcade" [ref=e86] [cursor=pointer]:
+            - /url: /arcade
+            - generic [ref=e87]: 
+            - generic [ref=e89]: Retro Arcade
+          - link " Activity Hub" [ref=e90] [cursor=pointer]:
+            - /url: /activity
+            - generic [ref=e91]: 
+            - generic [ref=e93]: Activity Hub
+        - generic [ref=e94]:
+          - generic [ref=e95]: Configuration
+          - link " Settings" [ref=e96] [cursor=pointer]:
+            - /url: /settings
+            - generic [ref=e97]: 
+            - generic [ref=e99]: Settings
+          - link " Welcomer Card" [ref=e100] [cursor=pointer]:
+            - /url: /welcomer
+            - generic [ref=e101]: 
+            - generic [ref=e103]: Welcomer Card
+          - link " Embed Builder" [ref=e104] [cursor=pointer]:
+            - /url: /builder
+            - generic [ref=e105]: 
+            - generic [ref=e107]: Embed Builder
+          - link " Automations" [ref=e108] [cursor=pointer]:
+            - /url: /automations
+            - generic [ref=e109]: 
+            - generic [ref=e111]: Automations
+          - link " Tickets" [ref=e112] [cursor=pointer]:
+            - /url: /tickets
+            - generic [ref=e113]: 
+            - generic [ref=e115]: Tickets
+          - link " Admin God Mode" [ref=e116] [cursor=pointer]:
+            - /url: /admin
+            - generic [ref=e117]: 
+            - generic [ref=e119]: Admin God Mode
+        - generic [ref=e120]:
+          - generic [ref=e121]: More
+          - link " Profil Petualang" [ref=e122] [cursor=pointer]:
+            - /url: /profile
+            - generic [ref=e123]: 
+            - generic [ref=e125]: Profil Petualang
+          - link " Ruang Trofi" [ref=e126] [cursor=pointer]:
+            - /url: /achievements
+            - generic [ref=e127]: 
+            - generic [ref=e129]: Ruang Trofi
+          - link " Creator Portfolio" [ref=e130] [cursor=pointer]:
+            - /url: /portfolio
+            - generic [ref=e131]: 
+            - generic [ref=e133]: Creator Portfolio
+      - generic [ref=e135] [cursor=pointer]:
+        - img "User" [ref=e136]
+        - generic [ref=e137]:
+          - generic [ref=e138]: Guest
+          - generic [ref=e139]: Klik untuk login
+        - link "" [ref=e140]:
+          - /url: /login?redirect=/profile
+    - generic [ref=e142]:
+      - banner [ref=e143]:
+        - generic:
+          - text: 
+          - generic:
+            - generic: System Overview
+            - generic:
+              - generic [ref=e144]: Naura OS
+              - generic [ref=e145]: /
+              - generic [ref=e146]: Dashboard
+        - generic [ref=e147]:
+          - generic [ref=e148] [cursor=pointer]:
+            - generic [ref=e150]: Supabase Live
+            - generic [ref=e151]: (59ms)
+          - 'button "Buka Command Palette pencarian navigasi (Shortcut: Ctrl+K)" [ref=e152] [cursor=pointer]':
+            - generic [ref=e153]: 
+            - generic [ref=e154]: Search (Ctrl+K)
+          - button "Beralih ke Mode Terang" [ref=e155] [cursor=pointer]:
+            - generic [ref=e156]: 
+            - generic [ref=e157]: Light
+          - button "Pilih palet warna dashboard" [ref=e158] [cursor=pointer]:
+            - generic [ref=e159]: 
+            - generic [ref=e160]: Midnight
+          - button "Bisukan efek suara" [pressed] [ref=e161] [cursor=pointer]:
+            - generic [ref=e162]: 
+            - generic [ref=e163]: SFX On
+          - generic "BGM & Sound Controls (Klik untuk putar/jeda)" [ref=e164] [cursor=pointer]:
+            - generic [ref=e170]: BGM
+            - button "Toggle Mute" [ref=e171]:
+              - generic [ref=e172]: 
+          - generic "Database Engine Status" [ref=e173]: PostgreSQL
+          - generic "Naura Coins" [ref=e176] [cursor=pointer]:
+            - generic [ref=e177]: 
+            - generic [ref=e178]: "0"
+          - link " Login" [ref=e179] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e180]: 
+            - generic [ref=e181]: Login
+          - img "User" [ref=e182] [cursor=pointer]
+      - main [ref=e183]:
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - heading " Selamat datang, Guest" [level=1] [ref=e186]:
+              - generic [ref=e187]: 
+              - text: Selamat datang,
+              - generic [ref=e189]: Guest
+            - paragraph [ref=e190]: Sistem monitoring terpusat · Telemetry real-time · Naura Hoshino v2.3.0
+          - generic [ref=e192]:
+            - generic [ref=e193]: Engine Version
+            - generic [ref=e194]: v2.3.0
+        - generic [ref=e197]:
+          - generic [ref=e198]:
+            - generic [ref=e200]:
+              - generic [ref=e201]: KONSOL KENDALI SISTEM · NAURA HOSHINO V2
+              - heading "Flagship Companion & Telemetri Real-Time" [level=2] [ref=e203]
+              - paragraph [ref=e204]: "Platform pengawasan bot terpadu: monitoring gateway Discord, manajemen audio Poru v5 & Lavalink, sistem moneter polyglot database, serta avatar 3D humanoid terkalibrasi v6."
+              - generic [ref=e205]:
+                - generic [ref=e206]:
+                  - generic [ref=e207]: 
+                  - text: Lavalink v4
+                - generic [ref=e208]:
+                  - generic [ref=e209]: 
+                  - text: Supabase & Redis
+                - generic [ref=e210]:
+                  - generic [ref=e211]: 
+                  - text: Naura Wilds RPG
+                - generic [ref=e212]:
+                  - generic [ref=e213]: 
+                  - text: Gemini 2.5 Flash
+              - generic [ref=e214]:
+                - link " Member Portfolio" [ref=e215] [cursor=pointer]:
+                  - /url: /portfolio
+                  - generic [ref=e216]: 
+                  - text: Member Portfolio
+                - link " Naura Wilds" [ref=e217] [cursor=pointer]:
+                  - /url: /world
+                  - generic [ref=e218]: 
+                  - text: Naura Wilds
+                - link " Music Studio" [ref=e219] [cursor=pointer]:
+                  - /url: /music
+                  - generic [ref=e220]: 
+                  - text: Music Studio
+            - generic [ref=e221]:
+              - generic [ref=e222]:
+                - generic [ref=e223]:
+                  - generic [ref=e224]: 
+                  - text: Pusat Operasional
+                - generic [ref=e225]: 4 Modul Utama
+              - generic [ref=e226]:
+                - link " Music Studio Audio Player & Lavalink " [ref=e227] [cursor=pointer]:
+                  - /url: /music
+                  - generic [ref=e228]: 
+                  - generic [ref=e230]:
+                    - generic [ref=e231]: Music Studio
+                    - generic [ref=e232]: Audio Player & Lavalink
+                  - text: 
+                - link " Ekonomi Server Saldo NC & Bank Vault " [ref=e233] [cursor=pointer]:
+                  - /url: /economy
+                  - generic [ref=e234]: 
+                  - generic [ref=e236]:
+                    - generic [ref=e237]: Ekonomi Server
+                    - generic [ref=e238]: Saldo NC & Bank Vault
+                  - text: 
+                - link " Naura Wilds Survival RPG Map " [ref=e239] [cursor=pointer]:
+                  - /url: /world
+                  - generic [ref=e240]: 
+                  - generic [ref=e242]:
+                    - generic [ref=e243]: Naura Wilds
+                    - generic [ref=e244]: Survival RPG Map
+                  - text: 
+                - link " Pengaturan Bot Konfigurasi Guild " [ref=e245] [cursor=pointer]:
+                  - /url: /settings
+                  - generic [ref=e246]: 
+                  - generic [ref=e248]:
+                    - generic [ref=e249]: Pengaturan Bot
+                    - generic [ref=e250]: Konfigurasi Guild
+                  - text: 
+          - generic [ref=e252]:
+            - generic:
+              - generic: 🌸 Idle
+              - generic: NEW VRM
+            - generic [ref=e253]:
+              - button "⭐ NEW" [ref=e254] [cursor=pointer]
+              - button "VRM" [ref=e255] [cursor=pointer]
+              - button "GLB" [ref=e256] [cursor=pointer]
+            - generic [ref=e258]: Memuat Avatar 3D... 100%
+            - generic [ref=e261]:
+              - button "🌸 Idle" [ref=e262] [cursor=pointer]
+              - button "👋 Sapa" [ref=e263] [cursor=pointer]
+              - button "🤔 Pikir" [ref=e264] [cursor=pointer]
+              - button "🎉 Ceria" [ref=e265] [cursor=pointer]
+              - button "😳 Malu" [ref=e266] [cursor=pointer]
+              - generic [ref=e267]:
+                - button "✨" [ref=e268] [cursor=pointer]
+                - button "↺" [ref=e269] [cursor=pointer]
+                - button "📷" [ref=e270] [cursor=pointer]
+        - generic [ref=e271]: Telemetri Sistem Real-Time
+        - generic [ref=e272]:
+          - generic [ref=e273]:
+            - generic [ref=e274]: Network Latency Gateway RTT
+            - generic [ref=e275]: 59ms
+            - generic [ref=e276]:
+              - generic [ref=e277]: 
+              - text: Discord Gateway Latensi
+          - generic [ref=e278]:
+            - generic [ref=e279]: System Uptime Process
+            - generic [ref=e280]: 0j 0m
+            - generic [ref=e281]:
+              - generic [ref=e282]: 
+              - text: Waktu aktif bot berkelanjutan
+          - generic [ref=e283]:
+            - generic [ref=e284]: Total Pengguna Database
+            - generic [ref=e285]: "12"
+            - generic [ref=e286]:
+              - generic [ref=e287]: 
+              - text: Profil pengguna terdaftar
+          - generic [ref=e288]:
+            - generic [ref=e289]: "Server Aktif Cluster #0"
+            - generic [ref=e290]: "142"
+            - generic [ref=e291]:
+              - generic [ref=e292]: 
+              - text: Guild terhubung live
+        - generic [ref=e293]:
+          - generic [ref=e295]:
+            - generic [ref=e296]:
+              - generic [ref=e297]: 
+              - text: Telemetri Real-Time
+            - generic [ref=e298]: Live Ping & RAM
+          - generic [ref=e301]:
+            - generic [ref=e302]:
+              - generic [ref=e303]:
+                - generic [ref=e304]: 
+                - text: Distribusi Perintah
+              - generic [ref=e305]: 12 Modul
+            - generic [ref=e308]:
+              - generic [ref=e309]: Music (24%)
+              - generic [ref=e311]: AI (20%)
+              - generic [ref=e313]: RPG (18%)
+              - generic [ref=e315]: Admin (15%)
+              - generic [ref=e317]: Utility (23%)
+        - generic [ref=e319]:
+          - generic [ref=e320]:
+            - generic [ref=e321]:
+              - generic [ref=e322]:
+                - generic [ref=e323]: 
+                - text: Top 5 Hall of Fame
+              - button "Lihat Semua " [ref=e324] [cursor=pointer]:
+                - text: Lihat Semua
+                - generic [ref=e325]: 
+            - generic [ref=e327]:
+              - generic [ref=e328]: 
+              - text: Memuat Top 5 Hall of Fame...
+          - generic [ref=e329]:
+            - generic [ref=e330]:
+              - generic [ref=e331]:
+                - generic [ref=e332]:
+                  - generic [ref=e333]: 
+                  - text: Now Playing
+                - link "Open " [ref=e334] [cursor=pointer]:
+                  - /url: /music
+                  - text: Open
+                  - generic [ref=e335]: 
+              - generic [ref=e336]:
+                - generic [ref=e337]: 🎵
+                - generic [ref=e338]:
+                  - generic [ref=e339]: Idle, Tidak Ada Lagu
+                  - generic [ref=e340]: Queue kosong
+                - generic [ref=e343]:
+                  - button "" [ref=e344] [cursor=pointer]
+                  - button "" [ref=e346] [cursor=pointer]
+                  - button "" [ref=e348] [cursor=pointer]
+            - generic [ref=e350]:
+              - generic [ref=e351]:
+                - generic [ref=e352]:
+                  - generic [ref=e353]: 
+                  - text: Survival Vitals
+                - link "Wilds " [ref=e354] [cursor=pointer]:
+                  - /url: /world
+                  - text: Wilds
+                  - generic [ref=e355]: 
+              - generic [ref=e356]:
+                - generic [ref=e357]:
+                  - generic [ref=e358]: ❤️
+                  - generic [ref=e359]: HP
+                  - generic [ref=e362]: 100%
+                - generic [ref=e363]:
+                  - generic [ref=e364]: 💧
+                  - generic [ref=e365]: Hydration
+                  - generic [ref=e368]: 100%
+                - generic [ref=e369]:
+                  - generic [ref=e370]: 🍖
+                  - generic [ref=e371]: Satiation
+                  - generic [ref=e374]: 100%
+                - generic [ref=e375]:
+                  - generic [ref=e376]: ⚡
+                  - generic [ref=e377]: Energy
+                  - generic [ref=e380]: 100%
+        - generic [ref=e381]:
+          - generic [ref=e383]:
+            - generic [ref=e384]:
+              - generic [ref=e385]: 
+              - text: Live Activity Feed
+            - link "Lihat Semua " [ref=e386] [cursor=pointer]:
+              - /url: /feed
+              - text: Lihat Semua
+              - generic [ref=e387]: 
+          - generic [ref=e413]:
+            - generic [ref=e414]:
+              - generic [ref=e415]:
+                - generic [ref=e416]: 
+                - text: Architecture
+              - generic [ref=e417]: "Cluster #0 Live"
+            - generic [ref=e418]:
+              - generic [ref=e419]:
+                - text: Database
+                - generic [ref=e420]: PostgreSQL
+              - generic [ref=e421]:
+                - text: Cache
+                - generic [ref=e422]: Redis
+              - generic [ref=e423]:
+                - text: Audio
+                - generic [ref=e424]: Lavalink v4
+              - generic [ref=e425]:
+                - text: AI Engine
+                - generic [ref=e426]: Gemini 2.5 Flash
+              - generic [ref=e427]:
+                - text: Shard
+                - generic [ref=e428]: "#0 Online"
+              - generic [ref=e429]:
+                - generic [ref=e430]:
+                  - generic [ref=e431]: 
+                  - text: Runtime
+                - text: Node.js v24
+        - text: 
+  - text:     
+  - generic [ref=e432]: Tema dashboard diubah ke Mode Gelap (midnight)
+  - generic [ref=e433]:
+    - generic [ref=e435]:
+      - generic [ref=e436]: Install Naura OS
+      - generic [ref=e437]: Akses dashboard lebih cepat langsung dari layar utama
+    - button " Install" [ref=e438] [cursor=pointer]:
+      - generic [ref=e439]: 
+      - text: Install
+    - button "" [ref=e440] [cursor=pointer]
+  - text:    
+  - generic [ref=e442]:
+    - generic "Buka AI Voice Companion Naura 🌸" [ref=e443] [cursor=pointer]:
+      - img "Naura"
+      - 'generic "Status: Online & Ceria" [ref=e444]'
+    - generic:
+      - generic:
+        - generic:
+          - img "Naura"
+          - generic:
+            - generic: Naura Hoshino
+            - generic:
+              - generic: ●
+              - text: Live AI Companion
+        - generic:
+          - link "":
+            - /url: /lounge
+          - button ""
+          - button ""
+      - generic: Halo! Aku Naura Hoshino, asisten ceria dan kawan petualanganmu. Ada yang bisa kubantu di server atau dashboard hari ini? 🌸✨
+      - generic:
+        - button "👋 Sapa Naura"
+        - button "⚡ Status Bot"
+        - button "🎵 Musik Santai"
+        - link "🎭 Buka 3D Lounge":
+          - /url: /lounge
+        - button "🎲 Dadu Hoki"
+      - generic:
+        - textbox "Tanya sesuatu ke Naura..."
+        - button ""
+  - generic [ref=e446]:
+    - img "Naura Avatar" [ref=e448]
+    - generic: Drag to move • Double-click to reset
+    - generic [ref=e450]: Double-click to reset position

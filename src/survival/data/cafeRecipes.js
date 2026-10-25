@@ -63,7 +63,7 @@ const CAFE_RECIPES = [
       type: "FRAGMENT_YIELD",
       value: 10,
       durationHours: 2,
-      description: "+10% Bonus Perolehan Star Fragments",
+      description: "+10% Bonus Perolehan Sukamaju Koin (SC)",
     },
   },
   {

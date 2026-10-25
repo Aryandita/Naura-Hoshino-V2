@@ -139,7 +139,7 @@ const FEATURES = Object.freeze({
     category: "game",
     description:
       "Dunia RPG, ekonomi, quest, NPC, farming, crafting, dungeon, dan achievement.",
-    enabledByDefault: false,
+    enabledByDefault: true,
     setupKey: "survival",
     premium: false,
     healthCheck: false,

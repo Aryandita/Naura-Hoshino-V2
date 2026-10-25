@@ -58,7 +58,7 @@ async function rollCouponDrop(source, { survival }) {
 function dropLine(result) {
   if (!result || !result.gained) return "";
   const emoji = currency.emojiOf(currency.COUPON);
-  return `${emoji} Naura kasih **${result.gained} Naura Coupon** buat kamu! Total sekarang **${result.total}**.`;
+  return `${emoji} Naura kasih **${result.gained} Voucher Beasiswa (VB)** buat kamu! Total sekarang **${result.total}**.`;
 }
 
 module.exports = { DROP_TABLE, rollCouponDrop, dropLine, luckBonus };

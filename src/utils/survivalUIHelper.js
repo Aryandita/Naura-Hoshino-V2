@@ -12,7 +12,9 @@
 // - Footer respons survival wajib getFooter() yang mendelegasikan ke
 //   ui.getFooter('survival').
 
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const path = require("path");
+const fs = require("fs");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require("discord.js");
 const { colors, footers, designTokens } = require("../config/ui/palette");
 const { buildGoalGradientBar } = require("./uxHelper");
 const { buildContainerV2 } = require("./NauraContainerBuilder");
@@ -298,12 +300,24 @@ function buildTimeLocationLine(survival) {
  * @returns {ActionRowBuilder}
  */
 function buildSurvivalActionRow(context, userId, { exclude = [], customButtons = [] } = {}) {
+  let effectiveContext = context;
+  let effectiveUserId = userId;
+
+  // Proteksi jika pemanggil terbalik atau mengoper (userId, lang)
+  if (typeof effectiveContext === "string" && /^\d{17,20}$/.test(effectiveContext)) {
+    effectiveUserId = effectiveContext;
+    effectiveContext = "town";
+  } else if (effectiveContext && typeof effectiveContext === "object" && effectiveContext.id) {
+    effectiveUserId = effectiveContext.id;
+    effectiveContext = "town";
+  }
+
   const row = new ActionRowBuilder();
 
   if (Array.isArray(customButtons) && customButtons.length > 0) {
     for (const btn of customButtons.slice(0, 5)) {
       const button = new ButtonBuilder()
-        .setCustomId(`survival_act_${btn.id}:${userId}`)
+        .setCustomId(`survival_act_${btn.id}:${effectiveUserId}`)
         .setLabel(btn.label)
         .setStyle(btn.style || ButtonStyle.Secondary);
       if (btn.emoji) button.setEmoji(btn.emoji);
@@ -364,13 +378,13 @@ function buildSurvivalActionRow(context, userId, { exclude = [], customButtons =
     ],
   };
 
-  const list = defs[context] || defs.gathering;
+  const list = defs[effectiveContext] || defs.gathering;
   const excludeSet = new Set(exclude);
   const items = list.filter((item) => !excludeSet.has(item.id)).slice(0, 5);
 
   for (const item of items) {
     const btn = new ButtonBuilder()
-      .setCustomId(`survival_act_${item.id}:${userId}`)
+      .setCustomId(`survival_act_${item.id}:${effectiveUserId}`)
       .setLabel(item.label)
       .setStyle(item.style);
     if (item.emoji) btn.setEmoji(item.emoji);
@@ -400,6 +414,7 @@ function buildStatusDashboardCard({
   pulseInfo = null,
   activeBuffs = [],
   buttonsRow = null,
+  topBannerAttachmentName = null,
 } = {}) {
   const userId = user?.id || "0";
   const hud = buildSurvivalHUD(survival);
@@ -449,6 +464,7 @@ function buildStatusDashboardCard({
     title: "🌿 Naura Wilds: Dashboard Status Petualang",
     iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
     expression: "info",
+    topBannerAttachmentName,
     description: cleanDescription,
     buttonsRow: defaultButtons,
     footerText: getFooter(),
@@ -468,6 +484,7 @@ function buildStatusDashboardCard({
  * @param {string} [params.weatherBonus=""] - Catatan efek bonus cuaca
  * @param {string} [params.warning=""] - Peringatan vital/stamina
  * @param {ActionRowBuilder|Array<ActionRowBuilder>} [params.buttonsRow]
+ * @param {string|null} [params.topBannerAttachmentName=null]
  * @returns {object} Payload Components V2 siap kirim
  */
 function buildActionResultCard({
@@ -479,6 +496,8 @@ function buildActionResultCard({
   weatherBonus = "",
   warning = "",
   buttonsRow = null,
+  topBannerAttachmentName = null,
+  files = [],
 } = {}) {
   const userId = user?.id || "0";
   const lines = [description];
@@ -510,6 +529,8 @@ function buildActionResultCard({
     title,
     iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
     expression: "reward",
+    topBannerAttachmentName,
+    files,
     description: cleanDesc,
     buttonsRow: defaultButtons,
     footerText: getFooter(),
@@ -527,6 +548,7 @@ function buildActionResultCard({
  * @param {string} [params.threatLevel="TINGGI"] - Tingkat ancaman (SEDANG, TINGGI, EKSTREM)
  * @param {string} [params.dangerWarning=""] - Pesan peringatan bahaya
  * @param {ActionRowBuilder|Array<ActionRowBuilder>} [params.buttonsRow]
+ * @param {string|null} [params.topBannerAttachmentName=null]
  * @returns {object} Payload Components V2 siap kirim
  */
 function buildDangerZoneCard({
@@ -536,6 +558,8 @@ function buildDangerZoneCard({
   threatLevel = "TINGGI",
   dangerWarning = "",
   buttonsRow = null,
+  topBannerAttachmentName = null,
+  files = [],
 } = {}) {
   const userId = user?.id || "0";
   const lines = [
@@ -559,6 +583,8 @@ function buildDangerZoneCard({
     title,
     iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
     expression: "alert",
+    topBannerAttachmentName,
+    files,
     description: cleanDesc,
     buttonsRow: defaultButtons,
     footerText: getFooter(),
@@ -846,7 +872,7 @@ function buildDurabilityWarningCard({
   ];
 
   if (repairCost > 0) {
-    lines.push(`💰 **Biaya Perbaikan:** ${repairCost.toLocaleString("id-ID")} NSF`);
+    lines.push(`💰 **Biaya Perbaikan:** ${repairCost.toLocaleString("id-ID")} SC`);
     lines.push("");
   }
 
@@ -886,6 +912,77 @@ function buildDurabilityWarningCard({
   });
 }
 
+/**
+ * Menentukan periode waktu (pagi/siang/sore/malam) berdasarkan input jam atau string.
+ * @param {number|string} hourOrPeriod
+ * @returns {'pagi'|'siang'|'sore'|'malam'}
+ */
+function resolvePeriod(hourOrPeriod) {
+  if (typeof hourOrPeriod === "string") {
+    const lower = hourOrPeriod.toLowerCase();
+    if (lower.includes("pagi")) return "pagi";
+    if (lower.includes("siang")) return "siang";
+    if (lower.includes("sore")) return "sore";
+    if (lower.includes("malam")) return "malam";
+    return "siang";
+  }
+  const h = Number(hourOrPeriod);
+  if (!Number.isFinite(h)) return "siang";
+  const hour = ((Math.floor(h) % 24) + 24) % 24;
+  if (hour >= 6 && hour < 11) return "pagi";
+  if (hour >= 11 && hour < 16) return "siang";
+  if (hour >= 16 && hour < 19) return "sore";
+  return "malam";
+}
+
+/**
+ * Mengambil aset latar belakang dinamis yang cocok dari assets/survival/background/
+ * berdasarkan tipe lokasi dan waktu in-game.
+ * @param {string} type - 'desa'|'kota'|'hutan'|'tambang'|'laut'|'academy'|'park'|dll
+ * @param {number|string} [hourOrPeriod='siang']
+ * @returns {{ fullPath: string, fileName: string, attachmentName: string, attachment: AttachmentBuilder } | null}
+ */
+function getSurvivalBackground(type = "desa", hourOrPeriod = "siang") {
+  const period = resolvePeriod(hourOrPeriod);
+  const normalizedType = String(type || "desa").toLowerCase().trim();
+  const bgDir = path.join(process.cwd(), "assets", "survival", "background");
+
+  let key = normalizedType;
+  if (key === "village" || key === "desa_sukamaju") key = "desa";
+  if (key === "city" || key === "kota_pratama") key = "kota";
+  if (key === "forest" || key === "hutan_sukamaju") key = "hutan";
+  if (key === "mine" || key === "tambang_sukamaju") key = "tambang";
+  if (key === "sea" || key === "laut_sukamaju" || key === "pesisir") key = "laut";
+  if (key === "school" || key === "sekolah" || key === "kampus" || key === "naura_academy") key = "academy";
+  if (key === "taman" || key === "taman_hiburan") key = "park";
+
+  const candidates = [
+    `${key}_${period}.jpeg`,
+    `${key}_${period}.jpg`,
+    `${key}_${period}.png`,
+    `${key}.jpeg`,
+    `${key}.jpg`,
+    `${key}.png`,
+    `desa_${period}.jpeg`,
+    "desa_siang.jpeg",
+  ];
+
+  for (const name of candidates) {
+    const full = path.join(bgDir, name);
+    if (fs.existsSync(full)) {
+      const attachmentName = `banner_${name}`;
+      return {
+        fullPath: full,
+        fileName: name,
+        attachmentName,
+        attachment: new AttachmentBuilder(full, { name: attachmentName }),
+      };
+    }
+  }
+
+  return null;
+}
+
 module.exports = {
   survivalColors,
   survivalGlass,
@@ -907,4 +1004,6 @@ module.exports = {
   buildPremiumPreviewCard,
   buildVoteStreakCelebrationCard,
   buildDurabilityWarningCard,
+  resolvePeriod,
+  getSurvivalBackground,
 };

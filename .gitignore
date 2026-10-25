@@ -24,6 +24,7 @@ naura_fallback.sqlite*
 # Bukti visual verifikasi 3D. Di-regenerate dengan `npm run verify:hero`,
 # jadi tidak perlu disimpan di repo (totalnya sekitar 1 MB per perjalanan).
 dashboard/public/verify_3d/
+dashboard-*.png
 *.db
 
 # Cache & temporary

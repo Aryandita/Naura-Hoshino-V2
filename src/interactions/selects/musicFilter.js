@@ -12,7 +12,7 @@ module.exports = [
     onError: "Gagal menerapkan filter audio.",
     async handler(interaction, client) {
       const selectedFilter = interaction.values[0];
-      const poru = client.poru;
+      const poru = client.musicManager?.poru || client.poru;
       const player = poru?.players.get(interaction.guildId);
 
       if (!player) {
@@ -28,6 +28,7 @@ module.exports = [
       }
 
       applyAudioFilter(player, selectedFilter);
+      client.musicManager?.updatePanelEmbed?.(player);
 
       const activePreset = FILTER_PRESETS.find((p) => p.value === selectedFilter) || {
         label: selectedFilter.toUpperCase(),

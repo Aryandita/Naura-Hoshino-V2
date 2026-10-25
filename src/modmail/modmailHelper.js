@@ -295,7 +295,7 @@ async function createTicketChannel(message, guildData, client, draft = null) {
 
     if (isInteraction) {
       await message
-        .editReply({ ...successPayload, components: [] })
+        .editReply(successPayload)
         .catch(() => {});
     } else if (message.reply) {
       await message.reply(successPayload).catch(() => {});
@@ -312,7 +312,7 @@ async function createTicketChannel(message, guildData, client, draft = null) {
 
     if (isInteraction) {
       await message
-        .editReply({ ...errPayload, components: [] })
+        .editReply(errPayload)
         .catch(() => {});
     } else if (message.reply) {
       await message.reply(errPayload).catch(() => {});

@@ -1,6 +1,6 @@
 # 🛡️ Security Policy & Vulnerability Reporting, Naura Hoshino V2
 
-> **Ekosistem:** Naura Hoshino V2 · **Versi Aktif:** 2.3.0 · **Framework:** discord.js v14 & Node.js ≥ 24  
+> **Ekosistem:** Naura Hoshino V2 · **Versi Aktif:** 2.4.0 · **Framework:** discord.js v14 & Node.js ≥ 24  
 > **Dokumentasi Terkait:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`RULES.md`](RULES.md) (Aturan Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen)
 
 Kami menganggap keamanan ekosistem **Naura Hoshino V2**, integritas data pengguna, dan perlindungan aset virtual sebagai prioritas utama. Dokumen ini menjelaskan kebijakan dukungan versi, cara melaporkan kerentanan keamanan secara bertanggung jawab (*responsible disclosure*), serta cakupan arsitektur defensif yang diterapkan dalam repositori ini.
@@ -13,8 +13,9 @@ Hanya versi rilis terbaru yang mendapatkan pembaruan keamanan, patch kerentanan,
 
 | Versi | Didukung | Status Siklus Hidup | Catatan Pemeliharaan |
 | :---: | :---: | :--- | :--- |
-| **`2.3.x`** | :white_check_mark: | **Aktif (Production)** | Menerima patch keamanan reguler dan pembaruan arsitektur |
-| **`2.2.x`** | :x: | **End of Life (EOL)** | Dukungan telah berakhir; disarankan migrasi ke v2.3.0 |
+| **`2.4.x`** | :white_check_mark: | **Aktif (Production)** | Menerima patch keamanan reguler dan pembaruan arsitektur |
+| **`2.3.x`** | :white_check_mark: | **Extended Maintenance** | Menerima security patches berkala |
+| **`2.2.x`** | :x: | **End of Life (EOL)** | Dukungan telah berakhir; disarankan migrasi ke v2.4.0 |
 | **`< 2.2`** | :x: | **Tidak Didukung** | Versi warisan lama tanpa dukungan keamanan |
 
 ---

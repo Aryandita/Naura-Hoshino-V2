@@ -139,24 +139,41 @@ const resultCard = ({
   extraText = "",
   mediaNames = [],
   fileNames = [],
+  files = [],
   rows = null,
-}) =>
-  buildContainerV2({
+}) => {
+  const fields = [
+    {
+      name: `${platformEmojiOf(platform)} Platform`,
+      value: `**${platformNameOf(platform)}**`,
+    },
+    {
+      name: `${e("core", "🌸")} Kualitas & Resolusi`,
+      value: `\`${resolutionText}\``,
+    },
+    {
+      name: `${e("success", "✅")} Status Unduhan`,
+      value: "`Siap Diputar / Disimpan`",
+    },
+  ];
+
+  return buildContainerV2({
     accentColorHex: ui.getColor("primary") || "#FFB6C1",
     authorName: "Naura Media Downloader Engine",
     title: `${e("core", "🌸")} Medianya Berhasil Naura Ambil!`,
     iconURL: client.user.displayAvatarURL(),
     expression: "happy",
     description:
-      `${platformEmojiOf(platform)} **Platform:** ${platformNameOf(platform)}\n` +
-      `🔗 **Sumber:** [Lihat postingan aslinya](${sourceUrl})\n` +
-      `🎬 **Kualitas:** ${resolutionText}${extraText}\n\n` +
-      `> ${e("naura_happy", "✨")} *Medianya sudah siap dan bisa langsung kamu simpan atau putar di atas!*`,
+      `🔗 **Sumber Postingan:** [Lihat postingan asli di ${platformNameOf(platform)}](${sourceUrl})${extraText}\n\n` +
+      `> ${e("naura_happy", "✨")} *Medianya sudah berhasil diproses dan bisa kamu putar atau simpan langsung di atas!*`,
+    fields,
     mediaAttachmentNames: mediaNames,
     fileAttachmentNames: fileNames,
+    files,
     buttonsRow: rows && rows.length > 0 ? rows : null,
     footerText: ui.getFooter("utility"),
   });
+};
 
 /**
  * Kartu hasil unduhan album multi-foto (dibagi per fase pengiriman).

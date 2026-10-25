@@ -196,8 +196,8 @@ function addEconomyGroup(builder) {
               .setDescription("Mata uang lelang (hanya sell)")
               .setRequired(false)
               .addChoices(
-                { name: "Star Fragment (NSF)", value: "nsf" },
-                { name: "Pratama Dollar", value: "coin" },
+                { name: "Sukamaju Koin (SC)", value: "nsf" },
+                { name: "Pratama Dollar (PD)", value: "coin" },
               ),
           )
           .addIntegerOption((opt) =>

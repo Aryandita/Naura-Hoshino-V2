@@ -374,15 +374,15 @@ const storyData = [
           },
           {
             speaker: "Bripka Agus",
-            text: "Semua dokumen sah. Selamat datang di Kota Pratama! Kamu bisa menukarkan Naura Star Fragments milikmu di Bank Sentral Pratama untuk mendapatkan Naura Coin.",
+            text: "Semua dokumen sah. Selamat datang di Kota Pratama! Kamu bisa menukarkan Sukamaju Koin milikmu di Bank Sentral Pratama untuk mendapatkan Pratama Dollar.",
           },
         ],
         challenge: {
           type: "coin",
           reqAmount: 1000,
-          btnLabel: "Konfirmasi Saldo (1,000 NSF)",
+          btnLabel: "Konfirmasi Saldo (1,000 SC)",
           get btnEmoji() {
-            return "⭐";
+            return "🪙";
           },
           failMsg:
             'Bripka Agus: "Anda perlu menunjukkan kecukupan saldo survival awal untuk jaminan izin tinggal di Kota Pratama."',

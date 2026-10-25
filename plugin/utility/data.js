@@ -146,7 +146,17 @@ module.exports = {
 
       collector.on("end", (collected) => {
         if (collected.size === 0) {
-          interaction.editReply({ components: [] }).catch(() => {});
+          interaction
+            .editReply(
+              buildContainerV2({
+                accentColorHex: ui.getColor("neutral") || "#64748B",
+                title: "Waktu Konfirmasi Habis",
+                description:
+                  "Permintaan penghapusan data dibatalkan otomatis karena tidak ada konfirmasi dalam 30 detik.",
+                footerText: ui.getFooter("core"),
+              }),
+            )
+            .catch(() => {});
         }
       });
     }

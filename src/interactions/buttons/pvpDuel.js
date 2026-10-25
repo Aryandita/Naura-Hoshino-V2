@@ -42,7 +42,7 @@ module.exports = [
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.editReply({ ...declinePayload, components: [] });
+      return interaction.editReply(declinePayload);
     },
   },
   {
@@ -106,7 +106,7 @@ module.exports = [
           footerText: ui.getFooter("survival"),
         });
 
-        return interaction.editReply({ ...resultPayload, components: [] });
+        return interaction.editReply(resultPayload);
       } catch (err) {
         logger.error("[PvPDuel] Gagal memproses duel: " + err.message);
         return interaction.editReply(

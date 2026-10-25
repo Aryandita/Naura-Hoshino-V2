@@ -223,10 +223,12 @@ function register(router, client) {
       const startTime = Date.now();
       const { sequelize } = require("../../../src/managers/dbManager");
       let dbLatencyMs = 24;
+      let dbConnected = false;
       if (sequelize) {
         try {
           await sequelize.authenticate();
           dbLatencyMs = Math.max(1, Date.now() - startTime);
+          dbConnected = true;
         } catch (_) {
           dbLatencyMs = 999;
         }
@@ -237,8 +239,10 @@ function register(router, client) {
       const ServerTreasury = require("../../../src/models/ServerTreasury");
 
       let registeredUsers = 0;
+      let userQueryOk = false;
       try {
         registeredUsers = await UserProfile.count();
+        userQueryOk = true;
       } catch (_) {}
       if (
         !registeredUsers &&
@@ -250,21 +254,24 @@ function register(router, client) {
           0,
         );
       }
-      if (!registeredUsers) registeredUsers = 1420;
+      if (!userQueryOk && !registeredUsers) registeredUsers = 1420;
 
       let activeSurvivalPlayers = 0;
+      let survivalQueryOk = false;
       try {
         activeSurvivalPlayers = await UserSurvival.count();
+        survivalQueryOk = true;
       } catch (_) {}
-      if (!activeSurvivalPlayers) activeSurvivalPlayers = 48;
+      if (!survivalQueryOk && !activeSurvivalPlayers) activeSurvivalPlayers = 48;
 
-      const activeGuilds = client.guilds?.cache?.size || 18;
+      const activeGuilds = client.guilds?.cache?.size || (dbConnected ? 0 : 18);
       const uptimeSeconds = client.uptime
         ? Math.floor(client.uptime / 1000)
         : 3600;
 
       let treasuryPoolNc = 0;
       let treasuryPoolNsf = 0;
+      let treasuryQueryOk = false;
       try {
         const treasury = await ServerTreasury.findOne({
           order: [["updatedAt", "DESC"]],
@@ -275,13 +282,16 @@ function register(router, client) {
             Number(treasury.noviceAidPool || 0) +
             Number(treasury.wanderingMerchantPool || 0);
         }
-        treasuryPoolNc = (await UserProfile.sum("economy_bank")) || 0;
+        treasuryPoolNc = Number((await UserProfile.sum("economy_bank")) || 0);
         if (!treasuryPoolNsf) {
-          treasuryPoolNsf = (await UserSurvival.sum("starFragments")) || 0;
+          treasuryPoolNsf = Number((await UserSurvival.sum("starFragments")) || 0);
         }
+        treasuryQueryOk = true;
       } catch (_) {}
-      if (!treasuryPoolNc) treasuryPoolNc = 500000;
-      if (!treasuryPoolNsf) treasuryPoolNsf = 25000;
+      if (!treasuryQueryOk) {
+        treasuryPoolNc = 500000;
+        treasuryPoolNsf = 25000;
+      }
 
       const sysMetrics = getSystemMetrics();
       const pluginStats = scanPluginDirectory();
@@ -304,8 +314,8 @@ function register(router, client) {
           },
           plugins: pluginStats,
           architecture: {
-            engineVersion: env.ENGINE_VERSION || "v2.3.0",
-            botVersion: env.BOT_VERSION || "v2.3.0",
+            engineVersion: env.ENGINE_VERSION || "v2.4.0",
+            botVersion: env.BOT_VERSION || "v2.4.0",
             nodeVersion: process.version,
             redisConnected: !!(
               redisManager.client && redisManager.client.isReady
@@ -860,19 +870,23 @@ function register(router, client) {
       const ServerTreasury = require("../../../src/models/ServerTreasury");
 
       let totalUsers = client.users?.cache?.size || 0;
+      let userQuerySuccess = false;
       if (!totalUsers) {
         try {
           totalUsers = await UserProfile.count();
+          userQuerySuccess = true;
         } catch (_) {}
       }
-      if (!totalUsers) totalUsers = 1420;
+      if (!totalUsers && !userQuerySuccess) totalUsers = 1420;
 
-      const totalGuilds = client.guilds?.cache?.size || 18;
+      const totalGuilds = client.guilds?.cache?.size || 0;
       let activeSurvivalPlayers = 0;
+      let survivalQuerySuccess = false;
       try {
         activeSurvivalPlayers = await UserSurvival.count();
+        survivalQuerySuccess = true;
       } catch (_) {}
-      if (!activeSurvivalPlayers) activeSurvivalPlayers = 48;
+      if (!activeSurvivalPlayers && !survivalQuerySuccess) activeSurvivalPlayers = 48;
 
       let activeVoiceSessions = 0;
       if (client.poru?.players) {
@@ -888,8 +902,9 @@ function register(router, client) {
       const mem = process.memoryUsage();
       const ramUsageMB = parseFloat((mem.heapUsed / 1024 / 1024).toFixed(1));
 
-      let treasuryNc = 8520000;
-      let treasuryNsf = 485000;
+      let treasuryNc = 0;
+      let treasuryNsf = 0;
+      let treasuryQuerySuccess = false;
       try {
         const tr = await ServerTreasury.findOne({
           order: [["updatedAt", "DESC"]],
@@ -900,11 +915,16 @@ function register(router, client) {
             Number(tr.noviceAidPool || 0) +
             Number(tr.wanderingMerchantPool || 0);
         }
-        treasuryNc = (await UserProfile.sum("economy_bank")) || 8520000;
+        treasuryNc = Number((await UserProfile.sum("economy_bank")) || 0);
         if (!treasuryNsf) {
-          treasuryNsf = (await UserSurvival.sum("starFragments")) || 485000;
+          treasuryNsf = Number((await UserSurvival.sum("starFragments")) || 0);
         }
+        treasuryQuerySuccess = true;
       } catch (_) {}
+      if (!treasuryQuerySuccess) {
+        treasuryNc = 8520000;
+        treasuryNsf = 485000;
+      }
 
       const ping =
         client.ws?.ping !== undefined && client.ws.ping >= 0

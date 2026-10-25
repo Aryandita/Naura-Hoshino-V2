@@ -13,6 +13,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
+  MessageFlags,
 } = require("discord.js");
 const ui = require("../../src/config/ui");
 const {
@@ -262,7 +263,7 @@ module.exports = {
         ) {
           return i.reply({
             content: `${ui.getEmoji("error") || "❌"} Hanya pembuat lobby atau admin yang dapat menutup lobby ini.`,
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
         collector.stop("closed");
@@ -282,7 +283,7 @@ module.exports = {
         if (!isParticipant) {
           return i.reply({
             content: `${ui.getEmoji("error") || "❌"} Kamu harus bergabung ke dalam tim untuk memanggil anggota lain.`,
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
         const mentions = state.members.map((m) => `<@${m.userId}>`).join(" ");
@@ -299,7 +300,7 @@ module.exports = {
         if (existingIdx === -1) {
           return i.reply({
             content: `${ui.getEmoji("info") || "ℹ️"} Kamu belum bergabung di dalam lobby ini.`,
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -332,7 +333,7 @@ module.exports = {
           if (state.members.length >= state.maxSlots) {
             return i.reply({
               content: `${ui.getEmoji("error") || "❌"} Maaf, slot tim sudah penuh!`,
-              flags: 64,
+              flags: MessageFlags.Ephemeral,
             });
           }
           state.members.push({

@@ -90,7 +90,7 @@ test("vitalTone memakai ambang kustom dan tetap aman untuk NaN", () => {
 
 const DASHBOARD_VITAL_SOURCES = [
   "dashboard/src/pages/index.html",
-  "dashboard/src/js/authManager.js",
+  "dashboard/src/js/sessionPresenter.js",
 ];
 
 test("berkas dasbor tidak lagi menulis clamping vital secara manual", () => {

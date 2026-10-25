@@ -21,6 +21,7 @@ const {
   reply,
   fail,
 } = require("./npcHelpers");
+const storyIntegration = require("./storyIntegration");
 
 // Setiap aksi menerima wadah yang sama: { npc, npcData, survival, profile, t, coin, now }
 
@@ -35,15 +36,38 @@ async function greet(i, ctx) {
     return fail(i, t("npc.greet_cooldown", { name: npc.name }), t);
   }
 
+  const oldRelationshipLevel = npcData.relationshipLevel || 0;
   const bonus = Math.floor(Math.random() * 2) + 1;
   npcData.affection = Math.min(100, npcData.affection + bonus);
   npcData.lastInteraction = now;
   refreshRelationship(npcData, npc);
+  
   // Rule 1.8: fields eksplisit agar penulisan tidak menimpa kolom lain
   // yang sedang menunggu di antrean flush cache.
   await npcData.save({
     fields: ["affection", "lastInteraction", "relationshipLevel"],
   });
+
+  // Check backstory unlock setelah relationship level naik
+  const newRelationshipLevel = npcData.relationshipLevel || 0;
+  if (newRelationshipLevel > oldRelationshipLevel) {
+    const backstoryUnlock = await storyIntegration.checkBackstoryUnlock(
+      i.user.id,
+      npc.id,
+      newRelationshipLevel,
+    );
+
+    if (backstoryUnlock && backstoryUnlock.type === "backstory_unlocked") {
+      // Tampilkan notifikasi backstory unlocked
+      return reply(
+        i,
+        `${e("happy", "\uD83D\uDCAC")} ${t("npc.greet_title")}`,
+        `${t("npc.greet_body", { name: npc.name, bonus })}\n\n📖 **Backstory Terbuka!**\nHubunganmu dengan ${npc.name} meningkat! Kamu sekarang bisa membaca cerita latar belakangnya dengan \`/story backstory ${npc.id}\`.`,
+        "success",
+        npc,
+      );
+    }
+  }
 
   return reply(
     i,
@@ -325,10 +349,125 @@ async function tax(i, ctx) {
   );
 }
 
+/** Ajak NPC kencan. Memerlukan tiket khusus dan relationship level >= 3. */
+async function date(i, ctx) {
+  const { npc, npcData, t } = ctx;
+  const roamEngine = require("../engines/roamEngine");
+  const visualNovelRenderer = require("../engines/visualNovelRenderer");
+  const { takeItemsAtomic } = require("../engines/inventoryHelper");
+
+  // Check eligibility
+  const dateCheck = await roamEngine.canGoOnDate(i.user.id, npc.id);
+
+  if (!dateCheck.canDate) {
+    return fail(i, dateCheck.reason, t, npc);
+  }
+
+  // Consume ticket secara atomik
+  const removed = await takeItemsAtomic(i.user.id, [
+    { id: dateCheck.ticket.itemId, amount: 1 },
+  ]);
+
+  if (!removed) {
+    return fail(i, "Tiket kencan tidak ditemukan di inventaris.", t, npc);
+  }
+
+  // Generate date scene
+  const dateScene = generateDateScene(npc.id, dateCheck.ticket);
+  
+  // Render VN scene
+  const vnPayload = await visualNovelRenderer.renderScene(dateScene);
+  
+  // Apply date rewards
+  const affectionBoost = 15;
+  npcData.affection = Math.min(100, npcData.affection + affectionBoost);
+  npcData.lastInteraction = new Date();
+  
+  // Set temporary buff (3 hari in-game)
+  const dateBuffKey = `date_buff_${npc.id}`;
+  const storyIntegration = require("./storyIntegration");
+  await storyIntegration.setStoryFlag(i.user.id, dateBuffKey, Date.now() + 3 * 24 * 60 * 60 * 1000);
+
+  await npcData.save({ fields: ["affection", "lastInteraction"] });
+
+  // Add reward notification to payload description
+  const originalDesc = vnPayload.description || "";
+  vnPayload.description = `${originalDesc}\n\n💖 **Kencan Selesai!**\nAfeksi +${affectionBoost} | Buff aktif selama 3 hari`;
+
+  return i.editReply(vnPayload);
+}
+
+function generateDateScene(npcId, ticket) {
+  const scenes = {
+    ningsih: {
+      characterId: "ningsih",
+      characterEmotion: "happy",
+      backgroundId: "kebun_sore",
+      speakerName: "Ningsih",
+      title: "Piknik di Kebun Bunga",
+      dialogText: "Terima kasih sudah mengajakku piknik...\n\n*Aroma bunga dan angin sore menciptakan suasana yang sempurna*\n\nAku... aku sangat bahagia hari ini.",
+      choices: [
+        { label: "\"Aku juga bahagia bersamamu.\"", value: "romantic", effect: { affection: 5 } },
+        { label: "\"Kebun ini indah sekali.\"", value: "compliment", effect: { affection: 3 } },
+      ],
+    },
+    tari: {
+      characterId: "tari",
+      characterEmotion: "excited",
+      backgroundId: "sungai_evening",
+      speakerName: "Tari",
+      title: "Sunset di Tepi Sungai",
+      dialogText: "Wah! Sunset hari ini gila banget kan!\n\n*Tari duduk di batu besar sambil memandang langit jingga*\n\nHei... terima kasih ya. Aku jarang punya waktu santai begini.",
+      choices: [
+        { label: "\"Kamu pantas dapat istirahat.\"", value: "caring", effect: { affection: 5 } },
+        { label: "\"Ayo nikmati momennya.\"", value: "present", effect: { affection: 3 } },
+      ],
+    },
+    bidan_sari: {
+      characterId: "bidan_sari",
+      characterEmotion: "gentle",
+      backgroundId: "cafe_night",
+      speakerName: "Bidan Sari",
+      title: "Makan Malam Romantis",
+      dialogText: "Sudah lama aku tidak makan malam di luar...\n\n*Sari tersenyum hangat di bawah cahaya lilin*\n\nTerima kasih sudah membuatku merasa istimewa malam ini.",
+      choices: [
+        { label: "\"Kamu memang istimewa.\"", value: "sincere", effect: { affection: 5 } },
+        { label: "\"Aku senang kamu menikmati.\"", value: "humble", effect: { affection: 3 } },
+      ],
+    },
+    bu_ratna: {
+      characterId: "bu_ratna",
+      characterEmotion: "relaxed",
+      backgroundId: "perpustakaan_evening",
+      speakerName: "Bu Ratna",
+      title: "Membaca Bersama",
+      dialogText: "Sudah lama aku tidak membaca dengan seseorang...\n\n*Ratna menutup bukunya sejenak dan menatapmu*\n\nBiasanya aku sendirian di sini. Tapi malam ini... terasa berbeda.",
+      choices: [
+        { label: "\"Aku suka menemanimu membaca.\"", value: "intellectual", effect: { affection: 5 } },
+        { label: "\"Buku apa yang kau baca?\"", value: "curious", effect: { affection: 3 } },
+      ],
+    },
+  };
+
+  return scenes[npcId] || {
+    characterId: npcId,
+    characterEmotion: "happy",
+    backgroundId: ticket.location,
+    speakerName: "NPC",
+    title: "Kencan Spesial",
+    dialogText: "Terima kasih sudah mengajakku...\n\nAku sangat menghargai waktu kita bersama.",
+    choices: [
+      { label: "Ngobrol lebih lama", value: "talk", effect: { affection: 3 } },
+      { label: "Pulang bersama", value: "walk", effect: { affection: 2 } },
+    ],
+  };
+}
+
 module.exports = {
   npc_greet: greet,
   npc_gift: gift,
   npc_marry: marry,
   npc_repair: repair,
   npc_tax_pay: tax,
+  npc_date: date,
 };

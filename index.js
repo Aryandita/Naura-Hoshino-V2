@@ -225,6 +225,17 @@ async function startBot() {
     const clusterManager = require("./src/managers/clusterManager");
     clusterManager.startStatsPublisher(client);
 
+    // Start periodic API health check (hanya di primary shard)
+    if (isPrimaryShard) {
+      try {
+        const apiHealthService = require("./src/services/apiHealthService");
+        apiHealthService.startPeriodicCheck(300000); // Check setiap 5 menit
+        logger.info("[BOOT] API Health Check service started (interval: 5 minutes)");
+      } catch (err) {
+        logger.warn("[BOOT] Failed to start API Health Check:", err.message);
+      }
+    }
+
     if (env.TOKEN) {
       try {
         await client.login(env.TOKEN);

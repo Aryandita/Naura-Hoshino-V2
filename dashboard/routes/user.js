@@ -888,6 +888,94 @@ module.exports = (client) => {
     }
   });
 
+  // ------------------------------------------------------------------
+  // User Settings API (Sinkronisasi dengan /setting bot command)
+  // ------------------------------------------------------------------
+  router.get("/api/user/settings", requireApiLogin, async (req, res) => {
+    try {
+      const profile = await cacheManager.getUserProfile(req.user.id);
+      const prefs = profile?.notification_prefs || {};
+      
+      res.json({
+        success: true,
+        settings: {
+          aiChatEnabled: prefs.dm_authorized !== false,
+          survivalNotifications: prefs.stamina_full !== false && prefs.quest_reset !== false,
+          premiumReminders: prefs.event_news !== false,
+          language: profile?.language || null,
+        },
+      });
+    } catch (e) {
+      logger.error("[API USER SETTINGS GET] Error:", e);
+      res.status(500).json({ success: false, error: "Failed to load settings." });
+    }
+  });
+
+  router.post("/api/user/settings", requireApiLogin, async (req, res) => {
+    try {
+      const { key, value } = req.body;
+      
+      if (!key) {
+        return res.status(400).json({ success: false, error: "Missing key parameter." });
+      }
+
+      const profile = await cacheManager.getUserProfile(req.user.id);
+      const prefs = profile?.notification_prefs || {
+        dm_authorized: false,
+        stamina_full: true,
+        quest_reset: true,
+        event_news: true,
+      };
+
+      switch (key) {
+        case "aiChatEnabled":
+          prefs.dm_authorized = Boolean(value);
+          break;
+        case "survivalNotifications":
+          prefs.stamina_full = Boolean(value);
+          prefs.quest_reset = Boolean(value);
+          break;
+        case "premiumReminders":
+          prefs.event_news = Boolean(value);
+          break;
+        case "language":
+          await cacheManager.updateUserProfile(req.user.id, { 
+            language: value === "default" ? null : value 
+          });
+          return res.json({ success: true, message: "Language updated." });
+        default:
+          return res.status(400).json({ success: false, error: "Unknown setting key." });
+      }
+
+      await cacheManager.updateUserProfile(req.user.id, { notification_prefs: prefs });
+      res.json({ success: true, message: "Settings updated." });
+    } catch (e) {
+      logger.error("[API USER SETTINGS POST] Error:", e);
+      res.status(500).json({ success: false, error: "Failed to update settings." });
+    }
+  });
+
+  router.post("/api/user/settings/reset", requireApiLogin, async (req, res) => {
+    try {
+      const defaultPrefs = {
+        dm_authorized: false,
+        stamina_full: true,
+        quest_reset: true,
+        event_news: true,
+      };
+
+      await cacheManager.updateUserProfile(req.user.id, { 
+        notification_prefs: defaultPrefs,
+        language: null,
+      });
+
+      res.json({ success: true, message: "Settings reset to defaults." });
+    } catch (e) {
+      logger.error("[API USER SETTINGS RESET] Error:", e);
+      res.status(500).json({ success: false, error: "Failed to reset settings." });
+    }
+  });
+
   return router;
 };
 

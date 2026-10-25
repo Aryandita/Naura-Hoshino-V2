@@ -14,7 +14,7 @@ module.exports = [
       if (!guild) return;
 
       const musicManager = client.musicManager;
-      const poru = client.poru;
+      const poru = client.musicManager?.poru || client.poru;
       const player = poru?.players.get(guild.id);
 
       if (!player || !player.currentTrack) {

@@ -139,6 +139,25 @@ const UserSurvival = sequelize.define(
       type: DataTypes.INTEGER,
       defaultValue: 1,
     },
+    storyProgress: {
+      type: DataTypes.JSON,
+      defaultValue: {
+        currentChapter: "prologue",
+        currentScene: "start",
+        completedScenes: [],
+        unlockedBackstories: [],
+        choices: {},
+        flags: {},
+      },
+    },
+    roamStats: {
+      type: DataTypes.JSON,
+      defaultValue: {
+        totalRoams: 0,
+        visitedLocations: [],
+        eventsEncountered: 0,
+      },
+    },
   },
   {
     tableName: "UserSurvivals",

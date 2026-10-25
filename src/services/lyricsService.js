@@ -1,6 +1,7 @@
 "use strict";
 
 const { logger } = require("../managers/logger");
+const env = require("../config/env");
 
 class LyricsService {
   /**
@@ -21,7 +22,7 @@ class LyricsService {
 
       const searchUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(cleanQuery)}`;
       const res = await globalThis.fetch(searchUrl, {
-        headers: { "User-Agent": "NauraHoshinoBot/2.3.0" },
+        headers: { "User-Agent": `NauraHoshinoBot/${env.BOT_VERSION || "2.4.0"}` },
         signal: AbortSignal.timeout(6000),
       });
 

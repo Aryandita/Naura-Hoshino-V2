@@ -173,6 +173,41 @@ const validateResult = async (data, platform) => {
   return null;
 };
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRateLimitError = (err) => {
+  if (!err) return false;
+  const status = err.status || err.response?.status || err.statusCode;
+  if (status === 429) return true;
+  const msg = String(err.message || "").toLowerCase();
+  return msg.includes("rate") || msg.includes("429") || msg.includes("too many");
+};
+
+/**
+ * Jalankan satu provider dengan retry eksponensial jika terkena rate limit.
+ * @param {Function} fn
+ * @param {string} name
+ * @param {string} url
+ * @param {number} maxRetries
+ */
+const executeWithRetry = async (fn, name, url, maxRetries = 2) => {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn(url);
+    } catch (err) {
+      if (isRateLimitError(err) && attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1500;
+        logger.info(
+          `[Downloader] ${name} rate-limited, retry ${attempt + 1}/${maxRetries} setelah ${delay}ms`,
+        );
+        await sleep(delay);
+        continue;
+      }
+      throw err;
+    }
+  }
+};
+
 /**
  * Jalankan rantai provider sampai ada hasil yang lolos validasi.
  * @returns {Promise<{data: object|null, providerName: string|null}>}
@@ -185,7 +220,7 @@ const runChain = async (url, platform, cleanup) => {
 
   for (const provider of chain) {
     try {
-      const raw = await provider.fn(url);
+      const raw = await executeWithRetry(provider.fn, provider.name, url);
       if (!raw) {
         logger.info(`[Downloader] ${provider.name} tidak memberi hasil.`);
         continue;

@@ -460,6 +460,36 @@ export class AnimationController {
             idol: "StarPose",
             pose: "StarPose",
             idle: "Idle",
+            walk: "WalkForward",
+            walkforward: "WalkForward",
+            move: "WalkForward",
+            navigate: "WalkForward",
+            walkbackward: "WalkBackward",
+            back: "WalkBackward",
+            retreat: "WalkBackward",
+            sit: "Sit",
+            relax: "Sit",
+            lounge: "Sit",
+            rest: "Sit",
+            dance: "DanceLoop1",
+            dance1: "DanceLoop1",
+            upbeat: "DanceLoop1",
+            energetic: "DanceLoop1",
+            dance2: "DanceLoop2",
+            groove: "DanceLoop2",
+            smooth: "DanceLoop2",
+            type: "Type",
+            typing: "Type",
+            keyboard: "Type",
+            writing: "Type",
+            nod: "NodYes",
+            yes: "NodYes",
+            confirm: "NodYes",
+            agree: "NodYes",
+            shake: "ShakeNo",
+            no: "ShakeNo",
+            deny: "ShakeNo",
+            reject: "ShakeNo",
         };
 
         const targetAnim = animMap[norm] || "Idle";
@@ -468,7 +498,13 @@ export class AnimationController {
             targetAnim === "Dizzy" ||
             targetAnim === "Sleepy" ||
             targetAnim === "Thinking" ||
-            targetAnim === "Shy";
+            targetAnim === "Shy" ||
+            targetAnim === "WalkForward" ||
+            targetAnim === "WalkBackward" ||
+            targetAnim === "Sit" ||
+            targetAnim === "DanceLoop1" ||
+            targetAnim === "DanceLoop2" ||
+            targetAnim === "Type";
 
         this.playClip(targetAnim, { loop: isLooping, fadeDuration: 0.4 });
     }

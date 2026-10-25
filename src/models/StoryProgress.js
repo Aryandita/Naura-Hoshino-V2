@@ -25,6 +25,22 @@ const StoryProgress = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: [],
     },
+    completedScenes: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
+    flags: {
+      type: DataTypes.JSON,
+      defaultValue: {},
+    },
+    choices: {
+      type: DataTypes.JSON,
+      defaultValue: {},
+    },
+    unlockedBackstories: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
   },
   {
     tableName: "story_progress",

@@ -149,11 +149,11 @@ module.exports = {
           expression: "angry",
           description: "Mode pertahanan darurat server telah diaktifkan! Tingkat verifikasi server dinaikkan ke level tertinggi untuk menyaring serangan serbuan raid.",
           fields: [
-            { label: "Status Shield", value: "AKTIF (SIAGA TINGGI)", inline: true },
-            { label: "Level Verifikasi", value: "Very High (SMS / Phone)", inline: true },
-            { label: "Channel Lockdown", value: isLockdown ? "Ya (Channel Ini Dikunci)" : "Tidak (Hanya Filter Gabung)", inline: true },
-            { label: "Diaktifkan Oleh", value: `<@${author.id}>`, inline: true },
-            { label: "Alasan", value: reason, inline: false },
+            { name: "Status Shield", value: "AKTIF (SIAGA TINGGI)", inline: true },
+            { name: "Level Verifikasi", value: "Very High (SMS / Phone)", inline: true },
+            { name: "Channel Lockdown", value: isLockdown ? "Ya (Channel Ini Dikunci)" : "Tidak (Hanya Filter Gabung)", inline: true },
+            { name: "Diaktifkan Oleh", value: `<@${author.id}>`, inline: true },
+            { name: "Alasan", value: reason, inline: false },
           ],
           footerText: ui.getFooter("core"),
         });
@@ -212,9 +212,9 @@ module.exports = {
           expression: "success",
           description: "Status darurat server telah dicabut. Tingkat keamanan dan izin channel telah dikembalikan ke kondisi normal.",
           fields: [
-            { label: "Status Shield", value: "NONAKTIF (NORMAL)", inline: true },
-            { label: "Level Verifikasi", value: VERIFICATION_NAMES[restoreLevel] || `${restoreLevel}`, inline: true },
-            { label: "Dinonaktifkan Oleh", value: `<@${author.id}>`, inline: true },
+            { name: "Status Shield", value: "NONAKTIF (NORMAL)", inline: true },
+            { name: "Level Verifikasi", value: VERIFICATION_NAMES[restoreLevel] || `${restoreLevel}`, inline: true },
+            { name: "Dinonaktifkan Oleh", value: `<@${author.id}>`, inline: true },
           ],
           footerText: ui.getFooter("core"),
         });
@@ -239,22 +239,22 @@ module.exports = {
             : "Sistem keamanan server berada dalam parameter operasional standar.",
           fields: [
             {
-              label: "Status Panic Shield",
+              name: "Status Panic Shield",
               value: isActive ? "AKTIF" : "NONAKTIF",
               inline: true,
             },
             {
-              label: "Tingkat Verifikasi",
+              name: "Tingkat Verifikasi",
               value: VERIFICATION_NAMES[currentLevel] || `Level ${currentLevel}`,
               inline: true,
             },
             {
-              label: "Karantina Lockdown",
+              name: "Karantina Lockdown",
               value: currentShield.lockdown ? "Aktif" : "Tidak Aktif",
               inline: true,
             },
             {
-              label: "Diperbarui Terakhir",
+              name: "Diperbarui Terakhir",
               value: currentShield.activatedAt
                 ? `<t:${Math.floor(new Date(currentShield.activatedAt).getTime() / 1000)}:R>`
                 : "Belum pernah",

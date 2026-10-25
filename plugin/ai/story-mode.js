@@ -7,6 +7,7 @@ const {
   ButtonStyle,
   ComponentType,
   AttachmentBuilder,
+  MessageFlags,
 } = require("discord.js");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
@@ -293,7 +294,7 @@ ${
       return btnInteraction.reply({
         content:
           "❌ Ini adalah buku petualangan pemain lain! Gunakan `/story start` untuk membuka ceritamu sendiri.",
-        flags: 64, // Ephemeral
+        flags: MessageFlags.Ephemeral,
       });
     }
 

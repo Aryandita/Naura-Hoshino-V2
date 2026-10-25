@@ -302,19 +302,19 @@ module.exports = {
       if (!answerRes.success) {
         return btnInteraction.reply({
           content: "❌ Kamu sudah menjawab ronde ini!",
-          flags: 64,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
       if (answerRes.isCorrect) {
         return btnInteraction.reply({
           content: `🎉 **BENAR!** Jawabanmu tepat: **${answerRes.correctAnswer}** (+${answerRes.pointsGained} Poin | Streak x${answerRes.streak})!`,
-          flags: 64,
+          flags: MessageFlags.Ephemeral,
         });
       } else {
         return btnInteraction.reply({
           content: `❌ **SALAH!** Jawaban yang benar adalah **${answerRes.correctAnswer}**. Streak terputus!`,
-          flags: 64,
+          flags: MessageFlags.Ephemeral,
         });
       }
     });

@@ -57,7 +57,7 @@ module.exports = [
           color: "#64748B",
           footerText: ui.getFooter("utility"),
         });
-        return interaction.update({ ...payload, components: [] });
+        return interaction.update(payload);
       }
 
       // Process Accept with Transaction
@@ -154,7 +154,7 @@ module.exports = [
             footerText: ui.getFooter("utility"),
           });
 
-          return interaction.update({ ...payload, components: [] });
+          return interaction.update(payload);
         } catch (err) {
           await t.rollback();
           throw err;

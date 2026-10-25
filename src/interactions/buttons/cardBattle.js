@@ -111,7 +111,7 @@ module.exports = [
           footerText: ui.getFooter("utility"),
         });
 
-        return interaction.editReply({ ...container, components: [] });
+        return interaction.editReply(container);
       }
 
       // Execute Player Action V2
@@ -291,7 +291,6 @@ module.exports = [
         return interaction.editReply({
           ...container,
           files: [attachment],
-          components: [],
         });
       }
 
@@ -387,7 +386,6 @@ module.exports = [
           return interaction.editReply({
             ...container,
             files: [attachment],
-            components: [],
           });
         }
 

@@ -26,69 +26,127 @@
     const sidebarElement = document.querySelector('.sidebar');
     const overlayElement = document.querySelector('.sidebar-overlay');
     const hamburgerButton = document.querySelector('.hamburger-btn');
-    const closeButton = document.querySelector('.sidebar-close-btn');
 
     function openSidebar() {
-        if (!sidebarElement) return;
-        sidebarElement.classList.add('open');
-        if (overlayElement) {
-            overlayElement.classList.add('active');
+        const sidebar = sidebarElement || document.querySelector('.sidebar');
+        const overlay = overlayElement || document.querySelector('.sidebar-overlay');
+        const hamburger = hamburgerButton || document.querySelector('.hamburger-btn');
+        if (!sidebar) return;
+        sidebar.classList.add('open');
+        if (overlay) {
+            overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
-        if (hamburgerButton) {
-            hamburgerButton.setAttribute('aria-expanded', 'true');
+        if (hamburger) {
+            hamburger.setAttribute('aria-expanded', 'true');
         }
     }
 
     function closeSidebar() {
-        if (!sidebarElement) return;
-        sidebarElement.classList.remove('open');
-        if (overlayElement) {
-            overlayElement.classList.remove('active');
+        const sidebar = sidebarElement || document.querySelector('.sidebar');
+        const overlay = overlayElement || document.querySelector('.sidebar-overlay');
+        const hamburger = hamburgerButton || document.querySelector('.hamburger-btn');
+        if (!sidebar) return;
+        sidebar.classList.remove('open');
+        if (overlay) {
+            overlay.classList.remove('active');
             document.body.style.overflow = '';
         }
-        if (hamburgerButton) {
-            hamburgerButton.setAttribute('aria-expanded', 'false');
+        if (hamburger) {
+            hamburger.setAttribute('aria-expanded', 'false');
         }
     }
 
-    if (hamburgerButton) {
-        hamburgerButton.addEventListener('click', (clickEvent) => {
-            clickEvent.stopPropagation();
-            if (sidebarElement && sidebarElement.classList.contains('open')) {
+    function updateCollapseBtnIcon(isCollapsed) {
+        const btn = document.getElementById('sidebarCollapseBtn') || document.querySelector('.sidebar-collapse-btn');
+        if (!btn) return;
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.className = isCollapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left';
+        }
+        btn.setAttribute('title', isCollapsed ? 'Bentangkan Sidebar (Ctrl+B)' : 'Ciutkan Sidebar (Ctrl+B)');
+    }
+
+    function toggleSidebar() {
+        const sidebar = sidebarElement || document.querySelector('.sidebar');
+        if (!sidebar) return;
+        if (window.innerWidth <= 1024) {
+            if (sidebar.classList.contains('open')) {
                 closeSidebar();
             } else {
                 openSidebar();
             }
-        });
+        } else {
+            const willCollapse = !sidebar.classList.contains('collapsed');
+            sidebar.classList.toggle('collapsed', willCollapse);
+            updateCollapseBtnIcon(willCollapse);
+            try {
+                localStorage.setItem('naura_sidebar_collapsed', String(willCollapse));
+            } catch (_) {}
+        }
     }
 
-    if (closeButton) {
-        closeButton.addEventListener('click', (clickEvent) => {
+    // Delegasi klik terpadu untuk semua pemicu navigasi
+    document.addEventListener('click', (clickEvent) => {
+        const collapseTrigger = clickEvent.target.closest('#sidebarCollapseBtn, .sidebar-collapse-btn');
+        if (collapseTrigger) {
+            clickEvent.preventDefault();
+            clickEvent.stopPropagation();
+            toggleSidebar();
+            return;
+        }
+
+        const hamburgerTrigger = clickEvent.target.closest('#hamburgerBtn, .hamburger-btn');
+        if (hamburgerTrigger) {
+            clickEvent.preventDefault();
+            clickEvent.stopPropagation();
+            toggleSidebar();
+            return;
+        }
+
+        const closeTrigger = clickEvent.target.closest('#sidebarCloseBtn, .sidebar-close-btn');
+        if (closeTrigger) {
+            clickEvent.preventDefault();
             clickEvent.stopPropagation();
             closeSidebar();
-        });
-    }
+            return;
+        }
 
-    if (overlayElement) {
-        overlayElement.addEventListener('click', closeSidebar);
-    }
+        const overlay = overlayElement || document.querySelector('.sidebar-overlay');
+        if (overlay && clickEvent.target === overlay) {
+            closeSidebar();
+            return;
+        }
 
-    // Tutup drawer di layar seluler saat salah satu tautan diklik
-    if (sidebarElement) {
-        sidebarElement.querySelectorAll('.nav-item').forEach((navItem) => {
-            navItem.addEventListener('click', () => {
-                if (window.innerWidth <= 1024) {
-                    closeSidebar();
-                }
-            });
-        });
-    }
+        // Tutup drawer di layar seluler saat tautan navigasi diklik
+        const navItem = clickEvent.target.closest('.sidebar .nav-item, .mobile-nav-item');
+        if (navItem && window.innerWidth <= 1024) {
+            closeSidebar();
+        }
+    });
 
-    // Tutup sidebar saat tombol Escape ditekan
+    // Pulihkan status compact tersimpan di desktop saat bootstrap
+    try {
+        const savedCollapsed = localStorage.getItem('naura_sidebar_collapsed') === 'true';
+        if (savedCollapsed && window.innerWidth > 1024) {
+            const sidebar = sidebarElement || document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.classList.add('collapsed');
+                updateCollapseBtnIcon(true);
+            }
+        }
+    } catch (_) {}
+
+    // Pintasan keyboard: Escape untuk menutup drawer, Ctrl+B untuk ciutkan/bentangkan
     document.addEventListener('keydown', (keyEvent) => {
         if (keyEvent.key === 'Escape') {
             closeSidebar();
+        }
+        if ((keyEvent.ctrlKey || keyEvent.metaKey) && keyEvent.key.toLowerCase() === 'b') {
+            const targetTag = keyEvent.target?.tagName;
+            if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || keyEvent.target?.isContentEditable) return;
+            keyEvent.preventDefault();
+            toggleSidebar();
         }
     });
 
@@ -187,7 +245,7 @@
                             <img src="/assets/core/avatar.png" alt="Naura" class="shared-nav-logo" onerror="this.src='/assets/core/avatar.png'">
                             <div class="shared-nav-brand-text">
                                 <div class="shared-brand-name">Naura Hoshino</div>
-                                <div class="shared-brand-tag">v2.3.0 · Hub</div>
+                                <div class="shared-brand-tag">v2.4.0 · Hub</div>
                             </div>
                         </a>
                         <nav class="shared-nav-links" aria-label="Navigasi Cepat">
@@ -323,33 +381,16 @@
         const sidebar = document.querySelector('.sidebar');
         if (!sidebar) return;
 
-        // Pulihkan status collapsible tersimpan
-        const isCollapsed = localStorage.getItem('naura_sidebar_collapsed') === 'true';
-        if (isCollapsed && window.innerWidth > 1024) {
-            sidebar.classList.add('collapsed');
-        }
-
-        function toggleSidebarCollapse() {
-            if (window.innerWidth <= 1024) return;
-            const willCollapse = !sidebar.classList.contains('collapsed');
-            sidebar.classList.toggle('collapsed', willCollapse);
-            localStorage.setItem('naura_sidebar_collapsed', String(willCollapse));
-        }
-
-        // Pasang tombol collapse di sidebar-brand jika belum ada
+        // Buat tombol collapse jika belum ada di template HTML halaman
         const sidebarBrand = sidebar.querySelector('.sidebar-brand');
-        if (sidebarBrand && !sidebarBrand.querySelector('.sidebar-collapse-btn')) {
+        if (sidebarBrand && !sidebar.querySelector('.sidebar-collapse-btn')) {
             const collapseBtn = document.createElement('button');
             collapseBtn.type = 'button';
             collapseBtn.className = 'sidebar-collapse-btn';
             collapseBtn.id = 'sidebarCollapseBtn';
             collapseBtn.title = 'Ciutkan Sidebar (Ctrl+B)';
             collapseBtn.setAttribute('aria-label', 'Toggle Compact Sidebar');
-            collapseBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
-            collapseBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleSidebarCollapse();
-            });
+            collapseBtn.innerHTML = '<i class="fa-solid fa-angles-left"></i>';
             sidebarBrand.appendChild(collapseBtn);
         }
 
@@ -372,16 +413,6 @@
             });
             sidebar.insertBefore(trigger, sidebarNav);
         }
-
-        // Pintasan keyboard global Ctrl+B untuk ciutkan/bentangkan sidebar
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
-                const targetTag = e.target.tagName;
-                if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || e.target.isContentEditable) return;
-                e.preventDefault();
-                toggleSidebarCollapse();
-            }
-        });
     }
 
     if (document.readyState === 'loading') {
@@ -542,12 +573,24 @@
             }
             const destinationUrl = anchorElement.getAttribute('href');
             if (!destinationUrl || navEvent.ctrlKey || navEvent.metaKey || navEvent.shiftKey) return;
+            if (destinationUrl.startsWith('#') || destinationUrl === 'javascript:void(0)') return;
+
+            // Jangan fade-out / blank jika mengklik link halaman yang sedang aktif
+            const cleanDest = destinationUrl.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
+            const cleanCurr = window.location.pathname.replace(/\/$/, '') || '/';
+            if (cleanDest === cleanCurr) {
+                navEvent.preventDefault();
+                if (window.innerWidth <= 1024 && typeof closeSidebar === 'function') {
+                    closeSidebar();
+                }
+                return;
+            }
 
             navEvent.preventDefault();
             document.body.style.opacity = '0';
             setTimeout(() => {
                 window.location.href = destinationUrl;
-            }, 200);
+            }, 180);
         });
     });
 
@@ -923,7 +966,7 @@
         const headerRight = document.querySelector('.top-header .header-right');
         if (!headerRight) return;
 
-        // Command Palette Spotlight Button
+        // ── Search / Command Palette Button (Ctrl+K) ──
         if (!document.getElementById('paletteOpenBtn')) {
             const searchBtn = document.createElement('button');
             searchBtn.type = 'button';
@@ -931,7 +974,7 @@
             searchBtn.className = 'theme-switcher-pill';
             searchBtn.title = 'Buka Command Palette (Ctrl+K)';
             searchBtn.setAttribute('aria-label', 'Buka Command Palette pencarian navigasi (Shortcut: Ctrl+K)');
-            searchBtn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> <span>Search (Ctrl+K)</span>`;
+            searchBtn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> <span>Search</span>`;
             searchBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 openPalette();
@@ -939,138 +982,136 @@
             headerRight.insertBefore(searchBtn, headerRight.firstChild);
         }
 
-        // Dedicated Dark / Light Mode Toggle Button (WCAG AA Fast Switch)
-        if (!document.getElementById('themeDarkLightToggle')) {
-            const dlBtn = document.createElement('button');
-            dlBtn.type = 'button';
-            dlBtn.id = 'themeDarkLightToggle';
-            dlBtn.className = 'theme-switcher-pill';
-            const curTheme = localStorage.getItem('naura_theme') || 'midnight';
-            const isLight = curTheme === 'light-horizon';
-            dlBtn.setAttribute('aria-pressed', isLight ? 'true' : 'false');
-            dlBtn.setAttribute('aria-label', isLight ? 'Beralih ke Mode Gelap' : 'Beralih ke Mode Terang');
-            dlBtn.title = isLight ? 'Beralih ke Mode Gelap' : 'Beralih ke Mode Terang';
-            dlBtn.innerHTML = `<i class="fa-solid ${isLight ? 'fa-moon' : 'fa-sun'}"></i> <span>${isLight ? 'Dark' : 'Light'}</span>`;
+        // ── Settings Dropdown (tema, SFX, BGM) ──
+        if (!document.getElementById('headerSettingsBtn')) {
+            const settingsWrapper = document.createElement('div');
+            settingsWrapper.className = 'header-settings-wrapper';
+            settingsWrapper.id = 'headerSettingsWrapper';
 
-            dlBtn.addEventListener('click', (e) => {
+            const settingsBtn = document.createElement('button');
+            settingsBtn.type = 'button';
+            settingsBtn.id = 'headerSettingsBtn';
+            settingsBtn.className = 'theme-switcher-pill header-icon-btn';
+            settingsBtn.title = 'Pengaturan Cepat (Tema, SFX, BGM)';
+            settingsBtn.setAttribute('aria-haspopup', 'true');
+            settingsBtn.setAttribute('aria-expanded', 'false');
+            settingsBtn.setAttribute('aria-label', 'Buka pengaturan cepat');
+            settingsBtn.innerHTML = `<i class="fa-solid fa-sliders"></i>`;
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'header-settings-dropdown';
+            dropdown.id = 'headerSettingsDropdown';
+            dropdown.setAttribute('role', 'menu');
+
+            function buildDropdown() {
+                const curTheme = localStorage.getItem('naura_theme') || 'midnight';
+                const isLight = curTheme === 'light-horizon';
+                const isSfxMuted = localStorage.getItem('naura_sfx_enabled') === 'false';
+                const isBgmOn = window.soundManager ? (window.soundManager.bgmEnabled && window.soundManager.unlocked) : false;
+                const curThemeObj = AVAILABLE_THEMES.find(t => t.id === curTheme) || AVAILABLE_THEMES[0];
+
+                dropdown.innerHTML = `
+                    <div class="settings-dropdown-section">
+                        <div class="settings-dropdown-label">Tampilan</div>
+                        <button type="button" class="settings-dropdown-item" id="sdThemeDarkLight" aria-pressed="${isLight}">
+                            <i class="fa-solid ${isLight ? 'fa-moon' : 'fa-sun'}"></i>
+                            <span>${isLight ? 'Beralih ke Mode Gelap' : 'Beralih ke Mode Terang'}</span>
+                        </button>
+                        <button type="button" class="settings-dropdown-item" id="sdThemeCycle">
+                            <i class="${curThemeObj.icon}"></i>
+                            <span>Tema: ${curThemeObj.label}</span>
+                            <span class="settings-dropdown-badge">Klik untuk ganti</span>
+                        </button>
+                    </div>
+                    <div class="settings-dropdown-divider"></div>
+                    <div class="settings-dropdown-section">
+                        <div class="settings-dropdown-label">Audio</div>
+                        <button type="button" class="settings-dropdown-item" id="sdSfxToggle" aria-pressed="${!isSfxMuted}">
+                            <i class="fa-solid ${isSfxMuted ? 'fa-bell-slash' : 'fa-bell'}"></i>
+                            <span>Efek Suara (SFX)</span>
+                            <span class="settings-dropdown-badge ${isSfxMuted ? '' : 'active'}">${isSfxMuted ? 'Off' : 'On'}</span>
+                        </button>
+                        <button type="button" class="settings-dropdown-item" id="sdBgmToggle" aria-pressed="${isBgmOn}">
+                            <i class="fa-solid ${isBgmOn ? 'fa-pause' : 'fa-play'}"></i>
+                            <span>Musik Latar (BGM)</span>
+                            <span class="settings-dropdown-badge ${isBgmOn ? 'active' : ''}" id="sdBgmLabel">${isBgmOn ? 'Playing' : 'Paused'}</span>
+                        </button>
+                    </div>
+                    <div class="settings-dropdown-divider"></div>
+                    <a href="/settings" class="settings-dropdown-item settings-dropdown-link">
+                        <i class="fa-solid fa-gears"></i>
+                        <span>Semua Pengaturan</span>
+                        <i class="fa-solid fa-arrow-right" style="margin-left:auto;font-size:10px;opacity:0.5;"></i>
+                    </a>
+                `;
+
+                // Wire up dark/light toggle
+                dropdown.querySelector('#sdThemeDarkLight').addEventListener('click', () => {
+                    const current = localStorage.getItem('naura_theme') || 'midnight';
+                    if (current === 'light-horizon') {
+                        applyTheme(localStorage.getItem('naura_last_dark_theme') || 'midnight');
+                    } else {
+                        localStorage.setItem('naura_last_dark_theme', current);
+                        applyTheme('light-horizon');
+                    }
+                    buildDropdown();
+                });
+
+                // Wire up theme cycle
+                dropdown.querySelector('#sdThemeCycle').addEventListener('click', () => {
+                    const current = localStorage.getItem('naura_theme') || 'midnight';
+                    const curIdx = AVAILABLE_THEMES.findIndex(t => t.id === current);
+                    const next = AVAILABLE_THEMES[(curIdx + 1) % AVAILABLE_THEMES.length];
+                    applyTheme(next.id);
+                    buildDropdown();
+                });
+
+                // Wire up SFX toggle
+                dropdown.querySelector('#sdSfxToggle').addEventListener('click', () => {
+                    if (!window.soundManager) return;
+                    const next = !window.soundManager.sfxEnabled;
+                    window.soundManager.setSfxEnabled(next);
+                    buildDropdown();
+                });
+
+                // Wire up BGM toggle
+                dropdown.querySelector('#sdBgmToggle').addEventListener('click', () => {
+                    if (window.toggleBgm) window.toggleBgm();
+                    setTimeout(buildDropdown, 100);
+                });
+            }
+
+            buildDropdown();
+
+            settingsBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const current = localStorage.getItem('naura_theme') || 'midnight';
-                if (current === 'light-horizon') {
-                    const lastDark = localStorage.getItem('naura_last_dark_theme') || 'midnight';
-                    applyTheme(lastDark);
-                    if (window.showToast) {
-                        window.showToast({
-                            type: 'info',
-                            title: 'Mode Gelap',
-                            message: 'Beralih ke mode gelap.',
-                            duration: 2000
-                        });
-                    }
-                } else {
-                    localStorage.setItem('naura_last_dark_theme', current);
-                    applyTheme('light-horizon');
-                    if (window.showToast) {
-                        window.showToast({
-                            type: 'info',
-                            title: 'Mode Terang',
-                            message: 'Beralih ke mode terang (Light Horizon).',
-                            duration: 2000
-                        });
-                    }
+                const isOpen = dropdown.classList.contains('open');
+                dropdown.classList.toggle('open', !isOpen);
+                settingsBtn.setAttribute('aria-expanded', String(!isOpen));
+                if (!isOpen) buildDropdown();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!settingsWrapper.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                    settingsBtn.setAttribute('aria-expanded', 'false');
                 }
             });
+
+            settingsWrapper.appendChild(settingsBtn);
+            settingsWrapper.appendChild(dropdown);
 
             const searchBtn = document.getElementById('paletteOpenBtn');
             if (searchBtn && searchBtn.nextSibling) {
-                headerRight.insertBefore(dlBtn, searchBtn.nextSibling);
+                headerRight.insertBefore(settingsWrapper, searchBtn.nextSibling);
             } else {
-                headerRight.insertBefore(dlBtn, headerRight.firstChild);
-            }
-        }
-
-        // Multi-Theme Palette Switcher Button
-        if (!document.getElementById('themeSwitcherPill')) {
-            const themePill = document.createElement('button');
-            themePill.type = 'button';
-            themePill.id = 'themeSwitcherPill';
-            themePill.className = 'theme-switcher-pill';
-            themePill.title = 'Ganti Palet Tema Dashboard (Midnight / Sakura / Cyber / Emerald / OLED)';
-            themePill.setAttribute('aria-haspopup', 'true');
-            themePill.setAttribute('aria-label', 'Pilih palet warna dashboard');
-
-            const curTheme = localStorage.getItem('naura_theme') || 'midnight';
-            const curObj = AVAILABLE_THEMES.find(t => t.id === curTheme) || AVAILABLE_THEMES[0];
-            themePill.innerHTML = `<i class="${curObj.icon}"></i> <span>${curObj.label}</span>`;
-
-            themePill.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const current = localStorage.getItem('naura_theme') || 'midnight';
-                const curIdx = AVAILABLE_THEMES.findIndex(t => t.id === current);
-                const nextIdx = (curIdx + 1) % AVAILABLE_THEMES.length;
-                const nextTheme = AVAILABLE_THEMES[nextIdx];
-                applyTheme(nextTheme.id);
-                if (window.showToast) {
-                    window.showToast({
-                        type: 'info',
-                        title: 'Tema Diperbarui',
-                        message: `Beralih ke tema ${nextTheme.label}.`,
-                        duration: 2500
-                    });
-                }
-            });
-
-            const dlBtn = document.getElementById('themeDarkLightToggle');
-            if (dlBtn && dlBtn.nextSibling) {
-                headerRight.insertBefore(themePill, dlBtn.nextSibling);
-            } else {
-                headerRight.appendChild(themePill);
-            }
-        }
-
-        // SFX Mute Quick Toggle Pill
-        if (!document.getElementById('sfxTogglePill')) {
-            const sfxPill = document.createElement('button');
-            sfxPill.type = 'button';
-            sfxPill.id = 'sfxTogglePill';
-            sfxPill.className = 'theme-switcher-pill';
-            sfxPill.title = 'Bisu / Bunyikan Efek Suara Interaktif (SFX)';
-
-            const isSfxMuted = localStorage.getItem('naura_sfx_enabled') === 'false';
-            sfxPill.setAttribute('aria-pressed', isSfxMuted ? 'false' : 'true');
-            sfxPill.setAttribute('aria-label', isSfxMuted ? 'Nyalakan efek suara' : 'Bisukan efek suara');
-            sfxPill.innerHTML = `<i class="fa-solid ${isSfxMuted ? 'fa-bell-slash' : 'fa-bell'}"></i> <span>${isSfxMuted ? 'SFX Off' : 'SFX On'}</span>`;
-
-            sfxPill.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (!window.soundManager) return;
-                const nextState = !window.soundManager.sfxEnabled;
-                window.soundManager.setSfxEnabled(nextState);
-                sfxPill.setAttribute('aria-pressed', nextState ? 'true' : 'false');
-                sfxPill.setAttribute('aria-label', nextState ? 'Bisukan efek suara' : 'Nyalakan efek suara');
-                sfxPill.innerHTML = `<i class="fa-solid ${nextState ? 'fa-bell' : 'fa-bell-slash'}"></i> <span>${nextState ? 'SFX On' : 'SFX Off'}</span>`;
-                if (window.showToast) {
-                    window.showToast({
-                        type: 'info',
-                        title: 'Efek Suara UI',
-                        message: nextState ? 'SFX diaktifkan.' : 'SFX dimatikan.',
-                        duration: 2000
-                    });
-                }
-            });
-
-            const themeBtn = document.getElementById('themeSwitcherPill');
-            if (themeBtn && themeBtn.nextSibling) {
-                headerRight.insertBefore(sfxPill, themeBtn.nextSibling);
-            } else {
-                headerRight.appendChild(sfxPill);
+                headerRight.insertBefore(settingsWrapper, headerRight.firstChild);
             }
         }
 
         // User Identity Chip
         const existingAvatar = document.getElementById('headerAvatar');
         if (existingAvatar) {
-            // Jika halaman sudah memiliki elemen avatar bawaan (seperti di index.html),
-            // cukup sinkronkan avatar dan tombol otentikasi dari /api/me tanpa membuat #headerUserChip kedua
             fetch('/api/me').then(r => r.json()).then(data => {
                 if (data && data.loggedIn && data.user) {
                     if (existingAvatar && data.user.id && data.user.avatar) {
@@ -1387,11 +1428,21 @@
         document.head.appendChild(vitalScript);
     }
 
-    // ── 8. Pemuatan Otomatis Modul Sesi & Otentikasi ───────────────────
+    // ── 8a. Pemuatan Session Presenter (UI layer, harus dimuat sebelum authManager) ──
+    if (!document.getElementById('naura-session-presenter-script')) {
+        const presenterScript = document.createElement('script');
+        presenterScript.id = 'naura-session-presenter-script';
+        presenterScript.src = '/src/js/sessionPresenter.js?v=2.4.0';
+        presenterScript.async = false;
+        document.body.appendChild(presenterScript);
+    }
+
+    // ── 8b. Pemuatan Otomatis Modul Sesi & Otentikasi ───────────────────
     if (!document.getElementById('naura-auth-script')) {
         const authScript = document.createElement('script');
         authScript.id = 'naura-auth-script';
-        authScript.src = '/src/js/authManager.js?v=2.3.1-v8';
+        authScript.src = '/src/js/authManager.js?v=2.4.0';
+        authScript.async = false;
         document.body.appendChild(authScript);
     }
 
@@ -1414,7 +1465,6 @@
         window.soundManager.playAdaptiveTheme();
 
         const existingBgm = document.getElementById('bgmControl');
-        const headerRight = document.querySelector('.top-header .header-right');
 
         function syncBgmUi() {
             if (!window.soundManager) return;
@@ -1489,27 +1539,8 @@
                 }
             }
             syncBgmUi();
-        } else if (headerRight && !document.getElementById('audioControlPill')) {
-            // Pasang Audio Control Widget Pill di .top-header .header-right pada halaman yang belum memiliki #bgmControl
-            const pill = document.createElement('div');
-            pill.className = 'audio-control-pill';
-            pill.id = 'audioControlPill';
-            pill.title = 'BGM & Sound Controls (Klik untuk putar/jeda)';
-            pill.innerHTML = `
-                <div class="audio-eq-bars" id="audioEqBars">
-                    <span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span>
-                </div>
-                <span class="audio-track-label" id="audioTrackLabel">BGM</span>
-                <button type="button" class="audio-btn-mute" id="audioBtnMute" aria-label="Toggle Mute">
-                    <i class="fa-solid fa-volume-high"></i>
-                </button>
-            `;
-            headerRight.insertBefore(pill, headerRight.firstChild);
-
-            pill.addEventListener('click', (clickEvent) => {
-                clickEvent.stopPropagation();
-                window.toggleBgm();
-            });
+        } else {
+            // BGM dikelola via settings dropdown - tidak perlu pill terpisah di header
             syncBgmUi();
         }
 

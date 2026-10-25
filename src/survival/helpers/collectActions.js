@@ -50,9 +50,9 @@ const LOOT = {
   },
 };
 
-// Upah kecil berupa Naura Star Fragment untuk setiap sesi eksplorasi yang
+// Upah kecil berupa Sukamaju Koin (SC) untuk setiap sesi eksplorasi yang
 // berhasil. Grinding barang kini ikut memberi makan loop mata uang: kerja di
-// kota membayar Coin, eksplorasi alam membayar NSF, dan Coupon tetap langka.
+// kota membayar PD, eksplorasi alam membayar SC, dan Voucher Beasiswa (VB) tetap langka.
 const NSF_REWARD = {
   hutan: 30,
   tambang: 80,

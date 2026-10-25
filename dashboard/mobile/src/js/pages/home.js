@@ -234,7 +234,7 @@ function _tmplBotStatus() {
       </div>
       <div style="padding:8px;background:var(--surface-glass);border:1px solid var(--hairline);border-radius:var(--r-md);text-align:center">
         <span style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;display:block">Engine</span>
-        <strong id="eco-stat-engine" style="font-size:0.875rem;color:var(--primary);font-family:var(--font-display)">v2.3.0</strong>
+        <strong id="eco-stat-engine" style="font-size:0.875rem;color:var(--primary);font-family:var(--font-display)">v2.4.0</strong>
       </div>
     </div>
   `;

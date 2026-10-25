@@ -127,7 +127,8 @@ class AiDjManager {
         return guildSettings.settings.language;
       }
 
-      const voiceChannel = manager.client.channels.cache.get(voiceChannelId);
+      const client = manager?.client || (manager?.channels ? manager : null);
+      const voiceChannel = client?.channels?.cache?.get?.(voiceChannelId);
       const langCounts = { id: 0, en: 0 };
 
       if (voiceChannel && voiceChannel.members) {
@@ -443,6 +444,47 @@ class AiDjManager {
       } catch (sendErr) {
         logger.warn(`[AiDjManager] Gagal mengirim kartu siaran radio: ${sendErr.message}`);
       }
+    }
+  }
+
+  /**
+   * Generate ambient music suggestion based on RPG context (from pending_plugin/ambientMusicGenerator)
+   * @param {object} rpgContext - { location, weather, timeOfDay, playerActivity }
+   * @returns {{ mood: string, suggestedTrack: object, promptPrepared: string, readyForAiActivation: boolean }}
+   */
+  generateAmbientFromRpgContext(rpgContext = {}) {
+    try {
+      const location = rpgContext.location || "village";
+      const weather = rpgContext.weather || "clear";
+      const timeOfDay = rpgContext.timeOfDay || "day";
+
+      let promptTemplate = `Buat deskripsi musik ambient untuk game RPG:\n`;
+      promptTemplate += `Lokasi: ${location}. Cuaca: ${weather}. Waktu: ${timeOfDay}.\n`;
+      promptTemplate += `Berikan rekomendasi track dalam format JSON: { title, mood, instruments[], tempo }.`;
+
+      const moodMap = {
+        dungeon: "tense", boss_arena: "epic", village: "peaceful",
+        forest: "peaceful", cafe: "relaxed", battlefield: "intense",
+      };
+      const mood = moodMap[location] || "neutral";
+
+      const tracks = {
+        tense: { title: `Danger in ${location}`, mood: "suspense", instruments: ["drums", "strings"], tempo: 120 },
+        epic: { title: `Glory of ${location}`, mood: "triumphant", instruments: ["orchestra", "choir"], tempo: 140 },
+        peaceful: { title: `${location} Serenity`, mood: "calm", instruments: ["flute", "harp"], tempo: 70 },
+        relaxed: { title: `${location} Vibes`, mood: "chill", instruments: ["piano", "guitar"], tempo: 80 },
+        neutral: { title: `${location} Ambience`, mood: "ambient", instruments: ["synth", "nature"], tempo: 90 },
+      };
+
+      return {
+        mood,
+        suggestedTrack: tracks[mood] || tracks.neutral,
+        promptPrepared: promptTemplate,
+        readyForAiActivation: true,
+      };
+    } catch (error) {
+      logger.error("[AiDjManager:AmbientContext] Error:", error);
+      return { mood: "neutral", suggestedTrack: { title: "Ambient", mood: "neutral" }, promptPrepared: "", readyForAiActivation: false };
     }
   }
 }

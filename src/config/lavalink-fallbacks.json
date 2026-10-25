@@ -1,19 +1,46 @@
 [
   {
-    "name": "Millohost Public Node",
-    "host": "lava-v4.millohost.my.id",
+    "name": "Serenetia Indonesia v4",
+    "host": "lavalinkv4-id.serenetia.com",
     "port": 443,
-    "password": "https://discord.gg/mjS5J2K3ep",
+    "password": "BatuManaBisa",
     "secure": true,
-    "tier": 3,
+    "tier": 1,
     "isPrimaryFallback": true
   },
   {
-    "name": "Serenetia Public Node",
-    "host": "lavalinkv4.serenetia.com",
+    "name": "Lavalink Rocks v4",
+    "host": "v4.lavalink.rocks",
     "port": 443,
-    "password": "https://seretia.link/discord",
+    "password": "horizxon.tech",
     "secure": true,
+    "tier": 2,
+    "isPrimaryFallback": false
+  },
+  {
+    "name": "Serenetia EU v4",
+    "host": "lavalinkv4-eu.serenetia.com",
+    "port": 443,
+    "password": "BatuManaBisa",
+    "secure": true,
+    "tier": 2,
+    "isPrimaryFallback": false
+  },
+  {
+    "name": "Jompo Cloud ID",
+    "host": "lavalink.jompo.cloud",
+    "port": 2333,
+    "password": "jompo",
+    "secure": false,
+    "tier": 3,
+    "isPrimaryFallback": false
+  },
+  {
+    "name": "Hetzner DE Fallback",
+    "host": "37.27.114.136",
+    "port": 25065,
+    "password": "reedrousfreenode",
+    "secure": false,
     "tier": 3,
     "isPrimaryFallback": false
   }

@@ -53,8 +53,8 @@ module.exports = {
             .setRequired(true)
             .addChoices(
               { name: "Silver Supply Drop (Pratama Dollar)", value: "standard" },
-              { name: "Gold Mystic Crate (NFS)", value: "gold" },
-              { name: "Diamond Mythic Crate (Naura Coupon)", value: "premium" },
+              { name: "Gold Mystic Crate (Sukamaju Koin)", value: "gold" },
+              { name: "Diamond Mythic Crate (Voucher Beasiswa)", value: "premium" },
             ),
         ),
     )

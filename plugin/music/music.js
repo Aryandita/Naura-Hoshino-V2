@@ -499,16 +499,39 @@ module.exports = {
             ? "ytsearch"
             : "spsearch";
 
-      const cacheKey = `music:ac:${searchEngine}:${cleanQuery}`;
+      const guildId = interaction.guildId || "dm";
+      const cacheKey = `music:ac:${guildId}:${searchEngine}:${cleanQuery}`;
       const cached = getCached(cacheKey);
       if (cached) return safeRespond(interaction, cached);
+
+      let searchTimeout = 2200;
+      try {
+        const { lavalinkClusterManager } = require("../../src/managers/lavalinkClusterManager");
+        if (lavalinkClusterManager && poru && poru.nodes) {
+          const connectedNodes = [...poru.nodes.values()].filter((n) => n.connected);
+          if (connectedNodes.length > 0) {
+            let totalLatency = 0;
+            let count = 0;
+            for (const node of connectedNodes) {
+              const lat = lavalinkClusterManager.getNodeLatency(node.name);
+              if (lat && lat < 999) {
+                totalLatency += lat;
+                count++;
+              }
+            }
+            if (count > 0) {
+              searchTimeout = Math.min(3000, Math.max(1500, Math.round(totalLatency / count) * 2));
+            }
+          }
+        }
+      } catch (_) {}
 
       let res = await Promise.race([
         poru.resolve({
           query: `${searchEngine}:${cleanQuery}`,
           requester: interaction.user,
         }),
-        new Promise((resolve) => setTimeout(() => resolve(null), 2200)),
+        new Promise((resolve) => setTimeout(() => resolve(null), searchTimeout)),
       ]);
 
       if (
@@ -520,7 +543,7 @@ module.exports = {
             query: `ytmsearch:${cleanQuery}`,
             requester: interaction.user,
           }),
-          new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
+          new Promise((resolve) => setTimeout(() => resolve(null), Math.floor(searchTimeout / 2))),
         ]);
       }
 
@@ -577,7 +600,7 @@ module.exports = {
     const sendReply = async (payload, autoDelete = false) => {
       const msg = await interaction.editReply(payload).catch(() => {});
       if (autoDelete && msg) {
-        setTimeout(() => interaction.deleteReply().catch(() => {}), 15000);
+        setTimeout(() => interaction.deleteReply().catch(() => {}), 15000).unref?.();
       }
       return msg;
     };
@@ -624,7 +647,7 @@ module.exports = {
     const sendReply = async (payload, autoDelete = false) => {
       const msg = await sentMsg.edit(payload).catch(() => {});
       if (autoDelete && msg) {
-        setTimeout(() => msg.delete().catch(() => {}), 15000);
+        setTimeout(() => msg.delete().catch(() => {}), 15000).unref?.();
       }
       return msg;
     };

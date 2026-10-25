@@ -117,6 +117,17 @@ function buildActions(npc, npcData, t) {
       .setStyle(ButtonStyle.Secondary),
   );
 
+  // Tombol kencan muncul jika NPC romansa dan relationship level >= 3
+  if (npc.type === "romansa" && npcData.relationshipLevel >= 3) {
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId("npc_date")
+        .setLabel("Ajak Kencan")
+        .setEmoji(e("heart", "\u2764\uFE0F"))
+        .setStyle(ButtonStyle.Danger),
+    );
+  }
+
   // Lamaran hanya muncul bila memang sudah pantas, jadi tombolnya sendiri
   // sudah menjadi petunjuk kemajuan hubungan.
   if (

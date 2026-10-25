@@ -1,7 +1,7 @@
 # 🤖 PANDUAN KERJA & ORIENTASI AGENT AI, NAURA HOSHINO V2
 
 > **Target:** AI Coding Assistants (Antigravity, Roo Code, Claude, Copilot, & Developer Manusia)  
-> **Versi Ekosistem:** 2.3.0 · **Engine:** 2.3.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
+> **Versi Ekosistem:** 2.4.0 · **Engine:** 2.4.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!IMPORTANT]
@@ -9,7 +9,7 @@
 
 ---
 
-## 🧭 1. Mental Model Ekosistem Naura Hoshino V2 (v2.3.0)
+## 🧭 1. Mental Model Ekosistem Naura Hoshino V2 (v2.4.0)
 
 Sebagai agen AI, bayangkan Naura Hoshino V2 sebagai platform terintegrasi dengan **6 Pilar Utama**:
 
@@ -103,12 +103,13 @@ Saat menangani kode Naura Hoshino V2, agen AI diharapkan menguasai kemampuan tek
 - Menjaga paritas 100% antara [`assets/language/id.json`](file:///d:/Naura%20Hoshino%20V2/assets/language/id.json) dan [`assets/language/en.json`](file:///d:/Naura%20Hoshino%20V2/assets/language/en.json).
 - Menghindari penggunaan em dash (`\u2014`) pada semua teks dan string kamus.
 
-### 3.7 Tata Kelola Penomoran Versi (X.Y.Z)
+### 3.7 Tata Kelola Penomoran Versi (X.Y.Z) & SSOT package.json
 
 Seluruh perubahan versi ekosistem wajib mematuhi skema semantik tiga tingkat:
 - **`X` (Versi Keseluruhan / Generasi Era):** Ditentukan oleh owner proyek (saat ini bernilai `2` untuk era Naura Hoshino V2). Agen AI dilarang mengubah angka X tanpa instruksi eksplisit pengguna.
 - **`Y` (Major Update):** Dinaikkan saat terjadi rilis arsitektur besar, penambahan pilar baru, pembaruan moneter besar (seperti Currency V2 Closed-Loop), integrasi AI Ensemble, atau kluster audio Lavalink.
 - **`Z` (Minor Update):** Dinaikkan saat merilis perbaikan bug (bugfix), optimasi performa, balancing RPG/ekonomi, atau penyesuaian stabilitas berkala.
+- **Pemusatan Versi di `package.json`**: Versi ekosistem dan bot engine (`BOT_VERSION`, `ENGINE_VERSION`, `BASE_VERSION`) dipusatkan di `package.json` sebagai Single Source of Truth (SSOT). Modul internal membaca versi dinamis sehingga pembaruan versi di masa depan cukup dilakukan dengan menaikkan atribut `version` di `package.json`.
 
 ### 3.8 AI Ensemble Router & Circuit Breaker Logic
 
@@ -150,6 +151,13 @@ Seluruh perubahan versi ekosistem wajib mematuhi skema semantik tiga tingkat:
 - **Canvas Social Flex & 24/7 Standby**:
   - Rendering bingkai neon hologram, kilau bintang 4-sudut, dan stempel VIP emas via `src/canvas/workers/profileWorker.js`.
   - Mode `stay24_7` pada `musicManager.js` dan `lavalinkClusterManager.js` untuk Guild Patron (Tier 3) dan ekspansi slot Soundboard hingga 50 slot.
+
+### 3.12 Standar Koneksi Database Produksi (Zero-Mock Assurance)
+
+- **Koneksi Live ke Database Produksi**:
+  - Seluruh endpoint telemetri (`/api/realtime/*`, `/api/health`, `/api/economy/*`, `/api/stats/live`, dll.) wajib menyajikan data riil hasil query PostgreSQL (Supabase / Sequelize), MongoDB, dan Redis saat berjalan di lingkungan produksi (GitHub CI/CD, hosting, atau VPS).
+  - Dilarang menimpa hasil query database yang sah dengan data statis/tiruan (`1420`, `48`, `500000`, `25000`, dll.).
+  - Nilai mock fallback hanya diizinkan bekerja secara kondisional ketika database fisik benar-benar terputus (`!dbConnected`).
 
 ---
 

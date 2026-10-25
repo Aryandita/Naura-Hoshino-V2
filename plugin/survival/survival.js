@@ -48,6 +48,17 @@ module.exports = {
   async autocomplete(interaction, client) {
     const subCommandName = interaction.options.getSubcommand(false);
     if (!subCommandName) return interaction.respond([]).catch(() => {});
+    
+    // Handle roam autocomplete specially
+    if (subCommandName === "roam" && typeof data.handleRoamAutocomplete === "function") {
+      try {
+        const choices = await data.handleRoamAutocomplete(interaction);
+        return interaction.respond(choices).catch(() => {});
+      } catch (error) {
+        logger.debug("[survival:roam-autocomplete] Error: " + (error?.message || error));
+      }
+    }
+    
     const cmd = subcommands.get(subCommandName);
     if (cmd && typeof cmd.autocomplete === "function") {
       try {

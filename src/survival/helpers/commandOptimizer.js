@@ -15,7 +15,7 @@ function optimizeCommandBuilder(builder, keepChoicesLimit = 0, maxDescLength = 3
       }
 
       // Jika pilihan statis lebih dari batas, daftarkan ke autocomplete registry
-      if (Array.isArray(opt.choices) && opt.choices.length > keepChoicesLimit) {
+      if (Array.isArray(opt.choices) && opt.choices.length > keepChoicesLimit && opt.choices.length > 5) {
         choicesRegistry.set(currentPath, opt.choices);
         choicesRegistry.set(opt.name, opt.choices);
         delete opt.choices;

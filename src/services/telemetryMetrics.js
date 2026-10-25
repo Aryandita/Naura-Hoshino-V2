@@ -6,10 +6,44 @@ class TelemetryMetrics {
   constructor() {
     this.commandExecutions = 0;
     this.startTime = Date.now();
+    this.commandSuccess = new Map();
+    this.commandErrors = new Map();
+    this.commandLatency = new Map();
   }
 
   incrementCommandExecution() {
     this.commandExecutions++;
+  }
+
+  incrementCommandSuccess(commandName) {
+    this.commandSuccess.set(commandName, (this.commandSuccess.get(commandName) || 0) + 1);
+  }
+
+  incrementCommandError(commandName, errorType = "unknown") {
+    const key = `${commandName}:${errorType.substring(0, 50)}`;
+    this.commandErrors.set(key, (this.commandErrors.get(key) || 0) + 1);
+  }
+
+  recordCommandLatency(commandName, latencyMs) {
+    if (!this.commandLatency.has(commandName)) {
+      this.commandLatency.set(commandName, []);
+    }
+    const latencies = this.commandLatency.get(commandName);
+    latencies.push(latencyMs);
+    if (latencies.length > 100) latencies.shift();
+  }
+
+  getCommandStats(commandName) {
+    const success = this.commandSuccess.get(commandName) || 0;
+    const errors = [...this.commandErrors.entries()]
+      .filter(([k]) => k.startsWith(`${commandName}:`))
+      .reduce((sum, [, v]) => sum + v, 0);
+    const latencies = this.commandLatency.get(commandName) || [];
+    const avgLatency = latencies.length > 0 
+      ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) 
+      : 0;
+    
+    return { success, errors, avgLatency, total: success + errors };
   }
 
   /**
@@ -62,6 +96,25 @@ class TelemetryMetrics {
       `naura_lavalink_players_active ${musicPlayersCount}`,
       "",
     ];
+
+    for (const [cmd, count] of this.commandSuccess) {
+      lines.push(
+        `# HELP naura_command_success_total Success count per command`,
+        `# TYPE naura_command_success_total counter`,
+        `naura_command_success_total{command="${cmd}"} ${count}`,
+        ""
+      );
+    }
+
+    for (const [key, count] of this.commandErrors) {
+      const [cmd, errType] = key.split(":");
+      lines.push(
+        `# HELP naura_command_error_total Error count per command`,
+        `# TYPE naura_command_error_total counter`,
+        `naura_command_error_total{command="${cmd}",error="${errType}"} ${count}`,
+        ""
+      );
+    }
 
     return lines.join("\n");
   }

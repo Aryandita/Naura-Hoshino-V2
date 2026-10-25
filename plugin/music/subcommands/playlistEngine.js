@@ -518,7 +518,7 @@ const playlistEngine = {
       });
       channel
         .send(syncPayload)
-        .then((m) => setTimeout(() => m.delete().catch(() => {}), 15000))
+        .then((m) => setTimeout(() => m.delete().catch(() => {}), 15000).unref?.())
         .catch(() => {});
     })();
   },

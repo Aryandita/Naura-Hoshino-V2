@@ -26,6 +26,11 @@ const SKIP_DIRS = new Set([
   ".git",
   ".github/ISSUE_TEMPLATE",
   ".agents",
+  ".kilo",
+  ".cache",
+  ".planning",
+  ".roo",
+  ".vscode",
   "bin",
   "coverage",
   "dist",
@@ -33,6 +38,14 @@ const SKIP_DIRS = new Set([
   "logs",
   "backups",
   "scratch",
+  "android",
+  "devtools",
+  "docker",
+  "pending_plugin",
+  "tasks",
+  "tools",
+  "test",
+  "tests",
 ]);
 
 const SKIP_FILES = new Set([
@@ -58,6 +71,15 @@ const TEXT_EXTENSIONS = new Set([
   ".sql",
   ".example",
 ]);
+
+// Skip minified files (they're generated and huge)
+const MINIFIED_PATTERN = /\.(min|bundle)\.(js|css)$/i;
+
+// Max file size to scan (1 MB)
+const MAX_FILE_SIZE = 1024 * 1024;
+
+// Max recursion depth for safety
+const MAX_DEPTH = 20;
 
 const args = process.argv.slice(2);
 const shouldFix = args.includes("--fix");
@@ -97,7 +119,8 @@ function shouldSkipDir(relDir) {
   return parts.some((part) => SKIP_DIRS.has(part)) || SKIP_DIRS.has(relDir);
 }
 
-function collectFiles(dir, acc) {
+function collectFiles(dir, acc, depth = 0) {
+  if (depth > MAX_DEPTH) return acc;
   let entries;
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -111,7 +134,7 @@ function collectFiles(dir, acc) {
 
     if (entry.isDirectory()) {
       if (shouldSkipDir(rel)) continue;
-      collectFiles(full, acc);
+      collectFiles(full, acc, depth + 1);
       continue;
     }
 
@@ -121,6 +144,17 @@ function collectFiles(dir, acc) {
     const ext = path.extname(entry.name).toLowerCase();
     const isDotfileText = entry.name.startsWith(".env");
     if (!TEXT_EXTENSIONS.has(ext) && !isDotfileText) continue;
+
+    // Skip minified/bundle files
+    if (MINIFIED_PATTERN.test(entry.name)) continue;
+
+    // Check file size before reading
+    try {
+      const stats = fs.statSync(full);
+      if (stats.size > MAX_FILE_SIZE) continue;
+    } catch {
+      continue;
+    }
 
     acc.push(full);
   }

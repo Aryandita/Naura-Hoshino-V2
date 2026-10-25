@@ -58,9 +58,9 @@ app.use("/vendor", express.static(path.join(distPath, "vendor")));
 app.use("/models", express.static(path.join(distPath, "models")));
 app.use("/models", express.static(path.join(projectRoot, "dashboard", "public", "models")));
 app.use("/node_modules", express.static(path.join(projectRoot, "node_modules")));
-app.use("/v2", express.static(distPath));
-app.use(express.static(distPath));
-app.use(express.static(path.join(projectRoot, "dashboard", "public")));
+app.use("/v2", express.static(distPath, { index: false }));
+app.use(express.static(distPath, { index: false }));
+app.use(express.static(path.join(projectRoot, "dashboard", "public"), { index: false }));
 
 // Mock client untuk API dashboard
 const mockClient = {

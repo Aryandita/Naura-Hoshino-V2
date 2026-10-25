@@ -24,6 +24,11 @@
       z-index: 99999;
       font-family: var(--font-body, 'Inter', sans-serif);
       user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    .naura-companion-root.is-animating {
+      transition: left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), right 0.3s ease, bottom 0.3s ease;
     }
     .naura-companion-orb {
       width: 60px;
@@ -32,18 +37,26 @@
       background: linear-gradient(135deg, rgba(244,114,182,0.3) 0%, rgba(56,189,248,0.2) 100%);
       border: 2px solid rgba(244,114,182,0.8);
       box-shadow: 0 0 20px rgba(244,114,182,0.45), 0 8px 32px rgba(0,0,0,0.4);
-      cursor: pointer;
+      cursor: grab;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
       backdrop-filter: blur(12px);
+      touch-action: none;
     }
     .naura-companion-orb:hover {
-      transform: scale(1.1) translateY(-3px);
+      transform: scale(1.08) translateY(-2px);
       box-shadow: 0 0 28px rgba(244,114,182,0.65), 0 12px 36px rgba(0,0,0,0.5);
       border-color: #f472b6;
+    }
+    .naura-companion-orb:active,
+    .naura-companion-orb.is-dragging {
+      cursor: grabbing !important;
+      transform: scale(1.12) !important;
+      box-shadow: 0 0 34px rgba(244,114,182,0.85), 0 16px 44px rgba(0,0,0,0.65) !important;
+      border-color: #f472b6 !important;
     }
     .naura-companion-avatar {
       width: 50px;
@@ -455,10 +468,86 @@
   }
 
 
+  const STORAGE_KEY_POS = 'naura_companion_orb_pos';
+  let isDragging = false;
+  let dragMoved = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let initialLeft = 0;
+  let initialTop = 0;
+  let currentPos = null;
+
+  function restorePosition() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_POS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.left === 'number' && typeof parsed.top === 'number') {
+          const maxLeft = Math.max(10, window.innerWidth - 74);
+          const maxTop = Math.max(10, window.innerHeight - 74);
+          const left = Math.min(Math.max(10, parsed.left), maxLeft);
+          const top = Math.min(Math.max(10, parsed.top), maxTop);
+          applyPosition(left, top);
+          return;
+        }
+      }
+    } catch (_) {}
+    resetToDefaultPosition(false);
+  }
+
+  function applyPosition(left, top) {
+    root.style.left = `${left}px`;
+    root.style.top = `${top}px`;
+    root.style.right = 'auto';
+    root.style.bottom = 'auto';
+    currentPos = { left, top };
+  }
+
+  function resetToDefaultPosition(save = true) {
+    root.style.left = 'auto';
+    root.style.top = 'auto';
+    root.style.right = '24px';
+    root.style.bottom = '24px';
+    currentPos = null;
+    if (save) {
+      try {
+        localStorage.removeItem(STORAGE_KEY_POS);
+      } catch (_) {}
+    }
+  }
+
+  function adjustCardPlacement() {
+    const rect = root.getBoundingClientRect();
+    const cardWidth = 350;
+
+    // Vertical orientation: buka ke bawah jika orb berada di area atas layar
+    const inTopHalf = rect.top < window.innerHeight * 0.45;
+    if (inTopHalf) {
+      card.style.top = '74px';
+      card.style.bottom = 'auto';
+    } else {
+      card.style.bottom = '74px';
+      card.style.top = 'auto';
+    }
+
+    // Horizontal orientation: sejajarkan ke kiri jika orb mepet tepi kiri
+    const inLeftHalf = rect.left < cardWidth + 20;
+    if (inLeftHalf) {
+      card.style.left = '0';
+      card.style.right = 'auto';
+      card.style.transformOrigin = inTopHalf ? 'top left' : 'bottom left';
+    } else {
+      card.style.right = '0';
+      card.style.left = 'auto';
+      card.style.transformOrigin = inTopHalf ? 'top right' : 'bottom right';
+    }
+  }
+
   function toggleCard() {
     isOpen = !isOpen;
     if (isOpen) {
       updatePageContext();
+      adjustCardPlacement();
       card.classList.add('is-open');
       chatInput.focus();
     } else {
@@ -466,10 +555,104 @@
     }
   }
 
-  // Inisialisasi konteks saat awal
+  // Pointer dragging handler pada orb
+  orb.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return; // Hanya klik kiri / touch
+
+    isDragging = false;
+    dragMoved = false;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+
+    const rect = root.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialTop = rect.top;
+
+    try {
+      orb.setPointerCapture(e.pointerId);
+    } catch (_) {}
+
+    const onPointerMove = (moveEvent) => {
+      const dx = moveEvent.clientX - dragStartX;
+      const dy = moveEvent.clientY - dragStartY;
+
+      if (!dragMoved && Math.hypot(dx, dy) > 4) {
+        dragMoved = true;
+        isDragging = true;
+        orb.classList.add('is-dragging');
+        root.classList.remove('is-animating');
+      }
+
+      if (isDragging) {
+        moveEvent.preventDefault();
+        const maxLeft = Math.max(10, window.innerWidth - 70);
+        const maxTop = Math.max(10, window.innerHeight - 70);
+        const nextLeft = Math.min(Math.max(10, initialLeft + dx), maxLeft);
+        const nextTop = Math.min(Math.max(10, initialTop + dy), maxTop);
+        applyPosition(nextLeft, nextTop);
+        if (isOpen) adjustCardPlacement();
+      }
+    };
+
+    const onPointerUp = (upEvent) => {
+      try {
+        orb.releasePointerCapture(upEvent.pointerId);
+      } catch (_) {}
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      orb.classList.remove('is-dragging');
+
+      if (dragMoved && currentPos) {
+        try {
+          localStorage.setItem(STORAGE_KEY_POS, JSON.stringify(currentPos));
+        } catch (_) {}
+      }
+
+      // Berikan debounce singkat agar event click tidak memicu toggle panel
+      setTimeout(() => {
+        isDragging = false;
+        dragMoved = false;
+      }, 60);
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: false });
+    window.addEventListener('pointerup', onPointerUp, { once: true });
+  });
+
+  // Dobel klik untuk reset posisi ke default (bottom-right)
+  orb.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    root.classList.add('is-animating');
+    resetToDefaultPosition(true);
+    if (isOpen) adjustCardPlacement();
+    setTimeout(() => {
+      root.classList.remove('is-animating');
+    }, 350);
+  });
+
+  // Event click hanya membuka/menutup kartu jika bukan aksi drag
+  orb.addEventListener('click', (e) => {
+    if (isDragging || dragMoved) return;
+    toggleCard();
+  });
+
+  // Resize window: jaga agar orb tidak keluar dari viewport
+  window.addEventListener('resize', () => {
+    if (currentPos) {
+      const maxLeft = Math.max(10, window.innerWidth - 74);
+      const maxTop = Math.max(10, window.innerHeight - 74);
+      const left = Math.min(Math.max(10, currentPos.left), maxLeft);
+      const top = Math.min(Math.max(10, currentPos.top), maxTop);
+      applyPosition(left, top);
+      if (isOpen) adjustCardPlacement();
+    }
+  });
+
+  // Pulihkan posisi saat inisialisasi
+  restorePosition();
   updatePageContext();
 
-  orb.addEventListener('click', toggleCard);
   btnClose.addEventListener('click', () => {
     isOpen = false;
     card.classList.remove('is-open');

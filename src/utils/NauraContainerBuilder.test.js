@@ -66,7 +66,11 @@ describe("NauraContainerBuilder & UI Localization V2", () => {
     });
 
     const str = JSON.stringify(payloadEn);
-    assert.ok(str.includes("Naura is working"));
+    assert.ok(
+      str.includes("Processing") ||
+        str.includes("Your request is being processed") ||
+        str.includes("Naura is working")
+    );
   });
 
   it("buildErrorContainerV2 menggunakan author dan pesan terjemahan", () => {

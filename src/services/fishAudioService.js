@@ -23,46 +23,98 @@ const API_BASE = "https://api.fish.audio";
 const CACHE_TTL_SECONDS = 86400; // 24 Jam
 
 /**
- * Circuit breaker sederhana untuk eksternal API Fish Audio.
- * Status: CLOSED (normal) -> OPEN (ditolak cepat) -> HALF_OPEN (percobaan probe)
- * setelah cooldown habis.
+ * Circuit breaker untuk eksternal API Fish Audio dengan deteksi rate limit, pelacakan latensi, dan metrik.
+ * Status: CLOSED (normal) -> OPEN (ditolak cepat) -> HALF_OPEN (percobaan probe) setelah cooldown habis.
  */
 class CircuitBreaker {
   constructor(options = {}) {
-    this.STATE_CLOSED = "CLOSED";
-    this.STATE_OPEN = "OPEN";
-    this.STATE_HALF_OPEN = "HALF_OPEN";
-    this.state = this.STATE_CLOSED;
     this.failureThreshold = options.failureThreshold || 3;
-    this.cooldownMs = options.cooldownMs || 60_000;
+    this.cooldownMs = options.cooldownMs || 60000;
+    this.state = "CLOSED";
     this.failureCount = 0;
-    this.nextAttemptTime = 0;
+    this.lastFailureTime = 0;
+    this.rollingLatencies = [];
+    this.totalRequests = 0;
+    this.successCount = 0;
   }
 
   isAvailable() {
-    const now = Date.now();
-    if (this.state === this.STATE_OPEN && now >= this.nextAttemptTime) {
-      this.state = this.STATE_HALF_OPEN;
+    if (this.state === "CLOSED") return true;
+    if (this.state === "OPEN") {
+      const now = Date.now();
+      if (now - this.lastFailureTime > this.cooldownMs) {
+        this.state = "HALF_OPEN";
+        return true;
+      }
+      return false;
     }
-    return this.state !== this.STATE_OPEN;
+    return true;
   }
 
-  recordSuccess() {
+  /**
+   * Catat keberhasilan request dengan pelacakan latensi.
+   * @param {number} [latencyMs] - Latensi request dalam milidetik
+   */
+  recordSuccess(latencyMs) {
     this.failureCount = 0;
-    this.state = this.STATE_CLOSED;
-    this.nextAttemptTime = 0;
+    this.state = "CLOSED";
+    this.successCount++;
+    this.totalRequests++;
+    if (typeof latencyMs === "number" && latencyMs >= 0) {
+      this.rollingLatencies.push(latencyMs);
+      if (this.rollingLatencies.length > 20) this.rollingLatencies.shift();
+    }
   }
 
-  recordFailure() {
-    this.failureCount += 1;
-    this.nextAttemptTime = Date.now() + this.cooldownMs;
-    if (this.failureCount >= this.failureThreshold) {
-      this.state = this.STATE_OPEN;
+  /**
+   * Catat kegagalan request dengan deteksi rate limit (HTTP 429).
+   * @param {Error} [error] - Objek error untuk deteksi rate limit
+   */
+  recordFailure(error) {
+    this.failureCount++;
+    this.totalRequests++;
+    this.lastFailureTime = Date.now();
+
+    const errMsg = String(error?.message || "").toLowerCase();
+    const isRateLimit =
+      errMsg.includes("429") ||
+      error?.status === 429 ||
+      errMsg.includes("quota") ||
+      errMsg.includes("rate limit") ||
+      errMsg.includes("resource_exhausted");
+
+    if (isRateLimit || this.failureCount >= this.failureThreshold) {
+      this.state = "OPEN";
+      logger.warn(
+        `[FishAudio] Circuit Breaker beralih ke OPEN (${isRateLimit ? "Rate Limit" : "Threshold"}). Cooldown: ${this.cooldownMs / 1000}s`,
+      );
     }
   }
 
   getState() {
     return this.state;
+  }
+
+  /**
+   * Dapatkan metrik circuit breaker untuk monitoring.
+   * @returns {Object} Metrik circuit breaker
+   */
+  getMetrics() {
+    const avgLatency =
+      this.rollingLatencies.length > 0
+        ? Math.round(
+            this.rollingLatencies.reduce((a, b) => a + b, 0) /
+              this.rollingLatencies.length,
+          )
+        : 0;
+
+    return {
+      state: this.state,
+      failureCount: this.failureCount,
+      totalRequests: this.totalRequests,
+      successCount: this.successCount,
+      avgLatencyMs: avgLatency,
+    };
   }
 }
 
@@ -211,6 +263,7 @@ class FishAudioService {
         `[FishAudio] Membuat speech: "${cleanText.slice(0, 40)}..." (Voice: ${voiceId || "default"})`,
       );
 
+      const startTime = Date.now();
       const response = await fetch(`${API_BASE}/v1/tts`, {
         method: "POST",
         headers: {
@@ -243,7 +296,8 @@ class FishAudioService {
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = Buffer.from(arrayBuffer);
 
-      this.circuitBreaker.recordSuccess();
+      const latencyMs = Date.now() - startTime;
+      this.circuitBreaker.recordSuccess(latencyMs);
 
       // 3. Simpan ke cache Redis
       try {
@@ -271,7 +325,7 @@ class FishAudioService {
         this._releaseSlot();
       }
     } catch (err) {
-      this.circuitBreaker.recordFailure();
+      this.circuitBreaker.recordFailure(err);
       logger.error(`[FishAudio] Eksepsi saat generate speech: ${err.message}`);
       if (err.name === "SystemError" || err.name === "ExternalAPIError" || err.name === "ValidationError") {
         throw err;
@@ -517,6 +571,59 @@ class FishAudioService {
     }
 
     return { text, audioBuffer };
+  }
+
+  /**
+   * Generate custom voice clone TTS with user-specific reference model
+   * Enhancement from pending_plugin/voiceCloneCompanion
+   * @param {string} text - Text to synthesize
+   * @param {object} options - { customModelId, userId, style }
+   * @returns {Promise<{ ok: boolean, audioBuffer: Buffer|null, promptPrepared: string }>}
+   */
+  async generateCustomVoiceClone(text, options = {}) {
+    const customModelId = options.customModelId || null;
+    const userId = options.userId || "unknown";
+    const style = options.style || "default";
+
+    let promptTemplate = `Generate TTS audio dengan voice clone kustom.\n`;
+    promptTemplate += `Text: "${text.substring(0, 100)}"\n`;
+    promptTemplate += `Custom Model ID: ${customModelId || "default"}\n`;
+    promptTemplate += `Style: ${style}\n`;
+
+    if (!this.isConfigured()) {
+      return {
+        ok: false,
+        audioBuffer: null,
+        promptPrepared: promptTemplate,
+        reason: "FISH_AUDIO_NOT_CONFIGURED",
+        readyForAiActivation: true,
+      };
+    }
+
+    try {
+      const audioBuffer = await this.generateSpeech(text, {
+        latency: "normal",
+        format: "mp3",
+        referenceId: customModelId,
+      });
+
+      logger.info(`[FishAudio:VoiceClone] Generated for user ${userId} with model ${customModelId}`);
+      return {
+        ok: true,
+        audioBuffer,
+        promptPrepared: promptTemplate,
+        readyForAiActivation: false,
+      };
+    } catch (error) {
+      logger.error(`[FishAudio:VoiceClone] Error for user ${userId}:`, error);
+      return {
+        ok: false,
+        audioBuffer: null,
+        promptPrepared: promptTemplate,
+        reason: "GENERATION_FAILED",
+        readyForAiActivation: true,
+      };
+    }
   }
 }
 

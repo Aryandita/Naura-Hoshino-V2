@@ -11,7 +11,7 @@
 
 "use strict";
 
-const CACHE_NAME = "naura-pwa-v2.3.0";
+const CACHE_NAME = "naura-pwa-v2.4.0";
 const OFFLINE_FALLBACK_PAGE = `<!doctype html>
 <html lang="id">
 <head>

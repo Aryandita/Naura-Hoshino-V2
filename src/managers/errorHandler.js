@@ -1,4 +1,4 @@
-﻿const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 const { logger } = require("../managers/logger");
 const env = require("../config/env");
 const ui = require("../config/ui");
@@ -82,7 +82,7 @@ const sendErrorLog = async (err, type, client) => {
         if (owner) {
           const errEmbed = new EmbedBuilder()
             .setColor("#00FFFF")
-            .setTitle(`\u26a0\ufe0f Naura Versi ${env.BOT_VERSION || "2.3.0"} - ${type}`)
+            .setTitle(`\u26a0\ufe0f Naura Versi ${env.BOT_VERSION || "2.4.0"} - ${type}`)
             .setDescription(
               `\`\`\`js\n${String(err?.stack || err).substring(0, 4000)}\n\`\`\``,
             )

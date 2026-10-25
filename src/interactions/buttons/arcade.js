@@ -57,7 +57,7 @@ module.exports = [
         footerText: "Holo-Arcade Trivia Royale",
       });
 
-      return interaction.editReply({ ...resultPayload, components: [] });
+      return interaction.editReply(resultPayload);
     },
   },
   {
@@ -101,7 +101,7 @@ module.exports = [
           description: `Urutan tombol meleset di langkah ke-${stepIndex + 1}!\n${session.bet > 0 ? `Kehilangan **-${session.bet} Star Fragments**.` : ""}`,
           footerText: "Holo-Arcade Rhythm Tap",
         });
-        return interaction.editReply({ ...failPayload, components: [] });
+        return interaction.editReply(failPayload);
       }
 
       // Check if all steps completed
@@ -121,7 +121,7 @@ module.exports = [
           footerText: "Holo-Arcade Rhythm Tap Master",
         });
 
-        return interaction.editReply({ ...winPayload, components: [] });
+        return interaction.editReply(winPayload);
       }
 
       // Save intermediate progress

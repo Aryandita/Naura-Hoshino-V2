@@ -7,65 +7,11 @@ const {
 const ui = require("../config/ui");
 const cacheManager = require("../managers/cacheManager");
 
-const premiumFilters = ["nightcore", "vaporwave", "8d", "karaoke"];
+const { applyAudioFilter, PREMIUM_FILTERS } = require("./audioFilters");
+const premiumFilters = PREMIUM_FILTERS;
 
 const applyLavalinkFilter = (player, filterType) => {
-  const apply = (payload, name) => {
-    player.currentFilterName = name;
-    if (player.node && player.node.rest) {
-      player.node.rest.updatePlayer({
-        guildId: player.guildId,
-        data: { filters: payload },
-      });
-    }
-  };
-
-  switch (filterType) {
-    case "clear":
-      return apply({}, "Original Audio");
-    case "bassboost":
-      return apply(
-        {
-          equalizer: [
-            { band: 0, gain: 0.6 },
-            { band: 1, gain: 0.6 },
-            { band: 2, gain: 0.4 },
-          ],
-        },
-        "Sub-Bassboost",
-      );
-    case "nightcore":
-      return apply(
-        { timescale: { speed: 1.2, pitch: 1.2, rate: 1 } },
-        "Nightcore Shift",
-      );
-    case "vaporwave":
-      return apply(
-        { timescale: { speed: 0.8, pitch: 0.8, rate: 1 } },
-        "Vaporwave Reverb",
-      );
-    case "8d":
-      return apply({ rotation: { rotationHz: 0.2 } }, "8D Surround");
-    case "pop":
-      return apply(
-        { tremolo: { frequency: 2.0, depth: 0.5 } },
-        "Pop / Tremolo",
-      );
-    case "karaoke":
-      return apply(
-        {
-          karaoke: {
-            level: 1.0,
-            monoLevel: 1.0,
-            filterBand: 220.0,
-            filterWidth: 100.0,
-          },
-        },
-        "Karaoke Mode",
-      );
-    default:
-      return apply({}, "Original Audio");
-  }
+  return applyAudioFilter(player, filterType);
 };
 
 module.exports = {

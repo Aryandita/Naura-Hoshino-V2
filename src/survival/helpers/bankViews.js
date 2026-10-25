@@ -74,10 +74,21 @@ function mainView(user, snap) {
       .setStyle(ButtonStyle.Secondary),
   );
 
-  const banner = ui.getBanner ? ui.getBanner("economy") : null;
-  const files = banner
-    ? [new AttachmentBuilder(banner, { name: BANNER_NAME })]
-    : [];
+  const bgPath = survivalUI.getSurvivalBackground
+    ? survivalUI.getSurvivalBackground("kota", snap.inGameHour || 12)
+    : null;
+  const files = [];
+  let topBannerAttachmentName = undefined;
+  if (bgPath) {
+    files.push(new AttachmentBuilder(bgPath, { name: "bank_bg.jpeg" }));
+    topBannerAttachmentName = "bank_bg.jpeg";
+  } else {
+    const banner = ui.getBanner ? ui.getBanner("economy") : null;
+    if (banner) {
+      files.push(new AttachmentBuilder(banner, { name: BANNER_NAME }));
+      topBannerAttachmentName = BANNER_NAME;
+    }
+  }
 
   const navRow = survivalUI.buildSurvivalActionRow("economy", user?.id || "", {
     exclude: ["bank"],
@@ -99,7 +110,8 @@ function mainView(user, snap) {
       `${e("clock")} Hari ke-**${snap.day}** di dunia Naura.`,
     ].join("\n"),
     buttonsRow: [row, navRow],
-    bannerAttachmentName: banner ? BANNER_NAME : undefined,
+    bannerAttachmentName: topBannerAttachmentName,
+    topBannerAttachmentName,
     files,
     footerText: ui.getFooter("survival"),
   });

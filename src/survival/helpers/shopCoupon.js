@@ -68,7 +68,7 @@ const COUPON_SHOP = {
   dialog: {
     greet: [
       "Pssst, {nama}! Ke sini sebentar. Gaston cuma buka kios kalau ada yang bawa kupon asli.",
-      "Hoo, {nama} bawa Naura Coupon! Gaston sudah lama menunggu pelanggan yang serius.",
+      "Hoo, {nama} bawa Voucher Beasiswa (VB)! Gaston sudah lama menunggu pelanggan yang serius.",
       "Selamat datang di kios rahasia Gaston, {nama}. Barang di sini tidak dijual dengan uang biasa.",
     ],
     browse: [

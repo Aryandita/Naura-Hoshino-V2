@@ -489,10 +489,28 @@ module.exports = {
         }
       });
 
-      collector.on("end", () => {
-        interaction
-          .editReply({ flags: MessageFlags.IsComponentsV2, components: [] })
-          .catch(() => {});
+      collector.on("end", (collected) => {
+        if (collected.size === 0) {
+          rowTalk.components.forEach((btn) => btn.setDisabled(true));
+          interaction
+            .editReply(
+              buildContainerV2({
+                accentColorHex: ui.getColor("primary") || "#FFB6C1",
+                authorName: "NAURA LIVING COMPANION",
+                title: "💬 Ngobrol Bersama Naura (Selesai)",
+                description:
+                  `${randomGreeting}\n\n` +
+                  `💖 **Status Hubungan:**\n` +
+                  `• Tingkat Kedekatan: **${affectionLevel}**\n` +
+                  `• Poin Reputasi & Afeksi: \`${rep} Poin\`\n\n` +
+                  "-# *Sesi interaksi telah berakhir.*",
+                expression: "happy",
+                buttonsRow: [rowTalk],
+                footerText: ui.getFooter("naura"),
+              }),
+            )
+            .catch(() => {});
+        }
       });
     } else if (subcommand === "play") {
       const row1 = new ActionRowBuilder().addComponents(
@@ -992,12 +1010,25 @@ module.exports = {
         }
       });
 
-      collector.on("end", () => {
-        // Pesan ini memakai Components V2, jadi flag-nya harus ikut disertakan
-        // saat komponennya dikosongkan. Tanpa itu Discord menolak suntingan.
-        interaction
-          .editReply({ flags: MessageFlags.IsComponentsV2, components: [] })
-          .catch(() => {});
+      collector.on("end", (collected) => {
+        if (collected.size === 0) {
+          [row1, row2, row3].forEach((r) =>
+            r.components.forEach((btn) => btn.setDisabled(true)),
+          );
+          interaction
+            .editReply(
+              buildContainerV2({
+                accentColorHex: ui.getColor("primary") || "#FFB6C1",
+                title: `${e("help_game", "\uD83C\uDFAE")} Main Bareng Naura (Selesai)`,
+                description:
+                  "Waktu pemilihan game telah berakhir. Ketik `/naura play` kembali kapan saja untuk bermain bersama Naura!",
+                expression: "happy",
+                buttonsRow: [row1, row2, row3],
+                footerText: ui.getFooter("naura"),
+              }),
+            )
+            .catch(() => {});
+        }
       });
     }
   },

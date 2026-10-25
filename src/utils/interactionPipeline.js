@@ -22,7 +22,9 @@ function registerCollector(messageId, collector) {
   if (existing && typeof existing.stop === "function") {
     try {
       existing.stop("navigated");
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[InteractionPipeline] Gagal menghentikan collector lama: " + (err?.message || err));
+    }
   }
   activeCollectors.set(messageId, collector);
 }
@@ -38,7 +40,9 @@ function stopCollector(messageId, reason = "navigated") {
   if (collector && typeof collector.stop === "function") {
     try {
       collector.stop(reason);
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[InteractionPipeline] Gagal menghentikan collector: " + (err?.message || err));
+    }
   }
   activeCollectors.delete(messageId);
 }
@@ -93,7 +97,9 @@ function createManagedCollector(message, user, options = {}) {
       });
       try {
         await i.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
-      } catch (_) {}
+      } catch (err) {
+        logger.debug("[InteractionPipeline] Gagal mengirim reply akses ditolak: " + (err?.message || err));
+      }
       return;
     }
 
@@ -113,7 +119,9 @@ function createManagedCollector(message, user, options = {}) {
     if (reason !== "navigated" && autoDisableOnEnd) {
       try {
         await message.edit({ components: [] });
-      } catch (_) {}
+      } catch (err) {
+        logger.debug("[InteractionPipeline] Gagal menghapus komponen saat collector end: " + (err?.message || err));
+      }
     }
 
     if (typeof onEnd === "function") {

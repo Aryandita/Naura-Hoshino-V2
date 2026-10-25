@@ -313,11 +313,13 @@ function register(router, client) {
       let totalBank = 0;
       let totalWallet = 0;
       let totalCoupons = 0;
+      let dbSumsOk = false;
 
       try {
-        totalWallet = (await UserProfile.sum("economy_wallet")) || 0;
-        totalBank = (await UserProfile.sum("economy_bank")) || 0;
-        totalCoupons = (await UserSurvival.sum("coupons")) || 0;
+        totalWallet = Number((await UserProfile.sum("economy_wallet")) || 0);
+        totalBank = Number((await UserProfile.sum("economy_bank")) || 0);
+        totalCoupons = Number((await UserSurvival.sum("coupons")) || 0);
+        dbSumsOk = true;
       } catch (_) {}
 
       const treasuryBalanceNc = totalBank || 0;
@@ -434,8 +436,8 @@ function register(router, client) {
           treasuryBalanceNsf,
           treasuryBalanceNc,
           totalCoupons,
-          totalBank: totalBank || 48500000,
-          totalWallet: totalWallet || 15420000,
+          totalBank: dbSumsOk ? totalBank : (totalBank || 48500000),
+          totalWallet: dbSumsOk ? totalWallet : (totalWallet || 15420000),
           stocks,
           userEconomy: topUsers,
           treasury: {

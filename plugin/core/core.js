@@ -43,7 +43,7 @@ module.exports = {
       s.setName("language").setDescription("Ubah bahasa bot di server ini / Change bot language")
         .addStringOption((o) =>
           o.setName("lang").setDescription("Pilih bahasa / Select language").setRequired(true)
-            .addChoices({ name: "Indonesian", value: "id" }, { name: "English", value: "en" }),
+            .addChoices({ name: "Indonesian", value: "id" }, { name: "English", value: "en" }, { name: "日本語", value: "ja" }, { name: "Español", value: "es" }),
         ),
     )
     .addSubcommand((s) => s.setName("partner").setDescription("Informasi program partnership komunitas resmi.")),

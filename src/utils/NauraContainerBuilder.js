@@ -273,9 +273,10 @@ function buildContainerV2({
 
   if (Array.isArray(fields) && fields.length > 0) {
     fields.forEach((field) => {
+      const fieldName = field.name || field.label || "";
       const value = truncateText(field.value, MAX_FIELD_LENGTH);
       droppableIndices.push(containerComponents.length);
-      containerComponents.push(textDisplay(`**${field.name}**\n${value}`));
+      containerComponents.push(textDisplay(`**${fieldName}**\n${value}`));
     });
   }
 
@@ -985,6 +986,224 @@ async function safeReplyOrEdit(interaction, payload) {
   );
 }
 
+/**
+ * Container Greeting - Sambutan hangat dengan ekspresi Happy
+ * @param {object} opts
+ * @returns {object}
+ */
+function buildGreetingContainerV2(opts = {}) {
+  const langContext = pick(opts, "lang") || pick(opts, "interaction");
+  const activeLang = resolveLanguage(langContext);
+  const userName = pick(opts, "userName") || pick(opts, "user")?.username || "";
+  const greetingText = pick(opts, "message") || t(activeLang, "container.greeting.body") || `Halo ${userName ? `, ${userName}` : ""}! Naura senang bertemu kamu!`;
+  const title = pick(opts, "title") || `${nauraExpression.getEmoji("greeting") || "✨"} Selamat Datang!`;
+
+  return buildContainerV2({
+    lang: activeLang,
+    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("primary") || designTokens.BRAND.primary.hex,
+    authorName: pick(opts, "authorName") || "Naura Hoshino",
+    title,
+    description: greetingText,
+    expression: pick(opts, "expression") || "greeting",
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    footerText: pick(opts, "footerText") || ui.getFooter("core", activeLang),
+    files: pick(opts, "files") || [],
+  });
+}
+
+/**
+ * Container Farewell - Perpisahan manis dengan ekspresi Blow kiss
+ * @param {object} opts
+ * @returns {object}
+ */
+function buildFarewellContainerV2(opts = {}) {
+  const langContext = pick(opts, "lang") || pick(opts, "interaction");
+  const activeLang = resolveLanguage(langContext);
+  const farewellText = pick(opts, "message") || t(activeLang, "container.farewell.body") || "Sampai jumpa lagi! Naura akan selalu menunggu kamu kembali.";
+  const title = pick(opts, "title") || `${nauraExpression.getEmoji("farewell") || "💋"} Sampai Jumpa!`;
+
+  return buildContainerV2({
+    lang: activeLang,
+    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-pink") || designTokens.BRAND.secondary?.hex || 0xffb6c1,
+    authorName: pick(opts, "authorName") || "Naura Hoshino",
+    title,
+    description: farewellText,
+    expression: pick(opts, "expression") || "farewell",
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    footerText: pick(opts, "footerText") || ui.getFooter("core", activeLang),
+    files: pick(opts, "files") || [],
+  });
+}
+
+/**
+ * Container Curious - Rasa ingin tahu dengan ekspresi Thinking
+ * @param {object} opts
+ * @returns {object}
+ */
+function buildCuriousContainerV2(opts = {}) {
+  const langContext = pick(opts, "lang") || pick(opts, "interaction");
+  const activeLang = resolveLanguage(langContext);
+  const curiousText = pick(opts, "message") || t(activeLang, "container.curious.body") || "Hmm, menarik sekali! Ceritakan lebih banyak kepada Naura?";
+  const title = pick(opts, "title") || `${nauraExpression.getEmoji("curious") || "🤔"} Penasaran...`;
+
+  return buildContainerV2({
+    lang: activeLang,
+    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-blue") || designTokens.STATUS.syncing.hex,
+    authorName: pick(opts, "authorName") || "Naura Hoshino",
+    title,
+    description: curiousText,
+    expression: pick(opts, "expression") || "curious",
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : false,
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    footerText: pick(opts, "footerText") || ui.getFooter("core", activeLang),
+    files: pick(opts, "files") || [],
+  });
+}
+
+/**
+ * Container Excited - Antusiasme tinggi dengan ekspresi Cheers
+ * @param {object} opts
+ * @returns {object}
+ */
+function buildExcitedContainerV2(opts = {}) {
+  const langContext = pick(opts, "lang") || pick(opts, "interaction");
+  const activeLang = resolveLanguage(langContext);
+  const excitedText = pick(opts, "message") || t(activeLang, "container.excited.body") || "Wah, luar biasa! Naura sangat bersemangat melihat ini!";
+  const title = pick(opts, "title") || `${nauraExpression.getEmoji("excited") || "🎉"} Luar Biasa!`;
+
+  return buildContainerV2({
+    lang: activeLang,
+    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("success") || designTokens.STATUS.online.hex,
+    authorName: pick(opts, "authorName") || "Naura Hoshino",
+    title,
+    description: excitedText,
+    expression: pick(opts, "expression") || "excited",
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionAs: pick(opts, "expressionAs") || "gallery",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    footerText: pick(opts, "footerText") || ui.getFooter("core", activeLang),
+    files: pick(opts, "files") || [],
+  });
+}
+
+/**
+ * Container Proud - Kebanggaan dengan ekspresi Impressed
+ * @param {object} opts
+ * @returns {object}
+ */
+function buildProudContainerV2(opts = {}) {
+  const langContext = pick(opts, "lang") || pick(opts, "interaction");
+  const activeLang = resolveLanguage(langContext);
+  const userName = pick(opts, "userName") || pick(opts, "user")?.username || "";
+  const proudText = pick(opts, "message") || t(activeLang, "container.proud.body") || `Naura bangga padamu${userName ? `, ${userName}` : ""}! Kerja kerasmu membuahkan hasil!`;
+  const title = pick(opts, "title") || `${nauraExpression.getEmoji("proud") || "⭐"} Naura Bangga!`;
+
+  return buildContainerV2({
+    lang: activeLang,
+    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("warning") || designTokens.STATUS.idle.hex,
+    authorName: pick(opts, "authorName") || "Naura Hoshino",
+    title,
+    description: proudText,
+    expression: pick(opts, "expression") || "proud",
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    footerText: pick(opts, "footerText") || ui.getFooter("core", activeLang),
+    files: pick(opts, "files") || [],
+  });
+}
+
+/**
+ * Container Sympathy - Empati dan dukungan dengan ekspresi Shy
+ * @param {object} opts
+ * @returns {object}
+ */
+function buildSympathyContainerV2(opts = {}) {
+  const langContext = pick(opts, "lang") || pick(opts, "interaction");
+  const activeLang = resolveLanguage(langContext);
+  const sympathyText = pick(opts, "message") || t(activeLang, "container.sympathy.body") || "Naura mengerti perasaanmu. Jangan khawatir, semuanya akan baik-baik saja.";
+  const title = pick(opts, "title") || `${nauraExpression.getEmoji("sympathy") || "💝"} Naura Mengerti...`;
+
+  return buildContainerV2({
+    lang: activeLang,
+    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-pink") || 0xffb6c1,
+    authorName: pick(opts, "authorName") || "Naura Hoshino",
+    title,
+    description: sympathyText,
+    expression: pick(opts, "expression") || "sympathy",
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : false,
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    footerText: pick(opts, "footerText") || ui.getFooter("core", activeLang),
+    files: pick(opts, "files") || [],
+  });
+}
+
+/**
+ * Container Playful - Suasana ceria dan bercanda dengan ekspresi Chirping
+ * @param {object} opts
+ * @returns {object}
+ */
+function buildPlayfulContainerV2(opts = {}) {
+  const langContext = pick(opts, "lang") || pick(opts, "interaction");
+  const activeLang = resolveLanguage(langContext);
+  const playfulText = pick(opts, "message") || t(activeLang, "container.playful.body") || "Hehe, seru banget! Ayo kita bersenang-senang bersama!";
+  const title = pick(opts, "title") || `${nauraExpression.getEmoji("playful") || "🎵"} Waktu Bermain!`;
+
+  return buildContainerV2({
+    lang: activeLang,
+    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-cyan") || designTokens.BRAND.accent?.hex || 0x87ceeb,
+    authorName: pick(opts, "authorName") || "Naura Hoshino",
+    title,
+    description: playfulText,
+    expression: pick(opts, "expression") || "playful",
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : false,
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    footerText: pick(opts, "footerText") || ui.getFooter("core", activeLang),
+    files: pick(opts, "files") || [],
+  });
+}
+
+/**
+ * Container Grateful - Rasa terima kasih dengan ekspresi Blow kiss
+ * @param {object} opts
+ * @returns {object}
+ */
+function buildGratefulContainerV2(opts = {}) {
+  const langContext = pick(opts, "lang") || pick(opts, "interaction");
+  const activeLang = resolveLanguage(langContext);
+  const gratefulText = pick(opts, "message") || t(activeLang, "container.grateful.body") || "Terima kasih banyak! Naura sangat menghargai dukunganmu!";
+  const title = pick(opts, "title") || `${nauraExpression.getEmoji("grateful") || "💖"} Terima Kasih!`;
+
+  return buildContainerV2({
+    lang: activeLang,
+    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-gold") || 0xffd700,
+    authorName: pick(opts, "authorName") || "Naura Hoshino",
+    title,
+    description: gratefulText,
+    expression: pick(opts, "expression") || "grateful",
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    footerText: pick(opts, "footerText") || ui.getFooter("core", activeLang),
+    files: pick(opts, "files") || [],
+  });
+}
+
 module.exports = {
   buildContainerV2,
   buildErrorContainerV2,
@@ -992,6 +1211,14 @@ module.exports = {
   buildMaintenanceContainerV2,
   buildSuccessContainerV2,
   buildPersonaContainerV2,
+  buildGreetingContainerV2,
+  buildFarewellContainerV2,
+  buildCuriousContainerV2,
+  buildExcitedContainerV2,
+  buildProudContainerV2,
+  buildSympathyContainerV2,
+  buildPlayfulContainerV2,
+  buildGratefulContainerV2,
   buildDashboardLinkButton,
   sanitizeComponentCustomIds,
   disableComponents,

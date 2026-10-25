@@ -129,7 +129,7 @@ module.exports = async function handleLegacyAutomod(message, client, ctx) {
       .catch(() => null);
 
     if (warning)
-      setTimeout(() => warning.delete().catch(() => {}), WARNING_LIFETIME_MS);
+      setTimeout(() => warning.delete().catch(() => {}), WARNING_LIFETIME_MS).unref?.();
   }
 
   await profile.save({ fields: ["mannersPoint"] });

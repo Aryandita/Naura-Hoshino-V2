@@ -154,6 +154,20 @@ const MOOD_MAP = {
   economy: "Cheers",
   celebrate: "Cheers",
 
+  // --- Container Expressions (baru) ---
+  greeting: "Happy",
+  farewell: "Blow kiss",
+  curious: "Thinking",
+  excited: "Cheers",
+  proud: "Impressed",
+  sympathy: "Shy",
+  encouraging: "Happy",
+  disappointed: "Akward",
+  playful: "Chirping",
+  serious: "Read",
+  grateful: "Blow kiss",
+  surprised_happy: "Shocked",
+
   // --- Nuansa lain ---
   food: "Eat",
   music: "Chirping",

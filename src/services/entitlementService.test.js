@@ -372,8 +372,9 @@ describe("Discord Entitlements & Premium Subscriptions Service", () => {
 
   it("manifest Discord Activity memuat scope relationships.read dan social_sdk", () => {
     const manifest = require("../config/discordActivityManifest.json");
+    const pkg = require("../../package.json");
     assert.ok(manifest.scopes.includes("relationships.read"));
     assert.ok(manifest.capabilities.includes("social_sdk"));
-    assert.strictEqual(manifest.version, "2.3.0");
+    assert.strictEqual(manifest.version, pkg.version);
   });
 });

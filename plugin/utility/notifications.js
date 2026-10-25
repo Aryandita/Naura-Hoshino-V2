@@ -26,7 +26,7 @@ module.exports = {
 
     let prefs = await notificationCenter.getUserPreferences(userId);
 
-    const renderPayload = (currentPrefs) => {
+    const renderPayload = (currentPrefs, disabled = false) => {
       const eGreen = ui.getEmoji("greenping") || "🟢";
       const eRed = ui.getEmoji("redping") || "🔴";
       const eFlash = ui.getEmoji("stamina") || "⚡";
@@ -101,6 +101,11 @@ module.exports = {
           .setEmoji(ui.parseEmoji(ui.getEmoji("topgg")) || { name: "🗳️" }),
       );
 
+      if (disabled) {
+        row1.components.forEach((btn) => btn.setDisabled(true));
+        row2.components.forEach((btn) => btn.setDisabled(true));
+      }
+
       return buildContainerV2({
         accentColorHex: "#38BDF8",
         title: `${eBell} Pusat Notifikasi Pribadi`,
@@ -139,7 +144,7 @@ module.exports = {
     });
 
     collector.on("end", () => {
-      interaction.editReply({ components: [] }).catch(() => {});
+      interaction.editReply(renderPayload(prefs, true)).catch(() => {});
     });
   },
 };

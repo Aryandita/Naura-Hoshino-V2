@@ -120,6 +120,9 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 body {
@@ -127,8 +130,9 @@ body {
   background-color: var(--bg-deep);
   color: var(--text-secondary);
   line-height: 1.6;
-  overflow-x: hidden;
-  min-height: 100dvh;
+  overflow: hidden;
+  height: 100%;
+  height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -181,25 +185,28 @@ p {
 .text-gradient-primary {
   background: linear-gradient(135deg, var(--primary, #f472b6) 0%, var(--accent-violet, #a78bfa) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-accent {
   background: linear-gradient(135deg, var(--accent-cyan, #22d3ee) 0%, var(--accent-green, #34d399) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-gold {
   background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 /* â”€â”€â”€ Layout Shell â”€â”€â”€ */
 .app-shell {
   display: flex;
-  min-height: 100dvh;
+  height: 100dvh;
   overflow: hidden;
   position: relative;
 }
@@ -207,7 +214,7 @@ p {
 /* â”€â”€â”€ Sidebar â”€â”€â”€ */
 .sidebar {
   width: var(--sidebar-w);
-  height: 100%;
+  height: 100dvh;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -218,7 +225,9 @@ p {
   overflow: hidden;
   transition: width var(--t-slow), transform var(--t-slow);
   z-index: 50;
-  position: relative;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
 }
 
 /* Sidebar brand */
@@ -283,6 +292,7 @@ p {
   padding: 12px 8px;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 .nav-group {
@@ -537,7 +547,10 @@ p {
 
 /* Collapsed State Layout */
 .sidebar.collapsed {
-  width: var(--sidebar-w-col, 68px);
+  width: var(--sidebar-w-col, 68px) !important;
+  min-width: 0 !important;
+  max-width: var(--sidebar-w-col, 68px) !important;
+  flex: 0 0 var(--sidebar-w-col, 68px) !important;
 }
 
 .sidebar.collapsed .sidebar-brand {
@@ -640,7 +653,28 @@ p {
 .metric-card.cat-amber::before, .metric-card[data-cat="amber"]::before { background: var(--accent-amber, #f59e0b); }
 
 /* â”€â”€â”€ Quick Actions Directional Micro-Interactions â”€â”€â”€ */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .quick-action {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--r-xl, 18px);
+  background: var(--bg-surface, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
+  text-decoration: none !important;
+  color: var(--text-primary, #f1f5f9) !important;
   position: relative;
   overflow: hidden;
   box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08));
@@ -648,6 +682,60 @@ p {
               background var(--t-base, 200ms ease),
               border-color var(--t-base, 200ms ease),
               box-shadow var(--t-base, 200ms ease);
+  cursor: pointer;
+}
+
+.quick-action:hover {
+  background: var(--bg-surface-hv, rgba(255, 255, 255, 0.08));
+  border-color: var(--border-primary, rgba(244, 114, 182, 0.35));
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.35), var(--glass-specular);
+  text-decoration: none !important;
+}
+
+.quick-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md, 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  transition: transform var(--t-base, 200ms ease);
+}
+
+.quick-action:hover .quick-action-icon {
+  transform: scale(1.08);
+}
+
+.quick-action-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.quick-action-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #f1f5f9);
+  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-action-desc {
+  font-size: 11px;
+  color: var(--text-muted, #718096);
+  line-height: 1.3;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-body, 'Outfit', sans-serif);
 }
 
 .quick-action::after {
@@ -657,16 +745,10 @@ p {
   font-size: 10px;
   color: var(--text-muted, #64748b);
   margin-left: auto;
-  opacity: 0;
-  transform: translateX(-4px);
+  opacity: 0.35;
+  transform: translateX(-2px);
   transition: opacity var(--t-base, 200ms ease), transform var(--t-base, 200ms ease), color var(--t-base, 200ms ease);
-}
-
-.quick-action:hover {
-  background: var(--bg-surface-hv, rgba(255, 255, 255, 0.08));
-  border-color: var(--border-primary, rgba(244, 114, 182, 0.35));
-  transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3), var(--glass-specular);
+  flex-shrink: 0;
 }
 
 .quick-action:hover::after {
@@ -693,14 +775,17 @@ p {
   background: rgba(205, 127, 50, 0.03) !important;
 }
 
-/* â”€â”€â”€ Main Content Area â”€â”€â”€ */
+/* ─── Main Content Area ─── */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
   height: 100%;
-  overflow: hidden;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 /* â”€â”€â”€ Top Header â”€â”€â”€ */
@@ -736,7 +821,7 @@ p {
 }
 
 .hamburger-btn {
-  display: none;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   width: 36px;
@@ -1082,6 +1167,115 @@ p {
   outline: none;
   box-shadow: var(--focus-ring);
 }
+
+/* ─── Header Settings Dropdown ─── */
+.header-settings-wrapper {
+  position: relative;
+}
+
+.header-settings-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 240px;
+  background: rgba(10, 13, 24, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-xl, 14px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(244,114,182,0.1);
+  padding: 8px;
+  z-index: 200;
+  display: none;
+  transform-origin: top right;
+  animation: dropdownSlideIn 0.18s ease;
+}
+
+.header-settings-dropdown.open {
+  display: block;
+}
+
+@keyframes dropdownSlideIn {
+  from { opacity: 0; transform: scale(0.94) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.settings-dropdown-section {
+  padding: 4px 0;
+}
+
+.settings-dropdown-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 4px 10px 6px;
+  font-family: var(--font-heading);
+}
+
+.settings-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--r-md, 10px);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+  text-align: left;
+  text-decoration: none;
+}
+
+.settings-dropdown-item:hover {
+  background: var(--bg-surface-hv, rgba(255,255,255,0.07));
+  color: var(--text-primary);
+}
+
+.settings-dropdown-item > i:first-child {
+  width: 16px;
+  text-align: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  color: var(--primary);
+  opacity: 0.8;
+}
+
+.settings-dropdown-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--r-full);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.settings-dropdown-badge.active {
+  background: var(--primary-dim);
+  color: var(--primary);
+  border-color: var(--border-primary);
+}
+
+.settings-dropdown-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 8px;
+}
+
+.settings-dropdown-link {
+  color: var(--text-secondary);
+}
+
 /* Wallet badge */
 .wallet-badge {
   display: flex;
@@ -1125,8 +1319,7 @@ p {
 /* â”€â”€â”€ Page Content â”€â”€â”€ */
 .page-content {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: visible;
   padding: 28px 28px 48px;
   position: relative;
   z-index: 1;
@@ -2185,6 +2378,10 @@ p {
     display: flex !important;
   }
 
+  .sidebar-collapse-btn {
+    display: none !important;
+  }
+
   .sidebar-overlay {
     display: block !important;
     position: fixed !important;
@@ -2452,6 +2649,31 @@ p {
       max-width: none !important;
     }
 
+    .pwa-close-btn {
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px !important;
+      border-radius: 50% !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+      border: 1px solid rgba(255, 255, 255, 0.16) !important;
+      color: #94a3b8 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      padding: 0 !important;
+      flex-shrink: 0 !important;
+      font-size: 13px !important;
+    }
+
+    .pwa-close-btn:hover {
+      background: rgba(239, 68, 68, 0.25) !important;
+      border-color: rgba(239, 68, 68, 0.6) !important;
+      color: #f87171 !important;
+      transform: scale(1.1) !important;
+    }
+
     .toast-stack, .naura-toast-container {
       top: calc(var(--header-h, 60px) + 14px) !important;
       bottom: auto !important;
@@ -2688,5 +2910,31 @@ select option:hover, select option:checked {
   border-radius: var(--r-md);
   box-shadow: 0 4px 14px rgba(244, 114, 182, 0.35);
   text-decoration: none;
+}
+
+/* ── PWA Install Banner Dismiss Button ── */
+.pwa-close-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #94a3b8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+  font-size: 13px !important;
+}
+
+.pwa-close-btn:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  color: #f87171 !important;
+  transform: scale(1.1) !important;
 }
 

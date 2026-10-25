@@ -24,20 +24,26 @@ try {
   const wt = require("node:worker_threads");
   isMainThread = wt.isMainThread;
   parentPort = wt.parentPort;
-} catch (_) {}
+} catch (err) {
+  logger.debug("[LifecycleManager] Worker threads tidak tersedia: " + (err?.message || err));
+}
 
 function sendToParent(msg) {
   if (typeof process.send === "function") {
     try {
       process.send(msg);
       return true;
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[LifecycleManager] Gagal mengirim pesan via process.send: " + (err?.message || err));
+    }
   }
   if (!isMainThread && parentPort && typeof parentPort.postMessage === "function") {
     try {
       parentPort.postMessage(msg);
       return true;
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[LifecycleManager] Gagal mengirim pesan via parentPort: " + (err?.message || err));
+    }
   }
   return false;
 }
@@ -60,26 +66,53 @@ function getSystemHealth(client) {
   try {
     const { sequelize } = require("./dbManager");
     postgresConnected = Boolean(sequelize && sequelize.connectionManager && !sequelize.connectionManager.closed);
-  } catch (_) {}
+  } catch (err) {
+    logger.debug("[LifecycleManager] Gagal memeriksa status PostgreSQL: " + (err?.message || err));
+  }
 
   let redisConnected = false;
   try {
     const redisManager = require("./redisManager");
     redisConnected = Boolean(redisManager && redisManager.isReady);
-  } catch (_) {}
+  } catch (err) {
+    logger.debug("[LifecycleManager] Gagal memeriksa status Redis: " + (err?.message || err));
+  }
 
   let mongoConnected = false;
   try {
     const mongoManager = require("./mongoManager");
     mongoConnected = Boolean(mongoManager && mongoManager.isReady);
-  } catch (_) {}
+  } catch (err) {
+    logger.debug("[LifecycleManager] Gagal memeriksa status MongoDB: " + (err?.message || err));
+  }
 
-  // Cache pending writes
   let pendingWrites = 0;
   try {
     const cacheManager = require("./cacheManager");
     pendingWrites = cacheManager.pendingWrites || 0;
-  } catch (_) {}
+  } catch (err) {
+    logger.debug("[LifecycleManager] Gagal mengambil pending writes: " + (err?.message || err));
+  }
+
+  let aiCircuitBreakers = {};
+  try {
+    const aiRouter = require("../ai/aiEnsembleRouter");
+    if (aiRouter && typeof aiRouter.getCircuitBreakerMetrics === "function") {
+      aiCircuitBreakers = aiRouter.getCircuitBreakerMetrics();
+    }
+  } catch (err) {
+    logger.debug("[LifecycleManager] Gagal mengambil AI circuit breaker metrics: " + (err?.message || err));
+  }
+
+  let dbPoolMetrics = {};
+  try {
+    const { getPoolMetrics } = require("../config/database");
+    if (typeof getPoolMetrics === "function") {
+      dbPoolMetrics = getPoolMetrics();
+    }
+  } catch (err) {
+    logger.debug("[LifecycleManager] Gagal mengambil database pool metrics: " + (err?.message || err));
+  }
 
   // Audio stats
   let activePlayers = 0;
@@ -117,6 +150,8 @@ function getSystemHealth(client) {
     cache: {
       pendingWrites,
     },
+    databasePool: dbPoolMetrics,
+    aiCircuitBreakers,
     shards: {
       shardId: client?.shard?.ids ? client.shard.ids.join(",") : "0",
       clusterId: client?.cluster?.id != null ? client.cluster.id : null,

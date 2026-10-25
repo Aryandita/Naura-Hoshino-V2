@@ -220,6 +220,48 @@ async function upgrade({ userId, survival, profile, fromId }) {
   };
 }
 
+/**
+ * Generate AI crafting suggestions based on inventory (from pending_plugin/smartCraftingAdvisor)
+ * @param {object} playerInventory - Current inventory items
+ * @param {number} playerLevel - Player level
+ * @returns {{ suggestions: Array, explanation: string, promptPrepared: string, readyForAiActivation: boolean }}
+ */
+function generateCraftSuggestions(playerInventory = [], playerLevel = 1) {
+  try {
+    const availableMaterials = new Set();
+    for (const item of playerInventory) {
+      if (item && item.type === "material") {
+        availableMaterials.add(item.id || item.name);
+      }
+    }
+
+    let promptTemplate = `Berikan saran crafting untuk pemain RPG:\n`;
+    promptTemplate += `Level: ${playerLevel}. Material: ${[...availableMaterials].join(", ") || "tidak ada"}.\n`;
+    promptTemplate += `Sarankan 3 resep optimal dalam format JSON: [{ name, materials{}, rarity, benefit }].`;
+
+    const basicRecipes = [
+      { name: "Health Potion", materials: ["herb_common"], rarity: "common", benefit: "Restore 50 HP" },
+      { name: "Iron Sword", materials: ["ore_iron", "wood_log"], rarity: "uncommon", benefit: "+15 ATK" },
+      { name: "Leather Armor", materials: ["leather_hide"], rarity: "common", benefit: "+10 DEF" },
+    ];
+
+    const feasible = basicRecipes.filter((r) =>
+      r.materials.every((m) => availableMaterials.has(m))
+    );
+
+    return {
+      suggestions: feasible.length > 0 ? feasible : basicRecipes.slice(0, 1),
+      explanation: feasible.length > 0
+        ? `Berdasarkan material Anda, saya sarankan ${feasible[0].name} sebagai prioritas.`
+        : "Material Anda belum cukup. Kumpulkan bahan terlebih dahulu.",
+      promptPrepared: promptTemplate,
+      readyForAiActivation: true,
+    };
+  } catch (error) {
+    return { suggestions: [], explanation: "Tidak dapat memberikan saran saat ini.", promptPrepared: "", readyForAiActivation: false };
+  }
+}
+
 module.exports = {
   STAMINA_ASSEMBLE,
   STAMINA_SMELT,
@@ -227,4 +269,5 @@ module.exports = {
   assemble,
   smelt,
   upgrade,
+  generateCraftSuggestions,
 };

@@ -308,9 +308,55 @@ async function publishMorningChronicle(client) {
   }
 }
 
+/**
+ * Generate cinematic narration for world events (from pending_plugin/worldEventNarrator)
+ * @param {object} eventData - { type, participants, outcome, location }
+ * @param {string} narrativeStyle - "epic", "mysterious", "cheerful", "dramatic"
+ * @returns {{ narration: string, title: string, promptPrepared: string, readyForAiActivation: boolean }}
+ */
+function generateCinematicNarration(eventData = {}, narrativeStyle = "epic") {
+  try {
+    const eventType = eventData.type || "generic";
+    const participants = eventData.participants || [];
+    const location = eventData.location || "Naura Wilds";
+    const participantList = participants.length > 0 ? participants.slice(0, 3).join(", ") : "para petualang";
+
+    let promptTemplate = `Ubah log peristiwa menjadi narasi sinematik RPG.\n`;
+    promptTemplate += `Gaya: ${narrativeStyle}. Event: ${eventType}. Lokasi: ${location}.\n`;
+    promptTemplate += `Partisipan: ${participantList}. Buat 2-3 paragraf narasi dalam bahasa Indonesia.`;
+
+    const narratives = {
+      boss_defeat: {
+        epic: { title: `Kemenangan Gemilang di ${location}`, text: `Di bawah langit kelam ${location}, ${participantList} berdiri tegak menghadapi sang tiran. Sejarah akan mencatat hari ini sebagai awal era baru.` },
+        dramatic: { title: `Pertarungan Terakhir di ${location}`, text: `Darah dan keringat membasahi tanah ${location}. Dengan serangan terakhir yang menentukan, kegelapan pun sirna.` },
+      },
+      festival: {
+        cheerful: { title: `Kegembiraan Melanda ${location}`, text: `Sorak sorai terdengar di seluruh penjuru ${location}! ${participantList} memimpin perayaan dengan tarian dan nyanyian.` },
+      },
+      generic: {
+        epic: { title: `Catatan dari ${location}`, text: `Di ${location}, sebuah peristiwa penting telah tercatat. ${participantList} terlibat dalam kejadian yang mengubah sejarah.` },
+      },
+    };
+
+    const typeNarratives = narratives[eventType] || narratives.generic;
+    const styleNarrative = typeNarratives[narrativeStyle] || Object.values(typeNarratives)[0];
+
+    return {
+      narration: styleNarrative?.text || `Peristiwa terjadi di ${location}.`,
+      title: styleNarrative?.title || "Peristiwa Dunia",
+      promptPrepared: promptTemplate,
+      readyForAiActivation: true,
+    };
+  } catch (error) {
+    logger.error("[ServerChronicle:CinematicNarration] Error:", error);
+    return { narration: "Sebuah peristiwa telah terjadi...", title: "Peristiwa Dunia", promptPrepared: "", readyForAiActivation: false };
+  }
+}
+
 module.exports = {
   recordMessageActivity,
   generateChronicleData,
   synthesizeChronicle,
   publishMorningChronicle,
+  generateCinematicNarration,
 };

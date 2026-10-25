@@ -1,9 +1,9 @@
-/**
+﻿/**
  * @namespace: plugin/leveling/xpBuffer.js
  * @type: Module
  * @copyright 2026 Aryandita Praftian
  * @assistant Naura Hoshino
- * @version 1.0.0
+ * @version 1.1.0
  * @description Penyangga XP di Redis supaya obrolan ramai tidak menulis ke MySQL tiap pesan.
  */
 
@@ -50,6 +50,10 @@ function isEnabled() {
   return redisManager.isReady;
 }
 
+/**
+ * Memulai interval flush berkala. Aman dipanggil berulang kali (idempotent).
+ * Timer menggunakan unref() agar tidak menahan proses saat shutdown.
+ */
 function start() {
   if (flushTimer) return;
 
@@ -64,6 +68,7 @@ function start() {
   if (flushTimer.unref) flushTimer.unref();
 }
 
+/** Menghentikan interval flush berkala. */
 function stop() {
   if (!flushTimer) return;
   clearInterval(flushTimer);
@@ -71,8 +76,40 @@ function stop() {
 }
 
 /**
- * Menambah XP tertunda untuk satu pengguna di satu server.
+ * Menulis XP tertunda ke Redis tanpa memicu start().
+ * Digunakan internal oleh flush() dan settleUser() untuk rollback
+ * guna menghindari circular dependency addXp -> start -> flush -> addXp.
  *
+ * @param {string} guildId - ID server Discord
+ * @param {string} userId - ID pengguna Discord
+ * @param {number} amount - Jumlah XP yang dikembalikan
+ * @param {number} messages - Jumlah pesan yang dikembalikan
+ * @returns {Promise<void>}
+ */
+async function requeueXp(guildId, userId, amount, messages) {
+  if (!isEnabled()) return;
+
+  const field = fieldOf(guildId, userId);
+
+  try {
+    await redisManager.client
+      .multi()
+      .hIncrBy(PENDING_XP_KEY, field, toInt(amount))
+      .hIncrBy(PENDING_MSG_KEY, field, toInt(messages))
+      .exec();
+  } catch (error) {
+    logger.error("[XP BUFFER] Gagal mengembalikan XP tertunda:", error.message);
+  }
+}
+
+/**
+ * Menambah XP tertunda untuk satu pengguna di satu server.
+ * Secara otomatis memulai timer flush jika belum berjalan.
+ *
+ * @param {string} guildId - ID server Discord
+ * @param {string} userId - ID pengguna Discord
+ * @param {number} amount - Jumlah XP yang ditambahkan
+ * @param {number} [messages=1] - Jumlah pesan yang dihitung
  * @returns {Promise<number|null>} Total XP tertunda setelah ditambah, atau null bila Redis tidak siap.
  */
 async function addXp(guildId, userId, amount, messages = 1) {
@@ -95,7 +132,13 @@ async function addXp(guildId, userId, amount, messages = 1) {
   }
 }
 
-/** XP dan jumlah pesan yang masih menunggu, untuk pembaca seperti perintah rank. */
+/**
+ * Mendapatkan jumlah XP dan pesan yang masih menunggu di buffer.
+ *
+ * @param {string} guildId - ID server Discord
+ * @param {string} userId - ID pengguna Discord
+ * @returns {Promise<{xp: number, messages: number}>} XP dan pesan pending.
+ */
 async function getPending(guildId, userId) {
   if (!isEnabled()) return { xp: 0, messages: 0 };
 
@@ -118,6 +161,10 @@ async function getPending(guildId, userId) {
 /**
  * Nilai dasar dari database, disimpan sebentar di Redis. Inilah yang memangkas
  * pembacaan: tanpa cache ini setiap pesan tetap memicu satu findOrCreate.
+ *
+ * @param {string} guildId - ID server Discord
+ * @param {string} userId - ID pengguna Discord
+ * @returns {Promise<{xp: number, level: number}>} Data leveling dasar.
  */
 async function readBase(guildId, userId) {
   const key = baseKey(guildId, userId);
@@ -143,6 +190,13 @@ async function readBase(guildId, userId) {
   return base;
 }
 
+/**
+ * Menghapus cache base leveling untuk memaksa pembacaan ulang dari database.
+ *
+ * @param {string} guildId - ID server Discord
+ * @param {string} userId - ID pengguna Discord
+ * @returns {Promise<void>}
+ */
 async function invalidateBase(guildId, userId) {
   if (!isEnabled()) return;
   await redisManager.deleteCache(baseKey(guildId, userId));
@@ -181,6 +235,8 @@ async function applyToDatabase(guildId, userId, xp, messages) {
  * mutakhir. Dipakai saat ambang naik level terlampaui, karena pengumuman naik
  * level tidak boleh menunggu siklus flush berikutnya.
  *
+ * @param {string} guildId - ID server Discord
+ * @param {string} userId - ID pengguna Discord
  * @returns {Promise<object|null>} Baris UserLeveling terbaru, atau null bila gagal.
  */
 async function settleUser(guildId, userId) {
@@ -219,8 +275,9 @@ async function settleUser(guildId, userId) {
     );
 
     // XP sudah dikeluarkan dari Redis di atas. Kembalikan supaya kegagalan
-    // database tidak menghanguskan XP pengguna.
-    if (xp > 0 || messages > 0) await addXp(guildId, userId, xp, messages);
+    // database tidak menghanguskan XP pengguna. Gunakan requeueXp untuk
+    // memutus circular dependency.
+    if (xp > 0 || messages > 0) await requeueXp(guildId, userId, xp, messages);
     return null;
   }
 }
@@ -281,7 +338,8 @@ async function flush() {
         written += 1;
       } catch (error) {
         logger.error("[XP BUFFER] Gagal menulis XP batch:", error.message);
-        await addXp(
+        // Gunakan requeueXp untuk rollback tanpa memicu circular dependency
+        await requeueXp(
           parsed.guildId,
           parsed.userId,
           toInt(value),

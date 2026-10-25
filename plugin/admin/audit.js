@@ -11,7 +11,6 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
-const fs = require("fs");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -111,14 +110,10 @@ module.exports = {
         });
 
         const fileName = `audit_export_${interaction.guild.id}_${Date.now()}.txt`;
-        fs.writeFileSync(fileName, logText);
-
-        const file = new AttachmentBuilder(fileName);
+        const file = new AttachmentBuilder(Buffer.from(logText, "utf-8"), {
+          name: fileName,
+        });
         await interaction.editReply({ ...payload, files: [file] });
-
-        setTimeout(() => {
-          if (fs.existsSync(fileName)) fs.unlinkSync(fileName);
-        }, 5000);
       } else {
         await interaction.editReply(payload);
       }

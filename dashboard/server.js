@@ -612,7 +612,9 @@ module.exports = (containerOrClient) => {
   webApp.get("/music", requireLogin, view("music.html"));
   webApp.get("/economy", view("economy.html"));
   webApp.get("/status", view("status.html"));
-  webApp.get("/world", view("world.html"));
+  webApp.get("/world", view("adisha-map.html"));
+  webApp.get("/adisha-map", view("adisha-map.html"));
+  webApp.get("/adisha", view("adisha-map.html"));
   webApp.get("/room", view("world.html"));
   webApp.get("/realm", view("world.html"));
   webApp.get("/karaoke", view("karaoke.html"));

@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // ==========================================
 // PUSAT KONFIGURASI TAMPILAN NAURA
@@ -24,10 +24,16 @@ const emojisGame = require("./ui/emojis_game");
 const emojisMedia = require("./ui/emojis_media");
 const helpers = require("./ui/helpers");
 const { logger } = require("../managers/logger");
+const { LRUCache } = require("./uiCache");
 
 const DEFAULT_SURVIVAL_BG = "./assets/survival/background/desa_siang.jpeg";
 const DEFAULT_MONSTER = "./assets/survival/monsters/slime.png";
 const DEFAULT_DUNGEON_BG = "./assets/survival/background/tambang_malam.jpeg";
+
+// LRU Cache instances for hotspot functions (TTL: 5 minutes)
+const footerCache = new LRUCache(100, 300000);
+const emojiCache = new LRUCache(100, 300000);
+const colorCache = new LRUCache(100, 300000);
 
 module.exports = {
   // --- Data tampilan ---
@@ -59,21 +65,34 @@ module.exports = {
   // ==========================================
 
   getFooter(category = "core", lang = null) {
+    const cacheKey = category + ":" + (lang || "");
+    const cached = footerCache.get(cacheKey);
+    if (cached !== undefined) return cached;
+
     const env = require("./env");
     const { BOT_VERSION } = require("./version");
-    const ver = env.BOT_VERSION || BOT_VERSION || "2.3.0";
+    const ver = env.BOT_VERSION || BOT_VERSION || "2.4.0";
+    let result;
+    
     if (lang) {
       const languageManager = require("../managers/languageManager");
       const key = `container.footers.${category}`;
       if (languageManager.has(lang, key)) {
-        return languageManager.translateSync(lang, key, { version: ver });
+        result = languageManager.translateSync(lang, key, { version: ver });
       }
     }
-    const template = this.footers[category] || this.footers.core;
-    if (typeof template === "string") {
-      return template.replace(/v\d+\.\d+\.\d+/g, `v${ver}`);
+    
+    if (result === undefined) {
+      const template = this.footers[category] || this.footers.core;
+      if (typeof template === "string") {
+        result = template.replace(/v\d+\.\d+\.\d+/g, `v${ver}`);
+      } else {
+        result = template;
+      }
     }
-    return template;
+    
+    footerCache.set(cacheKey, result);
+    return result;
   },
 
   getPremiumColor(tier) {
@@ -123,7 +142,12 @@ module.exports = {
 
   // Mengembalikan null bila tidak ada, supaya pola fallback tetap jalan.
   getEmoji(name) {
-    return this.emojis[name] || null;
+    const cached = emojiCache.get(name);
+    if (cached !== undefined) return cached;
+    
+    const result = this.emojis[name] || null;
+    emojiCache.set(name, result);
+    return result;
   },
 
   // Emoji ekspresi Naura berdasarkan nama ekspresi atau mood.
@@ -139,7 +163,12 @@ module.exports = {
   },
 
   getColor(name) {
-    return this.colors[name] || this.colors.primary;
+    const cached = colorCache.get(name);
+    if (cached !== undefined) return cached;
+    
+    const result = this.colors[name] || this.colors.primary;
+    colorCache.set(name, result);
+    return result;
   },
 
   getBrandColor(type = "primary") {
@@ -218,5 +247,39 @@ module.exports = {
 
   getCharacterImagePath(imageFileName) {
     return helpers.characterImagePath(imageFileName);
+  },
+
+  // ==========================================
+  // CACHE MANAGEMENT FUNCTIONS
+  // ==========================================
+
+  /**
+   * Clear all UI caches
+   */
+  clearUICache() {
+    footerCache.clear();
+    emojiCache.clear();
+    colorCache.clear();
+  },
+
+  /**
+   * Get cache statistics for all hotspot functions
+   * @returns {{footer: object, emoji: object, color: object}}
+   */
+  getUICacheStats() {
+    return {
+      footer: footerCache.getStats(),
+      emoji: emojiCache.getStats(),
+      color: colorCache.getStats(),
+    };
+  },
+
+  /**
+   * Destroy all cache intervals (for graceful shutdown)
+   */
+  destroyUICache() {
+    footerCache.destroy();
+    emojiCache.destroy();
+    colorCache.destroy();
   },
 };

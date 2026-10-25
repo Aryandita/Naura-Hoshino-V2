@@ -1,6 +1,6 @@
 # 🦖 PANDUAN DEPLOYMENT PTERODACTYL PANEL, NAURA HOSHINO V2
 
-> **Versi Ekosistem:** 2.3.0 · **Target Environment:** Pterodactyl Panel Only · **Runtime:** Node.js >= 24
+> **Versi Ekosistem:** 2.4.0 · **Target Environment:** Pterodactyl Panel Only · **Runtime:** Node.js >= 24
 
 Dokumen ini disusun khusus untuk deployment Naura Hoshino V2 pada **Pterodactyl Panel**. Bot dirancang untuk berjalan secara native menggunakan lifecycle script NPM (`prestart` -> `start`) tanpa memerlukan skrip wrapper eksternal.
 

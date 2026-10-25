@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const { parentPort } = require("node:worker_threads");
 const { SystemError } = require("../errors/DomainError");
@@ -60,6 +60,38 @@ if (parentPort) {
             "renderMinecraftPlayer",
             function () {
               return minecraftCanvas.renderMinecraftPlayer(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderMinecraftPing": {
+          const minecraftCanvas = require("./minecraftCanvas");
+          const rendered = await safeRender(
+            "renderMinecraftPing",
+            function () {
+              return minecraftCanvas.renderMinecraftPing(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderMinecraftStats": {
+          const minecraftCanvas = require("./minecraftCanvas");
+          const rendered = await safeRender(
+            "renderMinecraftStats",
+            function () {
+              return minecraftCanvas.renderMinecraftStats(payload);
             },
           );
           if (!rendered.ok) {
@@ -583,6 +615,54 @@ if (parentPort) {
             "renderFishCatch",
             function () {
               return fishCanvas.renderFishCatch(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderWeatherCard": {
+          const weatherCanvas = require("./weatherCanvas");
+          const rendered = await safeRender(
+            "renderWeatherCard",
+            function () {
+              return weatherCanvas.renderWeatherCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderAnimeCard": {
+          const animeCanvas = require("./animeCanvas");
+          const rendered = await safeRender(
+            "renderAnimeCard",
+            function () {
+              return animeCanvas.renderAnimeCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderMovieCard": {
+          const movieCanvas = require("./movieCanvas");
+          const rendered = await safeRender(
+            "renderMovieCard",
+            function () {
+              return movieCanvas.renderMovieCard(payload);
             },
           );
           if (!rendered.ok) {

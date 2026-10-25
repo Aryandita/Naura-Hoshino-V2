@@ -8,45 +8,14 @@
 (function () {
     'use strict';
 
-    // ── 1. Pemasangan Status Pill pada Header Atas ────────────────────
+    // ── 1. Status Pill Supabase ───────────────────────────────────────
+    // Dihapus dari header utama agar header lega dan tidak berdesakan (hanya penanda deskriptif).
+    // Modal tetap dapat dipanggil secara programmatic via window.showSupabaseModal.
     function mountHeaderPill() {
-        const headerRightElement = document.querySelector('.top-header .header-right');
-        if (!headerRightElement || document.getElementById('supabasePill')) return;
-
-        const pillElement = document.createElement('div');
-        pillElement.id = 'supabasePill';
-        pillElement.className = 'badge';
-        pillElement.style.cssText = `
-            background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            color: #34d399;
-            font-family: var(--font-mono, monospace);
-            font-size: 11px;
-            padding: 6px 12px;
-            border-radius: var(--r-full, 9999px);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-        `;
-        pillElement.innerHTML = `
-            <span style="width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;animation:pulse 2s infinite;"></span>
-            <span id="supabaseStatusText">Supabase Live</span>
-            <span id="supabasePingText" style="opacity:0.75;font-size:10px;">(24ms)</span>
-        `;
-
-        pillElement.addEventListener('mouseenter', () => {
-            pillElement.style.transform = 'scale(1.04)';
-            pillElement.style.borderColor = 'var(--accent-green, #34d399)';
-        });
-        pillElement.addEventListener('mouseleave', () => {
-            pillElement.style.transform = 'scale(1)';
-        });
-        pillElement.addEventListener('click', showSupabaseModal);
-
-        headerRightElement.prepend(pillElement);
+        const existingPill = document.getElementById('supabasePill');
+        if (existingPill) existingPill.remove();
     }
+    window.showSupabaseModal = showSupabaseModal;
 
     // ── 2. Modal Informasi & Uji Latensi Koneksi ───────────────────────
     function showSupabaseModal() {

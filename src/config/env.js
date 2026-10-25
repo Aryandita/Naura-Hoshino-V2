@@ -41,6 +41,14 @@ const readShardId = () => {
   return manual ? manual : undefined;
 };
 
+let packageJson = {};
+try {
+  packageJson = require("../../package.json");
+} catch {
+  packageJson = { version: "2.4.0" };
+}
+const BASE_VERSION = packageJson.version || "2.4.0";
+
 const env = {
   // RUNTIME & DEBUG
   NODE_ENV: cleanEnv(process.env.NODE_ENV) || "development",
@@ -69,9 +77,10 @@ const env = {
         .filter(Boolean)
     : [],
 
-  // VERSION & PARTNERSHIP CONFIG
-  BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || "2.3.0",
-  ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || "2.3.0",
+  // VERSION & PARTNERSHIP CONFIG (Single Source of Truth: package.json)
+  BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || BASE_VERSION,
+  ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || BASE_VERSION,
+  BASE_VERSION: BASE_VERSION,
   PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || "Belum ada kolaborasi",
 
   // SUPABASE (Primary Relational Cloud Provider)
@@ -231,6 +240,11 @@ const env = {
   CALLBACK_URL: cleanEnv(process.env.DISCORD_CALLBACK_URL),
   OWNER_EVAL_ENABLED: cleanEnv(process.env.OWNER_EVAL_ENABLED) === "true",
   USE_CLUSTERING: cleanEnv(process.env.USE_CLUSTERING) === "true",
+
+  // DASHBOARD V2 (Modern React Dashboard)
+  DASHBOARD_V2_PORT: parseInt(process.env.DASHBOARD_V2_PORT) || 3001,
+  DASHBOARD_V2_CLIENT_URL: cleanEnv(process.env.DASHBOARD_V2_CLIENT_URL) || "http://localhost:5174",
+  DASHBOARD_V2_JWT_SECRET: cleanEnv(process.env.DASHBOARD_V2_JWT_SECRET) || cleanEnv(process.env.SESSION_SECRET) || "",
 };
 
 // Variabel yang wajib ada sebelum bot boleh menyala

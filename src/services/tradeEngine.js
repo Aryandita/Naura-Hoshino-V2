@@ -527,6 +527,54 @@ class TradeEngine {
       return [];
     }
   }
+
+  /**
+   * Generate dynamic merchant personality dialogue (from pending_plugin/dynamicMerchantTrader)
+   * @param {string} merchantType - "general", "weapon", "food", "rare"
+   * @param {string} tradeAction - "buy", "sell", "bargain", "inquire"
+   * @param {object} contextData - { playerName, reputation, transactionCount }
+   * @returns {{ dialogue: string, promptPrepared: string, readyForAiActivation: boolean }}
+   */
+  generateMerchantDialogue(merchantType, tradeAction, contextData = {}) {
+    try {
+      const personalities = {
+        general: { name: "Pedagang Umum", style: "ramah dan santai" },
+        weapon: { name: "Pandai Besi", style: "tegas dan profesional" },
+        food: { name: "Koki Desa", style: "ceria dan penuh semangat" },
+        rare: { name: "Pedagang Misterius", style: "tenang dan penuh teka-teki" },
+      };
+
+      const merchant = personalities[merchantType] || personalities.general;
+      const reputation = contextData.reputation || 0;
+      const txCount = contextData.transactionCount || 0;
+
+      let promptTemplate = `Kamu adalah ${merchant.name} dengan gaya bicara ${merchant.style}.\n`;
+      promptTemplate += `Reputasi pemain: ${reputation}. Total transaksi: ${txCount}.\n`;
+      promptTemplate += `Aksi: "${tradeAction}". Berikan respon singkat dalam bahasa Indonesia.`;
+
+      const dialogues = {
+        buy: `Tentu, barang ini tersedia! Harga spesial untuk pelanggan setia.`,
+        sell: `Saya bisa beli itu darimu dengan harga wajar.`,
+        bargain: `Hmm, mari negosiasi. Saya beri diskon kecil karena kamu sering berkunjung.`,
+        inquire: `Barang itu? Kualitas terbaik dari supplier terpercaya!`,
+      };
+
+      return {
+        dialogue: dialogues[tradeAction] || "Ada yang bisa saya bantu?",
+        merchantName: merchant.name,
+        promptPrepared: promptTemplate,
+        readyForAiActivation: true,
+      };
+    } catch (error) {
+      logger.error("[TradeEngine:MerchantDialogue] Error:", error);
+      return {
+        dialogue: "Selamat datang di toko saya!",
+        merchantName: "Pedagang",
+        promptPrepared: "",
+        readyForAiActivation: false,
+      };
+    }
+  }
 }
 
 module.exports = new TradeEngine();
