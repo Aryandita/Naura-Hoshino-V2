@@ -113,7 +113,7 @@ class CaravanEngine {
 
     await cacheManager.debitUserSurvival(userId, "starFragments", merc.cost);
     logger.info(
-      `[CaravanEngine] User ${userId} menyewa tentara bayaran ${merc.name} seharga ${merc.cost} NSF`,
+      `[CaravanEngine] User ${userId} menyewa tentara bayaran ${merc.name} seharga ${merc.cost} SC`,
     );
 
     return {

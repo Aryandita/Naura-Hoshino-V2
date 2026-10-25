@@ -47,7 +47,7 @@ const RELICS_CATALOG = [
     get emoji() {
       return ui.getEmoji("star") || "⭐";
     },
-    desc: "+50% Bonus Perolehan Star Fragments",
+    desc: "+50% Bonus Perolehan Sukamaju Koin (SC)",
   },
 ];
 

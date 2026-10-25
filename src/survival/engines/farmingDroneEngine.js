@@ -582,8 +582,8 @@ class FarmingDroneEngine {
         if (!debit.ok) {
           return {
             ok: false,
-            reason: "INSUFFICIENT_NSF",
-            message: `Saldo Star Fragments (NSF) tidak mencukupi! Butuh ${RECHARGE_NSF_COST} NSF.`,
+            reason: "INSUFFICIENT_SC",
+            message: `Saldo Sukamaju Koin (SC) tidak mencukupi! Butuh ${RECHARGE_NSF_COST} SC.`,
           };
         }
         await recyclingPoolEngine.allocateSinkFunds(RECHARGE_NSF_COST);
@@ -634,8 +634,8 @@ class FarmingDroneEngine {
       if (!debit.ok) {
         return {
           ok: false,
-          reason: "INSUFFICIENT_NSF",
-          message: `Saldo Star Fragments (NSF) tidak mencukupi untuk servis drone! Butuh ${REPAIR_NSF_COST} NSF.`,
+          reason: "INSUFFICIENT_SC",
+          message: `Saldo Sukamaju Koin (SC) tidak mencukupi untuk servis drone! Butuh ${REPAIR_NSF_COST} SC.`,
         };
       }
 

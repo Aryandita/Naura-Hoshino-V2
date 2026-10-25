@@ -253,7 +253,7 @@ class CafeEngine {
     }
 
     logger.info(
-      `[CafeEngine] User ${userId} mengklaim ${totalToCollect} Star Fragments pendapatan idle.`,
+      `[CafeEngine] User ${userId} mengklaim ${totalToCollect} Sukamaju Koin (SC) pendapatan idle.`,
     );
     return {
       success: true,

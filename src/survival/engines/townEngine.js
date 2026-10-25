@@ -143,7 +143,7 @@ async function talkToTownNpc(npcId, userId, hour) {
   if (!hasRecentBonus && Math.random() < 0.35) {
     await cacheManager.incrementUserSurvival(userId, { starFragments: 20 }).catch(() => {});
     await redisManager.setCache(cooldownKey, "1", 1800).catch(() => {}); // 30 menit cooldown
-    bonusText = "✨ Kamu menerima traktiran kopi hangat (+20 Star Fragments)!";
+    bonusText = "✨ Kamu menerima traktiran kopi hangat (+20 SC)!";
   }
 
   // Progres Hubungan & Affection dengan NPC (UserNPC)
@@ -266,7 +266,7 @@ async function buyFromWanderingMerchant(userId, itemId) {
     return {
       ok: false,
       reason: "insufficient_nsf",
-      message: `Star Fragments kamu tidak cukup. Butuh ${item.price.toLocaleString("id-ID")} NSF, saldo kamu saat ini: ${userNsf.toLocaleString("id-ID")} NSF.`,
+      message: `Sukamaju Koin kamu tidak cukup. Butuh ${item.price.toLocaleString("id-ID")} SC, saldo kamu saat ini: ${userNsf.toLocaleString("id-ID")} SC.`,
     };
   }
 

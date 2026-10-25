@@ -15,8 +15,8 @@ function renderEmptyQuest(lang = "id", streakInfo = null, tierInfo = null) {
   const isEn = lang === "en";
   const title = isEn ? "Naura Wilds Daily Quest" : "Quest Harian Naura Wilds";
   const desc = isEn
-    ? "No active quest. Click the button below to generate a daily quest scaled to your level.\n\nComplete daily tasks to earn Naura Star Fragments, XP, and streak bonuses!"
-    : "Belum ada quest aktif. Klik tombol di bawah untuk menghasilkan quest harian yang disesuaikan dengan levelmu.\n\nSelesaikan tugas harian untuk mendapatkan Naura Star Fragments, XP, dan bonus streak!";
+    ? "No active quest. Click the button below to generate a daily quest scaled to your level.\n\nComplete daily tasks to earn Sukamaju Coins (SC), XP, and streak bonuses!"
+    : "Belum ada quest aktif. Klik tombol di bawah untuk menghasilkan quest harian yang disesuaikan dengan levelmu.\n\nSelesaikan tugas harian untuk mendapatkan Sukamaju Koin (SC), XP, dan bonus streak!";
 
   const descLines = [desc];
 
@@ -394,9 +394,9 @@ function renderWeeklyClaimResult(result, lang = "id") {
 
   if (result.reward) {
     const rewards = [];
-    if (result.reward.starFragments) rewards.push(`💎 **+${result.reward.starFragments} NSF**`);
+    if (result.reward.starFragments) rewards.push(`💎 **+${result.reward.starFragments} SC**`);
     if (result.reward.survivalXp) rewards.push(`🌟 **+${result.reward.survivalXp} XP**`);
-    if (result.reward.coupons) rewards.push(`🎟️ **+${result.reward.coupons} Naura Coupon**`);
+    if (result.reward.coupons) rewards.push(`🎟️ **+${result.reward.coupons} Voucher Beasiswa (VB)**`);
     if (rewards.length > 0) {
       descLines.push("**Hadiah yang Diterima:**", rewards.join("\n"), "");
     }

@@ -107,7 +107,7 @@ class LandEngine {
     if (!clan || (clan.vault || 0) < PLOT_CLAIM_COST) {
       return {
         success: false,
-        error: `Kas klan tidak mencukupi untuk klaim kapling (${PLOT_CLAIM_COST} Star Fragments).`,
+        error: `Kas klan tidak mencukupi untuk klaim kapling (${PLOT_CLAIM_COST} SC).`,
       };
     }
 

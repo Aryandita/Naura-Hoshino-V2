@@ -116,7 +116,7 @@ const SPOUSAL_DATA = {
     restoreThirst: 50,
     restoreStamina: 50,
     perkName: "Sinergi Kosmik Shino",
-    perkDesc: "Peningkatan perolehan Naura Coupon dan akses fitur gadget futuristik.",
+    perkDesc: "Peningkatan perolehan Voucher Beasiswa (VB) dan akses fitur gadget futuristik.",
   },
 };
 
@@ -403,25 +403,25 @@ async function claimApprenticePerk(userId) {
   let fragments = 500;
   let coupons = 1;
   let perkName = "Bantuan Anak Berbakti";
-  let rewardDesc = "500 Naura Star Fragments & 1 Naura Coupon";
+  let rewardDesc = "500 SC & 1 Voucher Beasiswa (VB)";
 
   if (motherId === "ningsih") {
     fragments = 600;
     perkName = "Panen Bunga Magang Ningsih";
-    rewardDesc = "600 NSF & Paket Bibit Bunga Segar";
+    rewardDesc = "600 SC & Paket Bibit Bunga Segar";
   } else if (motherId === "tari") {
     fragments = 650;
     perkName = "Selam Mutiara Magang Tari";
-    rewardDesc = "650 NSF & Tangkapan Mutiara Pesisir";
+    rewardDesc = "650 SC & Tangkapan Mutiara Pesisir";
   } else if (motherId === "bagas") {
     fragments = 550;
     perkName = "Servis Tempa Magang Bagas";
-    rewardDesc = "550 NSF & Kit Perbaikan Alat Gratis";
+    rewardDesc = "550 SC & Kit Perbaikan Alat Gratis";
   } else if (motherId === "bidan_sari") {
     fragments = 500;
     coupons = 2;
     perkName = "Herbal Sehat Magang Sari";
-    rewardDesc = "500 NSF & 2 Naura Coupon";
+    rewardDesc = "500 SC & 2 Voucher Beasiswa (VB)";
   }
 
   await cacheManager.incrementUserSurvival(userId, "starFragments", fragments);

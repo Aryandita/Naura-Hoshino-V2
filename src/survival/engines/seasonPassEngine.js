@@ -91,17 +91,17 @@ function getTierRewards(tier) {
     free.push({ type: "item", id: "survival_rations", amount: 2, label: "2x Survival Rations" });
   }
   if (safeTier % 10 === 0) {
-    // Tiap kelipatan 10: Naura Coupon gratis
-    free.push({ type: "coupons", amount: 1, label: "1x Naura Coupon" });
+    // Tiap kelipatan 10: Voucher Beasiswa gratis
+    free.push({ type: "coupons", amount: 1, label: "1x Voucher Beasiswa (VB)" });
   }
 
   // 2. Hadiah Jalur Premium
   const premium = [];
   const premFragments = 300 + safeTier * 50;
-  premium.push({ type: "fragments", amount: premFragments, label: `${premFragments.toLocaleString("id-ID")} NSF` });
+  premium.push({ type: "fragments", amount: premFragments, label: `${premFragments.toLocaleString("id-ID")} SC` });
 
   if (safeTier % 2 === 0) {
-    premium.push({ type: "coupons", amount: 1, label: "1x Naura Coupon" });
+    premium.push({ type: "coupons", amount: 1, label: "1x Voucher Beasiswa (VB)" });
   }
   if (safeTier % 5 === 0) {
     premium.push({ type: "item", id: "starlight_crystal", amount: 1, label: "1x Starlight Crystal" });

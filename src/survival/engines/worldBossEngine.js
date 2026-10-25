@@ -229,7 +229,7 @@ class WorldBossEngine {
       dbBoss.changed("rewardsPool", true);
 
       const eStar = ui.getEmoji("star_resonance") || "🔮";
-      message = `${eStar} **${username}** menyalurkan **Star Resonance**! Pool hadiah raid bertambah \`+${buffAdded}\` Star Fragments!`;
+      message = `${eStar} **${username}** menyalurkan **Star Resonance**! Pool hadiah raid bertambah \`+${buffAdded}\` Sukamaju Koin (SC)!`;
     }
 
     // 2. Evaluasi Transisi Fase (Phase 2 pada HP <= 50% bila belum pernah, Phase 3 pada HP <= 20%)

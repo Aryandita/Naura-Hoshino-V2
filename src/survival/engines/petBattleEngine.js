@@ -307,9 +307,9 @@ async function processPetBattle(userId, userPetRecord, opponentData) {
     await addItemsAtomic(userId, [
       {
         id: "star_fragment",
-        name: "Naura Star Fragment",
+        name: "Sukamaju Koin (SC)",
         amount: rewardNsf,
-        icon: "💎",
+        icon: "🪙",
         note: `Hadiah Pet Battle Arena [${division.name}]`,
       },
     ]);

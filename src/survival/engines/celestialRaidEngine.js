@@ -293,6 +293,57 @@ class CelestialRaidEngine {
       rewardPerMember: { nsf: rewardNsf, coupons: rewardCoupons },
     };
   }
+
+  /**
+   * Generate raid strategy recommendation based on party composition (from pending_plugin/raidStrategyPlanner)
+   * @param {Array} partyMembers - [{ userId, role, stats }]
+   * @param {string} bossId
+   * @returns {{ strategy: object, callouts: Array, promptPrepared: string, readyForAiActivation: boolean }}
+   */
+  generateStrategyRecommendation(partyMembers = [], bossId = null) {
+    try {
+      const roleCounts = {};
+      for (const member of partyMembers) {
+        const role = member.role || "VANGUARD";
+        roleCounts[role] = (roleCounts[role] || 0) + 1;
+      }
+
+      const hasGuardian = (roleCounts.GUARDIAN || 0) > 0;
+      const hasApothecary = (roleCounts.APOTHECARY || 0) > 0;
+      const partySize = partyMembers.length;
+
+      let promptTemplate = `Analisis komposisi party raid:\n`;
+      promptTemplate += `Party size: ${partySize}. Roles: ${Object.entries(roleCounts).map(([r, c]) => `${r}x${c}`).join(", ")}.\n`;
+      promptTemplate += `Boss: ${bossId || "unknown"}. Berikan strategi optimal dalam format JSON.`;
+
+      const balanceScore = (hasGuardian ? 0.3 : 0) + (hasApothecary ? 0.3 : 0) + (Math.min(partySize / 4, 1) * 0.4);
+
+      let formation = "aggressive";
+      let riskLevel = "high";
+      if (hasGuardian && hasApothecary && partySize >= 3) {
+        formation = "standard_raid";
+        riskLevel = "low";
+      } else if (hasGuardian || hasApothecary) {
+        formation = "adaptive";
+        riskLevel = "medium";
+      }
+
+      const callouts = [];
+      if (!hasGuardian) callouts.push({ trigger: "no_tank", action: "Semua pemain harus dodge attack! Tidak ada tank!", priority: "critical" });
+      if (!hasApothecary) callouts.push({ trigger: "no_healer", action: "Gunakan potion HP! Tidak ada healer di party!", priority: "high" });
+      callouts.push({ trigger: "enrage_phase", action: "BURST DPS SAAT BOSS ENRAGE! Waktu terbatas!", priority: "critical" });
+
+      return {
+        strategy: { formation, riskLevel, balanceScore: Math.round(balanceScore * 100), roleCounts },
+        callouts,
+        promptPrepared: promptTemplate,
+        readyForAiActivation: true,
+      };
+    } catch (error) {
+      logger.error("[CelestialRaid:Strategy] Error:", error);
+      return { strategy: { formation: "adaptive", riskLevel: "unknown" }, callouts: [], promptPrepared: "", readyForAiActivation: false };
+    }
+  }
 }
 
 module.exports = new CelestialRaidEngine();

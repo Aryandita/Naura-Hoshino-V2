@@ -66,7 +66,7 @@ async function placeOutlawBounty({ issuerId, targetUserId, rewardNsf, reason }) 
 
   const safeReward = parseInt(rewardNsf, 10) || 0;
   if (safeReward < 100) {
-    return { success: false, message: "Imbalan buronan minimal 100 Star Fragments (NSF)." };
+    return { success: false, message: "Imbalan buronan minimal 100 Sukamaju Koin (SC)." };
   }
 
   // Potong saldo pengaju secara atomik
@@ -75,7 +75,7 @@ async function placeOutlawBounty({ issuerId, targetUserId, rewardNsf, reason }) 
   if (!isDebitSuccess) {
     return {
       success: false,
-      message: `Saldo Star Fragments kamu tidak mencukupi untuk imbalan ${safeReward.toLocaleString("id-ID")} NSF.`,
+      message: `Saldo Sukamaju Koin (SC) kamu tidak mencukupi untuk imbalan ${safeReward.toLocaleString("id-ID")} SC.`,
     };
   }
 

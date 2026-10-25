@@ -183,6 +183,11 @@ function format(currency, amount) {
   return `${emojiOf(c)} **${value.toLocaleString("id-ID")} ${c.name}**`;
 }
 
+function nameOf(currency) {
+  const c = resolve(currency);
+  return c.short || c.name;
+}
+
 function stateOf(survival) {
   return (survival && survival.rpg_state) || {};
 }
@@ -504,6 +509,7 @@ module.exports = {
   byKind,
   emojiOf,
   emojiObjectOf,
+  nameOf,
   format,
   balanceOf,
   canAfford,
