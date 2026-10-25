@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -184,20 +184,41 @@
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
+        max-height: 380px;
+        overflow-y: auto;
+        padding-right: 4px;
       }
       .anim-btn {
         background: rgba(255, 255, 255, 0.04);
         border: 1px solid var(--border-subtle);
         border-radius: var(--r-md);
-        padding: 10px;
+        padding: 9px 10px;
         color: var(--text-secondary);
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 500;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: space-between;
+        gap: 6px;
         transition: all var(--t-fast);
+        text-align: left;
+      }
+      .anim-btn-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .anim-btn-badge {
+        font-size: 9px;
+        padding: 2px 5px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-muted);
+        flex-shrink: 0;
       }
       .anim-btn:hover {
         background: rgba(244, 114, 182, 0.15);
@@ -206,9 +227,68 @@
         transform: translateY(-2px);
       }
       .anim-btn.active {
-        background: rgba(244, 114, 182, 0.25);
+        background: rgba(244, 114, 182, 0.22);
         border-color: var(--primary);
         color: var(--primary);
+        font-weight: 600;
+      }
+      .anim-btn.active .anim-btn-badge {
+        background: rgba(244, 114, 182, 0.35);
+        color: #fff;
+      }
+      .anim-category-bar {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+      }
+      .anim-category-chip {
+        padding: 5px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 9999px;
+        border: 1px solid var(--border-subtle);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-muted);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all var(--t-fast);
+      }
+      .anim-category-chip:hover {
+        color: var(--text-primary);
+        border-color: var(--border-medium);
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .anim-category-chip.active {
+        background: rgba(244, 114, 182, 0.2);
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+      .anim-search-input {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        padding: 7px 12px;
+        font-size: 11px;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color var(--t-fast);
+      }
+      .anim-search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.2);
+      }
+      .anim-status-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(244, 114, 182, 0.08);
+        border: 1px solid rgba(244, 114, 182, 0.2);
+        border-radius: var(--r-md);
+        padding: 8px 12px;
+        font-size: 11px;
       }
     </style>
   </head>
@@ -224,7 +304,7 @@
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
-            <div class="sidebar-brand-sub">v2.3.0 Â· Online</div>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
           <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
             <i class="fa-solid fa-xmark"></i>
@@ -389,11 +469,11 @@
               <!-- Bottom Stage Overlay -->
               <div class="stage-bottom-overlay">
                 <div style="font-size:11px;color:var(--text-muted);background:rgba(15,23,42,0.7);padding:6px 12px;border-radius:var(--r-md);border:1px solid rgba(255,255,255,0.08);">
-                  <i class="fa-solid fa-hand-pointer" style="color:var(--accent-cyan);margin-right:4px;"></i> Putar 360Â° dengan Drag Mouse Â· Scroll untuk Zoom
+                  <i class="fa-solid fa-hand-pointer" style="color:var(--accent-cyan);margin-right:4px;"></i> Putar 360° dengan Drag Mouse · Scroll untuk Zoom
                 </div>
                 <div style="display:flex;gap:6px;">
-                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('kawaii')" title="Pencahayaan Studio Kawaii">ðŸŒ¸ Studio</button>
-                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('cyber')" title="Pencahayaan Cyberpunk Neon">âš¡ Cyber</button>
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('kawaii')" title="Pencahayaan Studio Kawaii">🌸 Studio</button>
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('cyber')" title="Pencahayaan Cyberpunk Neon">⚡ Cyber</button>
                 </div>
               </div>
             </div>
@@ -429,16 +509,16 @@
                 <!-- Chat Stream -->
                 <div class="chat-stream" id="loungeChatStream">
                   <div class="chat-bubble-bot">
-                    Halo Sensei! Selamat datang di 3D AI Lounge. Di sini kita bisa mengobrol santai, mendengarkan suaraku via Fish Audio, dan mencoba berbagai pose 3D interaktif! Ada yang ingin kamu bicarakan hari ini? ðŸŒ¸âœ¨
+                    Halo Sensei! Selamat datang di 3D AI Lounge. Di sini kita bisa mengobrol santai, mendengarkan suaraku via Fish Audio, dan mencoba berbagai pose 3D interaktif! Ada yang ingin kamu bicarakan hari ini? 🌸✨
                   </div>
                 </div>
 
                 <!-- Quick Prompt Chips -->
                 <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
-                  <button type="button" class="badge badge-amber" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('ðŸ‘‹ Halo Naura!')">ðŸ‘‹ Sapa</button>
-                  <button type="button" class="badge badge-cyan" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Ceritakan tentang Naura Wilds dong!')">ðŸŒ² Naura Wilds</button>
-                  <button type="button" class="badge badge-purple" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Bagikan tips bertahan hidup terbaik!')">âš”ï¸ Tips RPG</button>
-                  <button type="button" class="badge badge-success" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Beri aku ramalan hoki hari ini!')">âœ¨ Ramalan</button>
+                  <button type="button" class="badge badge-amber" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('👋 Halo Naura!')">👋 Sapa</button>
+                  <button type="button" class="badge badge-cyan" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Ceritakan tentang Naura Wilds dong!')">🌲 Naura Wilds</button>
+                  <button type="button" class="badge badge-purple" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Bagikan tips bertahan hidup terbaik!')">⚔️ Tips RPG</button>
+                  <button type="button" class="badge badge-success" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Beri aku ramalan hoki hari ini!')">✨ Ramalan</button>
                 </div>
 
                 <!-- Input Field -->
@@ -450,48 +530,182 @@
                 </div>
               </div>
 
-              <!-- TAB 2: ANIMATION MATRIX & POSE STUDIO -->
+              <!-- TAB 2: ANIMATION MATRIX & POSE STUDIO (31 ANIMASI) -->
               <div class="deck-content" id="deckPanePose" style="display:none;">
-                <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">
-                  Pilih animasi untuk digerakkan oleh model 3D Naura secara langsung:
-                </div>
-                <div class="anim-matrix-grid">
-                  <button type="button" class="anim-btn active" onclick="playMascotPose('Idle')">
-                    <i class="fa-solid fa-child-reaching" style="color:#f472b6;"></i> Pose Santai (Idle)
-                  </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('Wave')">
-                    <i class="fa-solid fa-hand" style="color:#38bdf8;"></i> Lambaikan Tangan
-                  </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('StarPose')">
-                    <i class="fa-solid fa-star" style="color:#fbbf24;"></i> Pose Idol Bintang
-                  </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('Cheers')">
-                    <i class="fa-solid fa-champagne-glasses" style="color:#34d399;"></i> Bersorak Gembira
-                  </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('BlowKiss')">
-                    <i class="fa-solid fa-heart" style="color:#ec4899;"></i> Tiupan Sayang
-                  </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('AstralCast')">
-                    <i class="fa-solid fa-wand-magic" style="color:#a855f7;"></i> Sihir Astral Halo
-                  </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('Thinking')">
-                    <i class="fa-solid fa-brain" style="color:#818cf8;"></i> Pose Merenung
-                  </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('Shy')">
-                    <i class="fa-solid fa-face-flushed" style="color:#fb7185;"></i> Tersipu Malu
+                <!-- Status Banner Animasi Aktif -->
+                <div class="anim-status-banner">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="badge badge-primary" style="font-size:10px;"><i class="fa-solid fa-play"></i> LIVE 3D</span>
+                    <span id="activeAnimLabel" style="font-weight:600;color:var(--text-primary);">🌸 Idle (Bernafas)</span>
+                  </div>
+                  <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:10px;" onclick="replayActiveAnim()" title="Putar Ulang Animasi Aktif">
+                    <i class="fa-solid fa-arrow-rotate-right"></i> Ulang
                   </button>
                 </div>
 
-                <div style="margin-top:16px;border-top:1px solid var(--border-subtle);padding-top:14px;">
+                <!-- Search Input Field -->
+                <div style="position:relative;">
+                  <input type="text" class="anim-search-input" id="animSearchInput" placeholder="Cari animasi (misal: walk, dance, salute, sit)..." oninput="onAnimSearch()" />
+                  <i class="fa-solid fa-magnifying-glass" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none;"></i>
+                </div>
+
+                <!-- Category Chips Filter -->
+                <div class="anim-category-bar">
+                  <button type="button" class="anim-category-chip active" data-cat="all" onclick="filterAnimCategory('all')">🌟 Semua (31)</button>
+                  <button type="button" class="anim-category-chip" data-cat="core" onclick="filterAnimCategory('core')">🌸 Core (10)</button>
+                  <button type="button" class="anim-category-chip" data-cat="locomotion" onclick="filterAnimCategory('locomotion')">🚶 Gerak (8)</button>
+                  <button type="button" class="anim-category-chip" data-cat="rpg" onclick="filterAnimCategory('rpg')">⚔️ RPG (5)</button>
+                  <button type="button" class="anim-category-chip" data-cat="social" onclick="filterAnimCategory('social')">☕ Sosial (8)</button>
+                </div>
+
+                <!-- 31 Animation Buttons Grid -->
+                <div class="anim-matrix-grid" id="animButtonsGrid">
+                  <!-- CORE & EMOTE (10) -->
+                  <button type="button" class="anim-btn active" data-anim="Idle" data-category="core" onclick="playMascotPose('Idle')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-child-reaching" style="color:#f472b6;"></i> Idle (Santai)</span>
+                    <span class="anim-btn-badge">3.6s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Wave" data-category="core" onclick="playMascotPose('Wave')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-hand" style="color:#38bdf8;"></i> Lambaikan Tangan</span>
+                    <span class="anim-btn-badge">2.4s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Thinking" data-category="core" onclick="playMascotPose('Thinking')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-brain" style="color:#818cf8;"></i> Merenung</span>
+                    <span class="anim-btn-badge">3.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="NodYes" data-category="core" onclick="playMascotPose('NodYes')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-circle-check" style="color:#34d399;"></i> Mengangguk Ya</span>
+                    <span class="anim-btn-badge">1.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="ShakeNo" data-category="core" onclick="playMascotPose('ShakeNo')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-circle-xmark" style="color:#f87171;"></i> Geleng Tidak</span>
+                    <span class="anim-btn-badge">1.4s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Cheers" data-category="core" onclick="playMascotPose('Cheers')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-champagne-glasses" style="color:#fbbf24;"></i> Bersorak Ceria</span>
+                    <span class="anim-btn-badge">2.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Shy" data-category="core" onclick="playMascotPose('Shy')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-face-flushed" style="color:#fb7185;"></i> Tersipu Malu</span>
+                    <span class="anim-btn-badge">3.0s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Sleepy" data-category="core" onclick="playMascotPose('Sleepy')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-bed" style="color:#93c5fd;"></i> Mengantuk</span>
+                    <span class="anim-btn-badge">3.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="BlowKiss" data-category="core" onclick="playMascotPose('BlowKiss')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-heart" style="color:#ec4899;"></i> Tiupan Ciuman</span>
+                    <span class="anim-btn-badge">2.6s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Dizzy" data-category="core" onclick="playMascotPose('Dizzy')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-dizzy" style="color:#c084fc;"></i> Pusing Bingung</span>
+                    <span class="anim-btn-badge">2.2s</span>
+                  </button>
+
+                  <!-- GERAK & TARI (8) -->
+                  <button type="button" class="anim-btn" data-anim="WalkForward" data-category="locomotion" onclick="playMascotPose('WalkForward')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-person-walking" style="color:#38bdf8;"></i> Berjalan Maju</span>
+                    <span class="anim-btn-badge">1.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="WalkBackward" data-category="locomotion" onclick="playMascotPose('WalkBackward')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-person-walking-arrow-right" style="color:#818cf8;"></i> Melangkah Mundur</span>
+                    <span class="anim-btn-badge">1.4s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="TurnLeft" data-category="locomotion" onclick="playMascotPose('TurnLeft')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-arrow-rotate-left" style="color:#34d399;"></i> Berputar Kiri</span>
+                    <span class="anim-btn-badge">1.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="TurnRight" data-category="locomotion" onclick="playMascotPose('TurnRight')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-arrow-rotate-right" style="color:#fbbf24;"></i> Berputar Kanan</span>
+                    <span class="anim-btn-badge">1.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Sit" data-category="locomotion" onclick="playMascotPose('Sit')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-chair" style="color:#a78bfa;"></i> Duduk Anggun</span>
+                    <span class="anim-btn-badge">4.0s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Type" data-category="locomotion" onclick="playMascotPose('Type')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-keyboard" style="color:#22d3ee;"></i> Mengetik Cepat</span>
+                    <span class="anim-btn-badge">2.5s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="DanceLoop1" data-category="locomotion" onclick="playMascotPose('DanceLoop1')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-music" style="color:#f472b6;"></i> Tarian Upbeat</span>
+                    <span class="anim-btn-badge">2.0s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="DanceLoop2" data-category="locomotion" onclick="playMascotPose('DanceLoop2')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-compact-disc" style="color:#c084fc;"></i> Tarian Halus</span>
+                    <span class="anim-btn-badge">3.0s</span>
+                  </button>
+
+                  <!-- RPG & AKSI (5) -->
+                  <button type="button" class="anim-btn" data-anim="AstralCast" data-category="rpg" onclick="playMascotPose('AstralCast')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-wand-magic-sparkles" style="color:#a855f7;"></i> Sihir Astral Halo</span>
+                    <span class="anim-btn-badge">3.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="StarPose" data-category="rpg" onclick="playMascotPose('StarPose')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-star" style="color:#f59e0b;"></i> Pose Idol Bintang</span>
+                    <span class="anim-btn-badge">2.6s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="CombatStance" data-category="rpg" onclick="playMascotPose('CombatStance')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-shield-halved" style="color:#ef4444;"></i> Kuda Bertarung</span>
+                    <span class="anim-btn-badge">3.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Craft" data-category="rpg" onclick="playMascotPose('Craft')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-hammer" style="color:#eab308;"></i> Menempa & Racik</span>
+                    <span class="anim-btn-badge">3.0s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Point" data-category="rpg" onclick="playMascotPose('Point')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-hand-point-right" style="color:#06b6d4;"></i> Menunjuk Arah</span>
+                    <span class="anim-btn-badge">2.0s</span>
+                  </button>
+
+                  <!-- SOSIAL & KAFE (8) -->
+                  <button type="button" class="anim-btn" data-anim="Salute" data-category="social" onclick="playMascotPose('Salute')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-person-military-pointing" style="color:#3b82f6;"></i> Hormat Disiplin</span>
+                    <span class="anim-btn-badge">2.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Bow" data-category="social" onclick="playMascotPose('Bow')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-person-praying" style="color:#6366f1;"></i> Membungkuk</span>
+                    <span class="anim-btn-badge">2.6s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="HoldItem" data-category="social" onclick="playMascotPose('HoldItem')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-box-open" style="color:#10b981;"></i> Memegang Benda</span>
+                    <span class="anim-btn-badge">3.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Read" data-category="social" onclick="playMascotPose('Read')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-book-open" style="color:#8b5cf6;"></i> Membaca Buku</span>
+                    <span class="anim-btn-badge">3.8s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Drink" data-category="social" onclick="playMascotPose('Drink')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-mug-hot" style="color:#14b8a6;"></i> Minum Teh/Kopi</span>
+                    <span class="anim-btn-badge">2.8s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Eat" data-category="social" onclick="playMascotPose('Eat')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-cake-candles" style="color:#f43f5e;"></i> Makan Camilan</span>
+                    <span class="anim-btn-badge">2.6s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Yawn" data-category="social" onclick="playMascotPose('Yawn')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-face-tired" style="color:#94a3b8;"></i> Menguap Santai</span>
+                    <span class="anim-btn-badge">3.2s</span>
+                  </button>
+                  <button type="button" class="anim-btn" data-anim="Stretch" data-category="social" onclick="playMascotPose('Stretch')">
+                    <span class="anim-btn-content"><i class="fa-solid fa-dumbbell" style="color:#f97316;"></i> Peregangan</span>
+                    <span class="anim-btn-badge">3.4s</span>
+                  </button>
+                </div>
+
+                <!-- Ekspresi Wajah (Blendshape) -->
+                <div style="margin-top:12px;border-top:1px solid var(--border-subtle);padding-top:12px;">
                   <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">
-                    Uji Ekspresi Wajah (Blendshape):
+                    Uji Ekspresi Wajah (Morph Blendshape):
                   </div>
                   <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Happy')">ðŸ˜Š Senyum</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Cheers')">ðŸ˜„ Tertawa</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Thinking')">ðŸ¤” Berpikir</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Shy')">ðŸ˜³ Malu</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Sleepy')">ðŸ˜´ Mengantuk</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Happy')">😊 Senyum</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Cheers')">😄 Tertawa</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Thinking')">🤔 Berpikir</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Shy')">😳 Malu</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Sleepy')">😴 Ngantuk</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Talk')">🗣️ Bicara</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Blink')">😑 Berkedip</button>
                   </div>
                 </div>
               </div>
@@ -501,10 +715,10 @@
                 <div>
                   <label style="font-size:12px;font-weight:600;color:var(--text-primary);">Sifat & Persona Percakapan</label>
                   <select class="select-input" id="selectLoungePersona" style="width:100%;margin-top:6px;">
-                    <option value="cheerful" selected>ðŸŒ¸ Cheerful Idol Companion (Bawaan)</option>
-                    <option value="cyberpunk">âš¡ Cyberpunk Tactical Operator</option>
-                    <option value="maid">ðŸµ Faithful Maid Protocol</option>
-                    <option value="tactical">ðŸŒ² Wilds Survival Commander</option>
+                    <option value="cheerful" selected>🌸 Cheerful Idol Companion (Bawaan)</option>
+                    <option value="cyberpunk">⚡ Cyberpunk Tactical Operator</option>
+                    <option value="maid">☕ Faithful Maid Protocol</option>
+                    <option value="tactical">🌲 Wilds Survival Commander</option>
                   </select>
                 </div>
 
@@ -544,6 +758,8 @@
       let analyser = null;
       let animFrameId = null;
 
+      let currentMascotAnim = "Idle";
+
       // Inisialisasi 3D Viewer
       async function initLounge3D() {
         const canvas = document.getElementById("lounge3dCanvas");
@@ -551,7 +767,7 @@
 
         try {
           viewer = new NauraHero3DViewer(canvas, {
-            modelPath: "/models/naura.vrm",
+            modelPath: "/models/naura_animated.glb",
             cameraFov: 32,
             cameraZ: 1.35,
             cameraY: 0.18,
@@ -565,7 +781,7 @@
             if (viewer) viewer.playAnimation("Idle");
           }, 3200);
         } catch (err) {
-          console.warn("[3D Lounge] Fallback ke model GLB:", err);
+          console.warn("[3D Lounge] Fallback ke model GLB dasar:", err);
           try {
             viewer = new NauraHero3DViewer(canvas, {
               modelPath: "/models/naura.glb",
@@ -606,13 +822,53 @@
         }
       });
 
-      // Animasi Matrix & Pose
+      // Animasi Matrix & Pose (31 Animasi Mandiri)
       window.playMascotPose = function (animName) {
+        currentMascotAnim = animName || "Idle";
         document.querySelectorAll(".anim-btn").forEach((b) => b.classList.remove("active"));
-        event?.currentTarget?.classList?.add("active");
+        const targetBtn = document.querySelector(`.anim-btn[data-anim="${animName}"]`) || event?.currentTarget;
+        if (targetBtn) targetBtn.classList.add("active");
+
+        const activeLabel = document.getElementById("activeAnimLabel");
+        if (activeLabel) {
+          const btnText = targetBtn?.querySelector(".anim-btn-content")?.textContent?.trim() || animName;
+          activeLabel.textContent = btnText;
+        }
+
         if (viewer && typeof viewer.playAnimation === "function") {
           viewer.playAnimation(animName);
         }
+      };
+
+      window.replayActiveAnim = function () {
+        if (viewer && typeof viewer.playAnimation === "function") {
+          viewer.playAnimation(currentMascotAnim);
+        }
+      };
+
+      window.filterAnimCategory = function (category) {
+        document.querySelectorAll(".anim-category-chip").forEach((c) => c.classList.remove("active"));
+        const activeChip = document.querySelector(`.anim-category-chip[data-cat="${category}"]`) || event?.currentTarget;
+        if (activeChip) activeChip.classList.add("active");
+
+        const searchVal = document.getElementById("animSearchInput")?.value?.toLowerCase()?.trim() || "";
+        document.querySelectorAll(".anim-btn").forEach((btn) => {
+          const matchCat = category === "all" || btn.dataset.category === category;
+          const matchSearch = !searchVal || btn.dataset.anim?.toLowerCase()?.includes(searchVal) || btn.textContent?.toLowerCase()?.includes(searchVal);
+          btn.style.display = matchCat && matchSearch ? "flex" : "none";
+        });
+      };
+
+      window.onAnimSearch = function () {
+        const searchVal = document.getElementById("animSearchInput")?.value?.toLowerCase()?.trim() || "";
+        const activeChip = document.querySelector(".anim-category-chip.active");
+        const activeCat = activeChip?.dataset?.cat || "all";
+
+        document.querySelectorAll(".anim-btn").forEach((btn) => {
+          const matchCat = activeCat === "all" || btn.dataset.category === activeCat;
+          const matchSearch = !searchVal || btn.dataset.anim?.toLowerCase()?.includes(searchVal) || btn.textContent?.toLowerCase()?.includes(searchVal);
+          btn.style.display = matchCat && matchSearch ? "flex" : "none";
+        });
       };
 
       window.setBlendshapeMood = function (mood) {
@@ -713,7 +969,7 @@
         } catch (_) {
           const errDiv = document.createElement("div");
           errDiv.className = "chat-bubble-bot";
-          errDiv.textContent = "Koneksi AI sedang beristirahat. Coba tanyakan hal lain ya Sensei! ðŸŒ¸";
+          errDiv.textContent = "Koneksi AI sedang beristirahat. Coba tanyakan hal lain ya Sensei! 🌸";
           stream.appendChild(errDiv);
         }
       }

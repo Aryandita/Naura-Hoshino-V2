@@ -93,7 +93,9 @@
         border-radius: 4px;
       }
       .item-icon {
-        font-size: 26px;
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
         margin-bottom: 2px;
       }
       .detail-card {
@@ -199,8 +201,10 @@
           slot.draggable = Boolean(item);
 
           if (item) {
+            const itemImage = item.image || `/items/${item.id || item.name.toLowerCase().replace(/\s+/g, '_')}.svg`;
             slot.innerHTML = `
-              <div class="item-icon">${item.icon}</div>
+              <img class="item-icon" src="${itemImage}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+              <div class="item-icon-fallback" style="display:none;font-size:26px;">${item.icon || '📦'}</div>
               ${item.count > 1 ? `<div class="item-count-badge">${item.count}</div>` : ''}
             `;
             slot.onclick = () => selectItem(item);
@@ -213,7 +217,8 @@
       }
 
       function selectItem(item) {
-        document.getElementById('detail-icon').innerText = item.icon || '📦';
+        const itemImage = item.image || `/items/${item.id || item.name.toLowerCase().replace(/\s+/g, '_')}.svg`;
+        document.getElementById('detail-icon').innerHTML = `<img src="${itemImage}" alt="${item.name}" style="width:64px;height:64px;object-fit:contain;" onerror="this.outerHTML='${item.icon || '📦'}'" />`;
         document.getElementById('detail-name').innerText = item.name || 'Item Misterius';
         document.getElementById('detail-rarity').innerText = item.rarity || 'Common';
         document.getElementById('detail-type').innerText = item.type || 'Material';
@@ -223,7 +228,7 @@
       }
 
       function renderEmptyDetails(isGuest) {
-        document.getElementById('detail-icon').innerText = '🎒';
+        document.getElementById('detail-icon').innerHTML = '<span style="font-size:48px;">🎒</span>';
         document.getElementById('detail-name').innerText = isGuest ? 'Ransel Mode Tamu' : 'Ransel Masih Kosong';
         document.getElementById('detail-rarity').innerText = 'Eksplorasi';
         document.getElementById('detail-type').innerText = 'Penyimpanan';

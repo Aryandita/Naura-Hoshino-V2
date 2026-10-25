@@ -1,0 +1,2110 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Peta Dunia Adisha & Roam Interaktif | Naura OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      /* Layout Grid Khusus Peta Adisha */
+      .adisha-grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 420px;
+        gap: 24px;
+        align-items: start;
+      }
+      @media (max-width: 1200px) {
+        .adisha-grid-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Player Vitality HUD Bar */
+      .vitality-hud-card {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.75) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 18px 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(16px);
+      }
+      .vitality-grid {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 20px;
+        align-items: center;
+      }
+      @media (max-width: 950px) {
+        .vitality-grid {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+      }
+
+      .player-badge-block {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .player-avatar-wrap {
+        position: relative;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        padding: 2px;
+        background: linear-gradient(135deg, #f472b6, #38bdf8);
+      }
+      .player-avatar-img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #0f172a;
+      }
+      .player-level-pill {
+        position: absolute;
+        bottom: -4px;
+        right: -4px;
+        background: #0284c7;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: var(--r-full);
+        border: 1px solid #0c4a6e;
+      }
+
+      .vitality-bars-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      @media (max-width: 768px) {
+        .vitality-bars-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .vbar-item {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        padding: 8px 12px;
+      }
+      .vbar-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      .vbar-track {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: var(--r-full);
+        overflow: hidden;
+      }
+      .vbar-fill {
+        height: 100%;
+        border-radius: var(--r-full);
+        transition: width 0.4s ease;
+      }
+      .vbar-fill.hp {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+      }
+      .vbar-fill.stamina {
+        background: linear-gradient(90deg, #0284c7, #38bdf8);
+      }
+      .vbar-fill.hunger {
+        background: linear-gradient(90deg, #d97706, #fbbf24);
+      }
+      .vbar-fill.thirst {
+        background: linear-gradient(90deg, #2563eb, #60a5fa);
+      }
+
+      .hud-right-cluster {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-end;
+      }
+      @media (max-width: 950px) {
+        .hud-right-cluster {
+          align-items: flex-start;
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+      }
+
+      .wallets-cluster {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .wallet-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: var(--r-full);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .wallet-chip.sc {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+      .wallet-chip.pd {
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+      }
+      .wallet-chip.vb {
+        background: rgba(168, 85, 247, 0.15);
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+      }
+
+      /* Vehicle Status Chip di HUD */
+      .vehicle-hud-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 12px;
+        background: rgba(245, 158, 11, 0.15);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        border-radius: var(--r-full);
+        font-size: 11px;
+        color: #fbbf24;
+        font-weight: 600;
+      }
+      .btn-sell-hud {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: #f87171;
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: var(--r-full);
+        cursor: pointer;
+        transition: all var(--t-fast);
+      }
+      .btn-sell-hud:hover {
+        background: #ef4444;
+        color: #fff;
+      }
+
+      /* Viewport Peta SVG */
+      .adisha-map-card {
+        background: radial-gradient(circle at 50% 30%, rgba(56, 189, 248, 0.04), transparent 70%),
+                    linear-gradient(180deg, #080c18 0%, #04070e 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 16px 45px rgba(0, 0, 0, 0.6);
+      }
+      .map-filter-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        background: rgba(10, 14, 26, 0.85);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-subtle);
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .region-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .region-pill-btn {
+        padding: 5px 12px;
+        border-radius: var(--r-full);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-subtle);
+        transition: all var(--t-fast);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .region-pill-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+      }
+      .region-pill-btn.active {
+        background: var(--primary-dim);
+        color: var(--primary);
+        border-color: var(--border-primary);
+        box-shadow: 0 0 12px rgba(244, 114, 182, 0.25);
+      }
+
+      .map-svg-container {
+        width: 100%;
+        height: 570px;
+        position: relative;
+        background-color: #060913;
+        background-image: 
+          radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+          radial-gradient(rgba(56, 189, 248, 0.06) 1px, transparent 1px);
+        background-size: 30px 30px, 60px 60px;
+        overflow: hidden;
+      }
+      svg.adisha-svg {
+        width: 100%;
+        height: 100%;
+        user-select: none;
+        transform-origin: center center;
+        will-change: transform;
+      }
+
+      /* Animasi Garis Rute */
+      .adisha-trail {
+        stroke: rgba(255, 255, 255, 0.18);
+        stroke-dasharray: 6 6;
+        animation: trailAnimation 24s linear infinite;
+      }
+      @keyframes trailAnimation {
+        to {
+          stroke-dashoffset: -240;
+        }
+      }
+
+      /* POI Nodes */
+      .poi-group {
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .poi-group:hover {
+        filter: brightness(1.3);
+      }
+      .poi-group.active-target circle.poi-ring-outer {
+        stroke: #f472b6;
+        stroke-width: 3;
+        filter: drop-shadow(0 0 12px rgba(244, 114, 182, 0.8));
+      }
+      .poi-group.player-here circle.poi-center {
+        fill: #38bdf8 !important;
+        stroke: #ffffff;
+        stroke-width: 3;
+        filter: drop-shadow(0 0 16px #38bdf8);
+      }
+      .pulse-player-beacon {
+        animation: beaconRing 2s cubic-bezier(0.1, 0.7, 0.3, 1) infinite;
+        transform-origin: center;
+      }
+      @keyframes beaconRing {
+        0% { r: 12; opacity: 0.9; }
+        100% { r: 36; opacity: 0; }
+      }
+
+      /* Intel & Action Panel Kanan */
+      .intel-panel-card {
+        background: linear-gradient(180deg, rgba(20, 24, 40, 0.85) 0%, rgba(10, 12, 22, 0.95) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        overflow: hidden;
+        backdrop-filter: blur(18px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      }
+      .intel-header-box {
+        padding: 20px;
+        border-bottom: 1px solid var(--border-subtle);
+        background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 70%);
+      }
+      .intel-badges-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .intel-cat-tag {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 3px 8px;
+        border-radius: var(--r-full);
+      }
+      .intel-loc-title {
+        font-family: var(--font-heading);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 4px 0;
+      }
+      .intel-loc-region {
+        font-size: 12px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* Roam Warp Banner */
+      .roam-action-banner {
+        padding: 14px 20px;
+        background: rgba(15, 23, 42, 0.7);
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .roam-cost-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+      }
+      .roam-cost-badge {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.15);
+        padding: 3px 8px;
+        border-radius: var(--r-sm);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+      }
+      .btn-roam-go {
+        padding: 8px 18px;
+        border-radius: var(--r-lg);
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        background: linear-gradient(135deg, #0284c7, #38bdf8);
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all var(--t-fast);
+        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+      }
+      .btn-roam-go:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
+      }
+      .btn-roam-go:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      .current-pos-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        border-radius: var(--r-full);
+        color: #34d399;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      /* Tabs Interaksi */
+      .intel-nav-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border-subtle);
+        background: rgba(10, 14, 26, 0.6);
+      }
+      .intel-tab-btn {
+        flex: 1;
+        padding: 12px 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: all var(--t-fast);
+      }
+      .intel-tab-btn:hover {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .intel-tab-btn.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+        background: rgba(244, 114, 182, 0.08);
+      }
+
+      .intel-tab-pane {
+        padding: 20px;
+        display: none;
+        max-height: 440px;
+        overflow-y: auto;
+      }
+      .intel-tab-pane.active {
+        display: block;
+      }
+
+      /* Styling Tab Kerja */
+      .job-card {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-lg);
+        padding: 16px;
+        margin-bottom: 14px;
+      }
+      .job-header-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .job-wage-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(16, 185, 129, 0.12);
+        color: #34d399;
+        border-radius: var(--r-full);
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .req-box {
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        padding: 12px;
+        margin-bottom: 14px;
+      }
+      .req-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        margin-bottom: 8px;
+      }
+      .req-item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        padding: 4px 0;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+      }
+      .req-item-row:last-child {
+        border-bottom: none;
+      }
+      .stat-badge-pass {
+        color: #34d399;
+        font-weight: 600;
+        font-size: 11px;
+      }
+      .stat-badge-fail {
+        color: #f87171;
+        font-weight: 600;
+        font-size: 11px;
+      }
+      .btn-work-start {
+        width: 100%;
+        padding: 11px;
+        border-radius: var(--r-lg);
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all var(--t-fast);
+      }
+      .btn-work-start:hover:not(:disabled) {
+        filter: brightness(1.15);
+        transform: translateY(-1px);
+      }
+      .btn-work-start:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        background: #334155;
+      }
+
+      /* Styling Tab Toko & Dealer Showroom */
+      .shop-item-card {
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        transition: all var(--t-fast);
+      }
+      .shop-item-card:hover {
+        background: rgba(30, 41, 59, 0.7);
+        border-color: var(--border-medium);
+      }
+      .shop-item-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .shop-item-emoji {
+        font-size: 24px;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--r-md);
+      }
+      .shop-item-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      .shop-item-desc {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+      }
+      .shop-item-effects {
+        display: flex;
+        gap: 6px;
+        margin-top: 4px;
+        flex-wrap: wrap;
+      }
+      .effect-tag {
+        font-size: 10px;
+        font-family: var(--font-mono);
+        padding: 1px 6px;
+        border-radius: var(--r-sm);
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+      }
+      .effect-tag.buff-perm {
+        background: rgba(16, 185, 129, 0.18);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+      .effect-tag.buff-temp {
+        background: rgba(245, 158, 11, 0.18);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+
+      .btn-buy-item {
+        padding: 6px 12px;
+        border-radius: var(--r-md);
+        font-size: 12px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        background: var(--primary-dim);
+        color: var(--primary);
+        border: 1px solid var(--border-primary);
+        white-space: nowrap;
+        transition: all var(--t-fast);
+      }
+      .btn-buy-item:hover:not(:disabled) {
+        background: var(--primary);
+        color: #fff;
+      }
+      .btn-buy-item:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      /* Vehicle Showroom Box */
+      .vehicle-showroom-card {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: var(--r-xl);
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      }
+      .v-showroom-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 12px;
+      }
+      .v-showroom-icon {
+        font-size: 32px;
+        width: 52px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(245, 158, 11, 0.15);
+        border-radius: var(--r-lg);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+      .v-showroom-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .v-showroom-subtitle {
+        font-size: 11px;
+        color: #fbbf24;
+      }
+      .v-buff-container {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: var(--r-md);
+        padding: 10px;
+        margin-bottom: 14px;
+        font-size: 11px;
+      }
+
+      /* Styling Tab NPC */
+      .npc-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        margin-bottom: 8px;
+      }
+      .npc-info-block {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .npc-avatar-circle {
+        font-size: 20px;
+      }
+      .npc-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      .npc-role {
+        font-size: 11px;
+        color: var(--text-secondary);
+      }
+
+      /* Roam Flash Transition */
+      .roam-flash-screen {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(15, 23, 42, 0.95) 70%);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 9999;
+        transition: opacity 0.35s ease;
+      }
+      .roam-flash-screen.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* Toast Notification */
+      .adisha-toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .adisha-toast {
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid var(--border-medium);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        border-radius: var(--r-lg);
+        padding: 12px 18px;
+        color: var(--text-primary);
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        backdrop-filter: blur(12px);
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+      }
+      .adisha-toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Overlay Transisi Perjalanan -->
+    <div class="roam-flash-screen" id="roamFlash"></div>
+    <div class="adisha-toast-container" id="toastContainer"></div>
+
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- Sidebar Utama Naura OS -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="this.style.display='none';this.parentElement.innerHTML='🌸';"
+            />
+          </div>
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">Naura Hoshino</div>
+            <div class="sidebar-brand-sub">v2.4.0 · Online</div>
+          </div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <nav class="sidebar-nav" role="navigation">
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item active">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>Peta Dunia Adisha</span>
+              <span class="nav-badge" style="background:#10b981;color:#fff;">Roam</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Radar</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-user" id="sidebarUserBlock">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              id="sidebarUserAvatar"
+            />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebarUserName">Petualang Adisha</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">Tamu / Penjelajah</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Shell Content -->
+      <div class="main-content">
+        <!-- Topbar Header -->
+        <header class="topbar">
+          <div class="topbar-left">
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Buka menu navigasi">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="breadcrumb">
+              <a href="/">Naura Wilds</a>
+              <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right"></i></span>
+              <span class="breadcrumb-current">Peta Dunia Adisha & Roam Terpadu</span>
+            </div>
+          </div>
+          <div class="topbar-right">
+            <div class="live-status-pill">
+              <span class="status-dot"></span>
+              <span id="timeStateLabel">Waktu In-Game: Siang</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Page Body Container -->
+        <main class="page-container">
+          <!-- 1. Player Vitality & Attributes HUD -->
+          <section class="vitality-hud-card">
+            <div class="vitality-grid">
+              <!-- Player Identity -->
+              <div class="player-badge-block">
+                <div class="player-avatar-wrap">
+                  <img
+                    src="/assets/core/avatar.png"
+                    alt="Player Avatar"
+                    class="player-avatar-img"
+                    id="hudAvatar"
+                  />
+                  <span class="player-level-pill" id="hudLevelBadge">Lv. 1</span>
+                </div>
+                <div>
+                  <div style="font-weight:700;font-size:15px;color:var(--text-primary);" id="hudPlayerName">
+                    Petualang Adisha
+                  </div>
+                  <div style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;margin-top:2px;">
+                    <i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i>
+                    <span id="hudCurrentLoc">Desa Sukamaju · Balai Desa</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4 Vitality Bars -->
+              <div class="vitality-bars-grid">
+                <div class="vbar-item">
+                  <div class="vbar-label">
+                    <span style="color:#f87171;"><i class="fa-solid fa-heart"></i> HP</span>
+                    <span id="labelHp" style="font-family:var(--font-mono);color:var(--text-secondary);">100/100</span>
+                  </div>
+                  <div class="vbar-track">
+                    <div class="vbar-fill hp" id="fillHp" style="width:100%;"></div>
+                  </div>
+                </div>
+
+                <div class="vbar-item">
+                  <div class="vbar-label">
+                    <span style="color:#38bdf8;"><i class="fa-solid fa-bolt"></i> Stamina</span>
+                    <span id="labelStamina" style="font-family:var(--font-mono);color:var(--text-secondary);">100/100</span>
+                  </div>
+                  <div class="vbar-track">
+                    <div class="vbar-fill stamina" id="fillStamina" style="width:100%;"></div>
+                  </div>
+                </div>
+
+                <div class="vbar-item">
+                  <div class="vbar-label">
+                    <span style="color:#fbbf24;"><i class="fa-solid fa-drumstick-bite"></i> Kenyang</span>
+                    <span id="labelHunger" style="font-family:var(--font-mono);color:var(--text-secondary);">100/100</span>
+                  </div>
+                  <div class="vbar-track">
+                    <div class="vbar-fill hunger" id="fillHunger" style="width:100%;"></div>
+                  </div>
+                </div>
+
+                <div class="vbar-item">
+                  <div class="vbar-label">
+                    <span style="color:#60a5fa;"><i class="fa-solid fa-droplet"></i> Hidrasi</span>
+                    <span id="labelThirst" style="font-family:var(--font-mono);color:var(--text-secondary);">100/100</span>
+                  </div>
+                  <div class="vbar-track">
+                    <div class="vbar-fill thirst" id="fillThirst" style="width:100%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Saldo Mata Uang V2 & Kendaraan Aktif -->
+              <div class="hud-right-cluster">
+                <div class="wallets-cluster">
+                  <div class="wallet-chip sc" title="Sukamaju Koin (Mata Uang Desa & Pesisir)">
+                    <i class="fa-solid fa-coins"></i>
+                    <span id="valCoinsSc">0 SC</span>
+                  </div>
+                  <div class="wallet-chip pd" title="Pratama Dollar (Mata Uang Kota & Bisnis)">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                    <span id="valCoinsPd">0 PD</span>
+                  </div>
+                  <div class="wallet-chip vb" title="Voucher Beasiswa (Kampus Draken & Akademik)">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span id="valCoinsVb">0 VB</span>
+                  </div>
+                </div>
+
+                <!-- Info Kendaraan Aktif Pemain -->
+                <div id="hudVehicleBox">
+                  <div class="vehicle-hud-badge" id="hudVehicleBadge">
+                    <i class="fa-solid fa-person-walking"></i>
+                    <span>Pejalan Kaki (Tanpa Motor)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. Main Two-Column Layout (Interactive SVG Map + Intel Drawer) -->
+          <div class="adisha-grid-layout">
+            <!-- Kolom Kiri: Peta Interaktif Benua Adisha -->
+            <div class="adisha-map-card">
+              <!-- Filter Wilayah Pills -->
+              <div class="map-filter-bar">
+                <div class="region-pills" id="regionFilterPills">
+                  <button class="region-pill-btn active" data-filter="all">
+                    <i class="fa-solid fa-globe"></i> Semua Kawasan
+                  </button>
+                  <button class="region-pill-btn" data-filter="desa_sukamaju">
+                    <i class="fa-solid fa-seedling" style="color:#10b981;"></i> Desa Sukamaju
+                  </button>
+                  <button class="region-pill-btn" data-filter="kota_pratama">
+                    <i class="fa-solid fa-city" style="color:#38bdf8;"></i> Kota Pratama
+                  </button>
+                  <button class="region-pill-btn" data-filter="desa_khulkhas">
+                    <i class="fa-solid fa-snowflake" style="color:#7dd3fc;"></i> Desa Khul'Khas
+                  </button>
+                  <button class="region-pill-btn" data-filter="hutan_dha_mhai">
+                    <i class="fa-solid fa-tree" style="color:#a855f7;"></i> Hutan Dha Mhai
+                  </button>
+                  <button class="region-pill-btn" data-filter="desa_lauh_than">
+                    <i class="fa-solid fa-water" style="color:#0ea5e9;"></i> Desa Lauh Than
+                  </button>
+                  <button class="region-pill-btn" data-filter="kampus_draken">
+                    <i class="fa-solid fa-graduation-cap" style="color:#c084fc;"></i> Kampus Draken
+                  </button>
+                  <button class="region-pill-btn" data-filter="tambang_raksasa" style="border-color:rgba(245,158,11,0.5);">
+                    <i class="fa-solid fa-mountain" style="color:#f59e0b;"></i> Tambang Raksasa <span id="filterLockIcon">🔒</span>
+                  </button>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                  <i class="fa-solid fa-compass"></i>
+                  <span>Pilih sub-daerah untuk jelajah / beli motor</span>
+                </div>
+              </div>
+
+              <!-- Kontainer SVG Peta -->
+              <div class="map-svg-container" id="mapSvgContainer">
+                <svg
+                  class="adisha-svg"
+                  id="adishaSvgMap"
+                  viewBox="0 0 1000 650"
+                  preserveAspectRatio="xMidYMid slice"
+                >
+                  <defs>
+                    <!-- Gradasi Kontur Wilayah -->
+                    <radialGradient id="gradSukamaju" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#10b981" stop-opacity="0.25" />
+                      <stop offset="100%" stop-color="#10b981" stop-opacity="0.02" />
+                    </radialGradient>
+                    <radialGradient id="gradPratama" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.28" />
+                      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.02" />
+                    </radialGradient>
+                    <radialGradient id="gradKhulkhas" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.25" />
+                      <stop offset="100%" stop-color="#7dd3fc" stop-opacity="0.02" />
+                    </radialGradient>
+                    <radialGradient id="gradDhaMhai" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.26" />
+                      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.02" />
+                    </radialGradient>
+                    <radialGradient id="gradLauhThan" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.25" />
+                      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.02" />
+                    </radialGradient>
+                    <radialGradient id="gradDraken" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.30" />
+                      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.02" />
+                    </radialGradient>
+                    <radialGradient id="gradTambang" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.35" />
+                      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.02" />
+                    </radialGradient>
+                  </defs>
+
+                  <!-- 1. Lapisan Kontur & Teritorial Benua Adisha -->
+                  <g id="territoryLayer">
+                    <!-- Hutan Dha Mhai (Barat Laut) -->
+                    <path
+                      d="M 100 120 Q 220 100 280 180 T 260 360 Q 140 380 90 280 Z"
+                      fill="url(#gradDhaMhai)"
+                      stroke="#8b5cf6"
+                      stroke-width="1.2"
+                      stroke-dasharray="4 4"
+                      opacity="0.75"
+                    />
+                    <text x="170" y="160" fill="#a78bfa" font-size="12" font-weight="700" letter-spacing="2">HUTAN DHA MHAI</text>
+
+                    <!-- Desa Khul'Khas (Timur Laut / Pegunungan Salju) -->
+                    <path
+                      d="M 680 80 Q 860 60 920 160 T 840 320 Q 720 300 680 200 Z"
+                      fill="url(#gradKhulkhas)"
+                      stroke="#7dd3fc"
+                      stroke-width="1.2"
+                      stroke-dasharray="4 4"
+                      opacity="0.75"
+                    />
+                    <text x="740" y="130" fill="#bae6fd" font-size="12" font-weight="700" letter-spacing="2">DESA KHUL'KHAS</text>
+
+                    <!-- Kota Pratama (Pusat Metropolis) -->
+                    <circle
+                      cx="550"
+                      cy="300"
+                      r="130"
+                      fill="url(#gradPratama)"
+                      stroke="#38bdf8"
+                      stroke-width="1.5"
+                      opacity="0.85"
+                    />
+                    <text x="500" y="270" fill="#7dd3fc" font-size="13" font-weight="700" letter-spacing="2">KOTA PRATAMA</text>
+
+                    <!-- Desa Sukamaju (Barat Daya) -->
+                    <path
+                      d="M 150 400 Q 340 380 370 490 T 280 610 Q 130 620 120 490 Z"
+                      fill="url(#gradSukamaju)"
+                      stroke="#10b981"
+                      stroke-width="1.2"
+                      stroke-dasharray="4 4"
+                      opacity="0.75"
+                    />
+                    <text x="210" y="440" fill="#6ee7b7" font-size="12" font-weight="700" letter-spacing="2">DESA SUKAMAJU</text>
+
+                    <!-- Desa Lauh Than (Pesisir Selatan) -->
+                    <path
+                      d="M 420 500 Q 600 480 620 590 T 480 640 Q 380 630 400 550 Z"
+                      fill="url(#gradLauhThan)"
+                      stroke="#0ea5e9"
+                      stroke-width="1.2"
+                      stroke-dasharray="4 4"
+                      opacity="0.75"
+                    />
+                    <text x="470" y="540" fill="#7dd3fc" font-size="12" font-weight="700" letter-spacing="2">DESA LAUH THAN</text>
+
+                    <!-- Kampus Universitas Draken (Tenggara / Pendidikan Tinggi) -->
+                    <path
+                      d="M 670 420 Q 840 400 870 510 T 770 590 Q 670 580 650 490 Z"
+                      fill="url(#gradDraken)"
+                      stroke="#7c3aed"
+                      stroke-width="1.2"
+                      stroke-dasharray="4 4"
+                      opacity="0.8"
+                    />
+                    <text x="700" y="450" fill="#c4b5fd" font-size="12" font-weight="700" letter-spacing="2">KAMPUS DRAKEN</text>
+
+                    <!-- Kawasan Tambang Raksasa (Tenggara Bawah / Lembah Galian Emas) -->
+                    <path
+                      d="M 750 560 Q 920 530 960 620 T 830 645 Q 740 640 735 590 Z"
+                      fill="url(#gradTambang)"
+                      stroke="#f59e0b"
+                      stroke-width="1.5"
+                      stroke-dasharray="5 3"
+                      opacity="0.85"
+                    />
+                    <text x="760" y="615" fill="#fcd34d" font-size="11" font-weight="700" letter-spacing="1.5">TAMBANG RAKSASA (WAJIB MOTOR)</text>
+                  </g>
+
+                  <!-- 2. Lapisan Jalur Penghubung (Connecting Trails) -->
+                  <g id="trailsLayer">
+                    <!-- Sukamaju ke Pratama -->
+                    <line x1="260" y1="520" x2="520" y2="340" class="adisha-trail" stroke-width="2" />
+                    <!-- Pratama ke Lauh Than -->
+                    <line x1="530" y1="360" x2="510" y2="520" class="adisha-trail" stroke-width="2" />
+                    <!-- Pratama ke Kampus Draken -->
+                    <line x1="580" y1="350" x2="730" y2="470" class="adisha-trail" stroke-width="2" />
+                    <!-- Pratama ke Khul'Khas -->
+                    <line x1="580" y1="270" x2="770" y2="180" class="adisha-trail" stroke-width="2" />
+                    <!-- Dha Mhai ke Pratama -->
+                    <line x1="240" y1="230" x2="500" y2="280" class="adisha-trail" stroke-width="2" />
+                    <!-- Sukamaju ke Dha Mhai -->
+                    <line x1="240" y1="480" x2="220" y2="260" class="adisha-trail" stroke-width="2" />
+                    <!-- Lauh Than ke Kampus Draken -->
+                    <line x1="560" y1="540" x2="700" y2="500" class="adisha-trail" stroke-width="2" />
+                    <!-- Kampus Draken ke Tambang Raksasa -->
+                    <line x1="740" y1="560" x2="800" y2="600" class="adisha-trail" stroke-width="2" stroke="#f59e0b" />
+                    <!-- Lauh Than ke Tambang Raksasa -->
+                    <line x1="580" y1="560" x2="760" y2="600" class="adisha-trail" stroke-width="2" stroke="#f59e0b" />
+                  </g>
+
+                  <!-- 3. Lapisan Sub-Daerah POI (Di-render secara dinamis via JS) -->
+                  <g id="poiNodesLayer"></g>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Kolom Kanan: Intel & Action Panel (Drawer Terpadu) -->
+            <div class="intel-panel-card" id="intelPanelCard">
+              <!-- Header Lokasi Terpilih -->
+              <div class="intel-header-box">
+                <div class="intel-badges-row">
+                  <span class="intel-cat-tag" id="locCatTag" style="background:rgba(56,189,248,0.2);color:#38bdf8;">
+                    Kategori Lokasi
+                  </span>
+                  <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);" id="locCoordsLabel">
+                    [X: 0, Y: 0]
+                  </span>
+                </div>
+                <h3 class="intel-loc-title" id="locTitle">Memuat Lokasi...</h3>
+                <div class="intel-loc-region">
+                  <i class="fa-solid fa-map-location-dot" style="color:var(--primary);"></i>
+                  <span id="locRegionName">Kawasan Adisha</span>
+                  <span>·</span>
+                  <span id="locDangerLevel" style="color:#34d399;">Aman</span>
+                </div>
+              </div>
+
+              <!-- Roam Action Banner (Pindah Lokasi / Status Sekarang) -->
+              <div class="roam-action-banner" id="roamBanner">
+                <div class="roam-cost-box" id="roamCostBox">
+                  <i class="fa-solid fa-shoe-prints" style="color:#38bdf8;"></i>
+                  <span>Biaya Jelajah:</span>
+                  <span class="roam-cost-badge" id="roamCostValue">5 Stamina</span>
+                </div>
+                <button class="btn-roam-go" id="btnRoamAction">
+                  <i class="fa-solid fa-person-walking"></i>
+                  <span>Jelajahi ke Tempat Ini</span>
+                </button>
+              </div>
+
+              <!-- 4 Tab Interaksi Lokasi -->
+              <div class="intel-nav-tabs">
+                <button class="intel-tab-btn active" data-tab="overview">
+                  <i class="fa-solid fa-info-circle"></i>
+                  <span>Ikhtisar</span>
+                </button>
+                <button class="intel-tab-btn" data-tab="work" id="tabBtnWork">
+                  <i class="fa-solid fa-briefcase"></i>
+                  <span>Bekerja</span>
+                </button>
+                <button class="intel-tab-btn" data-tab="shop" id="tabBtnShop">
+                  <i class="fa-solid fa-shop"></i>
+                  <span id="labelTabShop">Toko / Dealer</span>
+                </button>
+                <button class="intel-tab-btn" data-tab="npcs">
+                  <i class="fa-solid fa-users"></i>
+                  <span>Warga</span>
+                </button>
+              </div>
+
+              <!-- Konten Tab 1: Ikhtisar Suasana -->
+              <div class="intel-tab-pane active" id="pane-overview">
+                <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;" id="locDescText">
+                  Pilih lokasi mana pun di peta untuk melihat aktivitas yang dapat kamu lakukan.
+                </p>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">
+                  Fasilitas & Fitur Wilayah
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;" id="locFacilitiesList">
+                  <span class="effect-tag">Fasilitas Standar</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:12px;font-size:12px;color:var(--text-secondary);">
+                  <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">
+                    <i class="fa-solid fa-motorcycle" style="color:#f59e0b;"></i> Tips Kendaraan & Tambang
+                  </div>
+                  Membeli motor di dealer lokal memberikan diskon stamina saat menjelajah dan membuka akses resmi menuju Kawasan Tambang Raksasa. Jika ingin ganti motor baru, kamu bisa menjual motor lama seharga 70% di dealer.
+                </div>
+              </div>
+
+              <!-- Konten Tab 2: Lowongan Pekerjaan -->
+              <div class="intel-tab-pane" id="pane-work">
+                <div id="workAvailableContent">
+                  <div class="job-card">
+                    <div class="job-header-title">
+                      <i class="fa-solid fa-hammer" style="color:#38bdf8;"></i>
+                      <span id="jobTitleText">Petugas Lapangan</span>
+                    </div>
+                    <div class="job-wage-chip">
+                      <i class="fa-solid fa-sack-dollar"></i>
+                      <span id="jobWageText">Upah: +35 SC & +8 EXP</span>
+                    </div>
+
+                    <!-- Syarat Minimum Bekerja -->
+                    <div class="req-box">
+                      <div class="req-title">Syarat Fisik & Keahlian Minimum:</div>
+                      <div id="jobReqList"></div>
+                    </div>
+
+                    <button class="btn-work-start" id="btnDoWork">
+                      <i class="fa-solid fa-person-digging"></i>
+                      <span>Mulai Bekerja (-10 Stamina)</span>
+                    </button>
+                  </div>
+                </div>
+                <div id="noWorkMessage" style="display:none;text-align:center;padding:30px 10px;color:var(--text-muted);font-size:13px;">
+                  <i class="fa-solid fa-couch" style="font-size:28px;margin-bottom:10px;opacity:0.6;"></i>
+                  <div>Tempat ini adalah area santai/wisata. Tidak ada lowongan pekerjaan tetap di sini.</div>
+                </div>
+              </div>
+
+              <!-- Konten Tab 3: Belanja & Showroom Motor Dealer -->
+              <div class="intel-tab-pane" id="pane-shop">
+                <!-- Box Khusus Showroom Kendaraan jika lokasi adalah dealer -->
+                <div id="dealerShowroomBox" style="display:none;"></div>
+
+                <!-- Katalog Belanja Makanan / Barang Umum -->
+                <div id="shopItemsContainer"></div>
+                <div id="noShopMessage" style="display:none;text-align:center;padding:30px 10px;color:var(--text-muted);font-size:13px;">
+                  <i class="fa-solid fa-store-slash" style="font-size:28px;margin-bottom:10px;opacity:0.6;"></i>
+                  <div>Tidak ada pedagang atau dealer di sub-lokasi ini.</div>
+                </div>
+              </div>
+
+              <!-- Konten Tab 4: Penduduk & Interaksi Warga -->
+              <div class="intel-tab-pane" id="pane-npcs">
+                <div id="npcListContainer"></div>
+                <div id="noNpcMessage" style="display:none;text-align:center;padding:30px 10px;color:var(--text-muted);font-size:13px;">
+                  <i class="fa-solid fa-user-slash" style="font-size:28px;margin-bottom:10px;opacity:0.6;"></i>
+                  <div>Suasana sepi. Tidak ada warga atau penjaga yang sedang berjaga di sini.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Script Pengendali Utama Peta Adisha & Roam Engine -->
+    <script src="/src/js/sharedNav.js"></script>
+    <script>
+      (function () {
+        "use strict";
+
+        // State Aplikasi Peta Adisha
+        let adishaData = null;
+        let playerData = null;
+        let selectedAreaId = "desa_sukamaju";
+        let selectedLocationId = "balai_desa";
+        let currentFilter = "all";
+
+        const SVG_NS = "http://www.w3.org/2000/svg";
+
+        // Elemen DOM HUD
+        const hudAvatar = document.getElementById("hudAvatar");
+        const hudLevelBadge = document.getElementById("hudLevelBadge");
+        const hudPlayerName = document.getElementById("hudPlayerName");
+        const hudCurrentLoc = document.getElementById("hudCurrentLoc");
+        const hudVehicleBox = document.getElementById("hudVehicleBox");
+        const labelHp = document.getElementById("labelHp");
+        const fillHp = document.getElementById("fillHp");
+        const labelStamina = document.getElementById("labelStamina");
+        const fillStamina = document.getElementById("fillStamina");
+        const labelHunger = document.getElementById("labelHunger");
+        const fillHunger = document.getElementById("fillHunger");
+        const labelThirst = document.getElementById("labelThirst");
+        const fillThirst = document.getElementById("fillThirst");
+        const valCoinsSc = document.getElementById("valCoinsSc");
+        const valCoinsPd = document.getElementById("valCoinsPd");
+        const valCoinsVb = document.getElementById("valCoinsVb");
+
+        // Elemen DOM Drawer
+        const locCatTag = document.getElementById("locCatTag");
+        const locCoordsLabel = document.getElementById("locCoordsLabel");
+        const locTitle = document.getElementById("locTitle");
+        const locRegionName = document.getElementById("locRegionName");
+        const locDangerLevel = document.getElementById("locDangerLevel");
+        const locDescText = document.getElementById("locDescText");
+        const locFacilitiesList = document.getElementById("locFacilitiesList");
+        const roamBanner = document.getElementById("roamBanner");
+        const poiNodesLayer = document.getElementById("poiNodesLayer");
+        const roamFlash = document.getElementById("roamFlash");
+        const toastContainer = document.getElementById("toastContainer");
+
+        // Tab Elemen
+        const tabBtns = document.querySelectorAll(".intel-tab-btn");
+        const tabPanes = document.querySelectorAll(".intel-tab-pane");
+        const workAvailableContent = document.getElementById("workAvailableContent");
+        const noWorkMessage = document.getElementById("noWorkMessage");
+        const jobTitleText = document.getElementById("jobTitleText");
+        const jobWageText = document.getElementById("jobWageText");
+        const jobReqList = document.getElementById("jobReqList");
+        const btnDoWork = document.getElementById("btnDoWork");
+        const dealerShowroomBox = document.getElementById("dealerShowroomBox");
+        const shopItemsContainer = document.getElementById("shopItemsContainer");
+        const noShopMessage = document.getElementById("noShopMessage");
+        const npcListContainer = document.getElementById("npcListContainer");
+        const noNpcMessage = document.getElementById("noNpcMessage");
+
+        // Toast Helper
+        function showToast(text, icon = "fa-solid fa-circle-info") {
+          const toast = document.createElement("div");
+          toast.className = "adisha-toast";
+          toast.innerHTML = `<i class="${icon}" style="color:#38bdf8;"></i><span>${text}</span>`;
+          toastContainer.appendChild(toast);
+          setTimeout(() => toast.classList.add("show"), 10);
+          setTimeout(() => {
+            toast.classList.remove("show");
+            setTimeout(() => toast.remove(), 300);
+          }, 3500);
+        }
+
+        // Setup Tab Navigation
+        tabBtns.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            tabBtns.forEach((b) => b.classList.remove("active"));
+            tabPanes.forEach((p) => p.classList.remove("active"));
+            btn.classList.add("active");
+            const targetPane = document.getElementById(`pane-${btn.dataset.tab}`);
+            if (targetPane) targetPane.classList.add("active");
+          });
+        });
+
+        // Setup Filter Wilayah
+        const filterPills = document.querySelectorAll(".region-pill-btn");
+        filterPills.forEach((pill) => {
+          pill.addEventListener("click", () => {
+            filterPills.forEach((p) => p.classList.remove("active"));
+            pill.classList.add("active");
+            currentFilter = pill.dataset.filter;
+            renderPoiNodes();
+          });
+        });
+
+        // 1. Ambil Data Peta & Status Pemain dari Server
+        async function fetchInitialData() {
+          try {
+            const [mapRes, playerRes] = await Promise.all([
+              fetch("/api/survival/world/adisha-map"),
+              fetch("/api/survival/world/player-status"),
+            ]);
+
+            const mapJson = await mapRes.json();
+            const playerJson = await playerRes.json();
+
+            if (mapJson.success) {
+              adishaData = mapJson;
+              document.getElementById("timeStateLabel").textContent =
+                `Waktu In-Game: ${mapJson.timeState || "Siang"}`;
+            }
+
+            if (playerJson.success) {
+              playerData = playerJson.player;
+              selectedAreaId = playerData.currentAreaId || "desa_sukamaju";
+              selectedLocationId = playerData.currentLocationId || "balai_desa";
+              updateHudView();
+            }
+
+            renderPoiNodes();
+            renderSelectedLocationDetail();
+          } catch (err) {
+            console.error("Gagal memuat data Adisha:", err);
+            showToast("Gagal memuat peta dunia Adisha.", "fa-solid fa-triangle-exclamation");
+          }
+        }
+
+        // 2. Perbarui Tampilan HUD Pemain
+        function updateHudView() {
+          if (!playerData) return;
+          hudPlayerName.textContent = playerData.displayName || playerData.username || "Petualang Adisha";
+          hudLevelBadge.textContent = `Lv. ${playerData.level || 1}`;
+
+          const curArea = adishaData?.regions?.[playerData.currentAreaId];
+          const curLoc = curArea?.locations?.[playerData.currentLocationId];
+          hudCurrentLoc.textContent = `${curArea?.name || "Desa Sukamaju"} · ${curLoc?.name || "Balai Desa"}`;
+
+          // Vitalitas
+          const hp = playerData.hp || 100;
+          const maxHp = playerData.maxHp || 100;
+          labelHp.textContent = `${hp}/${maxHp}`;
+          fillHp.style.width = `${Math.min(100, Math.max(0, (hp / maxHp) * 100))}%`;
+
+          const stamina = playerData.stamina || 100;
+          const maxStamina = playerData.maxStamina || 100;
+          labelStamina.textContent = `${stamina}/${maxStamina}`;
+          fillStamina.style.width = `${Math.min(100, Math.max(0, (stamina / maxStamina) * 100))}%`;
+
+          const hunger = playerData.hunger || 100;
+          labelHunger.textContent = `${hunger}/100`;
+          fillHunger.style.width = `${Math.min(100, Math.max(0, hunger))}%`;
+
+          const thirst = playerData.thirst || 100;
+          labelThirst.textContent = `${thirst}/100`;
+          fillThirst.style.width = `${Math.min(100, Math.max(0, thirst))}%`;
+
+          // Saldo Mata Uang V2
+          valCoinsSc.textContent = `${(playerData.sukamajuCoins || 0).toLocaleString()} SC`;
+          valCoinsPd.textContent = `${(playerData.pratamaDollars || 0).toLocaleString()} PD`;
+          valCoinsVb.textContent = `${(playerData.scholarshipVouchers || 0).toLocaleString()} VB`;
+
+          // Tampilan Kendaraan Aktif di HUD
+          if (playerData.activeVehicle) {
+            const v = playerData.activeVehicle;
+            const resaleVal = Math.floor(v.price * 0.7);
+            hudVehicleBox.innerHTML = `
+              <div class="vehicle-hud-badge" title="${v.permanentBuffs?.description || ''}">
+                <span>${v.icon || "🛵"}</span>
+                <span>${v.name} (-${v.permanentBuffs?.staminaDiscountPercent || 25}% Stamina)</span>
+                <button class="btn-sell-hud" id="btnSellVehicleHud" title="Jual motor lama untuk refund 70%">
+                  Jual (${resaleVal} ${v.currency})
+                </button>
+              </div>
+            `;
+            const btnSell = document.getElementById("btnSellVehicleHud");
+            if (btnSell) {
+              btnSell.addEventListener("click", () => {
+                if (confirm(`Yakin ingin menjual ${v.name}? Kamu akan menerima pengembalian dana 70% sebesar ${resaleVal} ${v.currency}.`)) {
+                  executeSellVehicle();
+                }
+              });
+            }
+          } else {
+            hudVehicleBox.innerHTML = `
+              <div class="vehicle-hud-badge" style="background:rgba(255,255,255,0.06);border-color:var(--border-subtle);color:var(--text-muted);" title="Beli motor di dealer wilayah mana pun untuk membuka akses Tambang Raksasa">
+                <i class="fa-solid fa-person-walking"></i>
+                <span>Pejalan Kaki (Tanpa Motor)</span>
+              </div>
+            `;
+          }
+        }
+
+        // 3. Render Node POI Sub-Daerah pada SVG
+        function renderPoiNodes() {
+          if (!adishaData || !adishaData.regions) return;
+          poiNodesLayer.innerHTML = "";
+
+          const regions = adishaData.regions;
+
+          Object.keys(regions).forEach((areaKey) => {
+            // Abaikan alias duplikat istana_draken karena sudah direpresentasikan kampus_draken
+            if (areaKey === "istana_draken" && regions.kampus_draken) return;
+
+            if (currentFilter !== "all" && currentFilter !== areaKey) {
+              return;
+            }
+
+            const area = regions[areaKey];
+            const locs = area.locations || {};
+
+            Object.keys(locs).forEach((locKey) => {
+              const loc = locs[locKey];
+              const coords = loc.coords || { x: 50, y: 50 };
+
+              // Konversi persen (0-100) ke koordinat SVG viewBox 1000x650
+              const svgX = (coords.x / 100) * 1000;
+              const svgY = (coords.y / 100) * 650;
+
+              const isPlayerHere =
+                playerData?.currentAreaId === areaKey &&
+                playerData?.currentLocationId === locKey;
+              const isSelected =
+                selectedAreaId === areaKey && selectedLocationId === locKey;
+
+              const g = document.createElementNS(SVG_NS, "g");
+              g.setAttribute("class", `poi-group ${isPlayerHere ? "player-here" : ""} ${isSelected ? "active-target" : ""}`);
+              g.setAttribute("transform", `translate(${svgX}, ${svgY})`);
+              g.dataset.area = areaKey;
+              g.dataset.loc = locKey;
+
+              // Pulse beacon bila pemain berada di sini
+              if (isPlayerHere) {
+                const pulseCircle = document.createElementNS(SVG_NS, "circle");
+                pulseCircle.setAttribute("r", "16");
+                pulseCircle.setAttribute("fill", "none");
+                pulseCircle.setAttribute("stroke", "#38bdf8");
+                pulseCircle.setAttribute("stroke-width", "2");
+                pulseCircle.setAttribute("class", "pulse-player-beacon");
+                g.appendChild(pulseCircle);
+              }
+
+              // Ring Luar
+              const outerCircle = document.createElementNS(SVG_NS, "circle");
+              outerCircle.setAttribute("r", isSelected ? "15" : "11");
+              outerCircle.setAttribute("fill", "rgba(15, 23, 42, 0.85)");
+              outerCircle.setAttribute("stroke", loc.category === "dealer" ? "#f59e0b" : (area.themeColor || "#38bdf8"));
+              outerCircle.setAttribute("stroke-width", isSelected ? "2.5" : "1.5");
+              outerCircle.setAttribute("class", "poi-ring-outer");
+              g.appendChild(outerCircle);
+
+              // Titik Pusat
+              const centerCircle = document.createElementNS(SVG_NS, "circle");
+              centerCircle.setAttribute("r", isSelected ? "7" : "5");
+              centerCircle.setAttribute("fill", isPlayerHere ? "#38bdf8" : (loc.category === "dealer" ? "#f59e0b" : (area.themeColor || "#38bdf8")));
+              centerCircle.setAttribute("class", "poi-center");
+              g.appendChild(centerCircle);
+
+              // Label Teks Sub-Daerah
+              const text = document.createElementNS(SVG_NS, "text");
+              text.setAttribute("y", "-18");
+              text.setAttribute("text-anchor", "middle");
+              text.setAttribute("fill", isSelected ? "#ffffff" : "#cbd5e1");
+              text.setAttribute("font-size", isSelected ? "11" : "10");
+              text.setAttribute("font-weight", isSelected ? "700" : "500");
+              text.setAttribute("letter-spacing", "0.5");
+              text.textContent = loc.name;
+              g.appendChild(text);
+
+              // Event Klik Memilih Lokasi
+              g.addEventListener("click", () => {
+                selectedAreaId = areaKey;
+                selectedLocationId = locKey;
+                renderPoiNodes();
+                renderSelectedLocationDetail();
+              });
+
+              poiNodesLayer.appendChild(g);
+            });
+          });
+        }
+
+        // 4. Render Panel Detail Lokasi Terpilih
+        function renderSelectedLocationDetail() {
+          if (!adishaData) return;
+          const area = adishaData.regions?.[selectedAreaId];
+          const loc = area?.locations?.[selectedLocationId];
+          if (!loc) return;
+
+          locTitle.textContent = loc.name;
+          locRegionName.textContent = area.name;
+          locDangerLevel.textContent = area.dangerLevel || "Aman";
+          locCatTag.textContent = (loc.category || "Eksplorasi").toUpperCase();
+          if (loc.category === "dealer") {
+            locCatTag.style.background = "rgba(245, 158, 11, 0.25)";
+            locCatTag.style.color = "#fbbf24";
+          } else {
+            locCatTag.style.background = "rgba(56, 189, 248, 0.2)";
+            locCatTag.style.color = "#38bdf8";
+          }
+
+          locCoordsLabel.textContent = `[X: ${loc.coords?.x || 0}, Y: ${loc.coords?.y || 0}]`;
+          locDescText.textContent = loc.description || "Sub-lokasi unik di dunia Adisha.";
+
+          // Fasilitas List
+          locFacilitiesList.innerHTML = "";
+          const facilities = loc.facilities || ["Santai & Interaksi"];
+          facilities.forEach((f) => {
+            const span = document.createElement("span");
+            span.className = "effect-tag";
+            span.textContent = f.replace(/_/g, " ");
+            locFacilitiesList.appendChild(span);
+          });
+
+          // Cek Apakah Pemain Berada di Lokasi Ini
+          const isPlayerHere =
+            playerData?.currentAreaId === selectedAreaId &&
+            playerData?.currentLocationId === selectedLocationId;
+
+          if (isPlayerHere) {
+            roamBanner.innerHTML = `
+              <div class="current-pos-pill">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>Kamu Sedang Berada di Sini</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);">
+                Pilih tab di bawah untuk beraktivitas
+              </div>
+            `;
+          } else {
+            // Cek Izin Akses Kendaraan ke Tambang Raksasa
+            const requiresVehicle = area.requiresVehicle;
+            const hasVehicle = !!playerData?.vehicle;
+            const accessBlocked = requiresVehicle && !hasVehicle;
+
+            // Hitung Biaya Roam (dengan diskon motor jika ada)
+            const isCrossRegion = playerData?.currentAreaId !== selectedAreaId;
+            let roamCost = (loc.roamCost || 5) + (isCrossRegion ? 12 : 0);
+            if (playerData?.activeVehicle?.permanentBuffs?.staminaDiscountPercent) {
+              const disc = playerData.activeVehicle.permanentBuffs.staminaDiscountPercent / 100;
+              roamCost = Math.max(2, Math.round(roamCost * (1 - disc)));
+            }
+
+            const canRoam = (playerData?.stamina || 0) >= roamCost && !accessBlocked;
+
+            if (accessBlocked) {
+              roamBanner.innerHTML = `
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#f87171;">
+                  <i class="fa-solid fa-lock"></i>
+                  <span>Medan Tambang Wajib Motor</span>
+                </div>
+                <button class="btn-roam-go" disabled style="background:#334155;">
+                  <i class="fa-solid fa-ban"></i>
+                  <span>Butuh Kendaraan</span>
+                </button>
+              `;
+            } else {
+              roamBanner.innerHTML = `
+                <div class="roam-cost-box">
+                  <i class="fa-solid fa-shoe-prints" style="color:#38bdf8;"></i>
+                  <span>Biaya Jelajah:</span>
+                  <span class="roam-cost-badge">${roamCost} Stamina ${playerData?.vehicle ? '(Hemat Motor)' : ''}</span>
+                </div>
+                <button class="btn-roam-go" id="btnRoamAction" ${!canRoam ? "disabled" : ""}>
+                  <i class="fa-solid fa-person-walking"></i>
+                  <span>${canRoam ? "Jelajahi ke Tempat Ini" : "Stamina Kurang"}</span>
+                </button>
+              `;
+
+              const btnRoam = document.getElementById("btnRoamAction");
+              if (btnRoam && canRoam) {
+                btnRoam.addEventListener("click", () => executeRoam(selectedAreaId, selectedLocationId));
+              }
+            }
+          }
+
+          // Render Tab Kerja
+          renderWorkTab(loc, isPlayerHere);
+
+          // Render Tab Toko & Dealer Showroom
+          renderShopAndDealerTab(loc, isPlayerHere);
+
+          // Render Tab NPC
+          renderNpcTab(loc);
+        }
+
+        // 5. Render Tab Pekerjaan
+        function renderWorkTab(loc, isPlayerHere) {
+          if (!loc.workAvailable) {
+            workAvailableContent.style.display = "none";
+            noWorkMessage.style.display = "block";
+            return;
+          }
+
+          workAvailableContent.style.display = "block";
+          noWorkMessage.style.display = "none";
+
+          jobTitleText.textContent = loc.jobTitle || "Pekerja Lapangan";
+          const reward = loc.workReward || { currency: "SC", amount: 30, exp: 5 };
+          jobWageText.textContent = `Upah: +${reward.amount} ${reward.currency} & +${reward.exp} EXP`;
+
+          // Evaluasi Syarat Minimum Statistik
+          const reqs = loc.workRequirements || {};
+          const playerStats = playerData?.stats || { strength: 5, intelligence: 5, agility: 5, charisma: 5 };
+
+          jobReqList.innerHTML = "";
+          let allPassed = true;
+
+          const statKeys = [
+            { key: "strength", label: "Kekuatan Fisik (STR)", icon: "fa-solid fa-dumbbell" },
+            { key: "intelligence", label: "Kecerdasan (INT)", icon: "fa-solid fa-brain" },
+            { key: "agility", label: "Ketangkasan (AGI)", icon: "fa-solid fa-wind" },
+            { key: "charisma", label: "Karisma & Wibawa (CHA)", icon: "fa-solid fa-comments" },
+          ];
+
+          statKeys.forEach((s) => {
+            const reqVal = reqs[s.key] || 0;
+            if (reqVal > 0) {
+              const currentVal = playerStats[s.key] || 0;
+              const isPass = currentVal >= reqVal;
+              if (!isPass) allPassed = false;
+
+              const row = document.createElement("div");
+              row.className = "req-item-row";
+              row.innerHTML = `
+                <span><i class="${s.icon}" style="width:16px;color:#94a3b8;"></i> ${s.label} Min. ${reqVal}</span>
+                <span class="${isPass ? "stat-badge-pass" : "stat-badge-fail"}">
+                  ${isPass ? `<i class="fa-solid fa-check"></i> Lolos (${currentVal})` : `<i class="fa-solid fa-xmark"></i> Kurang (${currentVal}/${reqVal})`}
+                </span>
+              `;
+              jobReqList.appendChild(row);
+            }
+          });
+
+          // Cek Stamina Kerja (10 Stamina)
+          const hasStamina = (playerData?.stamina || 0) >= 10;
+          const canWorkNow = isPlayerHere && allPassed && hasStamina;
+
+          btnDoWork.disabled = !canWorkNow;
+          if (!isPlayerHere) {
+            btnDoWork.innerHTML = `<i class="fa-solid fa-ban"></i> Jelajahi ke Sini Dulu`;
+          } else if (!allPassed) {
+            btnDoWork.innerHTML = `<i class="fa-solid fa-lock"></i> Syarat Statistik Belum Cukup`;
+          } else if (!hasStamina) {
+            btnDoWork.innerHTML = `<i class="fa-solid fa-battery-empty"></i> Stamina Lelah (<10)`;
+          } else {
+            btnDoWork.innerHTML = `<i class="fa-solid fa-person-digging"></i> Mulai Bekerja (-10 Stamina)`;
+          }
+
+          btnDoWork.onclick = () => {
+            if (canWorkNow) executeWork(selectedAreaId, selectedLocationId);
+          };
+        }
+
+        // 6. Render Tab Toko & Showroom Dealer Motor
+        function renderShopAndDealerTab(loc, isPlayerHere) {
+          const isDealer = loc.category === "dealer";
+          const vehicleId = loc.vehicleId;
+          const vehicle = isDealer && adishaData?.vehicles ? adishaData.vehicles[vehicleId] : null;
+
+          // Render Box Showroom jika berada di dealer
+          if (isDealer && vehicle) {
+            dealerShowroomBox.style.display = "block";
+            const userOwnsThis = playerData?.vehicle === vehicle.id;
+            const userHasOther = playerData?.vehicle && !userOwnsThis;
+            const currentOwnedVehicle = userHasOther && adishaData?.vehicles ? adishaData.vehicles[playerData.vehicle] : null;
+            const resaleRefund = currentOwnedVehicle ? Math.floor(currentOwnedVehicle.price * 0.7) : 0;
+
+            const currency = vehicle.currency || "SC";
+            let userBal = 0;
+            if (currency === "SC") userBal = playerData?.sukamajuCoins || 0;
+            else if (currency === "PD") userBal = playerData?.pratamaDollars || 0;
+            else if (currency === "VB") userBal = playerData?.scholarshipVouchers || 0;
+
+            const canAfford = userBal >= vehicle.price;
+
+            let actionHtml = "";
+            if (!isPlayerHere) {
+              actionHtml = `<button class="btn-buy-item" disabled style="width:100%;"><i class="fa-solid fa-ban"></i> Jelajahi ke Dealer Dulu</button>`;
+            } else if (userOwnsThis) {
+              actionHtml = `<div class="current-pos-pill" style="width:100%;justify-content:center;"><i class="fa-solid fa-check"></i> Motor Aktif yang Sedang Kamu Kendarai</div>`;
+            } else if (userHasOther) {
+              actionHtml = `
+                <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:var(--r-md);padding:10px;margin-bottom:8px;font-size:11px;color:#fca5a5;">
+                  <i class="fa-solid fa-circle-exclamation"></i> Kamu memiliki <b>${currentOwnedVehicle?.name || 'motor lain'}</b>. Pemain hanya boleh memiliki 1 kendaraan aktif.
+                </div>
+                <button class="btn-buy-item" id="btnSellThenBuy" style="width:100%;background:#ef4444;color:#fff;">
+                  Jual ${currentOwnedVehicle?.name || 'Motor Lama'} (Refund 70%: +${resaleRefund} ${currentOwnedVehicle?.currency})
+                </button>
+              `;
+            } else {
+              actionHtml = `
+                <button class="btn-buy-item" id="btnBuyMotor" ${!canAfford ? "disabled" : ""} style="width:100%;padding:10px;font-size:13px;">
+                  <i class="fa-solid fa-motorcycle"></i> Beli ${vehicle.name} seharga ${vehicle.price} ${currency}
+                </button>
+              `;
+            }
+
+            dealerShowroomBox.innerHTML = `
+              <div class="vehicle-showroom-card">
+                <div class="v-showroom-header">
+                  <div class="v-showroom-icon">${vehicle.icon || "🏍️"}</div>
+                  <div>
+                    <div class="v-showroom-title">${vehicle.name}</div>
+                    <div class="v-showroom-subtitle">${vehicle.vehicleType} · ${vehicle.price} ${vehicle.currency}</div>
+                  </div>
+                </div>
+                <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5;">
+                  ${vehicle.description}
+                </p>
+                <div class="v-buff-container">
+                  <div style="font-weight:700;color:#34d399;"><i class="fa-solid fa-shield"></i> Efek Permanen:</div>
+                  <div style="color:var(--text-secondary);">${vehicle.permanentBuffs?.description || 'Diskon stamina jelajah'}</div>
+                  <div style="font-weight:700;color:#fbbf24;margin-top:4px;"><i class="fa-solid fa-bolt"></i> Efek Temporer (Buff):</div>
+                  <div style="color:var(--text-secondary);">${vehicle.temporaryBuff?.name}: ${vehicle.temporaryBuff?.description}</div>
+                  <div style="font-weight:700;color:#38bdf8;margin-top:4px;"><i class="fa-solid fa-key"></i> Hak Akses:</div>
+                  <div style="color:var(--text-secondary);">Membuka akses resmi ke Kawasan Tambang Raksasa Adisha.</div>
+                </div>
+                ${actionHtml}
+              </div>
+            `;
+
+            const btnBuyMotor = dealerShowroomBox.querySelector("#btnBuyMotor");
+            if (btnBuyMotor && canAfford && isPlayerHere) {
+              btnBuyMotor.addEventListener("click", () => executeBuyVehicle(vehicle.id));
+            }
+
+            const btnSellThenBuy = dealerShowroomBox.querySelector("#btnSellThenBuy");
+            if (btnSellThenBuy && isPlayerHere) {
+              btnSellThenBuy.addEventListener("click", () => executeSellVehicle());
+            }
+          } else {
+            dealerShowroomBox.style.display = "none";
+          }
+
+          // Render Katalog Belanja Makanan / Barang
+          const items = loc.shopItems || [];
+          if (items.length === 0 && !isDealer) {
+            shopItemsContainer.style.display = "none";
+            noShopMessage.style.display = "block";
+            return;
+          }
+
+          if (items.length > 0) {
+            shopItemsContainer.style.display = "block";
+            noShopMessage.style.display = "none";
+            shopItemsContainer.innerHTML = "";
+
+            items.forEach((item) => {
+              const card = document.createElement("div");
+              card.className = "shop-item-card";
+
+              const currency = item.currency || "SC";
+              let userBal = 0;
+              if (currency === "SC") userBal = playerData?.sukamajuCoins || 0;
+              else if (currency === "PD") userBal = playerData?.pratamaDollars || 0;
+              else if (currency === "VB") userBal = playerData?.scholarshipVouchers || 0;
+
+              const canAfford = userBal >= item.price;
+              const canBuy = isPlayerHere && canAfford;
+
+              let effectTagsHtml = "";
+              if (item.restores) {
+                if (item.restores.hp) effectTagsHtml += `<span class="effect-tag">+${item.restores.hp} HP</span>`;
+                if (item.restores.stamina) effectTagsHtml += `<span class="effect-tag">+${item.restores.stamina} Stamina</span>`;
+                if (item.restores.hunger) effectTagsHtml += `<span class="effect-tag">+${item.restores.hunger} Kenyang</span>`;
+                if (item.restores.thirst) effectTagsHtml += `<span class="effect-tag">+${item.restores.thirst} Hidrasi</span>`;
+              }
+
+              card.innerHTML = `
+                <div class="shop-item-left">
+                  <div class="shop-item-emoji">${item.icon || "📦"}</div>
+                  <div>
+                    <div class="shop-item-title">${item.name}</div>
+                    <div class="shop-item-desc">${item.price} ${currency}</div>
+                    <div class="shop-item-effects">${effectTagsHtml}</div>
+                  </div>
+                </div>
+                <button class="btn-buy-item" ${!canBuy ? "disabled" : ""}>
+                  ${!isPlayerHere ? "Jauh" : !canAfford ? "Koin Kurang" : "Beli"}
+                </button>
+              `;
+
+              const btnBuy = card.querySelector(".btn-buy-item");
+              if (btnBuy && canBuy) {
+                btnBuy.addEventListener("click", () => executeBuy(selectedAreaId, selectedLocationId, item.itemId));
+              }
+
+              shopItemsContainer.appendChild(card);
+            });
+          } else {
+            shopItemsContainer.style.display = "none";
+            if (!isDealer) noShopMessage.style.display = "block";
+          }
+        }
+
+        // 7. Render Tab Penduduk / NPC
+        function renderNpcTab(loc) {
+          const npcs = loc.residentNpcs || [];
+          if (npcs.length === 0) {
+            npcListContainer.style.display = "none";
+            noNpcMessage.style.display = "block";
+            return;
+          }
+
+          npcListContainer.style.display = "block";
+          noNpcMessage.style.display = "none";
+          npcListContainer.innerHTML = "";
+
+          npcs.forEach((npc) => {
+            const card = document.createElement("div");
+            card.className = "npc-card";
+            card.innerHTML = `
+              <div class="npc-info-block">
+                <div class="npc-avatar-circle">${npc.avatar || "👤"}</div>
+                <div>
+                  <div class="npc-name">${npc.name}</div>
+                  <div class="npc-role">${npc.role || "Penduduk"}</div>
+                </div>
+              </div>
+              <button class="btn-buy-item" style="padding:4px 10px;font-size:11px;">
+                <i class="fa-solid fa-comment-dots"></i> Sapa
+              </button>
+            `;
+
+            const btnGreet = card.querySelector("button");
+            btnGreet.addEventListener("click", () => {
+              showToast(`"${npc.name}" tersenyum ramah dan menyapamu hangat!`, "fa-solid fa-face-smile");
+            });
+
+            npcListContainer.appendChild(card);
+          });
+        }
+
+        // 8. Eksekusi Aksi Roam (Pindah Tempat)
+        async function executeRoam(targetAreaId, targetLocationId) {
+          try {
+            roamFlash.classList.add("active");
+            const res = await fetch("/api/survival/world/roam", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ targetAreaId, targetLocationId }),
+            });
+            const data = await res.json();
+
+            setTimeout(() => {
+              roamFlash.classList.remove("active");
+            }, 300);
+
+            if (data.success) {
+              playerData.currentAreaId = targetAreaId;
+              playerData.currentLocationId = targetLocationId;
+              playerData.stamina = data.newStamina;
+
+              updateHudView();
+              renderPoiNodes();
+              renderSelectedLocationDetail();
+              showToast(data.message || "Berhasil berpindah tempat!", "fa-solid fa-shoe-prints");
+            } else {
+              showToast(data.error || "Gagal berpindah lokasi.", "fa-solid fa-triangle-exclamation");
+            }
+          } catch (err) {
+            roamFlash.classList.remove("active");
+            showToast("Terjadi kesalahan jaringan.", "fa-solid fa-triangle-exclamation");
+          }
+        }
+
+        // 9. Eksekusi Aksi Bekerja
+        async function executeWork(areaId, locationId) {
+          try {
+            btnDoWork.disabled = true;
+            btnDoWork.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Bekerja...`;
+
+            const res = await fetch("/api/survival/world/work", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ areaId, locationId }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              playerData.stamina = data.newStamina;
+              if (data.reward?.currency === "SC") playerData.sukamajuCoins = data.newBalance;
+              else if (data.reward?.currency === "PD") playerData.pratamaDollars = data.newBalance;
+              else if (data.reward?.currency === "VB") playerData.scholarshipVouchers = data.newBalance;
+
+              updateHudView();
+              renderSelectedLocationDetail();
+              showToast(data.message, "fa-solid fa-sack-dollar");
+            } else {
+              showToast(data.error || "Gagal bekerja.", "fa-solid fa-triangle-exclamation");
+              renderSelectedLocationDetail();
+            }
+          } catch (err) {
+            showToast("Terjadi kesalahan jaringan saat bekerja.", "fa-solid fa-triangle-exclamation");
+            renderSelectedLocationDetail();
+          }
+        }
+
+        // 10. Eksekusi Pembelian Barang / Makanan
+        async function executeBuy(areaId, locationId, itemId) {
+          try {
+            const res = await fetch("/api/survival/world/shop/buy", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ areaId, locationId, itemId }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              const item = data.item;
+              if (item.currency === "SC") playerData.sukamajuCoins = data.newBalance;
+              else if (item.currency === "PD") playerData.pratamaDollars = data.newBalance;
+              else if (item.currency === "VB") playerData.scholarshipVouchers = data.newBalance;
+
+              if (data.stats) {
+                playerData.hp = data.stats.hp ?? playerData.hp;
+                playerData.stamina = data.stats.stamina ?? playerData.stamina;
+                playerData.hunger = data.stats.hunger ?? playerData.hunger;
+                playerData.thirst = data.stats.thirst ?? playerData.thirst;
+              }
+
+              updateHudView();
+              renderSelectedLocationDetail();
+              showToast(data.message || `Berhasil membeli ${item.name}!`, "fa-solid fa-bag-shopping");
+            } else {
+              showToast(data.error || "Gagal melakukan pembelian.", "fa-solid fa-triangle-exclamation");
+            }
+          } catch (err) {
+            showToast("Terjadi kesalahan koneksi belanja.", "fa-solid fa-triangle-exclamation");
+          }
+        }
+
+        // 11. Eksekusi Pembelian Motor di Dealer
+        async function executeBuyVehicle(vehicleId) {
+          try {
+            const res = await fetch("/api/survival/world/vehicle/buy", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ vehicleId }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              playerData.vehicle = data.vehicle.id;
+              playerData.activeVehicle = data.vehicle;
+              if (data.vehicle.currency === "SC") playerData.sukamajuCoins = data.newBalance;
+              else if (data.vehicle.currency === "PD") playerData.pratamaDollars = data.newBalance;
+              else if (data.vehicle.currency === "VB") playerData.scholarshipVouchers = data.newBalance;
+
+              updateHudView();
+              renderSelectedLocationDetail();
+              showToast(data.message, "fa-solid fa-motorcycle");
+            } else {
+              showToast(data.error || "Gagal membeli motor.", "fa-solid fa-triangle-exclamation");
+            }
+          } catch (err) {
+            showToast("Terjadi kesalahan koneksi saat membeli motor.", "fa-solid fa-triangle-exclamation");
+          }
+        }
+
+        // 12. Eksekusi Penjualan Motor Lama (Refund 70%)
+        async function executeSellVehicle() {
+          try {
+            const res = await fetch("/api/survival/world/vehicle/sell", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({}),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              const resale = data.resale;
+              if (resale.currency === "SC") playerData.sukamajuCoins = data.newBalance;
+              else if (resale.currency === "PD") playerData.pratamaDollars = data.newBalance;
+              else if (resale.currency === "VB") playerData.scholarshipVouchers = data.newBalance;
+
+              playerData.vehicle = null;
+              playerData.activeVehicle = null;
+
+              updateHudView();
+              renderSelectedLocationDetail();
+              showToast(data.message, "fa-solid fa-hand-holding-dollar");
+            } else {
+              showToast(data.error || "Gagal menjual kendaraan.", "fa-solid fa-triangle-exclamation");
+            }
+          } catch (err) {
+            showToast("Terjadi kesalahan saat menjual kendaraan.", "fa-solid fa-triangle-exclamation");
+          }
+        }
+
+        // Mulai aplikasi
+        fetchInitialData();
+      })();
+    </script>
+  </body>
+</html>
