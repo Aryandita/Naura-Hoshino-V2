@@ -65,7 +65,7 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
   <tr>
     <td align="center">
       <h3>🎮 Naura Wilds & Currency V2</h3>
-      <p>Sistem moneter tertutup 4-channel (Infrastruktur, Lotre, Subsidi, Pedagang), One-Way Bridge, ketahanan alat (durability), serta simulasi kota otonom (<code>/survival town</code>).</p>
+      <p>Sistem moneter tertutup 4-channel (Infrastruktur, Lotre, Subsidi, Pedagang), One-Way Bridge, ketahanan alat (durability), serta simulasi kota otonom (<code>/survival town</code>, <code>/survival chronicle</code>, <code>/survival raidplan</code>).</p>
     </td>
     <td align="center">
       <h3>💬 Discord Components V2</h3>
@@ -78,12 +78,12 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
   </tr>
   <tr>
     <td align="center">
-      <h3>🗄️ Polyglot Persistence</h3>
-      <p>Pemisahan domain transaksional PostgreSQL (45 migrasi terisolasi), audit dokumen MongoDB, lock terdistribusi Redis, dan fallback darurat SQLite.</p>
+      <h3>📊 Economy Analytics</h3>
+      <p>Analisis tren ekonomi server real-time dengan deteksi inflasi/deflasi otomatis dan rekomendasi balancing (<code>/economy analyze</code>).</p>
     </td>
     <td align="center">
-      <h3>🌍 Sistem Bilingual</h3>
-      <p>Dukungan penuh Bahasa Indonesia dan English yang tersimpan secara personal per-pengguna dengan paritas kamus 100% konsisten.</p>
+      <h3>🌍 Sistem Multilingual</h3>
+      <p>Dukungan penuh 4 bahasa (Indonesia, English, Español, 日本語) yang tersimpan secara personal per-pengguna dengan paritas kamus 100% konsisten.</p>
     </td>
     <td align="center">
       <h3>🎨 Dedicated Canvas Worker</h3>
