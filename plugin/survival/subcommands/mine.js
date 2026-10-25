@@ -121,12 +121,18 @@ module.exports = {
       );
     }
 
+    const inGameHour = (new Date().getUTCHours() * 2) % 24;
+    const bg = survivalUI.getSurvivalBackground("tambang", inGameHour);
+    const files = bg ? [bg.attachment] : [];
+
     const minePayload = buildContainerV2({
       accentColorHex: survivalUI.getColor("amber"),
       authorName: "Naura Ancient Cave",
       title: `${e("thinking", "\u26CF\uFE0F")} Menambang di Gua Kuno`,
       iconURL: user.displayAvatarURL(),
       expression: "info",
+      topBannerAttachmentName: bg?.attachmentName,
+      files,
       description: [
         "Ada kilau aneh dari bebatuan di depanmu. Naura ikut menahan napas...",
         "",
@@ -139,6 +145,7 @@ module.exports = {
     // Orkestrator survival sudah memanggil deferReply, jadi harus editReply.
     const message = await interaction.editReply({
       ...minePayload,
+      files,
       embeds: [],
     });
 
@@ -274,11 +281,13 @@ module.exports = {
         })),
         weatherBonus: pulse.pulseHeader,
         warning: energyRes.warning || "",
+        topBannerAttachmentName: bg?.attachmentName,
+        files,
         buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
       });
 
       await interaction
-        .editReply({ ...successPayload, embeds: [] })
+        .editReply({ ...successPayload, files, embeds: [] })
         .catch(() => {});
 
       await questGen

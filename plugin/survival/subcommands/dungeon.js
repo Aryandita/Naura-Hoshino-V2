@@ -295,6 +295,10 @@ module.exports = {
             collector.stop("lose");
             await rewards.applyDefeat(user.id);
 
+            const bgDanger = survivalUI.getSurvivalBackground("tambang", "malam");
+            const dangerFiles = bgDanger ? [bgDanger.attachment] : [];
+            const dangerAttachmentName = bgDanger ? bgDanger.attachmentName : null;
+
             return i.editReply(
               survivalUI.buildDangerZoneCard({
                 user,
@@ -302,6 +306,8 @@ module.exports = {
                 description: `**${enemy.name}** terlalu kuat kali ini. Gatot menyeretmu keluar gua dan Naura menunggumu di desa dengan air hangat. Pulihkan fisikmu sebelum mencoba lagi!`,
                 threatLevel: floor >= 20 ? "EKSTREM" : floor >= 10 ? "TINGGI" : "SEDANG",
                 dangerWarning: `HP kamu habis di lantai ${floor}. Seluruh stamina terkuras!`,
+                topBannerAttachmentName: dangerAttachmentName,
+                files: dangerFiles,
                 buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
               }),
             );

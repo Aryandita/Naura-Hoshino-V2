@@ -22,7 +22,7 @@ const {
   dropLine,
 } = require("../../../src/survival/helpers/couponRewards");
 
-// Perampokan terjadi di kota, jadi rampasan dan dendanya memakai Naura Coin.
+// Perampokan terjadi di kota, jadi rampasan dan dendanya memakai Pratama Dollar (PD).
 const LOOT_MIN = 50;
 const LOOT_MAX = 150;
 const BANK_PENALTY = 50;
@@ -144,7 +144,7 @@ module.exports = {
       return interaction.reply(payload);
     }
 
-    // GAGAL: seluruh NSF di kantong disita dan bank memotong denda Naura Coin.
+    // GAGAL: seluruh SC di kantong disita dan bank memotong denda Pratama Dollar (PD).
     const seized = survival.starFragments || 0;
     if (seized > 0) {
       await cacheManager.debitUserSurvival(user.id, "starFragments", seized);

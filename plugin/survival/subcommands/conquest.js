@@ -10,6 +10,7 @@ const ui = require("../../../src/config/ui");
 const territoryWarEngine = require("../../../src/services/territoryWarEngine");
 const { drawTerritoryMap } = require("../../../src/canvas/territoryCanvas");
 const GuildClan = require("../../../src/models/GuildClan");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 module.exports = {
   name: "conquest",
@@ -50,7 +51,7 @@ module.exports = {
       const territoryList = territories
         .map(
           (t) =>
-            `**• ${t.name}** (\`${t.territoryId}\`)\n  - Penguasa: **${t.clanName || "Netral"}** | Poin: \`${t.controlPoints}/1000\`\n  - Pajak: \`${t.taxYield} ⭐/jam\` | *${t.buffEffect}*`,
+            `**• ${t.name}** (\`${t.territoryId}\`)\n  - Penguasa: **${t.clanName || "Netral"}** | Poin: \`${t.controlPoints}/1000\`\n  - Pajak: \`${t.taxYield} SC/jam\` | *${t.buffEffect}*`,
         )
         .join("\n\n");
 
@@ -69,6 +70,7 @@ module.exports = {
           ``,
           `-# 💡 *Gunakan \`/survival rpg conquest aksi:attack sektor:SECTOR_DOCKS energi:50\` untuk menyerang!*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("town", userId)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -167,9 +169,10 @@ module.exports = {
         description: [
           `Hasil panen pajak dari **${taxRes.territoriesCount} Sektor** telah berhasil disetorkan!`,
           ``,
-          `💵 **Total Setoran Kas:** \`+${taxRes.claimedTax.toLocaleString("id-ID")} Star Fragments\``,
+          `💵 **Total Setoran Kas:** \`+${taxRes.claimedTax.toLocaleString("id-ID")} Sukamaju Koin (SC)\``,
           `🏰 **Klan Penerima:** **${userClan.name}**`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("town", userId)],
         footerText: ui.getFooter("survival"),
       });
 

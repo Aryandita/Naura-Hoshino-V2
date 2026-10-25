@@ -47,7 +47,7 @@ module.exports = {
     if (!debitSuccess?.ok) {
       return ui.sendError(
         interaction,
-        `Kamu membutuhkan **${banner.cost} ${banner.currency === "coin" ? "Naura Coin" : "Naura Coupon"}** untuk roll di banner ini!`,
+        `Kamu membutuhkan **${banner.cost} ${banner.currency === "coin" ? "Pratama Dollar (PD)" : "Voucher Beasiswa (VB)"}** untuk roll di banner ini!`,
         true,
       );
     }

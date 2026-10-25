@@ -237,7 +237,7 @@ module.exports = {
       if (i.customId === "btn_pass_buy_prem") {
         if ((freshSurvival.coupons || 0) < STAR_PASS_COST_COUPONS) {
           return i.reply({
-            content: `❌ Naura Coupon kamu tidak cukup. Membutuhkan ${STAR_PASS_COST_COUPONS} Kupon (kamu memiliki ${freshSurvival.coupons || 0} Kupon).`,
+            content: `❌ Voucher Beasiswa (VB) kamu tidak cukup. Membutuhkan ${STAR_PASS_COST_COUPONS} VB (kamu memiliki ${freshSurvival.coupons || 0} VB).`,
             flags: MessageFlags.Ephemeral,
           });
         }
@@ -245,7 +245,7 @@ module.exports = {
         const debitRes = await cacheManager.debitUserSurvival(user.id, "coupons", STAR_PASS_COST_COUPONS);
         if (!debitRes?.ok) {
           return i.reply({
-            content: "❌ Gagal memotong Naura Coupon. Saldo tidak mencukupi.",
+            content: "❌ Gagal memotong Voucher Beasiswa (VB). Saldo tidak mencukupi.",
             flags: MessageFlags.Ephemeral,
           });
         }

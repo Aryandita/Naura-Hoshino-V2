@@ -26,28 +26,28 @@ const DIFFICULTIES = [
     label: "Rebirth Mode MUDAH",
     emojiKey: "diff_easy",
     fallback: "\uD83D\uDFE2",
-    perk: "EXP +15%, NSF +5%, penurunan stamina -10%",
+    perk: "EXP +15%, SC +5%, penurunan stamina -10%",
   },
   {
     value: "Normal",
     label: "Rebirth Mode NORMAL",
     emojiKey: "diff_normal",
     fallback: "\uD83D\uDFE1",
-    perk: "EXP +10%, NSF +3%, penurunan stamina -5%",
+    perk: "EXP +10%, SC +3%, penurunan stamina -5%",
   },
   {
     value: "Sulit",
     label: "Rebirth Mode SULIT",
     emojiKey: "diff_hard",
     fallback: "\uD83D\uDFE0",
-    perk: "EXP +5%, NSF +2,5%, penurunan stamina -3%",
+    perk: "EXP +5%, SC +2,5%, penurunan stamina -3%",
   },
   {
     value: "Ekstrim",
     label: "Rebirth Mode EKSTRIM",
     emojiKey: "diff_extreme",
     fallback: "\uD83D\uDD34",
-    perk: "musuh 100% lebih kuat, harga toko melonjak, EXP & NSF -20%. Tamatkan untuk gelar **The Strongest & Smartest Survivor**",
+    perk: "musuh 100% lebih kuat, harga toko melonjak, EXP & SC -20%. Tamatkan untuk gelar **The Strongest & Smartest Survivor**",
   },
 ];
 
@@ -85,7 +85,7 @@ module.exports = {
     );
 
     const introPayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFC0CB",
+      accentColorHex: survivalUI.getColor("moss"),
       authorName: "Gerbang Reinkarnasi",
       title: `${e("impressed", "\uD83C\uDF0C")} Kamu sudah sampai di puncak, lho!`,
       iconURL: user.displayAvatarURL(),
@@ -94,7 +94,7 @@ module.exports = {
         "",
         "Reinkarnasi akan **mengorbankan uang, properti, level, dan seluruh barangmu** demi bonus permanen di kehidupan berikutnya.",
         "",
-        `${e("naura", "\uD83D\uDC96")} **Yang tetap kamu bawa:** Naura Coupon, khasiat permanen (Mahkota Keberuntungan dan kawan-kawannya), serta album kenangan fotomu. Itu kenangan dan hasil kerja kerasmu, jadi Naura nggak akan ambil.`,
+        `${e("naura", "\uD83D\uDC96")} **Yang tetap kamu bawa:** Voucher Beasiswa (VB), khasiat permanen (Mahkota Keberuntungan dan kawan-kawannya), serta album kenangan fotomu. Itu kenangan dan hasil kerja kerasmu, jadi Naura nggak akan ambil.`,
         "",
         "*Pilih tingkat kesulitan kehidupan barumu:*",
         ...DIFFICULTIES.map(
@@ -167,7 +167,7 @@ module.exports = {
       survival.changed("rpg_state", true);
 
       // Dompet kota ikut dikosongkan; sebelumnya hanya tabungan yang direset
-      // sehingga pemain bisa membawa seluruh Naura Coin melewati reinkarnasi.
+      // sehingga pemain bisa membawa seluruh Pratama Dollar (PD) melewati reinkarnasi.
       // Rule 1.10: reset UserProfile dilakukan lewat cacheManager.resetProfileForRebirth
       // agar antrean tulis dibersihkan dan cache diperbarui secara aman.
       await cacheManager.resetProfileForRebirth(user.id);
@@ -206,7 +206,7 @@ module.exports = {
       const couponEmoji = currency.emojiOf(currency.COUPON);
 
       const successPayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        accentColorHex: survivalUI.getColor("emerald"),
         authorName: "Gerbang Reinkarnasi",
         title: `${e("cheers", "\u2728")} Kamu lahir kembali!`,
         iconURL: user.displayAvatarURL(),
@@ -215,7 +215,7 @@ module.exports = {
           "",
           `Kamu terbangun sebagai sosok baru di tingkat kesulitan **${difficulty.toUpperCase()}**, tepat di Desa Pemula.`,
           coupon.gained
-            ? `${couponEmoji} Naura titipkan **${coupon.gained} Naura Coupon** sebagai tanda hormat atas keberanianmu. Total kuponmu sekarang **${coupon.total}**.`
+            ? `${couponEmoji} Naura titipkan **${coupon.gained} Voucher Beasiswa (VB)** sebagai tanda hormat atas keberanianmu. Total kuponmu sekarang **${coupon.total}**.`
             : "",
           "",
           `${e("read", "\uD83D\uDCD6")} Reinkarnasi ke-**${carriedState.rebirth_count}**. Mulai lagi petualanganmu!`,

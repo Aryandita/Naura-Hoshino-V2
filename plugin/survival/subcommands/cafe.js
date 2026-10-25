@@ -7,6 +7,7 @@ const {
   ButtonStyle,
   AttachmentBuilder,
   ComponentType,
+  MessageFlags,
 } = require("discord.js");
 const {
   buildContainerV2,
@@ -53,7 +54,7 @@ module.exports = {
           .filter(([, count]) => Number(count) > 0)
           .map(([id, count]) => {
             const r = getRecipeById(id);
-            return `- ${r ? r.emoji : "🍽️"} **${r ? r.name : id}**: \`${count} porsi\` (*${r ? r.price : 200} ⭐*)`;
+            return `- ${r ? r.emoji : "🍽️"} **${r ? r.name : id}**: \`${count} porsi\` (*${r ? r.price : 200} SC*)`;
           })
           .join("\n") ||
         "_Etalase masih kosong. Masak hidangan baru untuk mulai berjualan!_";
@@ -86,7 +87,7 @@ module.exports = {
           ``,
           `⭐ **Reputasi Kafe:** \`${cafe.reputation} REP\` (Level Up: \`${cafe.level * 100} REP\`)`,
           `👥 **Total Tamu Dilayani:** \`${cafe.customersServed} Orang\``,
-          `💰 **Pendapatan Pasif Siap Klaim:** \`${Number(cafe.uncollectedRevenue || 0).toLocaleString("id-ID")} ⭐\``,
+          `💰 **Pendapatan Pasif Siap Klaim:** \`${Number(cafe.uncollectedRevenue || 0).toLocaleString("id-ID")} Sukamaju Koin (SC)\``,
           ``,
           `🍽️ **Menu Aktif di Etalase:**`,
           dishSummary,
@@ -109,7 +110,7 @@ module.exports = {
         if (btnInteraction.user.id !== userId) {
           return btnInteraction.reply({
             content: "❌ Ini adalah panel kafe milik pemain lain!",
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -124,7 +125,7 @@ module.exports = {
                 description:
                   "Belum ada akumulasi koin yang bisa diklaim saat ini. Tunggu beberapa waktu lagi!",
               }),
-              flags: 64,
+              flags: MessageFlags.Ephemeral,
             });
           }
 
@@ -132,10 +133,10 @@ module.exports = {
             ...buildContainerV2({
               accentColorHex: "#86EFAC",
               title: "💰 Pendapatan Berhasil Diklaim!",
-              description: `Kamu berhasil mengumpulkan **+${collectRes.collectedAmount.toLocaleString("id-ID")} Star Fragments** dari pendapatan pasif tokomu!`,
+              description: `Kamu berhasil mengumpulkan **+${collectRes.collectedAmount.toLocaleString("id-ID")} Sukamaju Koin (SC)** dari pendapatan pasif tokomu!`,
               footerText: ui.getFooter("survival"),
             }),
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -148,7 +149,7 @@ module.exports = {
                 description:
                   "Tidak ada makanan/minuman yang siap disajikan! Masak menu terlebih dahulu.",
               }),
-              flags: 64,
+              flags: MessageFlags.Ephemeral,
             });
           }
 
@@ -164,13 +165,13 @@ module.exports = {
               description: [
                 `Pelanggan baru saja membeli **${serveRes.soldQuantity}x ${serveRes.emoji} ${serveRes.dishName}**!`,
                 ``,
-                `💵 **Hasil Penjualan:** \`+${serveRes.earnings.toLocaleString("id-ID")} ⭐\` (Termasuk tips \`${serveRes.tips} ⭐\`)`,
+                `💵 **Hasil Penjualan:** \`+${serveRes.earnings.toLocaleString("id-ID")} SC\` (Termasuk tips \`${serveRes.tips} SC\`)`,
                 `📦 **Sisa Stok:** \`${serveRes.remainingStock} Porsi\``,
                 `👥 **Total Tamu:** \`${serveRes.customersServed} Orang\``,
               ].join("\n"),
               footerText: ui.getFooter("survival"),
             }),
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -190,7 +191,7 @@ module.exports = {
               description: recipeList,
               footerText: ui.getFooter("survival"),
             }),
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
 
@@ -207,7 +208,7 @@ module.exports = {
                 title: "Gagal Memasak",
                 description: `Bahan mentah di tas tidak cukup untuk memasak **Sakura Blossom Latte**! Kumpulkan herbal dan air bersih dari aktivitas gathering.`,
               }),
-              flags: 64,
+              flags: MessageFlags.Ephemeral,
             });
           }
 
@@ -226,7 +227,7 @@ module.exports = {
               ].join("\n"),
               footerText: ui.getFooter("survival"),
             }),
-            flags: 64,
+            flags: MessageFlags.Ephemeral,
           });
         }
       });
@@ -335,7 +336,7 @@ module.exports = {
         description: [
           `Kamu telah memanen hasil usaha dari **${collectRes.cafeName}**!`,
           ``,
-          `💰 **Total Koin Masuk:** \`+${collectRes.collectedAmount.toLocaleString("id-ID")} Star Fragments\``,
+          `💰 **Total Koin Masuk:** \`+${collectRes.collectedAmount.toLocaleString("id-ID")} Sukamaju Koin (SC)\``,
           `📈 **Level Usaha:** \`Level ${collectRes.level}\``,
         ].join("\n"),
         buttonsRow: [survivalUI.buildSurvivalActionRow("town", userId)],
@@ -375,7 +376,7 @@ module.exports = {
         if (orderRes.reason === "OUT_OF_STOCK")
           msg = `Menu \`${targetRecipe}\` di kafe <@${targetUser.id}> sedang habis!`;
         if (orderRes.reason === "INSUFFICIENT_FUNDS")
-          msg = `Saldo Star Fragments milikmu tidak cukup (${orderRes.price} ⭐)!`;
+          msg = `Saldo Sukamaju Koin (SC) milikmu tidak cukup (${orderRes.price} SC)!`;
 
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -393,7 +394,7 @@ module.exports = {
         description: [
           `Kamu berhasil membeli **1x ${orderRes.emoji} ${orderRes.dishName}** dari **${orderRes.sellerCafeName}** (<@${targetUser.id}>)!`,
           ``,
-          `💸 **Biaya:** \`${orderRes.price} Star Fragments\``,
+          `💸 **Biaya:** \`${orderRes.price} Sukamaju Koin (SC)\``,
           `✨ **Khasiat Buff Aktif:** *${orderRes.buff.description}* (Berlaku selama ${orderRes.buff.durationHours} jam)`,
           ``,
           `-# 💡 *Koin telah langsung dikirimkan ke pemilik kafe dan reputasi kafenya bertambah!*`,

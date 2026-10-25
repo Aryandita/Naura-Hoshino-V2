@@ -16,6 +16,7 @@ const ui = require("../../../src/config/ui");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const npcConfig = require("../../../src/survival/data/npcs");
 const geminiClient = require("../../../src/ai/geminiClient");
 const actions = require("../../../src/survival/helpers/npcActions");
@@ -28,6 +29,8 @@ const {
   buildActions,
   MAX_DAILY_GIFTS,
 } = require("../../../src/survival/helpers/npcHelpers");
+const storyIntegration = require("../../../src/survival/helpers/storyIntegration");
+const npcScheduleEngine = require("../../../src/survival/engines/npcScheduleEngine");
 
 /** Minta AI merangkai sapaan. Selalu ada kalimat cadangan supaya NPC tak bisu. */
 async function composeGreeting(ctx) {
@@ -105,7 +108,7 @@ module.exports = {
     });
     const profile = await cacheManager.getUserProfile(user.id);
 
-    const coin = e("nsf", "\uD83E\uDE99");
+    const coin = e("sc", e("nsf", "\uD83E\uDE99"));
     const lokasi = survival.currentLocation || "desa";
     const inGameHour = survival.inGameHour || 6;
     const timeOfDay = t(timeOfDayKey(inGameHour));
@@ -144,7 +147,7 @@ module.exports = {
 
     let lastPayloadBuilder = () =>
       buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        accentColorHex: survivalUI.getColor("moss"),
         title: `${e("happy", "\uD83D\uDC65")} ${t("npc.list_title", { location: lokasi.toUpperCase() })}`,
         description: t("npc.list_desc", {
           location: lokasi.toUpperCase(),
@@ -155,7 +158,7 @@ module.exports = {
       });
 
     const listPayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      accentColorHex: survivalUI.getColor("moss"),
       title: `${e("happy", "\uD83D\uDC65")} ${t("npc.list_title", { location: lokasi.toUpperCase() })}`,
       description: t("npc.list_desc", {
         location: lokasi.toUpperCase(),
@@ -189,13 +192,26 @@ module.exports = {
           where: { userId: user.id, npcId: currentNpcId },
         });
 
+        // Check first encounter story scene
+        const firstEncounter = await storyIntegration.checkFirstEncounter(user.id, currentNpcId);
+        if (firstEncounter && (firstEncounter.type === "first_encounter" || firstEncounter.type === "vn_scene")) {
+          // Render VN scene untuk first encounter
+          const vnPayload = await storyIntegration.renderStoryScene(firstEncounter.scene);
+          lastPayloadBuilder = () => vnPayload;
+          return i.editReply(vnPayload);
+        }
+
         const relLabel = t(`npc.rel_${npcData.relationshipLevel || 0}`);
         const affectionBar = ui.createProgressBar(npcData.affection, 100, 10);
         const giftsToday = isSameDay(npcData.lastInteraction, new Date())
           ? npcData.dailyGifts || 0
           : 0;
 
-        const aiDialog = await composeGreeting({
+        // Get NPC current state dari schedule engine
+        const npcState = npcScheduleEngine.getNpcStateAtTime(currentNpcId, inGameHour);
+        const appearanceDesc = npcScheduleEngine.getAppearanceDescription(currentNpcId, npcState.portraitVariant);
+
+        let aiDialog = await composeGreeting({
           npc,
           lang,
           lokasi,
@@ -207,8 +223,23 @@ module.exports = {
           fallback: t("npc.ai_fallback"),
         });
 
-        // Potret NPC ditampilkan di pojok kanan atas (accessory)
-        const portrait = findPortrait(npc);
+        // Enhance dengan contextual dialog jika tersedia
+        const contextualDialog = npcScheduleEngine.getContextualDialog(currentNpcId, inGameHour);
+        if (contextualDialog) {
+          aiDialog = contextualDialog;
+        }
+
+        // Potret NPC - gunakan variant portrait jika tersedia
+        let portrait = null;
+        if (npcState.portraitVariant) {
+          portrait = npcScheduleEngine.getPortraitPath(currentNpcId, npcState.portraitVariant);
+        }
+        
+        // Fallback ke default portrait
+        if (!portrait) {
+          portrait = findPortrait(npc);
+        }
+
         const files = [];
         let iconURL;
 
@@ -220,8 +251,19 @@ module.exports = {
           iconURL = interaction.client.user.displayAvatarURL({ size: 512 });
         }
 
+        // Build description dengan activity info
+        const activityInfo = npcState.isAvailable 
+          ? `\n📍 *Sedang ${npcState.activity} di ${npcState.location}*`
+          : `\n💤 *Tidak tersedia saat ini*`;
+
+        const appearanceInfo = appearanceDesc 
+          ? `\n👔 *${appearanceDesc}*`
+          : "";
+
         const description = [
           `*${npc.personality}*`,
+          activityInfo,
+          appearanceInfo,
           "",
           `**${t("npc.status")}:** ${relLabel}`,
           `**${t("npc.affection")}:** ${npcData.affection}/100`,
@@ -229,11 +271,11 @@ module.exports = {
           `-# ${t("npc.gift_left")}: ${Math.max(0, MAX_DAILY_GIFTS - giftsToday)}/${MAX_DAILY_GIFTS}`,
           "",
           `${e("chirping", "\uD83D\uDCAC")} **${npc.name}:** "${aiDialog}"`,
-        ].join("\n");
+        ].filter(line => line !== "").join("\n");
 
         lastPayloadBuilder = () =>
           buildContainerV2({
-            accentColorHex: ui.getColor("primary") || "#FFB6C1",
+            accentColorHex: survivalUI.getColor("moss"),
             authorName: `Warga ${String(lokasi).toUpperCase()} • ${npc.type === "romansa" ? "💖 Romansa" : "💙 Teman"}`,
             title: `${npc.name} (${npc.title})`,
             iconURL,
@@ -243,7 +285,7 @@ module.exports = {
           });
 
         const infoPayload = buildContainerV2({
-          accentColorHex: ui.getColor("primary") || "#FFB6C1",
+          accentColorHex: survivalUI.getColor("moss"),
           authorName: `Warga ${String(lokasi).toUpperCase()} • ${npc.type === "romansa" ? "💖 Romansa" : "💙 Teman"}`,
           title: `${npc.name} (${npc.title})`,
           iconURL,
@@ -257,6 +299,36 @@ module.exports = {
       }
 
       if (!i.isButton() || !currentNpcId) return;
+
+      if (i.customId.startsWith("vn_choice_")) {
+        const choiceIndex = parseInt(i.customId.replace("vn_choice_", ""), 10);
+        const firstMeetScene = storyIntegration.getFirstEncounterScene(currentNpcId);
+        const choice = firstMeetScene?.choices?.[choiceIndex];
+        
+        let bonusAfeksi = 0;
+        const [npcData] = await UserNPC.findOrCreate({
+          where: { userId: user.id, npcId: currentNpcId },
+        });
+
+        if (choice?.effect?.affection) {
+          bonusAfeksi = choice.effect.affection;
+          npcData.affection = Math.min(100, Math.max(0, (npcData.affection || 0) + bonusAfeksi));
+          await npcData.save({ fields: ["affection"] });
+        }
+
+        const updatedNpc = npcConfig[currentNpcId];
+        const replyPayload = buildContainerV2({
+          accentColorHex: ui.getColor("success") || "#22c55e",
+          authorName: `Pertemuan Pertama • ${updatedNpc?.name || "NPC"}`,
+          title: "✨ Tanggapan Pilihan",
+          description: `Kamu menjawab: *${choice?.label || "..."}*\n\n${updatedNpc?.name || "NPC"} tersenyum ramah kepadamu.\n${bonusAfeksi > 0 ? `💖 **+${bonusAfeksi} Afeksi**` : ""}\n\nSekarang kamu bisa mulai berinteraksi secara reguler dengan warga ini!`,
+          buttonsRow: [selectRow, buildActions(updatedNpc, npcData, t)],
+          footerText: ui.getFooter("survival"),
+        });
+
+        lastPayloadBuilder = () => replyPayload;
+        return i.editReply(replyPayload);
+      }
 
       const handler = actions[i.customId];
       if (!handler) return;

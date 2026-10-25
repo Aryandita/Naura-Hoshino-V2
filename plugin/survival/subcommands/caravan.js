@@ -57,7 +57,7 @@ module.exports = {
       const mercLines = Object.values(roster)
         .map(
           (m) =>
-            `• **${m.name}**\n  💰 Biaya: \`${m.cost} NSF\` | 🛡️ Def: \`+${m.defenseBonus}\` | 🎯 Mitigasi Risiko: \`-${m.ambushMitigation}%\``,
+            `• **${m.name}**\n  💰 Biaya: \`${m.cost} SC\` | 🛡️ Def: \`+${m.defenseBonus}\` | 🎯 Mitigasi Risiko: \`-${m.ambushMitigation}%\``,
         )
         .join("\n");
 
@@ -108,7 +108,7 @@ module.exports = {
             title: "Gagal Menyewa Pengawal",
             description:
               hireRes.reason === "INSUFFICIENT_FUNDS"
-                ? `Saldo NSF kamu tidak mencukupi untuk menyewa pengawal ini (Dibutuhkan: \`${hireRes.required} NSF\`, Saldo: \`${hireRes.currentNsf} NSF\`).`
+                ? `Saldo SC kamu tidak mencukupi untuk menyewa pengawal ini (Dibutuhkan: \`${hireRes.required} SC\`, Saldo: \`${hireRes.currentNsf} SC\`).`
                 : "Pilihan pengawal bayaran tidak valid.",
             footerText: ui.getFooter("survival"),
           });

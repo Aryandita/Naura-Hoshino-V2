@@ -6,7 +6,7 @@ const {
 } = require("discord.js");
 
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
-const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 const CHAPTERS = {
   intro: {
@@ -49,21 +49,23 @@ const CHAPTERS = {
   economy: {
     label: "Sistem Moneter & Dompet",
     emoji: "💰",
-    description: "Mata uang NSF, Coin, Kupon, kurs dinamis, dan Undian Astral",
+    description: "Mata uang SC, PD, VB, BA, kurs dinamis, dan Undian Astral",
     content: [
-      "### 💰 Bab 3: Tiga Pilar Mata Uang & Sirkulasi Tertutup",
+      "### 💰 Bab 3: Lima Pilar Mata Uang V2 & Sirkulasi Tertutup",
       "",
-      "**1. Karakteristik Mata Uang:**",
-      "• **Naura Star Fragments (NSF):** Mata uang alam liar untuk belanja di desa, kafe, perbaikan alat, dan riset klan.",
-      "• **Naura Coin (NC):** Mata uang peradaban kota untuk pasar saham, reksa dana, dan kasino server.",
-      "• **Naura Coupon:** Mata uang prestise langka untuk peningkatan Battle Pass dan kosmetik eksklusif.",
+      "**1. Karakteristik Mata Uang Resmi V2:**",
+      "• **Sukamaju Koin (SC):** Mata uang alam liar untuk belanja di desa, kafe, perbaikan alat, dan riset klan.",
+      "• **Pratama Dollar (PD):** Mata uang peradaban kota untuk pasar saham, reksa dana, dan kasino server.",
+      "• **Voucher Beasiswa (VB):** Mata uang prestise langka untuk peningkatan Battle Pass dan kios eksklusif.",
+      "• **Berlian Adisha (BA):** Permata langka dari kedalaman gua dan capaian monumental petualang.",
+      "• **Medali Permainan (MP):** Hadiah kejuaraan mini-game dan turnamen server.",
       "",
       "**2. Kebijakan One-Way Bridge di Central Bank:**",
-      "• Kamu dapat menjual hasil panen dan jarahan alam (NSF) ke mata uang kota (Coin) di `/survival bank`.",
-      "• Penukaran Coin kembali ke NSF dilarang demi menjaga keadilan tantangan petualangan.",
+      "• Kamu dapat menukarkan hasil panen dan jarahan alam (SC) ke mata uang kota (PD) di `/survival bank` atau `/survival town`.",
+      "• Penukaran PD kembali ke SC diatur dengan batasan spread ketat demi menjaga keadilan tantangan petualangan.",
       "",
       "**3. Sistem Daur Ulang Komunitas 100%:**",
-      "• Setiap biaya perbaikan dan administrasi bank dialirkan kembali untuk membangun fasilitas sektor wilayah, mendanai subsidi harian petualang pemula (Lv 1 - 10), dan jackpot mingguan **Astral Lottery**!",
+      "• Setiap biaya perbaikan dan administrasi bank dialirkan kembali ke Server Treasury untuk membangun fasilitas sektor wilayah, mendanai subsidi harian petualang pemula (Lv 1 - 10), dan jackpot mingguan **Astral Lottery**!",
       "• Cek saldo dan kuota undianmu kapan saja melalui `/survival wallet`.",
     ].join("\n"),
   },
@@ -126,7 +128,7 @@ module.exports = {
     const row = new ActionRowBuilder().addComponents(selectMenu);
 
     const payload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      accentColorHex: survivalUI.getColor("moss"),
       authorName: "Naura Hoshino \u2022 Survival Academy",
       title: "📖 Panduan Lengkap Naura Wilds RPG",
       iconURL: user.displayAvatarURL(),
@@ -149,7 +151,7 @@ module.exports = {
         const chapter = CHAPTERS[selectedKey] || CHAPTERS.intro;
 
         const updatedPayload = buildContainerV2({
-          accentColorHex: ui.getColor("primary") || "#FFB6C1",
+          accentColorHex: survivalUI.getColor("moss"),
           authorName: "Naura Hoshino \u2022 Survival Academy",
           title: `📖 Panduan Naura Wilds: ${chapter.label}`,
           iconURL: user.displayAvatarURL(),

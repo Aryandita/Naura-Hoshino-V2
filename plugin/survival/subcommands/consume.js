@@ -80,7 +80,7 @@ module.exports = {
       const inventory = safeParseInventory(profile.inventory);
       const usable = {};
 
-      // Selain perbekalan biasa, barang Naura Coupon berkhasiat juga bisa
+      // Selain perbekalan biasa, barang Voucher Beasiswa berkhasiat juga bisa
       // dipakai dari sini supaya pemain tidak perlu perintah terpisah.
       for (const entry of inventory) {
         if (!entry || !entry.id) continue;
@@ -126,7 +126,7 @@ module.exports = {
       const selectRow = new ActionRowBuilder().addComponents(selectMenu);
 
       const menuPayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        accentColorHex: survivalUI.getColor("moss"),
         authorName: "Naura Survival Kit",
         title: `${e("happy", "\uD83C\uDF92")} Bekal survival kamu`,
         iconURL: user.displayAvatarURL(),
@@ -269,7 +269,7 @@ module.exports = {
           }
 
           const done = buildContainerV2({
-            accentColorHex: ui.getColor("primary") || "#FFD700",
+            accentColorHex: survivalUI.getColor("amber"),
             authorName: "Naura Mythic Hatching",
             title: hatch.title,
             iconURL: user.displayAvatarURL(),
@@ -446,7 +446,7 @@ module.exports = {
       );
 
       const success = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        accentColorHex: survivalUI.getColor("moss"),
         authorName: "Naura Survival Kit",
         title: `${e("eat", "\uD83D\uDE0B")} Yummy, habis!`,
         iconURL: user.displayAvatarURL(),

@@ -290,7 +290,7 @@ module.exports = {
 
     const introCard = (currentMode, currentOptions) =>
       buildContainerV2({
-        accentColorHex: ui.getColor("primary"),
+        accentColorHex: survivalUI.getColor("moss"),
         authorName: "Naura Crafting Guide",
         expression: "happy",
         title: e("craft_table", "\ud83d\udd28") + " Meja Perakitan Naura",

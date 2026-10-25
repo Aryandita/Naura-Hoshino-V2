@@ -1,10 +1,13 @@
 "use strict";
 
+const path = require("path");
+const fs = require("fs");
 const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   ButtonBuilder,
   ButtonStyle,
+  AttachmentBuilder,
 } = require("discord.js");
 const { buildContainerV2, disableContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
@@ -37,6 +40,17 @@ module.exports = {
 
     let selectedPoiId = null;
 
+    // Resolusi latar belakang dinamis berdasarkan wilayah dan waktu
+    const files = [];
+    let topBannerAttachmentName;
+    const period = townState.period || "siang";
+    const bgPrefix = region.id.includes("kota") ? "kota" : "desa";
+    const bgPath = path.join(process.cwd(), "assets", "survival", "background", `${bgPrefix}_${period}.jpeg`);
+    if (fs.existsSync(bgPath)) {
+      topBannerAttachmentName = "town_bg.jpeg";
+      files.push(new AttachmentBuilder(bgPath, { name: topBannerAttachmentName }));
+    }
+
     const buildPayload = (extraSnippet = "") => {
       const descLines = [
         `> *"${region.description}"*`,
@@ -47,7 +61,7 @@ module.exports = {
 
       if (region.id === "kota_pratama") {
         descLines.push(
-          `🏦 **Layanan Bank Pratama:** Kamu dapat menukarkan Naura Star Fragments (NSF) ke Naura Coin (NC) di sini!`,
+          `🏦 **Layanan Bank Pratama:** Kamu dapat menukarkan Sukamaju Koin (SC) ke Pratama Dollar (PD) di sini!`,
         );
       }
 
@@ -124,8 +138,8 @@ module.exports = {
         rows.push(
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
-              .setCustomId("town_exchange_nsf")
-              .setLabel("Tukar NSF -> NC (Bank Pratama)")
+              .setCustomId("town_exchange_sc")
+              .setLabel("Tukar SC -> PD (Bank Pratama)")
               .setEmoji("🏦")
               .setStyle(ButtonStyle.Success),
           ),
@@ -138,6 +152,8 @@ module.exports = {
         accentColorHex: survivalUI.getColor(region.themeColor) || survivalUI.getColor("emerald"),
         authorName: `Naura Wilds - ${region.name}`,
         title: `🗺️ ${region.title}`,
+        topBannerAttachmentName,
+        files,
         description: descLines.join("\n"),
         buttonsRow: rows,
         footerText: ui.getFooter("survival"),
@@ -201,14 +217,14 @@ module.exports = {
 
         currentPayload = buildPayload(talkSnippet);
         await i.editReply(currentPayload).catch(() => {});
-      } else if (i.customId === "town_exchange_nsf") {
+      } else if (i.customId === "town_exchange_sc" || i.customId === "town_exchange_nsf") {
         await i.deferUpdate().catch(() => {});
         const quote = await currency.getDynamicRateAndFee(1100);
         const minNeeded = Math.ceil(quote.rate / (1 - quote.feePercent));
         const amountToExchange = Math.max(1000, minNeeded);
-        const currentNsf = currency.balanceOf(currency.FRAGMENT, { survival, profile });
-        if (currentNsf < amountToExchange) {
-          const errPayload = buildPayload(`⚠️ **Bank Pratama:** Saldo Naura Star Fragments (NSF) milikmu kurang (${currentNsf.toLocaleString("id-ID")} / butuh ${amountToExchange.toLocaleString("id-ID")} NSF).`);
+        const currentSc = currency.balanceOf(currency.FRAGMENT, { survival, profile });
+        if (currentSc < amountToExchange) {
+          const errPayload = buildPayload(`⚠️ **Bank Pratama:** Saldo Sukamaju Koin (SC) milikmu kurang (${currentSc.toLocaleString("id-ID")} / butuh ${amountToExchange.toLocaleString("id-ID")} SC).`);
           return i.editReply(errPayload).catch(() => {});
         }
 
@@ -216,15 +232,15 @@ module.exports = {
         if (!result.ok) {
           let errReason = "Gagal memproses penukaran kurs di Bank Pratama.";
           if (result.reason === "insufficient") {
-            errReason = `Saldo Naura Star Fragments (NSF) milikmu kurang (${result.balance.toLocaleString("id-ID")} / butuh ${result.needed.toLocaleString("id-ID")} NSF).`;
+            errReason = `Saldo Sukamaju Koin (SC) milikmu kurang (${result.balance.toLocaleString("id-ID")} / butuh ${result.needed.toLocaleString("id-ID")} SC).`;
           } else if (result.reason === "below_minimum") {
-            errReason = `Jumlah penukaran di bawah batas minimum (minimal ${result.minimum.toLocaleString("id-ID")} NSF untuk 1 NC).`;
+            errReason = `Jumlah penukaran di bawah batas minimum (minimal ${result.minimum.toLocaleString("id-ID")} SC untuk 1 PD).`;
           }
           const errPayload = buildPayload(`⚠️ **Bank Pratama:** ${errReason}`);
           return i.editReply(errPayload).catch(() => {});
         }
 
-        const successSnippet = `🏦 **Transaksi Sukses:** Kamu menukarkan **${result.spent.toLocaleString("id-ID")} NSF** menjadi **${result.received.toLocaleString("id-ID")} Naura Coin (NC)** di Bank Sentral Pratama!\n*(Biaya Spread: ${result.feeNsf.toLocaleString("id-ID")} NSF dialirkan ke Server Treasury & Kas Kota)*`;
+        const successSnippet = `🏦 **Transaksi Sukses:** Kamu menukarkan **${result.spent.toLocaleString("id-ID")} SC** menjadi **${result.received.toLocaleString("id-ID")} Pratama Dollar (PD)** di Bank Sentral Pratama!\n*(Biaya Spread: ${result.feeNsf.toLocaleString("id-ID")} SC dialirkan ke Server Treasury & Kas Kota)*`;
         currentPayload = buildPayload(successSnippet);
         await i.editReply(currentPayload).catch(() => {});
       }

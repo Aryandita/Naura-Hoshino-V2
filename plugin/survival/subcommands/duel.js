@@ -119,14 +119,14 @@ module.exports = {
       if (!currencyHelper.canAfford(COIN, p1Holders, wager)) {
         return ui.sendError(
           interaction,
-          `Naura Coin kamu belum cukup untuk bertaruh **${wager.toLocaleString("id-ID")}**.`,
+          `Pratama Dollar (PD) kamu belum cukup untuk bertaruh **${wager.toLocaleString("id-ID")}**.`,
           true,
         );
       }
       if (!currencyHelper.canAfford(COIN, p2Holders, wager)) {
         return ui.sendError(
           interaction,
-          `Naura Coin **${opponent.username}** belum cukup untuk mengimbangi taruhanmu.`,
+          `Pratama Dollar (PD) **${opponent.username}** belum cukup untuk mengimbangi taruhanmu.`,
           true,
         );
       }

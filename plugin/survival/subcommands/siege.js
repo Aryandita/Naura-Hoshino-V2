@@ -161,8 +161,8 @@ module.exports = {
         description: [
           `Dividen penguasaan wilayah **${claimResult.towerName}** telah ditransfer ke brankas klan!`,
           "",
-          `• **Hasil Dividen:** \`+${claimResult.dividends.toLocaleString("id-ID")} Star Fragments\``,
-          `• **Saldo Brankas Baru:** \`${claimResult.clanVault.toLocaleString("id-ID")} NSF\``,
+          `• **Hasil Dividen:** \`+${claimResult.dividends.toLocaleString("id-ID")} Sukamaju Koin (SC)\``,
+          `• **Saldo Brankas Baru:** \`${claimResult.clanVault.toLocaleString("id-ID")} SC\``,
           `• **Jadwal Klaim Berikutnya:** Besok pukul 00:00 UTC`,
         ].join("\n"),
         buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],

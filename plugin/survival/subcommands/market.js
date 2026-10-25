@@ -14,7 +14,6 @@ const {
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
-  AttachmentBuilder,
   MessageFlags,
 } = require("discord.js");
 const {
@@ -24,6 +23,7 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const market = require("../../../src/survival/helpers/marketStock");
 const currencyHelper = require("../../../src/survival/engines/currency");
 const { SHOPS, say } = require("../../../src/survival/data/shopkeepers");
@@ -39,7 +39,6 @@ const {
 } = require("../../../src/domain/decisions/marketDecisions");
 
 const COLLECTOR_MS = 120000;
-const BANNER_NAME = "banner.png";
 const MAX_OPTIONS = 25;
 const VILLAGE_KEYS = ["desa", "village"];
 const FRAGMENT = currencyHelper.byKind(currencyHelper.FRAGMENT);
@@ -86,7 +85,7 @@ module.exports = {
       pool.forEach((it) => {
         available.push(
           choice(
-            `${it.name} (${n(it.finalPrice)} NSF)`,
+            `${it.name} (${n(it.finalPrice)} SC)`,
             market.encode(it.id, it.finalPrice, 1),
           ),
         );
@@ -118,10 +117,9 @@ module.exports = {
       survival.rpg_state?.difficulty || "Normal",
     );
 
-    const banner = ui.getBanner("shop");
-    const bannerFiles = banner
-      ? [new AttachmentBuilder(banner, { name: BANNER_NAME })]
-      : [];
+    const bgInfo = survivalUI.getSurvivalBackground("desa", survival.inGameHour || 12);
+    const bannerFiles = bgInfo ? [bgInfo.attachment] : [];
+    const bannerName = bgInfo ? bgInfo.attachmentName : undefined;
 
     const walletNow = async () => {
       const freshProfile = await cacheManager.getUserProfile(user.id);
@@ -191,7 +189,7 @@ module.exports = {
         iconURL: user.displayAvatarURL(),
         expression,
         description,
-        bannerAttachmentName: withBanner && banner ? BANNER_NAME : undefined,
+        topBannerAttachmentName: withBanner && bannerName ? bannerName : undefined,
         files: withBanner ? bannerFiles : [],
         buttonsRow: rows,
         footerText: ui.getFooter("survival"),
@@ -243,7 +241,7 @@ module.exports = {
           "",
           `${currencyHelper.emojiOf(FRAGMENT)} **Dompetmu:** \`${n(balance)}\` ${FRAGMENT.name}`,
         ].join("\n"),
-        rows: [mainRow()],
+        rows: [mainRow(), survivalUI.buildSurvivalActionRow("town", user.id)],
         withBanner: true,
       });
     };

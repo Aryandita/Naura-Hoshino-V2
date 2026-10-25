@@ -130,7 +130,7 @@ module.exports = {
     // 2. TOKO BENIH
     if (action === "shop") {
       const seedLines = CROP_SEEDS.map((s) => {
-        return `• ${s.emoji} **${s.name}**\n  💰 Harga: \`${s.seedPrice}\` Koin | ⏱️ Waktu Tumbuh: \`${s.growTimeMinutes}m\`\n  📦 Hasil: \`${s.harvestYield.amountMin}-${s.harvestYield.amountMax}x ${s.harvestYield.itemName}\` (+${s.harvestYield.xp} XP)\n  _${s.description}_`;
+        return `• ${s.emoji} **${s.name}**\n  💰 Harga: \`${s.seedPrice}\` SC | ⏱️ Waktu Tumbuh: \`${s.growTimeMinutes}m\`\n  📦 Hasil: \`${s.harvestYield.amountMin}-${s.harvestYield.amountMax}x ${s.harvestYield.itemName}\` (+${s.harvestYield.xp} XP)\n  _${s.description}_`;
       }).join("\n\n");
 
       const payload = buildContainerV2({
@@ -143,6 +143,7 @@ module.exports = {
           ``,
           `> *Tanam dengan perintah: \`/survival farm aksi:Tanam Benih benih:<pilihan> slot:<nomor>\`*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", userId)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -167,7 +168,7 @@ module.exports = {
       if (!res.success) {
         let msg = "Gagal menanam benih.";
         if (res.reason === "INSUFFICIENT_FUNDS") {
-          msg = `Saldo koinmu tidak cukup untuk membeli benih ini (\`${res.cost}\` Koin)!`;
+          msg = `Saldo Sukamaju Koin (SC) kamu tidak cukup untuk membeli benih ini (\`${res.cost}\` SC)!`;
         } else if (res.reason === "SLOT_OCCUPIED") {
           msg = `Pod #${slotIdx + 1} sudah terisi tanaman! Pilih pod lain atau tunggu panen.`;
         } else if (res.reason === "INVALID_SLOT_INDEX") {
@@ -233,7 +234,7 @@ module.exports = {
       if (!res.success) {
         let msg = "Gagal memberikan pupuk.";
         if (res.reason === "INSUFFICIENT_FUNDS") {
-          msg = `Saldo koinmu tidak cukup untuk membeli pupuk nutrisi (\`${res.cost}\` Koin)!`;
+          msg = `Saldo Sukamaju Koin (SC) kamu tidak cukup untuk membeli pupuk nutrisi (\`${res.cost}\` SC)!`;
         } else if (res.reason === "ALREADY_FERTILIZED") {
           msg = `Pod #${slotIdx + 1} sudah diberi pupuk nutrisi sebelumnya!`;
         } else if (res.reason === "SLOT_EMPTY") {
@@ -313,7 +314,7 @@ module.exports = {
         if (res.reason === "ALREADY_MAX_LEVEL") {
           msg = "Greenhouse milikmu sudah mencapai tingkat maksimal (Level 4)!";
         } else if (res.reason === "INSUFFICIENT_FUNDS") {
-          msg = `Saldo koin tidak cukup untuk ekspansi grid (\`${res.cost}\` Koin)!`;
+          msg = `Saldo Sukamaju Koin (SC) tidak cukup untuk ekspansi grid (\`${res.cost}\` SC)!`;
         }
 
         const payload = buildErrorContainerV2({
@@ -328,6 +329,7 @@ module.exports = {
         authorName: "CYBER-AGRONOMY GREENHOUSE",
         title: "🚀 Ekspansi Grid Selesai!",
         description: `Selamat! Fasilitas greenhouse berhasil ditingkatkan ke **Level ${res.newLevel}**! Kamu sekarang memiliki total **${res.newMaxSlots} Pod Hidroponik**!`,
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", userId)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -374,6 +376,7 @@ module.exports = {
           `⏱️ **Waktu Tumbuh:** ${res.hybridSeed.growTimeMinutes} menit`,
           `> *Benih hibrida ini memiliki nilai nutrisi dan hasil panen jauh lebih unggul!*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", userId)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -393,6 +396,7 @@ module.exports = {
             authorName: "NOTIFIKASI PANEN GREENHOUSE",
             title: "🗑️ Webhook Berhasil Dihapus",
             description: "Webhook notifikasi panen kamu telah dihapus. Kamu tidak akan lagi menerima peringatan eksternal saat tanaman matang.",
+            buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", userId)],
             footerText: ui.getFooter("survival"),
           });
           return sendResponse(payload, true);
@@ -420,6 +424,7 @@ module.exports = {
             "",
             "> *Ketik `/survival farm aksi:webhook url:hapus` untuk menonaktifkan.*",
           ].join("\n"),
+          buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", userId)],
           footerText: ui.getFooter("survival"),
         });
         return sendResponse(payload, true);
@@ -439,6 +444,7 @@ module.exports = {
           "💡 **Cara Mengatur Webhook:**",
           "Ketik: `/survival farm aksi:webhook url:https://discord.com/api/webhooks/...`",
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", userId)],
         footerText: ui.getFooter("survival"),
       });
       return sendResponse(payload, true);

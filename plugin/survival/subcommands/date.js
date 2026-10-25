@@ -36,9 +36,15 @@ const CHARACTER_DIR = path.join(
 );
 const IMAGE_EXTENSIONS = [".png", ".webp", ".jpeg", ".jpg"];
 
-// Katalog barang memakai `dating_ticket`, tetapi kode lama mencari
-// `date_ticket` sehingga tiket yang sudah dibeli tidak pernah terdeteksi.
-const TICKET_IDS = ["dating_ticket", "date_ticket"];
+// Katalog barang memakai `dating_ticket` dan tiket kencan wilayah khusus (ticket_picnic, ticket_beach, dll.)
+const TICKET_IDS = [
+  "ticket_picnic",
+  "ticket_beach",
+  "ticket_cafe",
+  "ticket_library",
+  "dating_ticket",
+  "date_ticket",
+];
 const PARK_LOCATIONS = ["park", "taman", "amusement_park"];
 
 const RELATIONSHIP_NAMES = ["Kenalan", "Teman", "Sahabat", "Pacar", "Menikah"];
@@ -209,6 +215,30 @@ module.exports = {
       const files = [];
       let bannerAttachmentName;
 
+      // Resolusi latar belakang taman sesuai waktu
+      const now = new Date();
+      const inGameHour = (now.getUTCHours() * 2) % 24;
+      let timePeriod = "siang";
+      if (inGameHour >= 5 && inGameHour < 11) timePeriod = "pagi";
+      else if (inGameHour >= 11 && inGameHour < 15) timePeriod = "siang";
+      else if (inGameHour >= 15 && inGameHour < 19) timePeriod = "sore";
+      else timePeriod = "malam";
+
+      const parkBgPath = path.join(
+        process.cwd(),
+        "assets",
+        "survival",
+        "background",
+        `park_${timePeriod}.jpeg`,
+      );
+      let topBannerAttachmentName;
+      if (fs.existsSync(parkBgPath)) {
+        topBannerAttachmentName = "park_bg.jpeg";
+        files.push(
+          new AttachmentBuilder(parkBgPath, { name: topBannerAttachmentName }),
+        );
+      }
+
       if (portrait) {
         const ext = path.extname(portrait.name) || ".png";
         bannerAttachmentName = `date${ext}`;
@@ -226,6 +256,9 @@ module.exports = {
         title: `${e("blowkiss", "\uD83D\uDC96")} Kencannya menyenangkan!`,
         iconURL: user.displayAvatarURL(),
         expression: "love",
+        topBannerAttachmentName,
+        bannerAttachmentName,
+        files,
         description: [
           `Kamu menikmati momen indah bareng **${selectedNPC.name}**, dan senyumnya tidak hilang sepanjang jalan. Naura ikut senang melihat kalian!`,
           "",
@@ -234,8 +267,7 @@ module.exports = {
           "",
           `📸 **Visual Dating CG Terbuka!** Foto kenangan kencan ini resmi tersimpan di album \`/survival gallery\`!`,
         ].join("\n"),
-        bannerAttachmentName,
-        files,
+        buttonsRow: [survivalUI.buildSurvivalActionRow("survival_act_date")],
         footerText: ui.getFooter("survival"),
       });
 

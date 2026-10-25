@@ -1,307 +1,420 @@
 "use strict";
 
 const {
+  SlashCommandBuilder,
   ActionRowBuilder,
-  ButtonBuilder,
   ButtonStyle,
-  AttachmentBuilder,
-  MessageFlags,
+  StringSelectMenuBuilder,
+  ComponentType,
 } = require("discord.js");
-const path = require("path");
-const fs = require("fs");
-
-const UserSurvival = require("../../../src/models/UserSurvival");
-const StoryProgress = require("../../../src/models/StoryProgress");
-const cacheManager = require("../../../src/managers/cacheManager");
-const storyData = require("../../../src/survival/data/storyData");
-const npcs = require("../../../src/survival/data/npcs");
-const ui = require("../../../src/config/ui");
-const leveling = require("../../../src/survival/engines/survivalLeveling");
-const currency = require("../../../src/survival/engines/currency");
 const {
   buildContainerV2,
+  buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
-const {
-  takeItemsAtomic,
-  addItemsAtomic,
-} = require("../../../src/survival/engines/inventoryHelper");
-
-const COLLECTOR_MS = 300000;
-const CHARACTER_DIR = path.join(process.cwd(), "assets", "survival", "characters");
-
-function e(name, fallback) {
-  return ui.getEmoji(name) || fallback;
-}
-
-function fill(text, username) {
-  return String(text || "").replace(/{player}/g, username);
-}
-
-function findNpcPortrait(npcId) {
-  if (!npcId) return null;
-  const npc = npcs[npcId];
-  const candidates = [];
-  if (npc?.image) candidates.push(npc.image);
-  candidates.push(`${npcId}.png`, `${npcId}.jpeg`, `${npcId}.jpg`);
-
-  for (const name of candidates) {
-    const full = path.join(CHARACTER_DIR, name);
-    if (fs.existsSync(full)) return { full, name };
-  }
-  return null;
-}
+const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
+const storyEngine = require("../../../src/survival/engines/storyEngine");
+const visualNovelRenderer = require("../../../src/survival/engines/visualNovelRenderer");
+const npcBackstoryEngine = require("../../../src/survival/engines/npcBackstoryEngine");
+const npcScheduleEngine = require("../../../src/survival/engines/npcScheduleEngine");
+const cacheManager = require("../../../src/managers/cacheManager");
+const { createManagedCollector } = require("../../../src/utils/interactionPipeline");
 
 module.exports = {
-  async execute(interaction) {
-    const user = interaction.user;
-
-    const [survival] = await UserSurvival.findOrCreate({
-      where: { userId: user.id },
-    });
-    const profile = await cacheManager.getUserProfile(user.id);
-    const [storyProgress] = await StoryProgress.findOrCreate({
-      where: { userId: user.id },
-    });
-
-    const currentArcId = storyProgress.currentArc;
-    if (currentArcId === -1) {
-      return ui.sendError(
-        interaction,
-        "✨ Selamat! Kamu telah menuntaskan seluruh 4-Act Saga Naura Wilds: Resonansi Inti Astral!",
-        true,
-      );
-    }
-
-    const arc = storyData.find((a) => a.arc === currentArcId);
-    if (!arc) return ui.sendError(interaction, "err_sys_61", true);
-
-    if ((survival.survival_level || 1) < arc.reqLevel) {
-      return ui.sendError(
-        interaction,
-        [
-          `Ceritanya belum bisa dibuka, sayang. Arc **${arc.arcName}** butuh **Level ${arc.reqLevel}**.`,
-          `Levelmu sekarang **${survival.survival_level || 1}**. Ayo naik level dulu, Naura temani!`,
-        ].join("\n"),
-        true,
-      );
-    }
-
-    const chapter = arc.chapters.find(
-      (c) => c.chapter === storyProgress.currentChapter,
-    );
-    if (!chapter) return ui.sendError(interaction, "err_sys_62", true);
-
-    let dialogueIndex = 0;
-
-    const buildFrame = () => {
-      const isLast = dialogueIndex >= chapter.dialogue.length - 1;
-      const line = chapter.dialogue[dialogueIndex];
-
-      const bgPath =
-        typeof ui.getSurvivalBackground === "function"
-          ? ui.getSurvivalBackground(chapter.background, 12)
-          : null;
-
-      const files = [];
-      let bannerAttachmentName;
-
-      if (bgPath && fs.existsSync(bgPath)) {
-        bannerAttachmentName = "story.png";
-        files.push(
-          new AttachmentBuilder(bgPath, { name: bannerAttachmentName }),
-        );
-      }
-
-      // NPC Avatar icon di pojok bila berbicara dengan NPC tertentu
-      const iconURL = user.displayAvatarURL();
-      const speakerPortrait = findNpcPortrait(chapter.speakerNpcId);
-      if (speakerPortrait && line.speaker !== user.username && line.speaker !== "{player}") {
-        // Bisa disematkan bila dibutuhkan
-      }
-
-      const row = new ActionRowBuilder();
-
-      if (!isLast) {
-        row.addComponents(
-          new ButtonBuilder()
-            .setCustomId("story_next")
-            .setLabel("Selanjutnya")
-            .setStyle(ButtonStyle.Primary),
-        );
-      } else if (chapter.challenge) {
-        row.addComponents(
-          new ButtonBuilder()
-            .setCustomId("story_challenge")
-            .setLabel(chapter.challenge.btnLabel || "Hadapi tantangan")
-            .setStyle(ButtonStyle.Danger),
-        );
-      } else {
-        row.addComponents(
-          new ButtonBuilder()
-            .setCustomId("story_finish")
-            .setLabel("Selesaikan bab ini")
-            .setStyle(ButtonStyle.Success),
-        );
-      }
-
-      return buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        authorName: `Naura Wilds Saga - Arc ${arc.arc}: ${arc.arcName}`,
-        title: `${e("read", "📖")} Bab ${chapter.chapter}: ${chapter.title}`,
-        iconURL,
-        expression: "info",
-        description: [
-          `*${fill(chapter.narrative, user.username)}*`,
-          "",
-          `**${fill(line.speaker, user.username)}**`,
-          `"${fill(line.text, user.username)}"`,
-        ].join("\n"),
-        bannerAttachmentName,
-        files,
-        buttonsRow: [row],
-        footerText: ui.getFooter("survival"),
-      });
-    };
-
-    const message = await interaction.editReply(buildFrame());
-
-    const collector = message.createMessageComponentCollector({
-      filter: (i) => i.user.id === user.id,
-      time: COLLECTOR_MS,
-    });
-
-    collector.on("collect", async (i) => {
-      await i.deferUpdate().catch(() => {});
-
-      if (i.customId === "story_next") {
-        dialogueIndex += 1;
-        return i.editReply(buildFrame()).catch(() => {});
-      }
-
-      if (i.customId !== "story_finish" && i.customId !== "story_challenge") {
-        return;
-      }
-
-      if (i.customId === "story_challenge") {
-        const challenge = chapter.challenge || {};
-        let passed = false;
-
-        if (challenge.type === "item") {
-          const taken = await takeItemsAtomic(user.id, [
-            { id: challenge.reqId, amount: challenge.reqAmount || 1 },
-          ]);
-          passed = taken.ok;
-        } else if (challenge.type === "coin") {
-          const paid = await currency.charge(
-            currency.COIN,
-            { survival, profile },
-            challenge.reqAmount,
-          );
-          passed = paid !== null;
-        }
-
-        if (!passed) {
-          const failPayload = buildContainerV2({
-            accentColorHex: ui.getColor("error") || "#ef4444",
-            authorName: "Naura Story",
-            title: `${e("shy", "🙅")} Syaratnya belum terpenuhi`,
-            iconURL: user.displayAvatarURL(),
-            expression: "fail",
-            description: fill(
-              challenge.failMsg ||
-                "Persiapanmu belum cukup untuk bagian ini. Kumpulkan dulu ya, Naura tunggu di sini.",
-              user.username,
+  data: new SlashCommandBuilder()
+    .setName("story")
+    .setDescription("Visual Novel Story Mode - Jelajahi cerita Naura Wilds")
+    .addSubcommand((sub) =>
+      sub
+        .setName("start")
+        .setDescription("Mulai atau lanjutkan story mode"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("backstory")
+        .setDescription("Baca latar belakang cerita NPC")
+        .addStringOption((opt) =>
+          opt
+            .setName("npc")
+            .setDescription("Pilih NPC")
+            .setRequired(true)
+            .addChoices(
+              { name: "Ningsih", value: "ningsih" },
+              { name: "Tari", value: "tari" },
+              { name: "Bidan Sari", value: "bidan_sari" },
+              { name: "Bu Ratna", value: "bu_ratna" },
+              { name: "Bagas", value: "bagas" },
             ),
-            footerText: ui.getFooter("survival"),
-          });
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("schedule")
+        .setDescription("Lihat jadwal aktivitas NPC")
+        .addStringOption((opt) =>
+          opt
+            .setName("npc")
+            .setDescription("Pilih NPC (kosongkan untuk lihat semua)")
+            .setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("progress")
+        .setDescription("Cek progres story mode kamu"),
+    ),
 
-          return i
-            .followUp({
-              ...failPayload,
-              flags: (failPayload.flags || 0) | MessageFlags.Ephemeral,
-            })
-            .catch(() => {});
-        }
+  async execute(interaction) {
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply().catch(() => {});
+    }
+
+    const sub = interaction.options.getSubcommand();
+    const userId = interaction.user.id;
+    const lang = interaction.localeLang || "id";
+
+    try {
+      if (sub === "start") {
+        return await handleStoryStart(interaction, userId, lang);
+      } else if (sub === "backstory") {
+        return await handleBackstory(interaction, userId, lang);
+      } else if (sub === "schedule") {
+        return await handleSchedule(interaction, userId, lang);
+      } else if (sub === "progress") {
+        return await handleProgress(interaction, userId, lang);
       }
-
-      collector.stop("finished");
-
-      const reward = chapter.reward || {};
-      const rewardLines = [];
-
-      if (reward.exp) {
-        await leveling.addPlayerXP(user.id, reward.exp);
-        rewardLines.push(
-          `> ${e("impressed", "🌟")} **+${reward.exp} XP**`,
-        );
-      }
-
-      if (reward.item) {
-        const amount = reward.amount || 1;
-        await addItemsAtomic(user.id, [
-          {
-            id: reward.item,
-            name: reward.item,
-            amount,
-            type: "loot",
-          },
-        ]);
-        rewardLines.push(
-          `> ${e("cheers", "📦")} **${amount}x ${reward.item}**`,
-        );
-      }
-
-      if (reward.starFragments) {
-        await cacheManager.incrementUserSurvival(user.id, {
-          starFragments: reward.starFragments,
-        });
-        rewardLines.push(
-          `> ⭐ **+${reward.starFragments.toLocaleString("id-ID")} Naura Star Fragments**`,
-        );
-      }
-
-      if (reward.nauraCoins) {
-        await cacheManager.incrementUserProfile(user.id, {
-          economy_wallet: reward.nauraCoins,
-        });
-        rewardLines.push(
-          `> 🪙 **+${reward.nauraCoins.toLocaleString("id-ID")} Naura Coins**`,
-        );
-      }
-
-      if (reward.coupons) {
-        await cacheManager.incrementUserSurvival(user.id, {
-          coupons: reward.coupons,
-        });
-        rewardLines.push(
-          `> 🎟️ **+${reward.coupons} Naura Coupons**`,
-        );
-      }
-
-      storyProgress.currentArc = chapter.nextArc;
-      storyProgress.currentChapter = chapter.nextChapter;
-      await storyProgress.save({ fields: ["currentArc", "currentChapter"] });
-
-      const successPayload = buildContainerV2({
-        accentColorHex: ui.getColor("success") || "#22c55e",
-        authorName: "Naura Story",
-        title: `${e("cheers", "🎉")} Bab Selesai!`,
-        iconURL: user.displayAvatarURL(),
-        expression: "achievement",
-        description: [
-          `Kamu menuntaskan **${chapter.title}**. Naura ikut terharu membacanya bareng kamu.`,
-          "",
-          rewardLines.length > 0
-            ? "**Hadiahmu:**"
-            : "Bab ini belum berhadiah, tapi ceritanya makin seru!",
-          ...rewardLines,
-          "",
-          "Lanjut lagi kapan pun kamu siap ya, Naura simpan progresnya.",
-        ].join("\n"),
+    } catch (error) {
+      const payload = buildErrorContainerV2({
+        title: `${ui.getEmoji("hmph", "❌")} ${lang === "id" ? "Terjadi Kesalahan" : "Error Occurred"}`,
+        description: error.message || (lang === "id" ? "Coba lagi nanti." : "Please try again later."),
         footerText: ui.getFooter("survival"),
       });
-
-      await i.editReply({ ...successPayload, embeds: [] }).catch(() => {});
-    });
+      await interaction.editReply(payload).catch(() => {});
+    }
   },
 };
+
+/**
+ * Handle Story Mode visual novel play
+ */
+async function handleStoryStart(interaction, userId, lang) {
+  const survival = await cacheManager.getUserSurvival(userId);
+  if (!survival) {
+    return interaction.editReply(
+      buildErrorContainerV2({
+        title: `${ui.getEmoji("hmph", "❌")} ${lang === "id" ? "Belum Memulai Petualangan" : "Adventure Not Started"}`,
+        description:
+          lang === "id"
+            ? "Kamu harus memulai petualangan survival terlebih dahulu dengan `/survival start` sebelum bisa mengakses Story Mode."
+            : "You must start your survival adventure with `/survival start` before accessing Story Mode.",
+        footerText: ui.getFooter("survival"),
+      }),
+    );
+  }
+
+  const progress = await storyEngine.getUserStoryProgress(userId);
+  const currentChapter = progress.currentChapter || "prologue";
+  let currentSceneId = progress.currentScene || "start";
+
+  let scene = storyEngine.getScene(currentChapter, currentSceneId);
+  if (!scene) {
+    currentSceneId = "start";
+    scene = storyEngine.getScene(currentChapter, currentSceneId);
+  }
+
+  if (!scene) {
+    // Chapter completed or no scene available
+    const payload = buildContainerV2({
+      accentColorHex: survivalUI.getColor("moss"),
+      authorName: "Story Mode • Naura Wilds",
+      title: "🎉 Bab Cerita Selesai!",
+      description:
+        lang === "id"
+          ? `Selamat! Kamu telah menyelesaikan bab **${currentChapter}**.\nNantikan episode dan chapter berikutnya di pembaruan Naura Wilds!`
+          : `Congratulations! You have completed chapter **${currentChapter}**.\nStay tuned for upcoming story chapters in Naura Wilds!`,
+      buttonsRow: [survivalUI.buildSurvivalActionRow('town', userId)],
+      footerText: ui.getFooter("survival"),
+    });
+    return interaction.editReply(payload);
+  }
+
+  return await renderVNStep(interaction, userId, currentChapter, currentSceneId, scene, lang);
+}
+
+/**
+ * Render single scene step with interactive branching
+ */
+async function renderVNStep(interaction, userId, chapterId, sceneId, scene, lang) {
+  // Transform choices or nextScene button
+  const sceneData = {
+    characterId: scene.character || (scene.dialog && scene.dialog.find((d) => d.character)?.character) || null,
+    characterEmotion: scene.emotion || (scene.dialog && scene.dialog.find((d) => d.emotion)?.emotion) || "neutral",
+    backgroundId: scene.background || "kebun_morning",
+    speakerName: scene.speaker || (scene.dialog && scene.dialog[0]?.speaker) || "Narrator",
+    title: scene.title || `Chapter: ${chapterId.toUpperCase()}`,
+    dialog: scene.dialog,
+    dialogText: scene.text || (scene.dialog && scene.dialog.map((d) => d.text).join("\n\n")),
+    choices: [],
+  };
+
+  if (Array.isArray(scene.choices) && scene.choices.length > 0) {
+    sceneData.choices = scene.choices.map((c) => ({
+      label: c.label.replace("[Player]", interaction.user.username),
+      style: ButtonStyle.Primary,
+    }));
+  } else if (scene.nextScene) {
+    sceneData.choices = [
+      {
+        label: lang === "id" ? "Lanjutkan Cerita ➔" : "Continue Story ➔",
+        style: ButtonStyle.Success,
+      },
+    ];
+  }
+
+  const payload = await visualNovelRenderer.renderScene(sceneData);
+  const message = await interaction.editReply(payload);
+
+  if (sceneData.choices.length > 0) {
+    createManagedCollector(message, interaction.user, {
+      time: 180000,
+      componentType: ComponentType.Button,
+      denyMessage: "Ini bukan sesi cerita kamu.",
+      onCollect: async (i) => {
+        await i.deferUpdate().catch(() => {});
+        const choiceIdx = parseInt(i.customId.split("_").pop(), 10);
+
+        let nextSceneId = null;
+        if (Array.isArray(scene.choices) && scene.choices[choiceIdx]) {
+          const res = await storyEngine.makeChoice(userId, chapterId, sceneId, choiceIdx);
+          nextSceneId = res.nextSceneId;
+        } else if (scene.nextScene) {
+          nextSceneId = scene.nextScene;
+          await storyEngine.updateUserStoryProgress(userId, {
+            currentChapter: chapterId,
+            currentScene: nextSceneId,
+          });
+        }
+
+        if (nextSceneId) {
+          const nextScene = storyEngine.getScene(chapterId, nextSceneId);
+          if (nextScene) {
+            return await renderVNStep(i, userId, chapterId, nextSceneId, nextScene, lang);
+          }
+        }
+
+        // Selesai atau chapter tamat
+        const finishPayload = buildContainerV2({
+          accentColorHex: survivalUI.getColor("moss"),
+          authorName: "Story Mode • Naura Wilds",
+          title: "🎉 Bab Selesai!",
+          description:
+            lang === "id"
+              ? "Kamu telah menyelesaikan adegan ini! Progres petualanganmu telah dicatat."
+              : "You have completed this scene! Your story progress has been recorded.",
+          buttonsRow: [survivalUI.buildSurvivalActionRow('town', userId)],
+          footerText: ui.getFooter("survival"),
+        });
+        return i.editReply(finishPayload);
+      },
+    });
+  }
+
+  return message;
+}
+
+/**
+ * Handle NPC Backstories list & detail reading
+ */
+async function handleBackstory(interaction, userId, lang) {
+  const npcId = interaction.options.getString("npc");
+  const backstories = await npcBackstoryEngine.getAvailableBackstories(userId, npcId);
+
+  if (backstories.length === 0) {
+    return interaction.editReply(
+      buildErrorContainerV2({
+        title: `${ui.getEmoji("hmph", "❌")} ${lang === "id" ? "Tidak Ada Backstory" : "No Backstory Available"}`,
+        description:
+          lang === "id"
+            ? "Kamu belum membuka backstory untuk NPC ini. Tingkatkan relationship level untuk membuka cerita latar belakang mereka."
+            : "You haven't unlocked any backstory for this NPC yet. Increase your relationship level to unlock their background stories.",
+        buttonsRow: [survivalUI.buildSurvivalActionRow('town', userId)],
+        footerText: ui.getFooter("survival"),
+      }),
+    );
+  }
+
+  const lines = backstories.map((b) => {
+    const status = b.isUnlocked ? "✅" : "🔒";
+    return `${status} **Level ${b.level}:** ${b.title}`;
+  });
+
+  const unlockedBackstories = backstories.filter((b) => b.isUnlocked);
+  const components = [];
+
+  if (unlockedBackstories.length > 0) {
+    const select = new StringSelectMenuBuilder()
+      .setCustomId("story_read_backstory")
+      .setPlaceholder(lang === "id" ? "Pilih kisah yang ingin dibaca..." : "Select story to read...")
+      .addOptions(
+        unlockedBackstories.map((b) => ({
+          label: `Level ${b.level}: ${b.title}`.substring(0, 100),
+          description: b.unlockCondition.substring(0, 100),
+          value: `${b.level}`,
+        })),
+      );
+    components.push(new ActionRowBuilder().addComponents(select));
+  }
+
+  components.push(survivalUI.buildSurvivalActionRow('town', userId));
+
+  const payload = buildContainerV2({
+    accentColorHex: survivalUI.getColor("emerald"),
+    authorName: lang === "id" ? "NPC Backstory Collection" : "NPC Backstory Collection",
+    title: `${ui.getEmoji("book", "📚")} ${lang === "id" ? "Daftar Backstory" : "Backstory List"}`,
+    description: `${lines.join("\n")}\n\n${lang === "id" ? "Pilih salah satu kisah yang sudah terbuka dari menu dropdown di bawah untuk membaca lengkap kisahnya." : "Select an unlocked story from dropdown below to read full lore."}`,
+    buttonsRow: components,
+    footerText: ui.getFooter("survival"),
+  });
+
+  const message = await interaction.editReply(payload);
+
+  if (unlockedBackstories.length > 0) {
+    createManagedCollector(message, interaction.user, {
+      time: 120000,
+      componentType: ComponentType.StringSelect,
+      onCollect: async (i) => {
+        await i.deferUpdate().catch(() => {});
+        const selectedLevel = parseInt(i.values[0], 10);
+        const storyItem = unlockedBackstories.find((b) => b.level === selectedLevel);
+
+        if (!storyItem) return;
+
+        const readerPayload = buildContainerV2({
+          accentColorHex: survivalUI.getColor("moss"),
+          authorName: `Backstory • ${npcId.toUpperCase()}`,
+          title: `📖 ${storyItem.title}`,
+          description: storyItem.content,
+          buttonsRow: [survivalUI.buildSurvivalActionRow('town', userId)],
+          footerText: ui.getFooter("survival"),
+        });
+
+        return i.editReply(readerPayload);
+      },
+    });
+  }
+
+  return message;
+}
+
+/**
+ * Handle NPC schedule inspection
+ */
+async function handleSchedule(interaction, userId, lang) {
+  const npcId = interaction.options.getString("npc");
+  const survival = await cacheManager.getUserSurvival(userId);
+  const hour = survival?.inGameHour || 8;
+
+  if (npcId) {
+    const state = npcScheduleEngine.getNpcStateAtTime(npcId, hour);
+    const appearanceDesc = npcScheduleEngine.getAppearanceDescription(npcId, state.portraitVariant);
+
+    const payload = buildContainerV2({
+      accentColorHex: survivalUI.getColor("emerald"),
+      authorName: lang === "id" ? "NPC Schedule" : "NPC Schedule",
+      title: `${ui.getEmoji("clock", "🕐")} ${lang === "id" ? "Jadwal Aktivitas NPC" : "NPC Activity Schedule"}`,
+      description:
+        lang === "id"
+          ? `**Jam In-Game:** ${hour}:00\n**Lokasi:** ${state.location}\n**Aktivitas:** ${state.activity}\n**Status:** ${state.isAvailable ? "Tersedia" : "Tidak Tersedia"}${appearanceDesc ? `\n**Penampilan:** ${appearanceDesc}` : ""}`
+          : `**In-Game Hour:** ${hour}:00\n**Location:** ${state.location}\n**Activity:** ${state.activity}\n**Status:** ${state.isAvailable ? "Available" : "Unavailable"}${appearanceDesc ? `\n**Appearance:** ${appearanceDesc}` : ""}`,
+      buttonsRow: [survivalUI.buildSurvivalActionRow('town', userId)],
+      footerText: ui.getFooter("survival"),
+    });
+
+    return await interaction.editReply(payload);
+  }
+
+  const locations = ["town_square", "market", "cafe", "farm", "clinic", "school", "smithy"];
+  const availableNpcs = [];
+
+  for (const loc of locations) {
+    const npcs = npcScheduleEngine.getAvailableNpcsAtLocation(loc, hour);
+    availableNpcs.push(...npcs);
+  }
+
+  if (availableNpcs.length === 0) {
+    return interaction.editReply(
+      buildErrorContainerV2({
+        title: `${ui.getEmoji("hmph", "❌")} ${lang === "id" ? "Tidak Ada NPC" : "No NPCs Available"}`,
+        description:
+          lang === "id"
+            ? `Tidak ada NPC yang tersedia pada jam ${hour}:00. Coba cek lagi di waktu lain.`
+            : `No NPCs available at hour ${hour}:00. Try checking again at a different time.`,
+        buttonsRow: [survivalUI.buildSurvivalActionRow('town', userId)],
+        footerText: ui.getFooter("survival"),
+      }),
+    );
+  }
+
+  const lines = availableNpcs.slice(0, 10).map((npc) => {
+    return `• **${npc.name}** (${npc.title})\n  📍 ${npc.currentState.location} - ${npc.currentState.activity}`;
+  });
+
+  const payload = buildContainerV2({
+    accentColorHex: survivalUI.getColor("emerald"),
+    authorName: lang === "id" ? "NPC Schedule" : "NPC Schedule",
+    title: `${ui.getEmoji("clock", "🕐")} ${lang === "id" ? "NPC Tersedia Saat Ini" : "Currently Available NPCs"}`,
+    description: `${lang === "id" ? `**Jam In-Game:** ${hour}:00\n\n` : `**In-Game Hour:** ${hour}:00\n\n`}${lines.join("\n\n")}`,
+    buttonsRow: [survivalUI.buildSurvivalActionRow('town', userId)],
+    footerText: ui.getFooter("survival"),
+  });
+
+  return await interaction.editReply(payload);
+}
+
+/**
+ * Handle user's story progress report
+ */
+async function handleProgress(interaction, userId, lang) {
+  const progress = await storyEngine.getUserStoryProgress(userId);
+
+  const payload = buildContainerV2({
+    accentColorHex: survivalUI.getColor("emerald"),
+    authorName: lang === "id" ? "Story Progress" : "Story Progress",
+    title: `${ui.getEmoji("chart", "📊")} ${lang === "id" ? "Progres Story Mode" : "Story Mode Progress"}`,
+    iconURL: interaction.user.displayAvatarURL(),
+    fields: [
+      {
+        name: lang === "id" ? "Chapter Saat Ini" : "Current Chapter",
+        value: progress.currentChapter || "Prologue",
+      },
+      {
+        name: lang === "id" ? "Scene Saat Ini" : "Current Scene",
+        value: progress.currentScene || "Start",
+      },
+      {
+        name: lang === "id" ? "Scenes Selesai" : "Completed Scenes",
+        value: `${progress.completedScenes.length}`,
+      },
+      {
+        name: lang === "id" ? "Backstories Terbuka" : "Unlocked Backstories",
+        value: `${progress.unlockedBackstories.length}`,
+      },
+      {
+        name: lang === "id" ? "Story Flags" : "Story Flags",
+        value:
+          Object.keys(progress.flags).length > 0
+            ? Object.entries(progress.flags)
+                .slice(0, 5)
+                .map(([k, v]) => `• ${k}: ${v}`)
+                .join("\n")
+            : lang === "id"
+              ? "Belum ada"
+              : "None",
+      },
+    ],
+    buttonsRow: [survivalUI.buildSurvivalActionRow('town', userId)],
+    footerText: ui.getFooter("survival"),
+  });
+
+  return await interaction.editReply(payload);
+}

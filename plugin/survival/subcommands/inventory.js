@@ -135,6 +135,17 @@ module.exports = {
         logger.warn("[SURVIVAL INVENTORY CANVAS ERROR]", canvasErr.message);
       }
 
+      if (!bannerAttachmentName) {
+        const bgInfo = survivalUI.getSurvivalBackground(
+          survival?.currentLocation || "desa",
+          survival?.inGameHour || 12,
+        );
+        if (bgInfo) {
+          files = [bgInfo.attachment];
+          bannerAttachmentName = bgInfo.attachmentName;
+        }
+      }
+
       // Filter & Sort Select Menu
       const filterSelect = new StringSelectMenuBuilder()
         .setCustomId("inv_filter_select")
@@ -188,7 +199,7 @@ module.exports = {
           value: [
             `> ${e("box", "📦")} **Jenis Item Unik:** \`${uniqueTypesCount}\` jenis`,
             `> ${e("inventory", "🎒")} **Total Muatan:** \`${totalUnits}\` unit barang`,
-            `> ${e("coin", "🪙")} **Estimasi Nilai Jual:** \`${totalSellValue.toLocaleString("id-ID")}\` Coins`,
+            `> ${e("coin", "🪙")} **Estimasi Nilai Jual:** \`${totalSellValue.toLocaleString("id-ID")}\` Sukamaju Koin (SC)`,
           ].join("\n"),
           inline: true,
         },
@@ -203,6 +214,8 @@ module.exports = {
         },
       ];
 
+      const navRow = survivalUI.buildSurvivalActionRow("town", user.id);
+
       const payload = buildContainerV2({
         accentColorHex: survivalUI.getColor("emerald") || "#86EFAC",
         authorName: `Naura Wilds • Sistem Manajemen Ransel Petualang`,
@@ -211,7 +224,7 @@ module.exports = {
         expression: uniqueTypesCount > 0 ? "Cheers" : "idle",
         description: descriptionText,
         fields: inventoryFields,
-        buttonsRow: [selectRow, buttonsRow],
+        buttonsRow: [selectRow, buttonsRow, navRow],
         bannerAttachmentName,
         files,
         footerText: ui.getFooter("survival"),
@@ -279,7 +292,9 @@ module.exports = {
                 itemListStr,
               ].join("\n"),
               fields: inventoryFields,
-              buttonsRow: [selectRow, buttonsRow],
+              buttonsRow: [selectRow, buttonsRow, navRow],
+              bannerAttachmentName,
+              files,
               footerText: ui.getFooter("survival"),
             });
 

@@ -117,7 +117,7 @@ module.exports = {
     const row = new ActionRowBuilder().addComponents(selectMenu);
 
     const housePayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFC0CB",
+      accentColorHex: survivalUI.getColor("moss"),
       authorName: "Naura Housing System",
       title: `${e("happy", "\uD83C\uDFE0")} Rumahmu: ${propId.toUpperCase()}`,
       iconURL: user.displayAvatarURL(),

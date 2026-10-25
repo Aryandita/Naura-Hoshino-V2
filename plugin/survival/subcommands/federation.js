@@ -9,6 +9,7 @@ const {
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 module.exports = {
   name: "federation",
@@ -93,8 +94,9 @@ module.exports = {
           `❤️ **Status HP Bos:** \`${boss.hp.toLocaleString("id-ID")} / ${boss.maxHp.toLocaleString("id-ID")}\` (\`${hpPercent}%\`)`,
           `🌀 **Fase Tempur:** \`Fase ${boss.phase}\``,
           `🏰 **Klan Penantang:** **${userClan.name}**`,
-          `\n*Serangan kolektif akan mendistribusikan hadiah dividen Star Fragments ke brankas klan anggota saat bos tumbang!*`,
+          `\n*Serangan kolektif akan mendistribusikan hadiah dividen Sukamaju Koin (SC) ke brankas klan anggota saat bos tumbang!*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("town", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -331,13 +333,14 @@ module.exports = {
       description: [
         `Halo, **${displayName}**! Hub Federasi Aliansi memungkinkan klan-klan dari berbagai server berkolaborasi membentuk aliansi pertahanan dan raid bersama.\n`,
         `🏰 **Klan Kamu Saat Ini:** **${userClan.name}** (Level ${userClan.level})`,
-        `💰 **Kas Klan:** \`${(userClan.vault || 0).toLocaleString("id-ID")} Star Fragments\``,
+        `💰 **Kas Klan:** \`${(userClan.vault || 0).toLocaleString("id-ID")} Sukamaju Koin (SC)\``,
         `\n**Pilihan Perintah Aliansi:**`,
         `• \`/survival federation aksi:halloffame\` - Papan peringkat prestise aliansi global.`,
         `• \`/survival federation aksi:boss\` - Status pertempuran Alliance Raid Boss kolektif.`,
         `• \`/survival federation aksi:create nama:<...> tag:<...>\` - Dirikan federasi baru (Ketua Klan).`,
         `• \`/survival federation aksi:join federation_id:<...>\` - Bergabung ke federasi yang ada.`,
       ].join("\n"),
+      buttonsRow: [survivalUI.buildSurvivalActionRow("town", user.id)],
       footerText: ui.getFooter("survival"),
     });
 

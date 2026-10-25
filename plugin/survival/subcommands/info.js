@@ -149,7 +149,7 @@ module.exports = {
       const perkLine =
         perkNames.length > 0
           ? `> ${e("sparkle")} Berkah aktif: **${perkNames.length}** (${perkNames.slice(0, 4).join(", ")})`
-          : `> ${e("sparkle")} Belum ada berkah khusus. Kumpulkan Naura Coupon dulu, yuk!`;
+          : `> ${e("sparkle")} Belum ada berkah khusus. Kumpulkan Voucher Beasiswa (VB) dulu, yuk!`;
 
       const friendshipLines = stats.friendshipBuffs && stats.friendshipBuffs.length > 0
         ? `\n💖 **Buff Persahabatan Penduduk:**\n` + stats.friendshipBuffs.slice(0, 3).map((b) => `> ${b.emoji} **${b.npcName}** (${b.levelTitle}): *${b.perkDesc}*`).join("\n")
@@ -187,6 +187,17 @@ module.exports = {
         logger.warn("[SURVIVAL INFO CANVAS]", canvasError.message);
       }
 
+      if (!bannerAttachmentName) {
+        const bgInfo = survivalUI.getSurvivalBackground(
+          survival?.currentLocation || "desa",
+          survival?.inGameHour || 12,
+        );
+        if (bgInfo) {
+          files = [bgInfo.attachment];
+          bannerAttachmentName = bgInfo.attachmentName;
+        }
+      }
+
       const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`info_cta_inventory:${user.id}`)
@@ -217,7 +228,11 @@ module.exports = {
           .setStyle(ButtonStyle.Secondary),
       );
 
-      const buttonsRow = [row1, row2];
+      const buttonsRow = [
+        row1,
+        row2,
+        survivalUI.buildSurvivalActionRow("town", user.id),
+      ];
 
       const rescueAlert = stats.rescueResult?.rescued
         ? `\n🚑 **Pertolongan Medis Darurat:**\n> Warga desa menemukanmu pingsan karena kelelahan ekstrim dan membawamu ke Klinik Desa! Kondisimu telah distabilkan, segera makan dan istirahat ya!\n`

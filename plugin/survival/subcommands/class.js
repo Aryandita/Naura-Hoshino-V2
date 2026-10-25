@@ -150,7 +150,7 @@ module.exports = {
         const kurang = Math.max(1, SWITCH_FEE - (profile.economy_wallet || 0));
         return ui.sendError(
           interaction,
-          `Pindah kelas butuh ${coinEmoji} **${SWITCH_FEE.toLocaleString("id-ID")} Naura Coin**, sedangkan kamu masih kurang **${kurang.toLocaleString("id-ID")}**. Kumpulkan dulu yaa, Naura dukung dari sini!`,
+          `Pindah kelas butuh ${coinEmoji} **${SWITCH_FEE.toLocaleString("id-ID")} Pratama Dollar (PD)**, sedangkan kamu masih kurang **${kurang.toLocaleString("id-ID")}**. Kumpulkan dulu yaa, Naura dukung dari sini!`,
           true,
         );
       }

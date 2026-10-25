@@ -52,7 +52,7 @@ module.exports = {
       const dur = it.durability !== undefined ? it.durability : 100;
       return {
         label: `Bongkar ${it.name || it.id} (Durability: ${dur}%)`,
-        description: `Daur ulang menjadi batangan logam & bonus NSF`.substring(0, 100),
+        description: `Daur ulang menjadi batangan logam & bonus SC`.substring(0, 100),
         value: `${it.id || it.name}_${idx}`,
         emoji: "♻️",
       };
@@ -63,7 +63,7 @@ module.exports = {
         "> *Bengkel Pandai Besi Bagas kini dilengkapi fasilitas dekonstruksi material.*",
         "",
         "🔨 **Layanan Bengkel Pandai Besi:**",
-        "• **Daur Ulang (Salvage):** Bongkar alat rusak atau aus menjadi batangan logam mentah dan bonus NSF.",
+        "• **Daur Ulang (Salvage):** Bongkar alat rusak atau aus menjadi batangan logam mentah dan bonus SC.",
         "• **Tempa & Rakit:** Buka meja perakitan untuk merakit senjata atau melebur bahan mentah.",
         "",
         `🎒 **Total Peralatan di Tas:** \`${salvageableItems.length}\` unit dapat didaur ulang.`,
@@ -142,7 +142,7 @@ module.exports = {
             `♻️ **Daur Ulang Massal Berhasil!**`,
             `Kamu membongkar **${allRes.count}** peralatan rusak menjadi:`,
             matLines,
-            `💰 Total Hasil Kas Daur Ulang: \`+${allRes.nsfAwarded} NSF\``,
+            `💰 Total Hasil Kas Daur Ulang: \`+${allRes.nsfAwarded} SC\``,
           ].join("\n");
         } else {
           snippet = `⚠️ **Daur Ulang Massal:** ${allRes.message || "Tidak ada barang yang dibongkar."}`;
@@ -168,7 +168,7 @@ module.exports = {
             `♻️ **Dekonstruksi Berhasil!**`,
             `Kamu membongkar **${salvageRes.salvagedItem.name || itemId}** dan memperoleh:`,
             matLines,
-            `💰 Bonus Kas Daur Ulang: \`+${salvageRes.nsfAwarded} NSF\``,
+            `💰 Bonus Kas Daur Ulang: \`+${salvageRes.nsfAwarded} SC\``,
           ].join("\n");
         } else {
           snippet = `⚠️ **Gagal Daur Ulang:** ${salvageRes.message || "Barang tidak dapat dibongkar."}`;

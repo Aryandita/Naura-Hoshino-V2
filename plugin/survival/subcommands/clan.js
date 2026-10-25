@@ -15,6 +15,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 const CREATE_COST = 500;
 const MAX_MEMBERS = 20;
@@ -38,7 +39,10 @@ function fail(interaction, message) {
   return interaction.editReply({ ...payload, embeds: [] });
 }
 
-function card(interaction, { color, title, description, expression, footer }) {
+function card(interaction, { color, title, description, expression, footer, buttonsRow }) {
+  const defaultButtons = buttonsRow || [
+    survivalUI.buildSurvivalActionRow("town", interaction.user?.id || ""),
+  ];
   const payload = buildContainerV2({
     accentColorHex: color,
     authorName: "Naura Clan Hall",
@@ -46,6 +50,7 @@ function card(interaction, { color, title, description, expression, footer }) {
     iconURL: interaction.user.displayAvatarURL(),
     expression: expression || "info",
     description,
+    buttonsRow: defaultButtons,
     footerText: footer || ui.getFooter("survival"),
   });
 
@@ -168,7 +173,7 @@ module.exports = {
 
       if (rewardTotal > 0) {
         description.push(
-          `\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **${rewardTotal.toLocaleString("id-ID")} NSF**!`,
+          `\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **${rewardTotal.toLocaleString("id-ID")} SC**!`,
         );
       }
 
@@ -197,7 +202,7 @@ module.exports = {
       );
 
       const payload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        accentColorHex: survivalUI.getColor("moss"),
         authorName: "🏰 Master Clan Hub & Dashboard",
         title: `${e("cheers", "🛡️")} Klan ${userClan.name}`,
         iconURL: interaction.user.displayAvatarURL(),
@@ -259,7 +264,7 @@ module.exports = {
           lang: "id",
         });
         questLines.push(
-          `**${idx + 1}.** ${icon} **${q.title}**\n> \`${goalBar.bar}\` \`${q.current} / ${q.target}\` (${goalBar.percent}%) • Kas Klan: ${nsfEmoji} **+${(q.reward || 0).toLocaleString("id-ID")} NSF**`,
+          `**${idx + 1}.** ${icon} **${q.title}**\n> \`${goalBar.bar}\` \`${q.current} / ${q.target}\` (${goalBar.percent}%) • Kas Klan: ${nsfEmoji} **+${(q.reward || 0).toLocaleString("id-ID")} SC**`,
         );
       });
 
@@ -277,7 +282,7 @@ module.exports = {
       const wantedList = await outlawBountyEngine.getWantedBoard();
       const topWanted = wantedList.slice(0, 3);
       const wantedLines = topWanted.length > 0
-        ? topWanted.map((b, i) => `> ${i + 1}. 🎯 <@${b.targetUserId}> : ${nsfEmoji} **${(b.rewardNsf || 0).toLocaleString("id-ID")} NSF** (*${b.reason || "Dicari"}*)`).join("\n")
+        ? topWanted.map((b, i) => `> ${i + 1}. 🎯 <@${b.targetUserId}> : ${nsfEmoji} **${(b.rewardNsf || 0).toLocaleString("id-ID")} SC** (*${b.reason || "Dicari"}*)`).join("\n")
         : "> *Belum ada buronan aktif saat ini.*";
 
       const {
@@ -313,7 +318,7 @@ module.exports = {
 
       if (rewardTotal > 0) {
         description.push(
-          `\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **+${rewardTotal.toLocaleString("id-ID")} NSF**!`,
+          `\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **+${rewardTotal.toLocaleString("id-ID")} SC**!`,
         );
       }
 
@@ -373,12 +378,13 @@ module.exports = {
         description: [
           `Selamat datang di 2.5D Guild Hall milik klan **${userClan.name}**!`,
           ``,
-          `💰 **Kas Brankas:** \`${(userClan.vault || 0).toLocaleString("id-ID")} Star Fragments\``,
+          `💰 **Kas Brankas:** \`${(userClan.vault || 0).toLocaleString("id-ID")} Sukamaju Koin (SC)\``,
           `🛋️ **Furnitur Terpasang:** ${furnituresList}`,
           `☕ **Fasilitas Barista:** \`${hallData.layout.furniture.includes("coffee_maker") ? "Tersedia (+25 Energy/hari)" : "Belum Dibeli"}\``,
           ``,
           `-# 💡 *Gunakan \`/survival rpg clan aksi:coffee\` untuk minum kopi atau \`aksi:furniture\` untuk membeli perabot baru!*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("town", interaction.user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -860,14 +866,14 @@ module.exports = {
           const ownerClan = t.clanId
             ? `Klan ID \`#${t.clanId}\``
             : "*Netral / Belum Dikuasai*";
-          return `📍 **${t.name}**\n- Penguasa: ${ownerClan}\n- Control Points: **${t.controlPoints} pts**\n- Hasil Pajak: ⭐ **${t.taxYield} NSF/hari**\n- Buff Wilayah: \`${t.buffEffect}\``;
+          return `📍 **${t.name}**\n- Penguasa: ${ownerClan}\n- Control Points: **${t.controlPoints} pts**\n- Hasil Pajak: ⭐ **${t.taxYield} SC/hari**\n- Buff Wilayah: \`${t.buffEffect}\``;
         })
         .join("\n\n");
 
       return card(interaction, {
         color: "#38BDF8",
         title: "🏰 Peta Wilayah & Teritori Klan Lintas Server",
-        description: `Berikut status penguasaan teritori strategis di dunia Naura RPG:\n\n${list}\n\n*Klan yang menguasai teritori memperoleh pendapatan pasif Star Fragments dan buff wilayah setiap reset mingguan.*`,
+        description: `Berikut status penguasaan teritori strategis di dunia Naura RPG:\n\n${list}\n\n*Klan yang menguasai teritori memperoleh pendapatan pasif Sukamaju Koin (SC) dan buff wilayah setiap reset mingguan.*`,
       });
     }
 

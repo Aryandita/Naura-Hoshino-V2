@@ -104,7 +104,7 @@ module.exports = {
       );
 
       return buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        accentColorHex: survivalUI.getColor("amber"),
         authorName: "Naura Hoshino \u2022 Financial Identity",
         title: "💳 Dompet Terpadu Petualang (Naura Wilds)",
         iconURL: user.displayAvatarURL(),

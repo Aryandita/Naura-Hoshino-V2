@@ -12,12 +12,10 @@
 // - perpindahan lokasi ditulis lewat cacheManager, bukan `survival.save()`,
 //   supaya cache `user:survival` tidak menyimpan lokasi lama sampai TTL habis.
 
-const fs = require("fs");
 const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  AttachmentBuilder,
   MessageFlags,
 } = require("discord.js");
 const {
@@ -39,7 +37,6 @@ const { getTimeState } = require("../../../src/survival/helpers/survivalTime");
 const CHOICE_MS = 15000;
 const QTE_MS = 5000;
 const TALK_MS = 30000;
-const BG_NAME = "location.jpeg";
 
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback || "";
@@ -202,11 +199,9 @@ module.exports = {
       return loc === lokasi;
     });
 
-    const bgPath = ui.getSurvivalBackground(lokasi, survival.inGameHour || 6);
-    const files =
-      bgPath && fs.existsSync(bgPath)
-        ? [new AttachmentBuilder(bgPath, { name: BG_NAME })]
-        : [];
+    const bgInfo = survivalUI.getSurvivalBackground(lokasi, survival.inGameHour || 6);
+    const files = bgInfo ? [bgInfo.attachment] : [];
+    const bgName = bgInfo ? bgInfo.attachmentName : undefined;
 
     const choiceRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -241,7 +236,7 @@ module.exports = {
       ]
         .filter(Boolean)
         .join(""),
-      bannerAttachmentName: files.length > 0 ? BG_NAME : undefined,
+      topBannerAttachmentName: bgName,
       files,
       buttonsRow: [choiceRow],
       footerText: ui.getFooter("survival"),
@@ -474,7 +469,7 @@ module.exports = {
 
       setTimeout(() => {
         finishSuccess(i).catch(() => {});
-      }, 1500);
+      }, 1500).unref?.();
     });
 
     collector.on("end", async (collected) => {

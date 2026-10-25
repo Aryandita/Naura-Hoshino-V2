@@ -5,6 +5,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const MarketAuction = require("../../../src/models/MarketAuction");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
@@ -85,7 +86,7 @@ module.exports = {
               timeLeft > 60 ? `${Math.ceil(timeLeft / 60)}j` : `${timeLeft}m`;
             const label =
               `[${auc.auctionId}] ${auc.itemName || auc.itemId} - ` +
-              `${auc.currentBid || auc.startingPrice} ${auc.currency === "nsf" ? "NSF" : "Koin"} (${timeLabel} lagi)`;
+              `${auc.currentBid || auc.startingPrice} ${auc.currency === "nsf" ? "SC" : "PD"} (${timeLabel} lagi)`;
             return choice(label, auc.auctionId);
           });
 
@@ -155,7 +156,7 @@ async function handleList(interaction) {
 
   return interaction.editReply(
     buildContainerV2({
-      accentColorHex: ui.getColor("primary"),
+      accentColorHex: survivalUI.getColor("amber"),
       authorName: "Market Auction",
       title: "Daftar Lelang Aktif",
       iconURL: interaction.client.user.displayAvatarURL(),
@@ -615,7 +616,7 @@ async function handleClaim(interaction) {
 
       return interaction.editReply(
         buildContainerV2({
-          accentColorHex: ui.getColor("primary"),
+          accentColorHex: survivalUI.getColor("amber"),
           description: `Lelang tidak ada yang menawar. Barang **${auction.amount}x ${auction.itemId}** telah dikembalikan ke tasmu.`,
         }),
       );

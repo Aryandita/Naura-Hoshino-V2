@@ -9,6 +9,7 @@ const {
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const {
   addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
@@ -88,7 +89,7 @@ module.exports = {
         // Klaim hasil ekspedisi
         await redisManager.deleteCache(redisKey);
 
-        // Tambah Star Fragments dan Item
+        // Tambah Sukamaju Koin (SC) dan Item
         await UserSurvival.increment(
           { starFragments: expData.fragments },
           { where: { userId } },
@@ -111,7 +112,8 @@ module.exports = {
           accentColorHex: "#10B981",
           authorName: `${ui.getEmoji("cat_pet") || "🐾"} Ekspedisi Selesai!`,
           title: `Pet ${pet.petName || pet.petType} Telah Kembali!`,
-          description: `Pet kamu berhasil pulang membawa banyak jarahan berharga!\n\n**Hasil Ekspedisi:**\n- ${ui.getEmoji("star") || "⭐"} **+${expData.fragments} Star Fragments**\n- ${ui.getEmoji("cat_pet") || "🐾"} **+${expData.exp} Pet EXP** (Level Sekarang: **Lv.${pet.petLevel}**)\n\n**Barang Jarahan:**\n${lootList}`,
+          description: `Pet kamu berhasil pulang membawa banyak jarahan berharga!\n\n**Hasil Ekspedisi:**\n- ${ui.getEmoji("star") || "⭐"} **+${expData.fragments} Sukamaju Koin (SC)**\n- ${ui.getEmoji("cat_pet") || "🐾"} **+${expData.exp} Pet EXP** (Level Sekarang: **Lv.${pet.petLevel}**)\n\n**Barang Jarahan:**\n${lootList}`,
+          buttonsRow: [survivalUI.buildSurvivalActionRow("profile", userId)],
           footerText: ui.getFooter("survival"),
         });
 
@@ -141,7 +143,8 @@ module.exports = {
       accentColorHex: "#38BDF8",
       authorName: `${ui.getEmoji("cat_pet") || "🐾"} Pet Dungeon Expedition`,
       title: "Pet Berangkat Menjelajah!",
-      description: `Pet kamu **${pet.petName || pet.petType}** telah berangkat menjelajahi dungeon selama **${durationHours} jam**!\n\n**Estimasi Hadiah:**\n- ${ui.getEmoji("star") || "⭐"} **+${expConfig.fragments} Star Fragments**\n- ${ui.getEmoji("cat_pet") || "🐾"} **+${expConfig.exp} Pet EXP**\n- ${ui.getEmoji("gift") || "🎁"} Bahan material langka`,
+      description: `Pet kamu **${pet.petName || pet.petType}** telah berangkat menjelajahi dungeon selama **${durationHours} jam**!\n\n**Estimasi Hadiah:**\n- ${ui.getEmoji("star") || "⭐"} **+${expConfig.fragments} Sukamaju Koin (SC)**\n- ${ui.getEmoji("cat_pet") || "🐾"} **+${expConfig.exp} Pet EXP**\n- ${ui.getEmoji("gift") || "🎁"} Bahan material langka`,
+      buttonsRow: [survivalUI.buildSurvivalActionRow("profile", userId)],
       footerText: ui.getFooter("survival"),
     });
 

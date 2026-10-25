@@ -4,6 +4,7 @@ const outlawEngine = require("../../../src/survival/engines/outlawBountyEngine")
 const duelEngine = require("../../../src/survival/engines/duelEngine");
 const { buildContainerV2, buildErrorContainerV2, buildSuccessContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 module.exports = {
   name: "bounty",
@@ -27,15 +28,16 @@ module.exports = {
               "Saat ini tidak ada buronan aktif yang kepalanya dihargai di Naura Wilds.",
               "",
               "Ingin menempatkan buronan atas pemain lain?",
-              "Gunakan `/survival bounty place target:@user imbalan:<nsf> alasan:<alasan>`",
+              "Gunakan `/survival bounty place target:@user imbalan:<sc> alasan:<alasan>`",
             ].join("\n"),
+            buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
             footerText: ui.getFooter("survival"),
           });
           return interaction.editReply(emptyPayload);
         }
 
         const lines = board.map((b, idx) => {
-          return `${idx + 1}. **<@${b.targetUserId}>**\n> 💰 Hadiah Kepala: **${b.rewardNsf.toLocaleString("id-ID")} NSF**\n> 📜 Alasan: *${b.reason}*\n> 🎯 Pemburu Pengaju: <@${b.issuerId}>`;
+          return `${idx + 1}. **<@${b.targetUserId}>**\n> 💰 Hadiah Kepala: **${b.rewardNsf.toLocaleString("id-ID")} SC**\n> 📜 Alasan: *${b.reason}*\n> 🎯 Pemburu Pengaju: <@${b.issuerId}>`;
         });
 
         const listPayload = buildContainerV2({
@@ -49,6 +51,7 @@ module.exports = {
             "",
             "- # *Gunakan `/survival bounty hunt target:@user` untuk menantang dan merebut hadiah kepalanya!*",
           ].join("\n"),
+          buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
           footerText: ui.getFooter("survival"),
         });
         return interaction.editReply(listPayload);
@@ -129,11 +132,12 @@ module.exports = {
             description: [
               `Kakak berhasil mengalahkan buronan <@${target.id}> dalam pertarungan sengit!`,
               "",
-              `🎁 **Hadiah Kepala Dicairkan:** **+${claimRes.rewardNsf?.toLocaleString("id-ID")} NSF**!`,
+              `🎁 **Hadiah Kepala Dicairkan:** **+${claimRes.rewardNsf?.toLocaleString("id-ID")} SC**!`,
               `> Sisa HP Pemburu: **${duelResult.winnerHp} HP**`,
               "",
               "- # *Nama buronan telah dihapus dari Wanted Outlaw Board.*",
             ].join("\n"),
+            buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
             footerText: ui.getFooter("survival"),
           });
           return interaction.editReply(victoryPayload);
@@ -149,6 +153,7 @@ module.exports = {
               `> Sisa HP Buronan: **${duelResult.winnerHp} HP**`,
               "Tingkatkan atribut dan perlengkapanmu sebelum menantangnya kembali!",
             ].join("\n"),
+            buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
             footerText: ui.getFooter("survival"),
           });
           return interaction.editReply(defeatPayload);

@@ -24,6 +24,7 @@ const {
   safeParseInventory,
   addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 const COLLECTOR_MS = 120000;
 const STUDY_HOURS = 3;
@@ -68,12 +69,18 @@ module.exports = {
         .setStyle(ButtonStyle.Primary),
     );
 
+    const inGameHour = survival.inGameHour || (new Date().getUTCHours() * 2) % 24;
+    const bg = survivalUI.getSurvivalBackground("academy", inGameHour);
+    const files = bg ? [bg.attachment] : [];
+
     const academyPayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      accentColorHex: survivalUI.getColor("moss"),
       authorName: "Naura Academy",
       title: `${e("read", "\uD83C\uDFEB")} Selamat datang di Naura Academy`,
       iconURL: user.displayAvatarURL(),
       expression: "info",
+      topBannerAttachmentName: bg?.attachmentName,
+      files,
       description: [
         "Perpustakaannya sepi dan wangi buku baru. Naura suka suasana di sini!",
         "",
@@ -86,7 +93,7 @@ module.exports = {
       footerText: ui.getFooter("survival"),
     });
 
-    const response = await interaction.editReply(academyPayload);
+    const response = await interaction.editReply({ ...academyPayload, files, embeds: [] });
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -152,16 +159,19 @@ module.exports = {
         }
 
         const studyPayload = buildContainerV2({
-          accentColorHex: ui.getColor("primary") || "#FFC0CB",
+          accentColorHex: survivalUI.getColor("moss"),
           authorName: "Naura Academy",
           title: `${e("read", "\uD83D\uDCD6")} Selesai belajar`,
           iconURL: user.displayAvatarURL(),
           expression: timeUpdate.passedOut ? "error" : "success",
+          topBannerAttachmentName: bg?.attachmentName,
+          files,
           description: lines.join("\n"),
+          buttonsRow: [survivalUI.buildSurvivalActionRow("town", user.id)],
           footerText: ui.getFooter("survival"),
         });
 
-        return i.editReply({ ...studyPayload, embeds: [] }).catch(() => {});
+        return i.editReply({ ...studyPayload, files, embeds: [] }).catch(() => {});
       }
 
       if (i.customId !== "study_exam") return;
@@ -177,7 +187,7 @@ module.exports = {
         return i.reply(ephemeral({ ...already, embeds: [] })).catch(() => {});
       }
 
-      // Ujian remedial dibayar dengan Naura Coin karena kampus ada di kota.
+      // Ujian remedial dibayar dengan Pratama Dollar (PD) karena kampus ada di kota.
       if ((rpgState.test_cd || 0) > (survival.inGameDay || 1)) {
         const paid = await currency.charge(
           currency.COIN,
@@ -214,11 +224,13 @@ module.exports = {
         await advanceTime(user.id, EXAM_HOURS);
 
         const passPayload = buildContainerV2({
-          accentColorHex: ui.getColor("success") || "#22c55e",
+          accentColorHex: survivalUI.getColor("emerald"),
           authorName: "Naura Academy",
           title: `${e("cheers", "\uD83C\uDF93")} Kamu lulus!`,
           iconURL: user.displayAvatarURL(),
           expression: "achievement",
+          topBannerAttachmentName: bg?.attachmentName,
+          files,
           description: [
             '**Prof. Habibie:** "Luar biasa, analisismu sangat tajam."',
             "",
@@ -226,10 +238,11 @@ module.exports = {
             "",
             "Naura bangga banget sama kamu, sungguh!",
           ].join("\n"),
+          buttonsRow: [survivalUI.buildSurvivalActionRow("town", user.id)],
           footerText: ui.getFooter("survival"),
         });
 
-        return i.editReply({ ...passPayload, embeds: [] }).catch(() => {});
+        return i.editReply({ ...passPayload, files, embeds: [] }).catch(() => {});
       }
 
       await cacheManager.mutateUserSurvivalJson(user.id, "rpg_state", (state) => {
@@ -240,20 +253,23 @@ module.exports = {
       await advanceTime(user.id, EXAM_HOURS);
 
       const failPayload = buildContainerV2({
-        accentColorHex: ui.getColor("warning") || "#FFB347",
+        accentColorHex: survivalUI.getColor("amber"),
         authorName: "Naura Academy",
         title: `${e("cry", "\uD83C\uDF93")} Ujiannya belum lulus`,
         iconURL: user.displayAvatarURL(),
         expression: "fail",
+        topBannerAttachmentName: bg?.attachmentName,
+        files,
         description: [
           '**Prof. Habibie:** "Jawabanmu kurang tepat. Belajar lebih giat lagi, ya."',
           "",
           "Jangan berkecil hati! Baca buku beberapa kali lagi, lalu coba ujian besok. Naura temani belajar sampai kamu lulus.",
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("town", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
-      return i.editReply({ ...failPayload, embeds: [] }).catch(() => {});
+      return i.editReply({ ...failPayload, files, embeds: [] }).catch(() => {});
     });
   },
 };

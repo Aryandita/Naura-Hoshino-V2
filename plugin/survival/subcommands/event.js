@@ -11,6 +11,7 @@ const {
 const {
   getCurrentSeason,
 } = require("../../../src/survival/helpers/survivalContext");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
@@ -84,7 +85,7 @@ module.exports = {
         "coupons",
         randomCoupon,
       );
-      lines.push(`> ${e("coupon", "🎫")} **${randomCoupon}x Naura Coupon**`);
+      lines.push(`> ${e("coupon", "🎫")} **${randomCoupon}x Voucher Beasiswa (VB)**`);
       lines.push(
         "",
         `${e("happy", "✨")} Selamat Tahun Baru! Semoga petualanganmu tahun ini semakin seru!`,
@@ -120,13 +121,13 @@ module.exports = {
       }
 
       // Default bonus
-      const randomNSF = Math.floor(Math.random() * 50) + 50;
+      const randomSC = Math.floor(Math.random() * 50) + 50;
       await cacheManager.incrementUserSurvival(
         user.id,
         "starFragments",
-        randomNSF,
+        randomSC,
       );
-      lines.push(`> ${e("nsf", "⭐")} **${randomNSF}x Naura Star Fragment**`);
+      lines.push(`> ${e("sc", "🪙")} **${randomSC}x Sukamaju Koin (SC)**`);
     }
 
     if (itemsToGive.length > 0) {
@@ -134,12 +135,13 @@ module.exports = {
     }
 
     const successPayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFC0CB",
+      accentColorHex: survivalUI.getColor("emerald"),
       authorName: "Naura Event Manager",
       title: `${e("cheers", "🎉")} Hadiah Event Diambil!`,
       iconURL: user.displayAvatarURL(),
       expression: "success",
       description: lines.join("\n"),
+      buttonsRow: [survivalUI.buildSurvivalActionRow("town", user.id)],
       footerText: ui.getFooter("survival"),
     });
 

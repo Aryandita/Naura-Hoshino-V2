@@ -132,19 +132,24 @@ module.exports = {
       `> ${timeState.emoji} **Hari ke-${timeUpdate.day}**, jam ${jam}:00 (${timeState.label})`,
     ].join("\n");
 
+    const bg = survivalUI.getSurvivalBackground(survival.currentLocation || "desa", timeUpdate.hour);
+    const files = bg ? [bg.attachment] : [];
+
     const payload = buildContainerV2({
-      accentColorHex: isDaytime ? "#38BDF8" : (ui.getColor("primary") || "#FFB6C1"),
+      accentColorHex: isDaytime ? survivalUI.getColor("river") : survivalUI.getColor("moss"),
       authorName: "Naura Survival Vitals",
       title: titleText,
       iconURL: interaction.client.user.displayAvatarURL(),
+      topBannerAttachmentName: bg?.attachmentName,
+      files,
       description,
       buttonsRow: [survivalUI.buildSurvivalActionRow("vitals", user.id)],
       footerText: `Jangan lupa minum air & makan ya \u2022 ${ui.getFooter("survival")}`,
     });
 
     if (interaction.deferred || interaction.replied) {
-      return interaction.editReply(payload);
+      return interaction.editReply({ ...payload, files, embeds: [] });
     }
-    return interaction.reply(payload);
+    return interaction.reply({ ...payload, files, embeds: [] });
   },
 };

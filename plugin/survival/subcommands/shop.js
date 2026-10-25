@@ -320,8 +320,8 @@ module.exports = {
                 "",
                 `• **Kategori:** ${String(itemData.category).toUpperCase()}`,
                 `• **Tier:** T${itemData.tier || 1} (${itemData.rarity || "Common"})`,
-                `• **Harga Beli:** ${(itemData.price || 0).toLocaleString("id-ID")} NSF`,
-                `• **Harga Jual:** ${(itemData.sellPrice || 0).toLocaleString("id-ID")} NSF`,
+                `• **Harga Beli:** ${(itemData.price || 0).toLocaleString("id-ID")} SC`,
+                `• **Harga Jual:** ${(itemData.sellPrice || 0).toLocaleString("id-ID")} SC`,
               ].join("\n"),
               files: [file],
               buttonsRow: [modeRow("buy"), categoryRow()],
@@ -375,7 +375,7 @@ module.exports = {
           ([key, label]) => {
             options.push({
               label: `Kios Gaston: ${label}`.substring(0, 100),
-              description: "Dibayar dengan Naura Coupon",
+              description: "Dibayar dengan Voucher Beasiswa (VB)",
               value: purchase.COUPON_PREFIX + key,
             });
           },
@@ -452,7 +452,7 @@ module.exports = {
             sellable.slice(0, MAX_OPTIONS).map((it) => ({
               label: `${it.name} (x${it.amount})`.substring(0, 100),
               description:
-                `${it.unitPrice.toLocaleString("id-ID")} NSF per unit`.substring(
+                `${it.unitPrice.toLocaleString("id-ID")} SC per unit`.substring(
                   0,
                   100,
                 ),
@@ -463,7 +463,7 @@ module.exports = {
 
       return shopPayload(
         `💰 ${shop.shopName} - Jual dari Ransel`,
-        `Mau jual hasil petualangan yang mana hari ini, ${vars.nama}? Kubayar tunai pakai NSF!`,
+        `Mau jual hasil petualangan yang mana hari ini, ${vars.nama}? Kubayar tunai pakai SC!`,
         bonusNote,
         false,
         [modeRow("sell"), sellSelectMenu],
@@ -538,7 +538,7 @@ module.exports = {
 
         activePayload = shopPayload(
           `💰 Konfirmasi Penjualan`,
-          `Barang: **${item ? item.name : itemId}**\nJumlah di ransel: **${amount} unit**\nHarga per unit: **${value.toLocaleString("id-ID")} NSF**\n\nMau dijual 1 unit dulu atau semuanya sekaligus?`,
+          `Barang: **${item ? item.name : itemId}**\nJumlah di ransel: **${amount} unit**\nHarga per unit: **${value.toLocaleString("id-ID")} SC**\n\nMau dijual 1 unit dulu atau semuanya sekaligus?`,
           "",
           false,
           [confirmRow],
@@ -578,8 +578,8 @@ module.exports = {
               accentColorHex: ui.getColor("success") || "#22c55e",
               title: `💰 Penjualan Berhasil!`,
               description: [
-                `Kamu berhasil menjual **${result.qty}x ${result.itemName}** seharga **${result.earned.toLocaleString("id-ID")} NSF**!`,
-                `Dompetmu sekarang: \`${result.balance.toLocaleString("id-ID")} NSF\``,
+                `Kamu berhasil menjual **${result.qty}x ${result.itemName}** seharga **${result.earned.toLocaleString("id-ID")} SC**!`,
+                `Dompetmu sekarang: \`${result.balance.toLocaleString("id-ID")} SC\``,
               ].join("\n"),
               footerText: ui.getFooter("survival"),
             }),

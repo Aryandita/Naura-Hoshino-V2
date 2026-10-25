@@ -117,7 +117,7 @@ module.exports = {
         description: [
           `Selamat datang di akuarium holografis laut dalam milikmu!`,
           ``,
-          `${ui.getEmoji("ticket") || "🎟️"} **Pendapatan Tiket:** \`+${vivarium.hourlyIncome} Star Fragments / jam\``,
+          `${ui.getEmoji("ticket") || "🎟️"} **Pendapatan Tiket:** \`+${vivarium.hourlyIncome} Sukamaju Koin (SC) / jam\``,
           `${ui.getEmoji("fish") || "🐟"} **Koleksi Spesies (${vivarium.totalFishes}/10 Ekor):**`,
           fishList,
           ``,
@@ -149,7 +149,7 @@ module.exports = {
         accentColorHex: "#86EFAC",
         authorName: `${ui.getEmoji("ticket") || "🎟️"} Loket Tiket Vivarium`,
         title: `${ui.getEmoji("sparkles") || "✨"} Hasil Tiket Pengunjung Masuk Kas!`,
-        description: `Kamu berhasil mengklaim **+${collectRes.revenue.toLocaleString("id-ID")} Star Fragments** dari hasil kunjungan akuarium selama ${collectRes.hoursPassed} jam terakhir!`,
+        description: `Kamu berhasil mengklaim **+${collectRes.revenue.toLocaleString("id-ID")} Sukamaju Koin (SC)** dari hasil kunjungan akuarium selama ${collectRes.hoursPassed} jam terakhir!`,
         footerText: ui.getFooter("survival"),
       });
 
@@ -219,8 +219,8 @@ module.exports = {
           `Kail laut dalammu berhasil mengangkat spesies langka dari kegelapan samudra!`,
           ``,
           `${ui.getEmoji("star") || "⭐"} **Kelangkaan:** \`${caught.rarity}\``,
-          `${ui.getEmoji("coin") || "💵"} **Nilai Jual Pasar:** \`${caught.price} Star Fragments\``,
-          `${ui.getEmoji("ticket") || "🎟️"} **Yield Tiket Akuarium:** \`+${caught.ticketYield} ${ui.getEmoji("star") || "⭐"}/jam\``,
+          `${ui.getEmoji("coin") || "💵"} **Nilai Jual Pasar:** \`${caught.price} Sukamaju Koin (SC)\``,
+          `${ui.getEmoji("ticket") || "🎟️"} **Yield Tiket Akuarium:** \`+${caught.ticketYield} SC/jam\``,
           ``,
           `-# ${ui.getEmoji("sparkle") || "💡"} *Tempatkan ikan ini di akuarium dengan \`/survival activity fish aksi:deposit ikan:${caught.id}\`!*`,
         ].join("\n"),
@@ -469,19 +469,25 @@ module.exports = {
 
           if (energyRes.warning) lines.push("", energyRes.warning);
 
+          const inGameHour = (new Date().getUTCHours() * 2) % 24;
+          const bg = survivalUI.getSurvivalBackground("laut", inGameHour);
+          const files = bg ? [bg.attachment] : [];
+
           const successPayload = buildContainerV2({
-            accentColorHex: ui.getColor("primary") || "#FFC0CB",
+            accentColorHex: survivalUI.getColor("river"),
             authorName: "Naura Fishing Spot",
             title: `${e("cheers", "\uD83C\uDF89")} Kailnya kena!`,
             iconURL: user.displayAvatarURL(),
             expression: catchResult.mood,
+            topBannerAttachmentName: bg?.attachmentName,
+            files,
             description: lines.join("\n"),
             buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
             footerText: ui.getFooter("survival"),
           });
 
           await interaction
-            .editReply({ ...successPayload, embeds: [] })
+            .editReply({ ...successPayload, files, embeds: [] })
             .catch(() => {});
 
           await questGen
@@ -525,6 +531,6 @@ module.exports = {
       } catch (err) {
         logger.debug("[fish:execute] Galat pada rutinitas aplikasi: " + (err?.message || err));
       }
-    }, waitTime);
+    }, waitTime).unref?.();
   },
 };

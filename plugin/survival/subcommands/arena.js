@@ -31,6 +31,7 @@ module.exports = {
             title: `${e("trophy")} Papan Peringkat Arena \u2022 ${seasonName}`,
             description: "Belum ada petarung yang tercatat di Arena musim ini.",
             expression: "Sleepy",
+            buttonsRow: [survivalUI.buildSurvivalActionRow("combat", interaction.user.id)],
             footerText: ui.getFooter("survival"),
           }),
         );
@@ -54,10 +55,11 @@ module.exports = {
 
       return interaction.editReply(
         buildContainerV2({
-          accentColorHex: ui.getColor("primary"),
+          accentColorHex: survivalUI.getColor("emerald"),
           title: `${e("trophy")} Papan Peringkat Arena \u2022 ${seasonName}`,
           description: `Musim kompetisi aktif: **${seasonName}**\n\n${leaderboardText}`,
           expression: "Impressed",
+          buttonsRow: [survivalUI.buildSurvivalActionRow("combat", interaction.user.id)],
           footerText: ui.getFooter("survival"),
         }),
       );
@@ -149,11 +151,12 @@ module.exports = {
           ``,
           `📊 **Hasil Rating:** \`${battleRes.eloChange > 0 ? "+" + battleRes.eloChange : battleRes.eloChange} ELO\` (Total: \`${battleRes.newElo} ELO\` | Divisi: **${battleRes.newDivision}**)`,
           battleRes.rewardCoins > 0
-            ? `💰 **Hadiah Kemenangan:** \`+${battleRes.rewardCoins} Star Fragments\``
+            ? `💰 **Hadiah Kemenangan:** \`+${battleRes.rewardCoins} SC\``
             : "",
         ]
           .filter(Boolean)
           .join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -257,6 +260,7 @@ module.exports = {
               "• Tangkap dan jinakkan hewan peliharaanmu melalui **/survival pet**.",
               "• Pastikan pet sudah disetel aktif dan dalam kondisi sehat/kenyang sebelum masuk arena.",
             ].join("\n"),
+            buttonsRow: [survivalUI.buildSurvivalActionRow("combat", interaction.user.id)],
             footerText: ui.getFooter("survival"),
           }),
         );

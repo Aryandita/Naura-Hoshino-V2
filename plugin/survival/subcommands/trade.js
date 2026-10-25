@@ -34,13 +34,16 @@ function reject(interaction, message) {
 module.exports = {
   async execute(interaction) {
     const targetUser = interaction.options.getUser("user");
-    const amount = interaction.options.getInteger("nsf") || 0;
+    const amount =
+      interaction.options.getInteger("sc") ||
+      interaction.options.getInteger("nsf") ||
+      0;
     const sender = interaction.user;
 
     if (!targetUser) {
       return reject(
         interaction,
-        "Naura belum tahu mau kirim ke siapa. Coba tulis begini ya: `/survival trade user:@teman nsf:100`.",
+        "Naura belum tahu mau kirim ke siapa. Coba tulis begini ya: `/survival trade user:@teman sc:100`.",
       );
     }
 
@@ -54,7 +57,7 @@ module.exports = {
     if (amount < MIN_AMOUNT) {
       return reject(
         interaction,
-        "Jumlah Star Fragment yang mau dikirim harus lebih dari nol. Naura tunggu angkanya!",
+        "Jumlah Sukamaju Koin (SC) yang mau dikirim harus lebih dari nol. Naura tunggu angkanya!",
       );
     }
 
@@ -169,7 +172,7 @@ module.exports = {
           footerText: ui.getFooter("survival"),
         });
         return i
-          .update({ ...guardFailPayload, embeds: [], components: [] })
+          .update(guardFailPayload)
           .catch(() => {});
       }
 
@@ -210,6 +213,7 @@ module.exports = {
           "",
           "Terima kasih sudah saling berbagi, Naura senang lihat kalian akrab!",
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("trade", sender.id)],
         footerText: ui.getFooter("survival"),
       });
 

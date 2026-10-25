@@ -2,6 +2,7 @@
 
 const mongoManager = require("../../../src/managers/mongoManager");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -26,7 +27,7 @@ module.exports = {
 
       if (!logs || logs.length === 0) {
         const emptyPayload = buildContainerV2({
-          accentColorHex: ui.getColor("info") || "#38BDF8",
+          accentColorHex: survivalUI.getColor("river"),
           authorName: "Naura Transaction Ledger",
           title: `${e("book", "📜")} Riwayat Aktivitas & Transaksi`,
           description: [
@@ -75,7 +76,7 @@ module.exports = {
       });
 
       const payload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#8B5CF6",
+        accentColorHex: survivalUI.getColor("moss"),
         authorName: "Naura Audit Ledger",
         title: `${e("coin", "🪙")} 10 Aktivitas & Transaksi Terakhir`,
         description: [

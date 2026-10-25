@@ -180,7 +180,7 @@ module.exports = {
           `**${child.name}** dengan bangga menyerahkan hasil kerja magangnya hari ini sesuai keahlian sang ibu (${child.motherName}):`,
           "",
           `🎁 **Hasil Magang:** **${perkRes.rewardDesc}**`,
-          `💰 Saldo Star Fragments dan Kuponmu telah bertambah secara otomatis!`,
+          `💰 Saldo Sukamaju Koin (SC) dan Voucher Beasiswamu (VB) telah bertambah secara otomatis!`,
         ].join("\n"),
         footerText: ui.getFooter("survival"),
       });

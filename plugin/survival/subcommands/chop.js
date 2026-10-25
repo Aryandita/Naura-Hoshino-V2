@@ -216,6 +216,10 @@ module.exports = {
       ];
       if (bonusLine) descLines.push("", bonusLine);
 
+      const inGameHour = (new Date().getUTCHours() * 2) % 24;
+      const bg = survivalUI.getSurvivalBackground("hutan", inGameHour);
+      const files = bg ? [bg.attachment] : [];
+
       const successPayload = survivalUI.buildActionResultCard({
         user,
         action: "chop",
@@ -229,11 +233,13 @@ module.exports = {
         })),
         weatherBonus: pulse.pulseHeader,
         warning: energyRes.warning || "",
+        topBannerAttachmentName: bg?.attachmentName,
+        files,
         buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
       });
 
       await interaction
-        .editReply({ ...successPayload, embeds: [] })
+        .editReply({ ...successPayload, files, embeds: [] })
         .catch(() => {});
 
       await questGen

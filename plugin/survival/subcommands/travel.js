@@ -7,8 +7,6 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const path = require("path");
-const fs = require("fs");
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -24,16 +22,11 @@ const survivalUI = require("../../../src/utils/survivalUIHelper");
 const currency = require("../../../src/survival/engines/currency");
 const encounter = require("../../../src/survival/helpers/npcEncounter");
 const roam = require("../../../src/survival/helpers/npcEncounterView");
+const storyIntegration = require("../../../src/survival/helpers/storyIntegration");
 
 const BANDIT_CHANCE = 0.15;
 const BANDIT_LOSS = 50;
 const COLLECTOR_MS = 120000;
-const BACKGROUND_DIR = path.join(
-  process.cwd(),
-  "assets",
-  "survival",
-  "background",
-);
 
 // Data NPC memakai `desa`, sedangkan pilihan perintah memakai `village`.
 const LOCATION_ALIAS = {
@@ -80,17 +73,10 @@ function timePeriodOf(label) {
 }
 
 function findBackground(locKey, period) {
-  const candidates = [
-    `${locKey}_${period}.png`,
-    `${locKey}.png`,
-    "placeholder.png",
-  ];
-
-  for (const name of candidates) {
-    const full = path.join(BACKGROUND_DIR, name);
-    if (fs.existsSync(full)) return { full, name };
+  const bg = survivalUI.getSurvivalBackground(locKey, period);
+  if (bg) {
+    return { full: bg.fullPath, name: bg.attachmentName };
   }
-
   return null;
 }
 
@@ -149,6 +135,27 @@ module.exports = {
     const timeUpdate = await advanceTime(user.id, Math.ceil(travelTime));
     const timeState = getTimeState(timeUpdate.hour);
 
+    // Check location-based story event
+    const locationStoryEvent = await storyIntegration.checkLocationStoryEvent(
+      user.id,
+      normalizedTarget,
+      timeUpdate.hour || 6,
+    );
+
+    // Check first visit story trigger
+    const firstVisitTrigger = await storyIntegration.checkActivityStoryTrigger(
+      user.id,
+      "travel_new_location",
+      { location: normalizedTarget },
+    );
+
+    let storyText = "";
+    if (locationStoryEvent && locationStoryEvent.type === "location_event") {
+      storyText = `\n\n📖 **${locationStoryEvent.scene.speakerName || "Story Event"}**\n${locationStoryEvent.scene.dialogText}`;
+    } else if (firstVisitTrigger && firstVisitTrigger.type === "exploration_note") {
+      storyText = `\n\n✨ ${firstVisitTrigger.message}`;
+    }
+
     let encounterText = "";
     const npcPerksEngine = require("../../../src/survival/engines/npcPerksEngine");
     const effectiveBanditChance = await npcPerksEngine.applyPassiveBonus(user.id, "bandit_chance", BANDIT_CHANCE);
@@ -204,6 +211,7 @@ module.exports = {
     }
 
     if (encounterText) lines.push(encounterText);
+    if (storyText) lines.push(storyText);
 
     if (timeUpdate.passedOut) {
       lines.push(
@@ -247,7 +255,7 @@ module.exports = {
 
     const buildTravelPayload = (rows) =>
       buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        accentColorHex: survivalUI.getColor("moss"),
         authorName: "Naura Travel",
         title: `${e("cheers", "\uD83D\uDDFA\uFE0F")} Kamu sudah sampai!`,
         iconURL: user.displayAvatarURL(),

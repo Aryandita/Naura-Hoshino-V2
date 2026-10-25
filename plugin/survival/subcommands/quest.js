@@ -36,7 +36,7 @@ function statusIcon(quest) {
   return e("thinking", "\u23F3");
 }
 
-function renderQuests(list, nsfEmoji) {
+function renderQuests(list, scEmoji) {
   return list
     .map((q, idx) => {
       const goalBar = ui.ux.buildGoalGradientBar({
@@ -47,7 +47,7 @@ function renderQuests(list, nsfEmoji) {
       });
       return (
         `**${idx + 1}.** ${statusIcon(q)} ${q.title}\n` +
-        `> \`${goalBar.bar}\` \`${q.current} / ${q.target}\` (${goalBar.percent}%) \u2022 Hadiah: ${nsfEmoji} **${q.reward} NSF**`
+        `> \`${goalBar.bar}\` \`${q.current} / ${q.target}\` (${goalBar.percent}%) \u2022 Hadiah: ${scEmoji} **${q.reward} SC**`
       );
     })
     .join("\n\n");
@@ -113,7 +113,7 @@ module.exports = async function questBoard(interaction, user, survivalData) {
     }
   }
 
-  // Hadiah NSF lewat modul mata uang supaya saldo tidak lagi disentuh langsung.
+  // Hadiah SC lewat modul mata uang supaya saldo tidak lagi disentuh langsung.
   if (rewardTotal > 0) {
     await currency.reward(
       currency.FRAGMENT,
@@ -122,7 +122,7 @@ module.exports = async function questBoard(interaction, user, survivalData) {
     );
   }
 
-  // Naura Coupon hanya jatuh dari misi jangka panjang, bukan misi harian,
+  // Voucher Beasiswa (VB) hanya jatuh dari misi jangka panjang, bukan misi harian,
   // supaya papan misi tidak berubah jadi mesin kupon setiap hari.
   let coupon = { gained: 0 };
   if (weeklyCleared > 0) {
@@ -137,12 +137,12 @@ module.exports = async function questBoard(interaction, user, survivalData) {
     await quest.save({ fields: ["questsState", "lastReset"] });
   }
 
-  const nsfEmoji = currency.emojiOf(currency.FRAGMENT);
+  const scEmoji = currency.emojiOf(currency.FRAGMENT);
   const dailyText =
-    renderQuests(state.daily, nsfEmoji) ||
+    renderQuests(state.daily, scEmoji) ||
     "*Belum ada misi harian buat hari ini.*";
   const weeklyText =
-    renderQuests(state.weekly, nsfEmoji) || "*Belum ada misi mingguan.*";
+    renderQuests(state.weekly, scEmoji) || "*Belum ada misi mingguan.*";
 
   const userName = ui.ux.resolveUserName(interaction);
   const parts = [
@@ -175,12 +175,13 @@ module.exports = async function questBoard(interaction, user, survivalData) {
     } else if (weeklyCleared > 0) {
       parts.push(
         "",
-        `${e("shy", "\uD83D\uDE3F")} Naura sudah coba cari kupon buat kamu, tapi belum ketemu kali ini. Minggu depan kita coba lagi, ya!`,
+        `${e("shy", "\uD83D\uDE3F")} Naura sudah coba cari voucher beasiswa buat kamu, tapi belum ketemu kali ini. Minggu depan kita coba lagi, ya!`,
       );
     }
   }
 
   const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+  const survivalUI = require("../../../src/utils/survivalUIHelper");
   const buttonsRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("btn_dailyquest_view")
@@ -195,13 +196,13 @@ module.exports = async function questBoard(interaction, user, survivalData) {
   );
 
   const payload = buildContainerV2({
-    accentColorHex: ui.getColor("primary") || "#FFB6C1",
+    accentColorHex: survivalUI.getColor("moss"),
     authorName: "Naura Quest Board",
     title: `${e("read", "\uD83D\uDCDC")} Papan Misi ${userName}`,
     iconURL: user.displayAvatarURL(),
     expression: rewardTotal > 0 ? "success" : "info",
     description: parts.join("\n"),
-    buttonsRow: [buttonsRow],
+    buttonsRow: [buttonsRow, survivalUI.buildSurvivalActionRow("gathering", user.id)],
     footerText: ui.getFooter("survival"),
   });
 

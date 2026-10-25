@@ -32,7 +32,7 @@ const FAIL_MESSAGE = {
     "Nominalnya belum terbaca. Tulis angkanya saja ya, misalnya `1500`.",
   below_minimum: "Nominalnya masih di bawah batas minimum.",
   insufficient: "Saldonya belum cukup untuk transaksi ini.",
-  coupon_locked: "Naura Coupon tidak bisa ditukar, itu barang langka!",
+  coupon_locked: "Voucher Beasiswa (VB) tidak bisa ditukar, itu barang langka!",
   unsupported_pair: "Pasangan mata uang itu belum dilayani loket Naura.",
   same_currency: "Itu mata uang yang sama, jadi tidak perlu ditukar~",
   already_active: "Masih ada yang aktif. Selesaikan yang itu dulu, ya.",
@@ -43,7 +43,7 @@ const FAIL_MESSAGE = {
   unknown_term: "Pilihan jangka waktunya tidak Naura kenali.",
   unknown_asset: "Portofolio itu tidak Naura kenali.",
   one_way_restricted:
-    "Kebijakan Moneter Central Bank: Penukaran Coin ke Star Fragments (NSF) dikunci satu arah untuk menjaga integritas tantangan survival di alam liar.",
+    "Kebijakan Moneter Bank Sentral: Penukaran Pratama Dollar (PD) ke Sukamaju Koin (SC) dibatasi satu arah untuk menjaga integritas tantangan survival di alam liar.",
 };
 
 function e(name, fallback) {
@@ -211,7 +211,7 @@ module.exports = {
         // --- Penukaran mata uang ---
         if (id === "bank_ex_to_nsf") {
           return i.reply({
-            content: `${e("warning")} **Kebijakan One-Way Bridge:**\nNaura Central Bank tidak melayani penukaran Naura Coin kembali ke Star Fragments (NSF) untuk menjaga keadilan ekosistem bertahan hidup di alam liar Naura Wilds~`,
+            content: `${e("warning")} **Kebijakan One-Way Bridge:**\nNaura Central Bank tidak melayani penukaran Pratama Dollar (PD) kembali ke Sukamaju Koin (SC) untuk menjaga keadilan ekosistem bertahan hidup di alam liar Naura Wilds~`,
             flags: MessageFlags.Ephemeral,
           });
         }
@@ -242,7 +242,7 @@ module.exports = {
 
               const feeText =
                 result.feeNsf > 0
-                  ? `\n💼 **Biaya Admin (${result.feePercent * 100}%):** ${views.n(result.feeNsf)} NSF didaur ulang ke fasilitas komunitas.`
+                  ? `\n💼 **Biaya Admin (${result.feePercent * 100}%):** ${views.n(result.feeNsf)} SC didaur ulang ke fasilitas komunitas.`
                   : "";
               const ticketText =
                 result.ticketsAwarded > 0
@@ -276,10 +276,10 @@ module.exports = {
           return askAmount(i, {
             title: toBank ? "Setor ke rekening" : "Tarik ke dompet",
             description: toBank
-              ? "Tulis jumlah **Naura Coin** yang mau kamu simpan di rekening."
-              : "Tulis jumlah **Naura Coin** yang mau kamu ambil dari rekening.",
+              ? "Tulis jumlah **Pratama Dollar (PD)** yang mau kamu simpan di rekening."
+              : "Tulis jumlah **Pratama Dollar (PD)** yang mau kamu ambil dari rekening.",
             balance: availableBalance,
-            unit: "Coin",
+            unit: "PD",
             run: async (raw) => {
               const result = await actions.moveSavings(user.id, raw, toBank);
               if (!result.ok) return result;
@@ -288,8 +288,8 @@ module.exports = {
                 title: toBank ? "Setoran diterima!" : "Penarikan selesai!",
                 description: [
                   toBank
-                    ? `**${views.n(result.amount)} Naura Coin** sudah aman di rekeningmu.`
-                    : `**${views.n(result.amount)} Naura Coin** sudah pindah ke dompetmu.`,
+                    ? `**${views.n(result.amount)} Pratama Dollar (PD)** sudah aman di rekeningmu.`
+                    : `**${views.n(result.amount)} Pratama Dollar (PD)** sudah pindah ke dompetmu.`,
                   "",
                   `${e("bank")} Rekening: \`${views.n(result.bank)}\``,
                   `${e("wallet")} Dompet: \`${views.n(result.wallet)}\``,
@@ -305,16 +305,16 @@ module.exports = {
           const termKey = id.replace("bank_dep_create_", "");
           return askAmount(i, {
             title: "Buka deposito baru",
-            description: `Tulis jumlah **Naura Coin** dari rekening yang mau dititipkan. Minimal **${views.n(MIN_DEPOSIT_COIN)} Coin**.`,
+            description: `Tulis jumlah **Pratama Dollar (PD)** dari rekening yang mau dititipkan. Minimal **${views.n(MIN_DEPOSIT_COIN)} PD**.`,
             balance: snap.bank,
-            unit: "Coin",
+            unit: "PD",
             run: async (raw) => {
               const result = await actions.createDeposit(user.id, termKey, raw);
               if (!result.ok) return result;
               return {
                 ok: true,
                 title: "Deposito dibuka!",
-                description: `**${views.n(result.amount)} Naura Coin** tersimpan dalam paket **${result.term.label}** (${result.term.name}).\nJatuh tempo pada hari ke-**${result.unlockDay}**. Naura ingatkan nanti, ya!`,
+                description: `**${views.n(result.amount)} Pratama Dollar (PD)** tersimpan dalam paket **${result.term.label}** (${result.term.name}).\nJatuh tempo pada hari ke-**${result.unlockDay}**. Naura ingatkan nanti, ya!`,
               };
             },
           });
@@ -333,8 +333,8 @@ module.exports = {
             ...views.successView(
               "Deposito dicairkan!",
               [
-                `Pokok **${views.n(result.amount)} Coin** ditambah bunga **${views.n(result.interest)} Coin**.`,
-                `Total **${views.n(result.payout)} Coin** sudah masuk rekeningmu dari paket ${result.termName}.`,
+                `Pokok **${views.n(result.amount)} PD** ditambah bunga **${views.n(result.interest)} PD**.`,
+                `Total **${views.n(result.payout)} PD** sudah masuk rekeningmu dari paket ${result.termName}.`,
               ].join("\n"),
             ),
             flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -350,7 +350,7 @@ module.exports = {
 
           return askAmount(i, {
             title: `Beli ${asset.name}`,
-            description: `Tulis jumlah **Naura Coin** dari rekening yang mau diinvestasikan. Minimal **${views.n(MIN_INVEST_COIN)} Coin**.`,
+            description: `Tulis jumlah **Pratama Dollar (PD)** dari rekening yang mau diinvestasikan. Minimal **${views.n(MIN_INVEST_COIN)} PD**.`,
             run: async (raw) => {
               const result = await actions.buyInvestment(
                 user.id,
@@ -361,7 +361,7 @@ module.exports = {
               return {
                 ok: true,
                 title: "Investasi tercatat!",
-                description: `**${views.n(result.amount)} Naura Coin** masuk ke portofolio **${result.asset.name}**. Naura pantau nilainya tiap hari!`,
+                description: `**${views.n(result.amount)} Pratama Dollar (PD)** masuk ke portofolio **${result.asset.name}**. Naura pantau nilainya tiap hari!`,
               };
             },
           });

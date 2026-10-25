@@ -42,7 +42,7 @@ module.exports = {
 
       const wagerNote =
         leaveRes.wagerPayout > 0
-          ? `🔥 **Hasil Taruhan Wager (${leaveRes.wagerMultiplier}x):** \`+${leaveRes.wagerPayout.toLocaleString("id-ID")} NSF\` (Modal: ${leaveRes.wager.toLocaleString("id-ID")} NSF)`
+          ? `🔥 **Hasil Taruhan Wager (${leaveRes.wagerMultiplier}x):** \`+${leaveRes.wagerPayout.toLocaleString("id-ID")} SC\` (Modal: ${leaveRes.wager.toLocaleString("id-ID")} SC)`
           : "";
 
       const descriptionLines = [
@@ -50,7 +50,7 @@ module.exports = {
         ``,
         `🏰 **Lantai Tertinggi Ditaklukkan:** \`Lantai ${leaveRes.floorsCleared}\``,
         `🎁 **Total Relic Dikumpulkan:** \`${leaveRes.relicsGained} Relic\``,
-        `💰 **Total Koin Diamankan:** \`+${leaveRes.totalCoins.toLocaleString("id-ID")} Star Fragments\``,
+        `💰 **Total Koin Diamankan:** \`+${leaveRes.totalCoins.toLocaleString("id-ID")} SC\``,
       ];
       if (wagerNote) descriptionLines.push(wagerNote);
 
@@ -79,8 +79,8 @@ module.exports = {
       ) {
         return interaction.editReply({
           ...buildErrorContainerV2({
-            title: "Saldo NSF Tidak Mencukupi",
-            description: `Kamu membutuhkan minimal **${wager.toLocaleString("id-ID")} NSF** untuk memasang taruhan ekspedisi ini (Saldo saat ini: ${startRes.currentNsf.toLocaleString("id-ID")} NSF).`,
+            title: "Saldo SC Tidak Mencukupi",
+            description: `Kamu membutuhkan minimal **${wager.toLocaleString("id-ID")} SC** untuk memasang taruhan ekspedisi ini (Saldo saat ini: ${startRes.currentNsf.toLocaleString("id-ID")} SC).`,
             footerText: ui.getFooter("survival"),
           }),
         });
@@ -88,7 +88,7 @@ module.exports = {
       run = startRes;
       outcomeText =
         wager > 0
-          ? `🔥 *Kamu memasang taruhan High-Risk sebesar **${wager.toLocaleString("id-ID")} NSF** dan melangkah masuk ke gerbang The Neo-Abyss Lantai 1!*`
+          ? `🔥 *Kamu memasang taruhan High-Risk sebesar **${wager.toLocaleString("id-ID")} SC** dan melangkah masuk ke gerbang The Neo-Abyss Lantai 1!*`
           : "🚀 *Kamu melangkah masuk ke dalam gerbang dimensi The Neo-Abyss Lantai 1!*";
     } else if (action.startsWith("room_")) {
       const choiceIdx = parseInt(action.replace("room_", ""), 10) - 1;
@@ -125,7 +125,7 @@ module.exports = {
         description: [
           outcomeText,
           ``,
-          `💰 **Total Koin Masuk Tas:** \`+${(run.fragmentsCollected + 1000).toLocaleString("id-ID")} Star Fragments\``,
+          `💰 **Total Koin Masuk Tas:** \`+${(run.fragmentsCollected + 1000).toLocaleString("id-ID")} SC\``,
           `🏆 Gelar kehormatan dan hadiah musim telah berhasil diklaim!`,
         ].join("\n"),
         buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
@@ -169,14 +169,14 @@ module.exports = {
     );
     const wagerDesc =
       run.wager > 0
-        ? `🔥 **Taruhan Wager:** \`${run.wager.toLocaleString("id-ID")} NSF\` (Multiplier: \`${wagerMultiplier}x\`)\n`
+        ? `🔥 **Taruhan Wager:** \`${run.wager.toLocaleString("id-ID")} SC\` (Multiplier: \`${wagerMultiplier}x\`)\n`
         : "";
 
     const payload = buildContainerV2({
       accentColorHex: survivalUI.getRarityColor("epic"),
       authorName:
         run.wager > 0
-          ? `🌀 The Neo-Abyss · Lantai ${run.currentFloor} / 50 (Taruhan: ${run.wager.toLocaleString("id-ID")} NSF)`
+          ? `🌀 The Neo-Abyss · Lantai ${run.currentFloor} / 50 (Taruhan: ${run.wager.toLocaleString("id-ID")} SC)`
           : `🌀 The Neo-Abyss · Lantai ${run.currentFloor} / 50`,
       title: `❤️ HP: ${run.currentHp}/${run.maxHp}  |  ⚔️ ATK: ${run.attackPower}  |  💰 ${run.fragmentsCollected} ⭐`,
       description: [
@@ -215,13 +215,14 @@ module.exports = {
         const leaveRes = await abyssEngine.finishRun(userId);
         const wagerBonusText =
           leaveRes.wagerPayout > 0
-            ? `\n🔥 **Hasil Taruhan Wager (${leaveRes.wagerMultiplier}x):** +${leaveRes.wagerPayout.toLocaleString("id-ID")} NSF!`
+            ? `\n🔥 **Hasil Taruhan Wager (${leaveRes.wagerMultiplier}x):** +${leaveRes.wagerPayout.toLocaleString("id-ID")} SC!`
             : "";
         return interaction.followUp({
           ...buildContainerV2({
             accentColorHex: survivalUI.getColor("emerald"),
             title: "✨ Ekspedisi Berhasil Diselesaikan!",
-            description: `Kamu berhasil mengamankan **+${leaveRes.totalCoins.toLocaleString("id-ID")} Star Fragments**!${wagerBonusText}`,
+            description: `Kamu berhasil mengamankan **+${leaveRes.totalCoins.toLocaleString("id-ID")} Sukamaju Koin (SC)**!${wagerBonusText}`,
+            buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
             footerText: ui.getFooter("survival"),
           }),
           flags: MessageFlags.Ephemeral,
