@@ -421,7 +421,7 @@ class AiEnsembleRouter {
     const candidateModels = [
       env.GROQ_MODEL || "llama-3.3-70b-versatile",
       "llama-3.1-8b-instant",
-      "llama-3.2-3b-preview",
+      "llama-3.2-1b-preview",
     ];
 
     let lastGroqStatus = null;
@@ -698,6 +698,14 @@ class AiEnsembleRouter {
       used: newUsed,
       limit: quotaStatus.limit,
     };
+  }
+
+  getCircuitBreakerMetrics() {
+    const metrics = {};
+    for (const [name, breaker] of Object.entries(this.breakers)) {
+      metrics[name] = breaker.getMetrics();
+    }
+    return metrics;
   }
 }
 

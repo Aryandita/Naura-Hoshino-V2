@@ -73,6 +73,31 @@ function cleanUserId(userId) {
   return clean;
 }
 
+/**
+ * Helper untuk mengukur performa query database dan log slow queries.
+ * @param {string} queryName - Nama query untuk identifikasi di log
+ * @param {Function} queryFn - Async function yang menjalankan query
+ * @param {number} [thresholdMs=100] - Batas waktu dalam ms sebelum dianggap slow
+ * @returns {Promise<any>} Hasil dari queryFn
+ */
+async function measureQuery(queryName, queryFn, thresholdMs = 100) {
+  const start = Date.now();
+  try {
+    const result = await queryFn();
+    const duration = Date.now() - start;
+    
+    if (duration > thresholdMs) {
+      logger.warn(`[SLOW QUERY] ${queryName} took ${duration}ms (threshold: ${thresholdMs}ms)`);
+    }
+    
+    return result;
+  } catch (error) {
+    const duration = Date.now() - start;
+    logger.error(`[QUERY ERROR] ${queryName} failed after ${duration}ms: ${error.message}`);
+    throw error;
+  }
+}
+
 
 /**
  * CacheManager: Read-Through and Write-Behind Caching Layer
@@ -110,6 +135,20 @@ class CacheManager {
   /** Jumlah user yang masih menunggu ditulis ke database. */
   get pendingWrites() {
     return this.writeQueue.size + this.survivalQueue.size;
+  }
+
+  /**
+   * Mengambil UserProfile dan UserSurvival secara paralel untuk mengurangi latensi.
+   * Gunakan ini saat kedua data dibutuhkan sekaligus daripada memanggil sequential.
+   * @param {string} userId - ID Discord User
+   * @returns {Promise<{profile: Object|null, survival: Object|null}>}
+   */
+  async getUserProfileAndSurvival(userId) {
+    const [profile, survival] = await Promise.all([
+      this.getUserProfile(userId),
+      this.getUserSurvival(userId),
+    ]);
+    return { profile, survival };
   }
 
   // ==========================================
@@ -551,23 +590,34 @@ class CacheManager {
     const cacheKey = `user:profile:${userId}`;
 
     try {
-      // 1. Coba ambil dari Redis
-      const cachedProfile = await redisManager.getCache(cacheKey);
-      if (cachedProfile) return cachedProfile;
+      // 1. Coba ambil dari Redis dengan timeout protection
+      try {
+        const cachedProfile = await Promise.race([
+          redisManager.getCache(cacheKey),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout')), 100))
+        ]);
+        if (cachedProfile) return cachedProfile;
+      } catch (redisError) {
+        // Redis timeout or error, continue to DB
+      }
 
       // 2. Jika tidak ada di Redis, ambil dari Database Utama (findOrCreate)
       // Gunakan paranoid: false agar record yang pernah di-soft-delete dapat dipulihkan
       // tanpa memicu SequelizeUniqueConstraintError pada primary key userId.
-      const [dbProfile] = await UserProfile.findOrCreate({
-        where: { userId },
-        paranoid: false,
-      });
+      const [dbProfile] = await measureQuery('getUserProfile.findOrCreate', () =>
+        UserProfile.findOrCreate({
+          where: { userId },
+          paranoid: false,
+          defaults: { userId }, // Provide defaults to speed up creation
+        })
+      );
       if (dbProfile) {
         if (dbProfile.deletedAt) {
           await dbProfile.restore();
         }
         const profileData = dbProfile.toJSON();
-        await redisManager.setCache(cacheKey, profileData, PROFILE_TTL);
+        // Set cache dengan fire-and-forget untuk tidak blocking response
+        redisManager.setCache(cacheKey, profileData, PROFILE_TTL).catch(() => {});
         return profileData;
       }
 
@@ -578,17 +628,24 @@ class CacheManager {
           ? error.errors.map((e) => `${e.path}: ${e.message}`).join(", ")
           : (error?.message || error);
       logger.error(`[CacheManager] Error getUserProfile (${userId}):`, errMsg);
-      // Fallback: Jika redis down, tembak DB langsung
+      // Fallback: Jika redis down, tembak DB langsung dengan timeout
       try {
-        const [dbProfile] = await UserProfile.findOrCreate({
-          where: { userId },
-          paranoid: false,
-        });
+        const [dbProfile] = await Promise.race([
+          measureQuery('getUserProfile.findOrCreate', () =>
+            UserProfile.findOrCreate({
+              where: { userId },
+              paranoid: false,
+              defaults: { userId },
+            })
+          ),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 5000))
+        ]);
         if (dbProfile && dbProfile.deletedAt) {
           await dbProfile.restore();
         }
         return dbProfile ? dbProfile.toJSON() : null;
       } catch (dbError) {
+        logger.error(`[CacheManager] DB fallback failed for ${userId}:`, dbError.message);
         return null;
       }
     }
@@ -820,10 +877,12 @@ class CacheManager {
       const cached = await redisManager.getCache(cacheKey);
       if (cached) return cached;
 
-      const [db] = await UserSurvival.findOrCreate({
-        where: { userId },
-        paranoid: false,
-      });
+      const [db] = await measureQuery('getUserSurvival.findOrCreate', () =>
+        UserSurvival.findOrCreate({
+          where: { userId },
+          paranoid: false,
+        })
+      );
       if (db) {
         if (db.deletedAt) {
           await db.restore();
@@ -840,10 +899,12 @@ class CacheManager {
           : (error?.message || error);
       logger.error(`[CacheManager] Error getUserSurvival (${userId}):`, errMsg);
       try {
-        const [db] = await UserSurvival.findOrCreate({
+        const [db] = await measureQuery('getUserSurvival.findOrCreate', () =>
+        UserSurvival.findOrCreate({
           where: { userId },
           paranoid: false,
-        });
+        })
+      );
         if (db && db.deletedAt) {
           await db.restore();
         }

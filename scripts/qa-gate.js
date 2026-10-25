@@ -134,6 +134,7 @@ async function run() {
   results.push(
     await runStep("8/8 Automated Unit Test Suite", "node", [
       "--test",
+      "--test-timeout=30000",
       "src/**/*.test.js",
       "dashboard/**/*.test.js",
       "plugin/**/*.test.js",

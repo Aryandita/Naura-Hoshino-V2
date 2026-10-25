@@ -1,6 +1,6 @@
 {
   "name": "naura-hoshino",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Naura Hoshino, Bot Discord multifungsi dengan UI Canvas Modern",
   "main": "index.js",
   "scripts": {
@@ -17,7 +17,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --test \"src/**/*.test.js\" \"dashboard/**/*.test.js\" \"plugin/**/*.test.js\" \"test/**/*.test.js\"",
+    "test": "node --test --test-timeout=30000 \"src/**/*.test.js\" \"dashboard/**/*.test.js\" \"plugin/**/*.test.js\" \"test/**/*.test.js\"",
+    "test:quick": "node --test --test-timeout=10000 --test-concurrency=true \"src/**/*.test.js\" \"dashboard/**/*.test.js\"",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -46,6 +47,8 @@
     "db:inspect": "node scripts/inspect-db.js",
     "test:services": "node scripts/test-services.js",
     "preview:3d": "node scripts/preview-3d.js",
+    "model:bake": "node scripts/bake-animations-glb.js",
+    "model:verify": "node scripts/verify-baked-glb.js",
     "verify:hero": "node scripts/verify_hero_runtime.js",
     "sync:github": "node scripts/git-sync.js",
     "assistant": "node assistant/server.js",
