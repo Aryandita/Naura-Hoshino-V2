@@ -1,5 +1,20 @@
 "use strict";
 
+/**
+ * @module gallery
+ * @description Subcommand /survival gallery - Koleksi gambar dan screenshot momen petualangan.
+ * 
+ * Fitur Utama:
+ * - Image gallery pagination
+ * - Canvas-generated artwork
+ * - Collection completion tracking
+ */
+
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const path = require("path");
 const {
   ActionRowBuilder,
@@ -65,6 +80,10 @@ function formatDate(value) {
     year: "numeric",
   });
 }
+
+// ============================================================================
+// HANDLER
+// ============================================================================
 
 module.exports = {
   async execute(interaction, client) {

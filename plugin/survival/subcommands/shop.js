@@ -1,5 +1,21 @@
 "use strict";
+
+/**
+ * @module shop
+ * @description Subcommand /survival shop - Toko desa dengan item catalog dan purchase system.
+ * 
+ * Fitur Utama:
+ * - Item catalog pagination
+ * - Price display dengan currency type
+ * - Purchase validation (saldo, level req)
+ * - Atomic inventory write
+ */
+
 const { logger } = require("../../../src/managers/logger");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const path = require("path");
 const {
@@ -64,6 +80,10 @@ function portraitOf(npc) {
     iconURL: `attachment://${name}`,
   };
 }
+
+// ============================================================================
+// HANDLER
+// ============================================================================
 
 module.exports = {
   async autocomplete(interaction) {
@@ -130,6 +150,10 @@ module.exports = {
     return safeRespond(interaction, fuzzyFilter(available, focusedValue, 25));
   },
 
+  /**
+   * Handler utama untuk command /survival shop
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (!interaction.deferred && !interaction.replied) {
       if (typeof interaction.deferUpdate === "function") {

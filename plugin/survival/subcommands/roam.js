@@ -1,5 +1,17 @@
 "use strict";
 
+/**
+ * @module roam
+ * @description Subcommand /survival roam - Eksplorasi bebas lokasi dengan random encounter dan flavor text.
+ * 
+ * Fitur Utama:
+ * - Random event trigger system
+ * - Location-based encounter table
+ * - Stamina cost per roam
+ * - Flavor text dari World Pulse engine
+ */
+
+
 const {
   StringSelectMenuBuilder,
   ActionRowBuilder,
@@ -12,6 +24,10 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -72,7 +88,15 @@ function getStaminaBar(current, max) {
   return { bar: "█".repeat(filled) + "░".repeat(empty), pct: Math.round(pct), color };
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival roam
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (!interaction.deferred && !interaction.replied) {
       await interaction.deferReply().catch(() => {});

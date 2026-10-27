@@ -1,11 +1,28 @@
 "use strict";
 
+/**
+ * @module study
+ * @description Subcommand /survival study - Sistem belajar di kampus untuk meningkatkan stat INT dan mendapatkan XP.
+ * 
+ * Fitur Utama:
+ * - Biaya stamina per sesi belajar
+ * - Bonus INT stat berdasarkan level dan perlengkapan
+ * - XP reward dengan scaling level
+ * - Time advancement setelah belajar
+ * - Quest progress increment
+ */
+
+
 const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   MessageFlags,
 } = require("discord.js");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -39,7 +56,15 @@ function ephemeral(payload) {
   return { ...payload, flags: (payload.flags || 0) | MessageFlags.Ephemeral };
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival study
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const [survival] = await UserSurvival.findOrCreate({

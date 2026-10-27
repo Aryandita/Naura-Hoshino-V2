@@ -1,6 +1,22 @@
 "use strict";
 
+/**
+ * @module heist
+ * @description Subcommand /survival heist - Heist mission dengan planning phase dan execution mini-game.
+ * 
+ * Fitur Utama:
+ * - Heist difficulty tiers
+ * - Crew assembly requirement
+ * - Stealth vs combat approach
+ * - Loot splitting mechanic
+ */
+
+
 const { MessageFlags } = require("discord.js");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const UserSurvival = require("../../../src/models/UserSurvival");
 const UserNPC = require("../../../src/models/UserNPC");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -48,7 +64,15 @@ function fail(interaction, title, description) {
   return interaction.reply(ephemeral(payload));
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival heist
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const [survival] = await UserSurvival.findOrCreate({

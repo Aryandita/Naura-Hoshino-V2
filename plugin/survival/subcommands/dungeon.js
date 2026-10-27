@@ -1,10 +1,27 @@
 // Lokasi: plugin/survival/subcommands/dungeon.js
 "use strict";
 
+/**
+ * @module dungeon
+ * @description Subcommand /survival dungeon - Infinite dungeon crawler dengan procedural rooms dan boss fights.
+ * 
+ * Fitur Utama:
+ * - Procedural room generation
+ * - Combat encounter system
+ * - Boss fight mechanics
+ * - Loot drop pool per floor
+ * - Leaderboard damage tracking
+ */
+
+
 const { MessageFlags } = require("discord.js");
 const {
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -45,7 +62,15 @@ function ephemeral(payload) {
   };
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival dungeon
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const [survival] = await UserSurvival.findOrCreate({

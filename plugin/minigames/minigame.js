@@ -1,4 +1,29 @@
-"use strict";
+/**
+ * @module MinigameCommand
+ * @deprecated Perintah minigame sudah dikonsolidasikan ke /arcade
+ * 
+ * Modul ini menyediakan router untuk command /minigame yang sudah deprecated.
+ * Seluruh subcommand sekarang di-redirect ke sistem Arcade baru yang
+ * menggunakan Medali Permainan (MP) sebagai mata uang.
+ * 
+ * Fitur Legacy:
+ * - Blackjack (deprecated)
+ * - Typerace (deprecated)
+ * - Leaderboard (deprecated)
+ * 
+ * @example
+ * // Perintah lama (sudah deprecated)
+ * /minigame blackjack taruhan:100
+ * 
+ * // Perintah baru
+ * /arcade hub
+ * 
+ * @author Naura Hoshino Development Team
+ * @version 2.4.0
+ * @deprecated Gunakan /arcade sebagai ganti
+ */
+
+'use strict';
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -17,7 +42,17 @@ const {
 } = require("../../src/premium/premiumHelper");
 const { showMinigameIntro } = require("./helpers/minigameShared");
 
+// ============================================================================
+// SUBCOMMAND REGISTRY
+// ============================================================================
+
+/**
+ * Map untuk menyimpan subcommand minigame
+ * @type {Map<string, Object>}
+ */
 const subcommands = new Map();
+
+// Load all subcommands from subcommands directory
 const subcommandsPath = path.join(__dirname, "subcommands");
 if (fs.existsSync(subcommandsPath)) {
   const files = fs
@@ -31,6 +66,15 @@ if (fs.existsSync(subcommandsPath)) {
   }
 }
 
+// ============================================================================
+// CORE FUNCTIONS
+// ============================================================================
+
+/**
+ * Menjalankan logika minigame dengan konteks premium
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction - Discord interaction
+ * @returns {Promise<void>}
+ */
 async function runMinigameLogic(interaction) {
   const subcommandName = interaction.options.getSubcommand();
   const user = interaction.user;
@@ -41,9 +85,15 @@ async function runMinigameLogic(interaction) {
   const premiumTier = getUserPremiumTier(profile);
   const nsfMultiplier = getMinigameMultiplier(premiumTier);
 
-  const nsfEmoji = ui.getEmoji("nsf") || ui.getEmoji("star_fragment") || "⭐";
+  const nsfEmoji = ui.getEmoji("nsf") || ui.getEmoji("star_fragment") || "\u2b50";
   const coinEmoji = `${nsfEmoji} NSF`;
-  const errorEmoji = ui.emojis.error || "❌";
+  const errorEmoji = ui.emojis.error || "\u274c";
+  
+  /**
+   * Helper untuk mengirim pesan error
+   * @param {string} msg - Pesan error
+   * @returns {Promise<void>}
+   */
   const sendError = (msg) => {
     const errPayload = buildErrorContainerV2({
       title: "Gagal",
@@ -53,6 +103,7 @@ async function runMinigameLogic(interaction) {
     return interaction.editReply(errPayload);
   };
 
+  // Build context object for subcommands
   const context = {
     user,
     profile,
@@ -71,6 +122,7 @@ async function runMinigameLogic(interaction) {
 
   const executeGame = () => sub.execute(interaction, context);
 
+  // Skip intro for leaderboard
   if (subcommandName === "leaderboard") {
     return executeGame();
   }
@@ -78,14 +130,22 @@ async function runMinigameLogic(interaction) {
   return showMinigameIntro(interaction, subcommandName, executeGame);
 }
 
+// ============================================================================
+// MODULE EXPORTS
+// ============================================================================
+
 module.exports = {
+  /**
+   * Definisi slash command untuk /minigame (DEPRECATED)
+   * @type {import('discord.js').SlashCommandBuilder}
+   */
   data: new SlashCommandBuilder()
     .setName("minigame")
-    .setDescription("🎮 [DEPRECATED] Gunakan /arcade untuk bermain game dengan Medali Permainan (MP)")
+    .setDescription("\ud83c\udfae [DEPRECATED] Gunakan /arcade untuk bermain game dengan Medali Permainan (MP)")
     .addSubcommand((sub) =>
       sub
         .setName("blackjack")
-        .setDescription("🃏 [DEPRECATED] Bermain Blackjack - gunakan /arcade play blackjack")
+        .setDescription("\ud83c\udccf [DEPRECATED] Bermain Blackjack - gunakan /arcade play blackjack")
         .addIntegerOption((opt) =>
           opt
             .setName("taruhan")
@@ -98,7 +158,7 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("typerace")
-        .setDescription("⌨️ [DEPRECATED] Type Race - gunakan /arcade play typerace")
+        .setDescription("\u2328\ufe0f [DEPRECATED] Type Race - gunakan /arcade play typerace")
         .addStringOption((opt) =>
           opt
             .setName("kesulitan")
@@ -119,25 +179,30 @@ module.exports = {
         ),
     ),
 
+  /**
+   * Handler eksekusi command /minigame
+   * Displays deprecation notice and redirects to /arcade
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
-    // Show deprecation notice and redirect to /arcade
     const payload = buildContainerV2({
       accentColorHex: "#F59E0B",
       authorName: "Naura Arcade",
-      title: "⚠️ Perintah /minigame Telah Dipindahkan",
+      title: "\u26a0\ufe0f Perintah /minigame Telah Dipindahkan",
       iconURL: interaction.user.displayAvatarURL(),
       description: [
-        `Halo **${interaction.user.displayName || interaction.user.username}**! 👋`,
+        `Halo **${interaction.user.displayName || interaction.user.username}**! \ud83d\udc4b`,
         "",
-        `Perintah \`/minigame\` telah **dikonsolidasikan** ke dalam sistem **Arcade** baru! 🎮`,
+        `Perintah \`/minigame\` telah **dikonsolidasikan** ke dalam sistem **Arcade** baru! \ud83c\udfae`,
         "",
-        `### ✨ Apa yang Baru?`,
+        `### \u2728 Apa yang Baru?`,
         `- Semua game sekarang menggunakan **Medali Permainan (MP)** sebagai mata uang`,
         `- Biaya main: **5 MP** per game`,
         `- Menang: **+25 MP** | Seri: **+5 MP** | Kalah: **0 MP**`,
         `- Klaim **50 MP gratis** setiap hari dengan \`/arcade daily\``,
         "",
-        `### 🎯 Cara Menggunakan`,
+        `### \ud83c\udfaf Cara Menggunakan`,
         `\`/arcade hub\`, Buka menu pilih game`,
         `\`/arcade play <game>\`, Main game langsung`,
         `\`/arcade daily\`, Klaim hadiah harian`,
@@ -150,22 +215,28 @@ module.exports = {
         new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId("redirect_arcade_hub")
-            .setLabel("🎮 Buka Arcade Hub")
+            .setLabel("\ud83c\udfae Buka Arcade Hub")
             .setStyle(ButtonStyle.Primary)
-            .setEmoji("🕹️"),
+            .setEmoji("\ud83d\udd79"),
           new ButtonBuilder()
             .setCustomId("redirect_arcade_daily")
-            .setLabel("🎁 Klaim Daily (+50 MP)")
+            .setLabel("\ud83c\udf81 Klaim Daily (+50 MP)")
             .setStyle(ButtonStyle.Success)
-            .setEmoji("🏅"),
+            .setEmoji("\ud83c\udfc5"),
         ),
       ],
-      footerText: "Naura Hoshino Ecosystem • Migrasi ke Arcade System v2",
+      footerText: "Naura Hoshino Ecosystem \u2022 Migrasi ke Arcade System v2",
     });
 
     return interaction.reply(payload);
   },
 
+  /**
+   * Meluncurkan subgame untuk interaksi yang sudah didefer
+   * @param {import('discord.js').Interaction} interaction - Discord interaction
+   * @param {string} gameName - Nama game yang akan dijalankan
+   * @returns {Promise<void>}
+   */
   async launchSubgame(interaction, gameName) {
     const mockInteraction = {
       ...interaction,
@@ -200,6 +271,13 @@ module.exports = {
     await runMinigameLogic(mockInteraction);
   },
 
+  /**
+   * Handler eksekusi untuk prefix command (legacy)
+   * @param {import('discord.js').Message} message - Discord message
+   * @param {string[]} args - Argumen perintah
+   * @param {import('discord.js').Client} client - Discord client
+   * @returns {Promise<void>}
+   */
   async executePrefix(message, args, client) {
     if (!args || args.length === 0) {
       return ui.sendError(message, "err_sys_2");
@@ -264,7 +342,7 @@ module.exports = {
       },
       fetchReply: async () => {
         const sentMsg = await message.reply({
-          content: "⏳ Memproses minigame...",
+          content: "\u23f3 Memproses minigame...",
         });
         return sentMsg;
       },

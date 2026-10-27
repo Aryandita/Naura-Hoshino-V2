@@ -1,5 +1,21 @@
 "use strict";
 
+/**
+ * @module town
+ * @description Subcommand /survival town - Hub desa Sukamaju dengan akses ke fasilitas NPC dan bangunan.
+ * 
+ * Fitur Utama:
+ * - Building directory (kafe, bank, klinik, dll)
+ * - NPC interaction shortcuts
+ * - Town map visualization
+ * - Facility status display
+ */
+
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const path = require("path");
 const fs = require("fs");
 const {
@@ -20,7 +36,15 @@ const townEngine = require("../../../src/survival/engines/townEngine");
 
 const COLLECTOR_MS = 90000;
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival town
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const survival = await cacheManager.getUserSurvival(user.id);

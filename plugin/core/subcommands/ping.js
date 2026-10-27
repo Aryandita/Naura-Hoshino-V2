@@ -1,5 +1,21 @@
 "use strict";
 
+/**
+ * 🏓 Ping Command - System Diagnostics - Naura Hoshino V2
+ * --------------------------------------------------------
+ * Performs comprehensive latency diagnostics across all Naura systems.
+ * Tests connectivity to databases, APIs, audio nodes, and third-party services.
+ *
+ * Diagnostic Categories:
+ * - Core Systems: Discord WebSocket, Roundtrip API, Event Loop
+ * - Memory Systems: PostgreSQL, MongoDB, Redis
+ * - Intelligence Systems: Gemini AI, Verba API
+ * - Third-Party: Top.gg, Saweria, Trakteer
+ * - Audio Systems: Lavalink cluster nodes
+ *
+ * @module plugin/core/subcommands/ping
+ */
+
 const { AttachmentBuilder } = require("discord.js");
 const { sequelize } = require("../../../src/managers/dbManager");
 const ui = require("../../../src/config/ui");
@@ -10,17 +26,134 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 const { e, face, createNavButtons } = require("../helpers/coreShared");
 
-async function handlePing(interaction, client, lang) {
-  const dot = e("dot", "\u25B6\uFE0F");
-  const online = e("online", "\uD83D\uDFE2");
-  const offline = e("offline", "\uD83D\uDD34");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
+/** Timeout for external API health checks (ms) */
+const API_TIMEOUT_MS = 3000;
+
+/** External services to monitor */
+const EXTERNAL_SERVICES = [
+  { name: "Verba API", url: "https://api.verba.ink/" },
+  { name: "Google Gemini", url: "https://generativelanguage.googleapis.com/" },
+  { name: "Saweria Gateway", url: "https://saweria.co" },
+  { name: "Trakteer Support", url: "https://trakteer.id" },
+  { name: "Top.gg Portal", url: "https://top.gg" },
+];
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Measure latency of an async operation.
+ * @param {Function} operation - Async function to measure
+ * @returns {Promise<{success: boolean, latency: number}>}
+ */
+async function measureLatency(operation) {
+  const start = Date.now();
+  try {
+    await operation();
+    return { success: true, latency: Date.now() - start };
+  } catch {
+    return { success: false, latency: 0 };
+  }
+}
+
+/**
+ * Check HTTP endpoint health with timeout.
+ * @param {string} url - Endpoint URL
+ * @returns {Promise<{success: boolean, latency: number}>}
+ */
+async function checkHttpHealth(url) {
+  const start = Date.now();
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      signal: AbortSignal.timeout(API_TIMEOUT_MS),
+    }).catch(() => null);
+
+    if (response) {
+      return { success: true, latency: Date.now() - start };
+    }
+    return { success: false, latency: 0 };
+  } catch {
+    return { success: false, latency: 0 };
+  }
+}
+
+/**
+ * Format ping result as Discord emoji + status text.
+ * @param {boolean} online - Is service online
+ * @param {number} latencyMs - Latency in milliseconds
+ * @param {string} onlineEmoji - Online status emoji
+ * @param {string} offlineEmoji - Offline status emoji
+ * @returns {string} Formatted status string
+ */
+function formatPingStatus(online, latencyMs, onlineEmoji, offlineEmoji) {
+  if (!online) return `${offlineEmoji} Offline`;
+  return `${onlineEmoji} \`${latencyMs}ms\``;
+}
+
+/**
+ * Build Lavalink node status list.
+ * @param {object} musicManager - Music manager instance
+ * @param {string} dot - Dot emoji
+ * @param {string} online - Online emoji
+ * @param {string} offline - Offline emoji
+ * @returns {string} Formatted node list
+ */
+function buildLavalinkStatus(musicManager, dot, online, offline) {
+  try {
+    if (!musicManager?.poru) return `${offline} Offline`;
+
+    const nodes = musicManager.poru.nodes;
+    if (nodes.size === 0) {
+      return `\n${dot} ${face("warning", "⚠️")} Standby (No active nodes)`;
+    }
+
+    const nodeLines = [];
+    let index = 1;
+    nodes.forEach((node) => {
+      const status = node.isConnected
+        ? `${online} Online (Active)`
+        : `${offline} Offline (Inactive)`;
+      nodeLines.push(`${dot} **${node.name || `Naura Node ${index}`}:** ${status}`);
+      index++;
+    });
+
+    return "\n" + nodeLines.join("\n");
+  } catch (err) {
+    logger.debug(`[core:handlePing] Audio operation failed: ${err?.message || err}`);
+    return `${offline} Error`;
+  }
+}
+
+// ============================================================================
+// MAIN HANDLER
+// ============================================================================
+
+/**
+ * Handle /core ping command execution.
+ * Measures latency across all system components and displays diagnostic report.
+ * @param {object} interaction - Discord interaction
+ * @param {object} client - Discord client
+ * @param {object} lang - Language dictionary
+ * @returns {Promise<void>}
+ */
+async function handlePing(interaction, client, lang) {
+  // Get emojis
+  const dot = e("dot", "▶️");
+  const online = e("online", "🟢");
+  const offline = e("offline", "🔴");
+
+  // Send loading message
   const loadingPayload = buildLoadingContainerV2({
     authorName: "Naura Latency Diagnostic",
-    title: "Mengukur Latensi...",
-    loadingMessage:
-      lang.PING_LOADING || "Menghubungi shard dan gateway Discord...",
-    footerText: `Sedang menyiapkan untuk ${interaction.user.username}`,
+    title: "Measuring Latency...",
+    loadingMessage: lang.PING_LOADING || "Contacting shards and Discord gateway...",
+    footerText: `Preparing diagnostics for ${interaction.user.username}`,
     withBanner: true,
   });
 
@@ -31,149 +164,80 @@ async function handlePing(interaction, client, lang) {
     sent = await interaction.editReply(loadingPayload);
   }
 
+  // Measure core latencies
   const roundtripLatency =
     sent?.createdTimestamp && interaction?.createdTimestamp
       ? Math.max(0, sent.createdTimestamp - interaction.createdTimestamp)
       : 0;
   const websocketLatency = client.ws?.ping != null ? Math.round(client.ws.ping) : 0;
 
+  // Measure event loop delay
   const loopStart = Date.now();
   await new Promise((resolve) => setImmediate(resolve));
   const eventLoopDelay = Date.now() - loopStart;
 
-  let dbPing = `${offline} Offline`;
-  try {
-    const dbStart = Date.now();
-    await sequelize.query("SELECT 1");
-    dbPing = `${online} \`${Date.now() - dbStart}ms\``;
-  } catch (_) {
-    dbPing = `${offline} Error`;
-  }
+  // Check database connections
+  const dbResult = await measureLatency(() => sequelize.query("SELECT 1"));
+  const dbPing = formatPingStatus(dbResult.success, dbResult.latency, online, offline);
 
+  // Check Redis cache
   let redisPing = `${offline} Offline`;
   try {
     const redisManager = require("../../../src/managers/redisManager");
-    if (redisManager.client && redisManager.client.isReady) {
-      const redisStart = Date.now();
-      await redisManager.client.ping();
-      redisPing = `${online} \`${Date.now() - redisStart}ms\``;
+    if (redisManager.client?.isReady) {
+      const redisResult = await measureLatency(() => redisManager.client.ping());
+      redisPing = formatPingStatus(redisResult.success, redisResult.latency, online, offline);
     }
-  } catch (_) {
+  } catch {
     redisPing = `${offline} Error`;
   }
 
+  // Check MongoDB
   let mongoPing = `${offline} Offline`;
   try {
     const mongoose = require("mongoose");
-    if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const mongoStart = Date.now();
-      await mongoose.connection.db.admin().ping();
-      mongoPing = `${online} \`${Date.now() - mongoStart}ms\``;
+    if (mongoose.connection?.readyState === 1) {
+      const mongoResult = await measureLatency(() =>
+        mongoose.connection.db.admin().ping(),
+      );
+      mongoPing = formatPingStatus(mongoResult.success, mongoResult.latency, online, offline);
     }
-  } catch (_) {
+  } catch {
     mongoPing = `${offline} Error`;
   }
 
-  let lavalinkStr = `${offline} Offline`;
-  try {
-    if (client.musicManager && client.musicManager.poru) {
-      const nodes = client.musicManager.poru.nodes;
-      if (nodes.size > 0) {
-        const nodeArr = [];
-        let i = 1;
-        nodes.forEach((node) => {
-          const status = node.isConnected
-            ? `${online} Online (Aktif)`
-            : `${offline} Offline (Mati)`;
-          nodeArr.push(
-            `${dot} **${node.name || `Naura Node ${i}`}:** ${status}`,
-          );
-          i++;
-        });
-        lavalinkStr = "\n" + nodeArr.join("\n");
-      } else {
-        lavalinkStr = `\n${dot} ${face("warning", "\u26A0\uFE0F")} Standby (Tidak ada Node aktif)`;
-      }
-    }
-  } catch (err) {
-    logger.debug("[core:handlePing] Operasi audio/voice gagal: " + (err?.message || err));
+  // Check Lavalink nodes
+  const lavalinkStr = buildLavalinkStatus(client.musicManager, dot, online, offline);
+
+  // Check external services in parallel
+  const externalChecks = await Promise.all(
+    EXTERNAL_SERVICES.map(async (service) => ({
+      name: service.name,
+      result: await checkHttpHealth(service.url),
+    })),
+  );
+
+  // Format external service statuses
+  const externalStatuses = {};
+  for (const check of externalChecks) {
+    externalStatuses[check.name] = formatPingStatus(
+      check.result.success,
+      check.result.latency,
+      online,
+      offline,
+    );
   }
 
-  let verbaPing = `${offline} Offline`;
-  try {
-    const verbaStart = Date.now();
-    const fetchRes = await fetch("https://api.verba.ink/", {
-      method: "HEAD",
-      signal: AbortSignal.timeout(3000),
-    }).catch(() => null);
-    if (fetchRes) verbaPing = `${online} \`${Date.now() - verbaStart}ms\``;
-    else verbaPing = `${offline} Timeout`;
-  } catch (_) {
-    verbaPing = `${offline} Error`;
-  }
+  // Get section emojis
+  const ePingTitle = e("ping", "🏓");
+  const eCoreSystem = e("network_ping", "🌐");
+  const eEventLoop = e("eventloop", "⚡");
+  const eMemorySystem = e("database_ping", "🗄️");
+  const eIntellSystem = e("intelligence", "🧠");
+  const eThirdPartySystem = e("saweria", "🔌");
+  const eAudioSystem = e("help_music", "🎵");
 
-  let geminiPing = `${offline} Offline`;
-  try {
-    const geminiStart = Date.now();
-    const fetchRes2 = await fetch(
-      "https://generativelanguage.googleapis.com/",
-      { method: "HEAD", signal: AbortSignal.timeout(3000) },
-    ).catch(() => null);
-    if (fetchRes2) geminiPing = `${online} \`${Date.now() - geminiStart}ms\``;
-    else geminiPing = `${offline} Timeout`;
-  } catch (_) {
-    geminiPing = `${offline} Error`;
-  }
-
-  let saweriaPing = `${offline} Offline`;
-  try {
-    const saweriaStart = Date.now();
-    const saweriaRes = await fetch("https://saweria.co", {
-      method: "HEAD",
-      signal: AbortSignal.timeout(3000),
-    }).catch(() => null);
-    if (saweriaRes)
-      saweriaPing = `${online} \`${Date.now() - saweriaStart}ms\``;
-    else saweriaPing = `${offline} Timeout`;
-  } catch (_) {
-    saweriaPing = `${offline} Error`;
-  }
-
-  let trakteerPing = `${offline} Offline`;
-  try {
-    const trakteerStart = Date.now();
-    const trakteerRes = await fetch("https://trakteer.id", {
-      method: "HEAD",
-      signal: AbortSignal.timeout(3000),
-    }).catch(() => null);
-    if (trakteerRes)
-      trakteerPing = `${online} \`${Date.now() - trakteerStart}ms\``;
-    else trakteerPing = `${offline} Timeout`;
-  } catch (_) {
-    trakteerPing = `${offline} Error`;
-  }
-
-  let topggPing = `${offline} Offline`;
-  try {
-    const topggStart = Date.now();
-    const topggRes = await fetch("https://top.gg", {
-      method: "HEAD",
-      signal: AbortSignal.timeout(3000),
-    }).catch(() => null);
-    if (topggRes) topggPing = `${online} \`${Date.now() - topggStart}ms\``;
-    else topggPing = `${offline} Timeout`;
-  } catch (_) {
-    topggPing = `${offline} Error`;
-  }
-
-  const ePingTitle = e("ping", "\uD83C\uDFD3");
-  const eCoreSystem = e("network_ping", "\uD83C\uDF10");
-  const eEventLoop = e("eventloop", "\u26A1");
-  const eMemorySystem = e("database_ping", "\uD83D\uDDC4\uFE0F");
-  const eIntellSystem = e("intelligence", "\uD83E\uDDE0");
-  const eThirdPartySystem = e("saweria", "\uD83D\uDD0C");
-  const eAudioSystem = e("help_music", "\uD83C\uDFB5");
-
+  // Build diagnostic report
   const pingBanner = ui.getBanner("ping");
 
   const payload = buildContainerV2({
@@ -195,11 +259,11 @@ async function handlePing(interaction, client, lang) {
       },
       {
         name: `${eIntellSystem} Naura Intelligent Systems`,
-        value: `${dot} **Google Gemini:** ${geminiPing}\n${dot} **Verba API:** ${verbaPing}`,
+        value: `${dot} **Google Gemini:** ${externalStatuses["Google Gemini"]}\n${dot} **Verba API:** ${externalStatuses["Verba API"]}`,
       },
       {
         name: `${eThirdPartySystem} Third-Party & Integrations`,
-        value: `${dot} **Top.gg Portal:** ${topggPing}\n${dot} **Saweria Gateway:** ${saweriaPing}\n${dot} **Trakteer Support:** ${trakteerPing}`,
+        value: `${dot} **Top.gg Portal:** ${externalStatuses["Top.gg Portal"]}\n${dot} **Saweria Gateway:** ${externalStatuses["Saweria Gateway"]}\n${dot} **Trakteer Support:** ${externalStatuses["Trakteer Support"]}`,
       },
       {
         name: `${eAudioSystem} Naura Music & Audio Systems`,

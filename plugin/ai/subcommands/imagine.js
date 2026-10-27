@@ -1,5 +1,22 @@
 "use strict";
 
+/**
+ * 🎨 Imagine Subcommand - AI Image Generation - Naura Hoshino V2
+ * ---------------------------------------------------------------
+ * Generates images using multiple AI sources with fallback pipeline.
+ * Supports style presets, rate limiting, and premium-only access.
+ *
+ * Features:
+ * - Multi-source image generation (Gemini → Verba → Fooocus → Pollinations)
+ * - 6 style presets (Kawaii Anime, Cyberpunk, Realistic, Watercolor, Fantasy, Pure)
+ * - Rate limiting via Redis (3/5min normal, 10/5min premium)
+ * - Premium-only feature gating
+ * - Parallel multi-image generation (up to 4 variations)
+ * - Automatic fallback between sources
+ *
+ * @module plugin/ai/subcommands/imagine
+ */
+
 const { AttachmentBuilder } = require("discord.js");
 const axios = require("axios");
 
@@ -13,40 +30,49 @@ const {
 const redisManager = require("../../../src/managers/redisManager");
 const { DomainError } = require("../../../src/errors/DomainError");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Default filename for generated images */
 const FILE_NAME = "naura_art.png";
+
+/** API endpoints */
 const VERBA_URL = "https://api.verba.ink/v1/image";
 const POLLINATIONS_URL = "https://image.pollinations.ai/prompt";
+
+/** Timeout for external API calls (2 minutes) */
 const FETCH_TIMEOUT_MS = 120000;
 
-// ==========================================
-// STYLE PRESETS
-// Setiap gaya menambahkan trigger words ke prompt asli agar hasil lebih terarah.
-// ==========================================
+/** Rate limit configuration */
+const RATE_LIMIT_NORMAL = 3;      // non-premium requests per window
+const RATE_LIMIT_PREMIUM = 10;    // premium requests per window
+const RATE_LIMIT_WINDOW = 300;    // 5 minutes in seconds
+
+/** Default style preset */
+const DEFAULT_STYLE = "kawaii-anime";
+
+/** Style presets with prompt suffixes for better results */
 const STYLE_PRESETS = {
   "kawaii-anime": {
     label: "Kawaii Anime",
-    suffix:
-      ", anime style, kawaii, vibrant colors, soft lighting, detailed illustration, Makoto Shinkai style, high quality",
+    suffix: ", anime style, kawaii, vibrant colors, soft lighting, detailed illustration, Makoto Shinkai style, high quality",
   },
   cyberpunk: {
     label: "Cyberpunk",
-    suffix:
-      ", cyberpunk, neon lights, futuristic city, dark atmosphere, rain, digital art, blade runner aesthetic, 8K",
+    suffix: ", cyberpunk, neon lights, futuristic city, dark atmosphere, rain, digital art, blade runner aesthetic, 8K",
   },
   realistic: {
     label: "Realistis",
-    suffix:
-      ", hyperrealistic, DSLR photograph, 8K ultra HD, photorealistic, bokeh, professional lighting",
+    suffix: ", hyperrealistic, DSLR photograph, 8K ultra HD, photorealistic, bokeh, professional lighting",
   },
   watercolor: {
     label: "Cat Air",
-    suffix:
-      ", watercolor painting, soft brush strokes, artistic, pastel colors, flowing ink, traditional art style",
+    suffix: ", watercolor painting, soft brush strokes, artistic, pastel colors, flowing ink, traditional art style",
   },
   fantasy: {
     label: "Fantasi Epik",
-    suffix:
-      ", epic fantasy, dramatic lighting, concept art, artstation, magical atmosphere, cinematic, highly detailed",
+    suffix: ", epic fantasy, dramatic lighting, concept art, artstation, magical atmosphere, cinematic, highly detailed",
   },
   none: {
     label: "Prompt Murni",
@@ -54,26 +80,31 @@ const STYLE_PRESETS = {
   },
 };
 
-// Gaya default bila tidak dipilih
-const DEFAULT_STYLE = "kawaii-anime";
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
 
-// Rate limit: jumlah max request per window
-const RATE_LIMIT_NORMAL = 3; // non-premium
-const RATE_LIMIT_PREMIUM = 10; // premium
-const RATE_LIMIT_WINDOW = 300; // 5 menit (detik)
-
+/**
+ * Get emoji by name with fallback.
+ * @param {string} name - Emoji key
+ * @param {string} fallback - Fallback emoji
+ * @returns {string} Resolved emoji
+ */
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
-// ==========================================
-// RATE LIMITING
-// ==========================================
+/**
+ * Check rate limit for user via Redis.
+ * @param {string} userId - User ID
+ * @param {boolean} isPremiumUser - Is premium user
+ * @returns {Promise<{allowed: boolean, remaining: number, used?: number, limit?: number}>}
+ */
 async function checkRateLimit(userId, isPremiumUser) {
   const limit = isPremiumUser ? RATE_LIMIT_PREMIUM : RATE_LIMIT_NORMAL;
   const key = `ratelimit:imagine:${userId}`;
 
-  // Jika Redis tidak siap, izinkan saja (degraded mode)
+  // Allow if Redis not ready (degraded mode)
   if (!redisManager.isReady) return { allowed: true, remaining: limit - 1 };
 
   const count = await redisManager.increment(key, RATE_LIMIT_WINDOW);
@@ -88,11 +119,16 @@ async function checkRateLimit(userId, isPremiumUser) {
   };
 }
 
-// ==========================================
-// GENERATOR FUNCTIONS (Pipeline: Gemini → Verba → Fooocus → Pollinations)
-// ==========================================
+// ============================================================================
+// IMAGE GENERATION SOURCES
+// ============================================================================
 
-/** Sumber 1: Google Gemini Imagen. Gratis dalam batas dan berkualitas tinggi. */
+/**
+ * Source 1: Google Gemini Imagen (high quality, free tier available).
+ * @param {string} prompt - Enhanced prompt
+ * @returns {Promise<string>} Image URL or base64 data URI
+ * @throws {DomainError} If generation fails
+ */
 async function generateWithGemini(prompt) {
   if (!env.GEMINI_API) {
     throw new DomainError("CONFIG_ERROR", "GEMINI_API tidak dikonfigurasi.");
@@ -101,7 +137,7 @@ async function generateWithGemini(prompt) {
   const { GoogleGenAI } = require("@google/genai");
   const client = new GoogleGenAI({ apiKey: env.GEMINI_API });
 
-  // Gemini Imagen 3 (model terbaru untuk generasi gambar)
+  // Gemini Imagen 3 (latest model for image generation)
   const response = await client.models.generateImages({
     model: "imagen-3.0-generate-002",
     prompt,
@@ -119,7 +155,12 @@ async function generateWithGemini(prompt) {
   return `data:image/png;base64,${base64}`;
 }
 
-/** Sumber 2: Verba API. Diprioritaskan bila API key tersedia. */
+/**
+ * Source 2: Verba API (prioritized when API key available).
+ * @param {string} prompt - Enhanced prompt
+ * @returns {Promise<string>} Image URL
+ * @throws {DomainError} If API call fails
+ */
 async function generateWithVerba(prompt) {
   const response = await axios.post(
     VERBA_URL,
@@ -164,9 +205,14 @@ async function generateWithVerba(prompt) {
   return url;
 }
 
-/** Sumber 3: Fooocus lokal. Wajib pakai env.FOOOCUS_BASE_URL (bukan process.env langsung). */
+/**
+ * Source 3: Local Fooocus instance (requires env.FOOOCUS_BASE_URL).
+ * @param {string} prompt - Enhanced prompt
+ * @returns {Promise<string>} Image URL or base64 data URI
+ * @throws {DomainError} If generation fails
+ */
 async function generateWithFooocus(prompt) {
-  const baseUrl = env.FOOOCUS_BASE_URL; // Perbaikan bug: env.js bukan process.env
+  const baseUrl = env.FOOOCUS_BASE_URL;
   const response = await axios.post(
     `${baseUrl}/v1/generation/text-to-image`,
     {
@@ -187,51 +233,60 @@ async function generateWithFooocus(prompt) {
   throw new DomainError("INVALID_RESPONSE_FORMAT", "Format balasan Fooocus tidak valid.");
 }
 
-/** Sumber 4: Pollinations AI. Fallback gratis yang selalu tersedia. */
+/**
+ * Source 4: Pollinations AI (free fallback, always available).
+ * @param {string} prompt - Enhanced prompt
+ * @returns {string} Image URL
+ */
 function pollinationsUrl(prompt) {
   const encoded = encodeURIComponent(prompt);
   return `${POLLINATIONS_URL}/${encoded}?width=512&height=512&nologo=true&enhance=true`;
 }
 
 /**
- * Coba semua sumber gambar secara berurutan.
- * Mengembalikan { url, source } dari sumber pertama yang berhasil.
+ * Try all image sources in order, return first successful result.
+ * Pipeline: Gemini → Verba → Fooocus → Pollinations
+ * @param {string} prompt - Enhanced prompt
+ * @returns {Promise<{url: string, source: string}>} Generated image info
  */
 async function tryAllSources(prompt) {
-  // Sumber 1: Gemini Imagen
+  // Source 1: Gemini Imagen
   if (env.GEMINI_API) {
     try {
       const url = await generateWithGemini(prompt);
       return { url, source: "Gemini Imagen 3" };
     } catch (err) {
-      logger.warn(`[AI Imagine] Gemini Imagen gagal: ${err.message}`);
+      logger.warn(`[AI Imagine] Gemini Imagen failed: ${err.message}`);
     }
   }
 
-  // Sumber 2: Verba API
+  // Source 2: Verba API
   if (env.VERBA_API_KEY) {
     try {
       const url = await generateWithVerba(prompt);
       return { url, source: "Verba Image API" };
     } catch (err) {
-      logger.warn(`[AI Imagine] Verba gagal: ${err.message}`);
+      logger.warn(`[AI Imagine] Verba failed: ${err.message}`);
     }
   }
 
-  // Sumber 3: Fooocus lokal
+  // Source 3: Local Fooocus
   try {
     const url = await generateWithFooocus(prompt);
     return { url, source: "Fooocus Local AI" };
   } catch (err) {
-    logger.warn(`[AI Imagine] Fooocus gagal: ${err.message}`);
+    logger.warn(`[AI Imagine] Fooocus failed: ${err.message}`);
   }
 
-  // Sumber 4: Pollinations (selalu berhasil selama ada internet)
+  // Source 4: Pollinations (always works with internet)
   return { url: pollinationsUrl(prompt), source: "Pollinations AI" };
 }
 
 /**
- * Ubah URL atau base64 menjadi AttachmentBuilder nyata untuk Discord.
+ * Convert URL or base64 to Discord AttachmentBuilder.
+ * @param {string} imageUrl - Image URL or base64 data URI
+ * @param {string} [fileName=FILE_NAME] - Output filename
+ * @returns {Promise<AttachmentBuilder>} Discord attachment
  */
 async function toAttachment(imageUrl, fileName = FILE_NAME) {
   if (imageUrl.startsWith("data:image")) {
@@ -248,15 +303,24 @@ async function toAttachment(imageUrl, fileName = FILE_NAME) {
   return new AttachmentBuilder(Buffer.from(download.data), { name: fileName });
 }
 
-// ==========================================
-// HANDLER UTAMA
-// ==========================================
+// ============================================================================
+// MAIN HANDLER
+// ============================================================================
+
+/**
+ * Execute imagine subcommand.
+ * Generates AI images with style presets and rate limiting.
+ * @param {object} interaction - Discord interaction
+ * @param {{isPremiumUser: boolean}} options - User premium status
+ * @returns {Promise<void>}
+ */
 module.exports = async function imagine(interaction, { isPremiumUser }) {
+  // Extract options
   const prompt = interaction.options.getString("prompt");
   const gaya = interaction.options.getString("gaya") || DEFAULT_STYLE;
   const jumlahRaw = interaction.options.getInteger("jumlah") || 1;
 
-  // Pengguna non-premium tidak bisa multi-gambar dan mengakses fitur ini
+  // Premium-only feature gate
   if (!isPremiumUser) {
     return interaction.editReply(
       buildErrorContainerV2({
@@ -269,7 +333,7 @@ module.exports = async function imagine(interaction, { isPremiumUser }) {
     );
   }
 
-  // Rate limiting
+  // Rate limiting check
   const rateCheck = await checkRateLimit(interaction.user.id, isPremiumUser);
   if (!rateCheck.allowed) {
     return interaction.editReply(
@@ -281,18 +345,18 @@ module.exports = async function imagine(interaction, { isPremiumUser }) {
     );
   }
 
-  // Jumlah gambar: non-premium dibatasi 1, premium maks 4
+  // Limit image count (non-premium: 1, premium: max 4)
   const jumlah = isPremiumUser ? Math.min(jumlahRaw, 4) : 1;
 
-  // Ambil style preset dan bangun prompt akhir
+  // Apply style preset to prompt
   const stylePreset = STYLE_PRESETS[gaya] || STYLE_PRESETS[DEFAULT_STYLE];
   const enhancedPrompt = prompt + stylePreset.suffix;
 
   try {
-    // Generate semua gambar secara paralel
+    // Generate all images in parallel
     const generateTasks = Array.from({ length: jumlah }, (_, i) =>
       tryAllSources(enhancedPrompt).catch((err) => {
-        logger.error(`[AI Imagine] Variasi ${i + 1} gagal:`, err);
+        logger.error(`[AI Imagine] Variation ${i + 1} failed:`, err);
         return null;
       }),
     );
@@ -302,25 +366,23 @@ module.exports = async function imagine(interaction, { isPremiumUser }) {
       return interaction.editReply(
         buildErrorContainerV2({
           title: `${e("cry", "❌")} Lukisan Gagal`,
-          description:
-            "Semua sumber gambar tidak dapat dihubungi. Coba lagi dalam beberapa saat ya!",
+          description: "Semua sumber gambar tidak dapat dihubungi. Coba lagi dalam beberapa saat ya!",
           footerText: ui.getFooter("core"),
         }),
       );
     }
 
-    // Convert semua hasil ke attachment
+    // Convert all results to attachments
     const attachments = [];
     const attachmentNames = [];
     for (let i = 0; i < results.length; i++) {
-      const fileName =
-        results.length > 1 ? `naura_art_${i + 1}.png` : FILE_NAME;
+      const fileName = results.length > 1 ? `naura_art_${i + 1}.png` : FILE_NAME;
       try {
         const att = await toAttachment(results[i].url, fileName);
         attachments.push(att);
         attachmentNames.push(fileName);
       } catch (err) {
-        logger.error(`[AI Imagine] Gagal mengunduh variasi ${i + 1}:`, err);
+        logger.error(`[AI Imagine] Failed to download variation ${i + 1}:`, err);
       }
     }
 
@@ -328,13 +390,13 @@ module.exports = async function imagine(interaction, { isPremiumUser }) {
       return interaction.editReply(
         buildErrorContainerV2({
           title: `${e("cry", "❌")} Gagal Mengambil Gambar`,
-          description:
-            "Gambarnya sudah jadi, tapi Naura kesulitan mengambilnya. Coba sekali lagi yaa?",
+          description: "Gambarnya sudah jadi, tapi Naura kesulitan mengambilnya. Coba sekali lagi yaa?",
           footerText: ui.getFooter("core"),
         }),
       );
     }
 
+    // Build success response
     const primarySource = results[0]?.source || "AI Generator";
     const styleLabel = stylePreset.label;
     const remainingInfo =
@@ -352,21 +414,19 @@ module.exports = async function imagine(interaction, { isPremiumUser }) {
         `> **Prompt:** *${prompt}*\n` +
         `> **Gaya:** ${styleLabel}\n` +
         (jumlah > 1 ? `> **Variasi:** ${attachments.length} gambar\n` : ""),
-      // Gambar pertama sebagai banner, sisanya sebagai media gallery
       bannerAttachmentName: attachmentNames[0],
       mediaAttachmentNames: attachmentNames.slice(1),
       files: attachments,
-      footerText: `${primarySource} \u2022 ${remainingInfo}`,
+      footerText: `${primarySource} • ${remainingInfo}`,
     });
 
     return interaction.editReply(payload);
   } catch (error) {
-    logger.error("[AI Imagine] Error tidak terduga:", error);
+    logger.error("[AI Imagine] Unexpected error:", error);
     return interaction.editReply(
       buildErrorContainerV2({
         title: `${e("cry", "❌")} Terjadi Kesalahan`,
-        description:
-          "Ada masalah yang tidak terduga. Naura sudah mencatatnya ya!",
+        description: "Ada masalah yang tidak terduga. Naura sudah mencatatnya ya!",
         footerText: ui.getFooter("core"),
       }),
     );

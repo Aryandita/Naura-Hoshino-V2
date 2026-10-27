@@ -1,3 +1,13 @@
+/**
+ * @module moderation
+ * @description Router moderasi server (purge, nuke, roleall, timeout, kick, ban, unban, panic).
+ * @author Naura Hoshino V2 Development Team
+ * @version 2.4.0
+ * @since 1.0.0
+ */
+
+"use strict";
+
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -17,6 +27,13 @@ const { sendModLog } = require("../../src/utils/modLogHelper");
 const incidentService = require("../../src/services/incidentService");
 const cacheManager = require("../../src/managers/cacheManager");
 
+/**
+ * Mengambil ID channel audit log dari pengaturan guild.
+ * Mencoba beberapa fallback key untuk kompatibilitas dengan konfigurasi lama.
+ * 
+ * @param {string} guildId - ID guild/server
+ * @returns {Promise<string|null>} ID channel audit log atau null jika tidak ditemukan
+ */
 async function getAuditChannelId(guildId) {
   try {
     const row = await cacheManager.getGuildSettings(guildId);
@@ -31,6 +48,16 @@ async function getAuditChannelId(guildId) {
   }
 }
 
+/**
+ * Mengeksekusi operasi pembersihan pesan massal (purge) dengan progress tracking.
+ * Fungsi ini menghapus pesan secara bertahap untuk menghindari rate limit Discord API.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {number} amount - Jumlah total pesan yang akan dihapus
+ * @param {import("discord.js").User|null} targetUser - Filter user tertentu (opsional)
+ * @param {import("discord.js").Guild} guild - Guild tempat operasi dilakukan
+ * @returns {Promise<void>}
+ */
 async function executePurge(interaction, amount, targetUser, guild) {
   try {
     let deletedCount = 0;
@@ -122,6 +149,16 @@ async function executePurge(interaction, amount, targetUser, guild) {
   }
 }
 
+/**
+ * Mengeksekusi operasi penambahan/pencabutan role massal ke semua member server.
+ * Memproses member secara berurutan dengan penanganan error yang aman.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {import("discord.js").Role} targetRole - Role yang akan ditambahkan/dicabut
+ * @param {"add"|"remove"} action - Aksi yang akan dilakukan
+ * @param {import("discord.js").Collection<string, import("discord.js").GuildMember>} members - Koleksi member server
+ * @returns {Promise<void>}
+ */
 async function executeRoleAll(interaction, targetRole, action, members) {
   let successCount = 0;
   let skipCount = 0;

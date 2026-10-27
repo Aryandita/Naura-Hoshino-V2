@@ -1,3 +1,13 @@
+/**
+ * @module reactionrole
+ * @description Sistem panel reaction role dengan tombol interaktif.
+ * @author Naura Hoshino V2 Development Team
+ * @version 2.4.0
+ * @since 1.0.0
+ */
+
+"use strict";
+
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -13,15 +23,32 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 
+/**
+ * Jumlah maksimum slot role yang dapat ditambahkan dalam satu panel.
+ * @type {number}
+ */
 const MAX_SLOTS = 3;
 
-function ephemeral(payload) {
+/**
+   * Membungkus payload dengan flag Ephemeral agar pesan hanya terlihat oleh pengguna.
+   * 
+   * @param {Object} payload - Payload respons Discord
+   * @returns {Object} Payload dengan flag Ephemeral ditambahkan
+   */
+  function ephemeral(payload) {
   return { ...payload, flags: (payload.flags || 0) | MessageFlags.Ephemeral };
 }
 
 // Role terkelola dan role di atas posisi bot tidak akan pernah bisa diberikan,
 // jadi lebih baik ditolak sekarang daripada gagal saat tombolnya ditekan.
-function rejectionReason(role, me) {
+/**
+   * Memeriksa alasan penolakan role berdasarkan posisi dan status managed.
+   * 
+   * @param {import("discord.js").Role} role - Role yang akan diperiksa
+   * @param {import("discord.js").GuildMember} me - Member bot di guild
+   * @returns {string|null} Alasan penolakan atau null jika role valid
+   */
+  function rejectionReason(role, me) {
   if (role.managed) return "dikelola integrasi lain";
   if (role.id === role.guild.id) return "role bawaan @everyone";
   if (me && role.position >= me.roles.highest.position)

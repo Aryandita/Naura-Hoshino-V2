@@ -1,6 +1,22 @@
 "use strict";
 
+/**
+ * @module rebirth
+ * @description Subcommand /survival rebirth - Prestige system untuk reset progress dengan permanent bonuses.
+ * 
+ * Fitur Utama:
+ * - Rebirth count tracking
+ * - Permanent stat bonus per rebirth
+ * - Reset confirmation dialog
+ * - Legacy title unlock
+ */
+
+
 const { ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const UserFarm = require("../../../src/models/UserFarm");
@@ -55,7 +71,15 @@ function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival rebirth
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const [survival] = await UserSurvival.findOrCreate({

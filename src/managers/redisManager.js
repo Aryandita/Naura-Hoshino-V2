@@ -1,6 +1,52 @@
+﻿/**
+ * @module RedisManager
+ * @description Redis Pub/Sub dan Caching Layer untuk Naura Hoshino V2
+ * 
+ * Manajer Redis yang menyediakan caching layer (L2), distributed locking, dan
+ * pub/sub messaging untuk komunikasi antar-shard. Dirancang dengan fallback
+ * otomatis ke in-memory cache jika Redis tidak tersedia.
+ * 
+ * KEY FEATURES:
+ * 1. Dual-Mode Operation - Redis cluster saat available, in-memory fallback saat down
+ * 2. Exponential Backoff Retry - 3 percobaan dengan jeda 2s, 4s, 8s untuk resilience
+ * 3. Distributed Locking - Atomic lock/unlock dengan Lua script untuk race condition prevention
+ * 4. Pub/Sub Messaging - Komunikasi real-time antar Discord shards via Redis channels
+ * 5. Automatic Reconnection - Reconnect strategy dengan jitter untuk mencegah thundering herd
+ * 6. TTL-Based Cache Expiry - Auto-cleanup untuk mencegah memory leak
+ * 7. Hash Operations Support - hincrby, hgetall, hset, hget untuk structured data
+ * 8. Sorted Set Operations - zadd untuk leaderboard dan ranking systems
+ * 9. Memory Cleanup Timer - Periodic cleanup setiap 60 detik untuk expired entries
+ * 10. Graceful Degradation - Semua operasi tetap berfungsi dalam mode in-memory
+ * 
+ * ARCHITECTURE NOTES:
+ * - Connection: createClient dari 'redis' package dengan reconnectStrategy custom
+ * - Fallback: Map-based in-memory cache dengan TTL tracking manual
+ * - Locking: SET NX PX + Lua script untuk atomic release (mencegah accidental unlock)
+ * - PubSub: Duplicate client connection khusus untuk subscriber (Redis requirement)
+ * - Method Aliasing: hincrby/hgetall/etc alias ke camelCase versions untuk compatibility
+ * 
+ * RETRY STRATEGY:
+ * - Max Retries: 3 attempts
+ * - Backoff Sequence: [2000ms, 4000ms, 8000ms]
+ * - Jitter: Random 0-200ms pada reconnect delay untuk prevent synchronized retries
+ * - Connect Timeout: 10000ms
+ * - Keep Alive: 30000ms
+ * 
+ * LOCKING PATTERN:
+ * - acquireLock(key, token, ttlMs): SET key token NX PX ttlMs
+ * - releaseLock(key, token): Lua script - DEL hanya jika token cocok
+ * - Token harus unik per lock holder (biasanya UUID atau timestamp+random)
+ * 
+ * @see {@link CacheManager} untuk L1 write-behind caching layer
+ * @see {@link src/utils/redisLockHelper.js} untuk high-level locking utilities
+ */
+
+// === SECTION: DEPENDENCIES ===
+
 const { createClient } = require("redis");
 const { logger } = require("../managers/logger");
 
+// === SECTION: CONSTANTS & CONFIGURATION ===
 // ==========================================
 // KONFIGURASI RETRY DENGAN EXPONENTIAL BACKOFF
 // 3 percobaan, jeda 2s, 4s, 8s antara percobaan.
@@ -17,6 +63,7 @@ else
 end
 `;
 
+// === SECTION: HELPER FUNCTIONS ===
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -54,6 +101,7 @@ async function retryWithBackoff(fn, options = {}) {
   throw lastErr;
 }
 
+// === SECTION: MAIN REDIS MANAGER CLASS ===
 class RedisManager {
   constructor() {
     const redisUrl = require("../config/env").REDIS_URL;
@@ -151,6 +199,7 @@ class RedisManager {
     };
   }
 
+  // === SECTION: IN-MEMORY FALLBACK OPERATIONS ===
   _memoryGet(key) {
     const entry = this.memoryCache.get(key);
     if (!entry) return null;
@@ -212,6 +261,7 @@ class RedisManager {
     return false;
   }
 
+  // === SECTION: CONNECTION MANAGEMENT ===
   async ping() {
     if (!this.isReady) return false;
     try {
@@ -253,6 +303,7 @@ class RedisManager {
     }
   }
 
+  // === SECTION: CACHE OPERATIONS (GET/SET/DELETE) ===
   async setCache(key, data, expirationInSeconds = 3600) {
     if (this.isReady) {
       try {
@@ -647,6 +698,7 @@ class RedisManager {
     return this.hGetAll(key);
   }
 
+  // === SECTION: DISTRIBUTED LOCKING ===
   async acquireLock(key, token, ttlMs = 5000) {
     if (this.isReady) {
       try {
@@ -684,6 +736,7 @@ class RedisManager {
     return this._memoryReleaseLock(key, token);
   }
 
+  // === SECTION: PUB/SUB MESSAGING ===
   async initPubSub(channelName, onMessageCallback) {
     if (!this.isReady) return;
     try {

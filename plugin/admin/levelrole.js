@@ -1,5 +1,29 @@
+/**
+ * ??? LevelRole Command - Role Reward Manager - Naura Hoshino V2
+ * -----------------------------------------------------------------
+ * Manages automatic role rewards based on level and achievement milestones.
+ * Requires ManageRoles permission.
+ *
+ * Features:
+ * - Add: Configure role rewards for level/wealth/fragments milestones
+ * - Remove: Delete a role reward configuration
+ * - List: View all configured role rewards
+ * - Sync: Manually sync member roles with their achievements
+ *
+ * Supported Milestone Types:
+ * - level: Global server level
+ * - survival_level: Naura Wilds survival level
+ * - wealth: Total Naura Coins accumulated
+ * - fragments: Star Fragments collected
+ *
+ * @module plugin/admin/levelrole
+ */
+
 "use strict";
 
+// ============================================================================
+// DEPENDENCIES
+// ============================================================================
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require("discord.js");
 const {
   getRoleRewards,
@@ -15,6 +39,17 @@ const {
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+/** Accent color for success responses */
+const SUCCESS_COLOR = "#10B981";
+/** Accent color for info responses */
+const INFO_COLOR = "#3B82F6";
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("levelrole")
@@ -30,10 +65,10 @@ module.exports = {
             .setDescription("Kategori milestone yang ingin dihadiahi")
             .setRequired(true)
             .addChoices(
-              { name: "⚡ Level Global Server", value: "level" },
-              { name: "🌲 Level Survival Wilds", value: "survival_level" },
-              { name: "💰 Kekayaan (Total Naura Coins)", value: "wealth" },
-              { name: "⭐ Star Fragments Survival", value: "fragments" },
+              { name: "? Level Global Server", value: "level" },
+              { name: "?? Level Survival Wilds", value: "survival_level" },
+              { name: "?? Kekayaan (Total Naura Coins)", value: "wealth" },
+              { name: "? Star Fragments Survival", value: "fragments" },
             ),
         )
         .addIntegerOption((opt) =>
@@ -78,6 +113,14 @@ module.exports = {
         ),
     ),
 
+  // ========================================================================
+  // EXECUTION
+  // ========================================================================
+  /**
+   * Execute the levelrole command.
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     const sub = interaction.options.getSubcommand();
     const guildId = interaction.guildId;
@@ -137,9 +180,9 @@ module.exports = {
 
         if (!rules || rules.length === 0) {
           const emptyPayload = buildContainerV2({
-            accentColorHex: ui.getColor("info") || "#3B82F6",
+            accentColorHex: ui.getColor("info") || INFO_COLOR,
             authorName: "NAURA ROLE REWARD MANAGER",
-            title: "📜 Daftar Hadiah Role Server",
+            title: "?? Daftar Hadiah Role Server",
             description: [
               "Server ini belum memiliki konfigurasi hadiah role otomatis.",
               "",
@@ -152,13 +195,13 @@ module.exports = {
         }
 
         const lines = rules.map((r, idx) => {
-          return `${idx + 1}. <@&${r.roleId}> ➔ Syarat: **${r.threshold.toLocaleString("id-ID")}** (${r.type})`;
+          return `${idx + 1}. <@&${r.roleId}> ? Syarat: **${r.threshold.toLocaleString("id-ID")}** (${r.type})`;
         });
 
         const listPayload = buildContainerV2({
-          accentColorHex: "#10B981",
+          accentColorHex: SUCCESS_COLOR,
           authorName: "NAURA ROLE REWARD MANAGER",
-          title: `📜 Konfigurasi Hadiah Role (${rules.length} Aturan)`,
+          title: `?? Konfigurasi Hadiah Role (${rules.length} Aturan)`,
           description: [
             "Berikut adalah role yang akan disematkan secara otomatis:",
             "",

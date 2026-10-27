@@ -1,6 +1,18 @@
 // Lokasi: plugin/survival/subcommands/craft.js
 "use strict";
 
+/**
+ * @module craft
+ * @description Subcommand /survival craft - Crafting system dengan recipe book dan material consumption.
+ * 
+ * Fitur Utama:
+ * - Recipe lookup dengan category filter
+ * - Material validation dan consumption
+ * - Crafting animation delay
+ * - Result item atomic write
+ */
+
+
 const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
@@ -13,6 +25,10 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -260,7 +276,15 @@ function failText(result) {
   return "Naura bingung dengan resep itu. Coba pilih yang lain, ya.";
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival craft
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (!interaction.deferred && !interaction.replied) {
       if (typeof interaction.deferUpdate === "function") {

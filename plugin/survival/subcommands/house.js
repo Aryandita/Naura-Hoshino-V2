@@ -1,10 +1,26 @@
 "use strict";
 
+/**
+ * @module house
+ * @description Subcommand /survival house - Manajemen properti dan dekorasi tempat tinggal pemain.
+ * 
+ * Fitur Utama:
+ * - Property upgrade tiers (jalanan -> mansion)
+ * - Decoration placement system
+ * - Storage capacity management
+ * - Rent/payment system
+ */
+
+
 const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   MessageFlags,
 } = require("discord.js");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -37,7 +53,15 @@ function ephemeral(content) {
   return { content, flags: MessageFlags.Ephemeral };
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival house
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const [survival] = await UserSurvival.findOrCreate({

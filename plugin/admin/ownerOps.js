@@ -1,4 +1,29 @@
 "use strict";
+
+/**
+ * @module OwnerOpsCommand
+ * @description Operasi darurat & panel manajemen teknis khusus Owner bot.
+ * 
+ * Fitur Utama:
+ * - Maintenance Mode: Aktifkan/nonaktifkan pemeliharaan global bot
+ * - Kill Switch: Matikan modul/command spesifik tanpa shutdown bot
+ * - Doctor Diagnostic: Cek kesehatan 6 pilar infrastruktur
+ * - Logs Viewer: Tinjau log error terbaru langsung di DM Discord
+ * - Key Management: Terbitkan, list, dan cabut kunci akses dev untuk Code Runner
+ * - Player Repair: Pulihkan status pemain yang freeze/deadlock
+ * - Player Heal: Pemulihan vital parsial/penuh (HP, stamina, hunger, thirst, sick)
+ * - Premium Management: Grant/revoke status VIP Booster Premium
+ * - Owner Panel: Ringkasan seluruh operasi khusus Owner
+ * 
+ * Keamanan Ketat:
+ * - Hanya dapat diakses oleh user dalam OWNER_IDS
+ * - Command diagnostik & key management WAJIB via DM (bukan guild channel)
+ * - Audit trail mencatat callerTag untuk setiap operasi
+ * 
+ * Subcommands yang boleh dijalankan di Guild: heal, repair, panel, premium
+ * Subcommands yang WAJIB di DM: maintenance, killswitch, doctor, logs, keygen, keylist, keyrevoke
+ */
+
 const { logger } = require("../../src/managers/logger");
 
 const {
@@ -14,9 +39,50 @@ const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const incidentService = require("../../src/services/incidentService");
 const accessKeyService = require("../../src/services/accessKeyService");
 
+// ============================================================================
+// SECTION 1: KONSTANTA & HELPER KEAMANAN
+// ============================================================================
+
+/** @constant {Array<string>} SUBCOMMANDS_ALLOWED_IN_GUILD - Subcommand yang boleh dijalankan di server */
+const SUBCOMMANDS_ALLOWED_IN_GUILD = ["heal", "repair", "panel", "premium"];
+
+/** @constant {number} DEFAULT_LOG_LIMIT - Jumlah default baris log yang ditampilkan */
+const DEFAULT_LOG_LIMIT = 15;
+
+/** @constant {number} MAX_LOG_TEXT_LENGTH - Batas karakter untuk blok log */
+const MAX_LOG_TEXT_LENGTH = 3500;
+
+/** @constant {number} DEFAULT_KEY_MAX_USES - Kuota eksekusi default untuk dev key */
+const DEFAULT_KEY_MAX_USES = 10;
+
+/** @constant {number} DEFAULT_KEY_DURATION_HOURS - Masa aktif default dev key (jam) */
+const DEFAULT_KEY_DURATION_HOURS = 24;
+
+/** @constant {number} DEFAULT_PREMIUM_DAYS - Durasi default premium grant (hari) */
+const DEFAULT_PREMIUM_DAYS = 30;
+
+/** @constant {number} MAX_VITAL_VALUE - Nilai maksimal untuk stamina/hunger/thirst (0-100) */
+const MAX_VITAL_VALUE = 100;
+
+/** @constant {number} MIN_HP_VALUE - Nilai minimal HP (tidak boleh 0) */
+const MIN_HP_VALUE = 1;
+
+/** @constant {number} KEYLIST_DISPLAY_LIMIT - Jumlah kunci yang ditampilkan dalam list */
+const KEYLIST_DISPLAY_LIMIT = 15;
+
+/**
+ * Cek apakah userId adalah Owner bot berdasarkan konfigurasi env.
+ * 
+ * @param {string} userId - Discord User ID
+ * @returns {boolean} true jika user ada di daftar OWNER_IDS
+ */
 function isOwner(userId) {
   return Array.isArray(env.OWNER_IDS) && env.OWNER_IDS.includes(userId);
 }
+
+// ============================================================================
+// SECTION 2: SLASH COMMAND DEFINITION
+// ============================================================================
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -217,10 +283,10 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    // KEAMANAN & PRIVASI KETAT: Dilarang keras dieksekusi oleh selain Owner bot
+    // Validasi keamanan: hanya Owner bot yang boleh mengakses
     if (!isOwner(interaction.user.id)) {
       return interaction.reply({
-        content: "⛔ Perintah ini sangat rahasia dan hanya dapat diakses oleh Owner bot.",
+        content: "\u26d4 Perintah ini sangat rahasia dan hanya dapat diakses oleh Owner bot.",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -229,14 +295,16 @@ module.exports = {
     const callerTag = interaction.user.globalName || interaction.user.username;
 
     // Perintah operasional berisiko kebocoran log/token wajib dieksekusi di DM
-    if (interaction.guildId && !["heal", "repair", "panel", "premium"].includes(sub)) {
+    if (interaction.guildId && !SUBCOMMANDS_ALLOWED_IN_GUILD.includes(sub)) {
       return interaction.reply({
-        content: "⛔ Perintah diagnostik dan manajemen kunci hanya dapat diakses melalui Direct Message (DM) bersama Owner bot demi keamanan.",
+        content: "\u26d4 Perintah diagnostik dan manajemen kunci hanya dapat diakses melalui Direct Message (DM) bersama Owner bot demi keamanan.",
         flags: MessageFlags.Ephemeral,
       });
     }
 
-    // 0. PANEL DIREKTORI OWNER
+    // =========================================================================
+    // SECTION 3: PANEL DIREKTORI OWNER
+    // =========================================================================
     if (sub === "panel") {
       const { buildOwnerPanelPayload } = require("../../src/utils/ownerPanelHelper");
       const payload = buildOwnerPanelPayload();
@@ -246,7 +314,9 @@ module.exports = {
       });
     }
 
-    // 1. MAINTENANCE
+    // =========================================================================
+    // SECTION 4: MAINTENANCE MODE
+    // =========================================================================
     if (sub === "maintenance") {
       const mode = interaction.options.getString("mode");
       const reason =
@@ -278,7 +348,9 @@ module.exports = {
       });
     }
 
-    // 2. KILL-SWITCH
+    // =========================================================================
+    // SECTION 5: KILL-SWITCH MODUL
+    // =========================================================================
     if (sub === "killswitch") {
       const modul = interaction.options.getString("modul");
       const status = interaction.options.getString("status");
@@ -306,7 +378,9 @@ module.exports = {
       });
     }
 
-    // 3. DOCTOR DIAGNOSTIC
+    // =========================================================================
+    // SECTION 6: DOCTOR DIAGNOSTIC
+    // =========================================================================
     if (sub === "doctor") {
       await interaction.deferReply();
       const report = await incidentService.runDoctorDiagnostic(interaction.client);
@@ -366,9 +440,11 @@ module.exports = {
       );
     }
 
-    // 4. LOGS
+    // =========================================================================
+    // SECTION 7: LOGS VIEWER
+    // =========================================================================
     if (sub === "logs") {
-      const limit = interaction.options.getInteger("limit") || 15;
+      const limit = interaction.options.getInteger("limit") || DEFAULT_LOG_LIMIT;
       const lines = incidentService.getRecentLogs(limit);
 
       return interaction.reply({
@@ -379,7 +455,7 @@ module.exports = {
           description: [
             "Berikut kutipan log error terbaru dari sistem:",
             "```text",
-            lines.join("\n").substring(0, 3500),
+            lines.join("\n").substring(0, MAX_LOG_TEXT_LENGTH),
             "```",
           ].join("\n"),
           footerText: ui.getFooter("core"),
@@ -387,11 +463,13 @@ module.exports = {
       });
     }
 
-    // 5. KEYGEN
+    // =========================================================================
+    // SECTION 8: KEYGEN - TERBITKAN KUNCI AKSES
+    // =========================================================================
     if (sub === "keygen") {
       const targetUser = interaction.options.getUser("target_user");
-      const maxUses = interaction.options.getInteger("max_uses") || 10;
-      const durationHours = interaction.options.getInteger("durasi_jam") || 24;
+      const maxUses = interaction.options.getInteger("max_uses") || DEFAULT_KEY_MAX_USES;
+      const durationHours = interaction.options.getInteger("durasi_jam") || DEFAULT_KEY_DURATION_HOURS;
 
       const key = await accessKeyService.createKey({
         createdBy: callerTag,
@@ -424,9 +502,11 @@ module.exports = {
       });
     }
 
-    // 6. KEYLIST
+    // =========================================================================
+    // SECTION 9: KEYLIST - DAFTAR KUNCI AKSES
+    // =========================================================================
     if (sub === "keylist") {
-      const keys = await accessKeyService.listKeys(15);
+      const keys = await accessKeyService.listKeys(KEYLIST_DISPLAY_LIMIT);
 
       if (keys.length === 0) {
         return interaction.reply({
@@ -455,7 +535,9 @@ module.exports = {
       });
     }
 
-    // 7. KEYREVOKE
+    // =========================================================================
+    // SECTION 10: KEYREVOKE - CABUT KUNCI AKSES
+    // =========================================================================
     if (sub === "keyrevoke") {
       const keyString = interaction.options.getString("key");
       const revoked = await accessKeyService.revokeKey(keyString);
@@ -472,7 +554,9 @@ module.exports = {
       });
     }
 
-    // 8. REPAIR
+    // =========================================================================
+    // SECTION 11: REPAIR - PULIHKAN PLAYER STATE
+    // =========================================================================
     if (sub === "repair") {
       const targetUser = interaction.options.getUser("user");
       const repairRes = await incidentService.repairPlayerState(
@@ -499,7 +583,9 @@ module.exports = {
       });
     }
 
-    // 9. HEAL (Fleksibel: Parsial / Penuh & Support User ID Luar Server)
+    // =========================================================================
+    // SECTION 12: HEAL - PEMULIHAN VITAL PLAYER
+    // =========================================================================
     if (sub === "heal") {
       const targetUser = interaction.options.getUser("user");
       const targetId = interaction.options.getString("user_id") || targetUser?.id || interaction.user.id;
@@ -528,22 +614,22 @@ module.exports = {
       let detailDesc = "";
 
       if (statType === "stamina") {
-        const val = Number.isFinite(rawAmount) ? Math.max(0, Math.min(100, rawAmount)) : 100;
+        const val = Number.isFinite(rawAmount) ? Math.max(0, Math.min(MAX_VITAL_VALUE, rawAmount)) : 100;
         patch.stamina = val;
         title = `⚡ Pemulihan Stamina: <@${targetId}>`;
         detailDesc = `⚡ **Stamina:** \`${val}/100\``;
       } else if (statType === "hp") {
-        const val = Number.isFinite(rawAmount) ? Math.max(1, Math.min(maxHp, rawAmount)) : maxHp;
+        const val = Number.isFinite(rawAmount) ? Math.max(MIN_HP_VALUE, Math.min(maxHp, rawAmount)) : maxHp;
         patch.hp = val;
         title = `❤️ Pemulihan Kesehatan (HP): <@${targetId}>`;
         detailDesc = `❤️ **HP:** \`${val}/${maxHp}\``;
       } else if (statType === "hunger" || statType === "lapar") {
-        const val = Number.isFinite(rawAmount) ? Math.max(0, Math.min(100, rawAmount)) : 100;
+        const val = Number.isFinite(rawAmount) ? Math.max(0, Math.min(MAX_VITAL_VALUE, rawAmount)) : 100;
         patch.hunger = val;
         title = `🍖 Pemulihan Nutrisi: <@${targetId}>`;
         detailDesc = `🍖 **Lapar:** \`${val}/100\``;
       } else if (statType === "thirst" || statType === "haus") {
-        const val = Number.isFinite(rawAmount) ? Math.max(0, Math.min(100, rawAmount)) : 100;
+        const val = Number.isFinite(rawAmount) ? Math.max(0, Math.min(MAX_VITAL_VALUE, rawAmount)) : 100;
         patch.thirst = val;
         title = `💧 Pemulihan Hidrasi: <@${targetId}>`;
         detailDesc = `💧 **Haus:** \`${val}/100\``;
@@ -605,12 +691,14 @@ module.exports = {
       });
     }
 
-    // 10. PREMIUM (Suntik / Cabut VIP Member)
+    // =========================================================================
+    // SECTION 13: PREMIUM - GRANT/REVOKE VIP
+    // =========================================================================
     if (sub === "premium") {
       const action = interaction.options.getString("aksi") || "grant";
       const targetUser = interaction.options.getUser("user");
       const targetId = interaction.options.getString("user_id") || targetUser?.id || interaction.user.id;
-      const days = interaction.options.getInteger("durasi_hari") || 30;
+      const days = interaction.options.getInteger("durasi_hari") || DEFAULT_PREMIUM_DAYS;
 
       const store = require("../../src/premium/premiumStore");
       const { tierDisplayName } = require("../../src/premium/premiumTiers");
@@ -679,5 +767,6 @@ module.exports = {
         flags: interaction.guildId ? MessageFlags.Ephemeral : undefined,
       });
     }
+
   },
 };

@@ -1,6 +1,21 @@
 "use strict";
 
+/**
+ * @module family
+ * @description Subcommand /survival family - Sistem pernikahan dan keluarga dengan NPC companion.
+ * 
+ * Fitur Utama:
+ * - Marriage proposal ke NPC (friendship level 4)
+ * - Spouse benefits dan buff pasif
+ * - Family home decoration
+ */
+
+
 const { MessageFlags } = require("discord.js");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const familyEngine = require("../../../src/survival/engines/familyEngine");
 const {
   buildContainerV2,
@@ -10,10 +25,18 @@ const {
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
   name: "family",
   description: "👨‍👩‍👧 Interaksi Pengasuhan Keluarga & Magang Bakat Anak",
 
+  /**
+   * Handler utama untuk command /survival family
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const action = interaction.options.getString("aksi") || "status";
     const user = interaction.user;

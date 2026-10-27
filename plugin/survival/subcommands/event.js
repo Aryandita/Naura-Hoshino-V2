@@ -1,5 +1,20 @@
 "use strict";
 
+/**
+ * @module event
+ * @description Subcommand /survival event - Event musiman dan limited-time activities tracker.
+ * 
+ * Fitur Utama:
+ * - Active event listing
+ * - Event reward preview
+ * - Countdown timer display
+ */
+
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const {
   addItemsAtomic,
@@ -17,7 +32,15 @@ function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival event
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
 

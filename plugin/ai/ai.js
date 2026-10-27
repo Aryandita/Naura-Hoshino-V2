@@ -1,9 +1,44 @@
 "use strict";
 
+/**
+ * 🤖 AI Command Router - Naura AI Suite - Naura Hoshino V2
+ * ---------------------------------------------------------
+ * Main router for Naura's artificial intelligence features.
+ * Provides hub menu for AI capabilities and direct chat access.
+ *
+ * Features:
+ * - Interactive hub menu with quick buttons and dropdown
+ * - Direct chat via optional message parameter
+ * - Premium user detection for feature gating
+ * - Multiple AI subcommands: chat, story, voice, vision, sensei, mystery, persona
+ *
+ * Subcommands:
+ * - /ai <pesan>           : Direct chat with Naura AI
+ * - /ai (no args)         : Open AI hub menu
+ * - /ai chat              : Dialog conversation
+ * - /ai story             : Story Mode RPG adventure
+ * - /ai voice             : Voice companion & DJ
+ * - /ai vision            : Image analysis
+ * - /ai sensei            : Bot tutor & guide
+ * - /ai mystery           : Detective mystery game
+ * - /ai persona           : Persona customization
+ *
+ * @module plugin/ai/ai
+ */
+
 const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
 const cacheManager = require("../../src/managers/cacheManager");
 const chat = require("./subcommands/chat");
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Check if user has active premium status.
+ * @param {object} profile - User profile object
+ * @returns {boolean} True if premium is active
+ */
 function isPremium(profile) {
   return Boolean(
     profile.isPremium &&
@@ -11,6 +46,10 @@ function isPremium(profile) {
     new Date(profile.premiumUntil) > new Date(),
   );
 }
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -23,10 +62,25 @@ module.exports = {
         .setRequired(false),
     ),
 
+  // ============================================================================
+  // COMMAND EXECUTION
+  // ============================================================================
+
+  /**
+   * Execute AI command.
+   * Shows hub menu or handles direct chat message.
+   * @param {object} interaction - Discord interaction
+   * @param {object} client - Discord client
+   * @returns {Promise<void>}
+   */
   async execute(interaction, client) {
     const directMessage = interaction.options ? interaction.options.getString("pesan") : null;
+
+    // Handle direct chat message
     if (directMessage) {
       await interaction.deferReply();
+
+      // Create mock interaction with overridden options
       const mockInteraction = new Proxy(interaction, {
         get(target, prop) {
           if (prop === "options") {
@@ -39,6 +93,7 @@ module.exports = {
           return typeof val === "function" ? val.bind(target) : val;
         },
       });
+
       const profile = await cacheManager.getUserProfile(interaction.user.id);
       return chat(mockInteraction, {
         profile,
@@ -46,6 +101,7 @@ module.exports = {
       });
     }
 
+    // Show AI hub menu
     const { buildInteractiveHubPayload } = require("../../src/utils/hubMenuHelper");
     const payload = buildInteractiveHubPayload({
       title: "🤖 Naura Artificial Intelligence Suite",

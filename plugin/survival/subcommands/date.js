@@ -1,11 +1,27 @@
 "use strict";
 
+/**
+ * @module date
+ * @description Subcommand /survival date - Date activity dengan NPC untuk meningkatkan relationship.
+ * 
+ * Fitur Utama:
+ * - Date location selection
+ * - Affection point gain
+ * - Special dialog per NPC
+ * - Gift preference matching
+ */
+
+
 const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   AttachmentBuilder,
   MessageFlags,
 } = require("discord.js");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const fs = require("fs");
 const path = require("path");
@@ -68,7 +84,15 @@ function findPortrait(npc) {
   return null;
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival date
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const survival = await cacheManager.getUserSurvival(user.id);

@@ -1,3 +1,22 @@
+/**
+ * @module AkinatorMinigame
+ * @description Game Akinator yang mencoba menebak karakter yang dipikirkan pemain.
+ * 
+ * Fitur:
+ * - Integrasi dengan aki-api untuk database karakter
+ * - Region Indonesia untuk karakter lokal
+ * - Tombol interaktif untuk jawaban (Ya/Tidak/Tidak Tahu/Mungkin)
+ * - Deteksi kemenangan saat progress >= 80% atau step >= 79
+ * - Fallback handling untuk SSL certificate issues
+ * 
+ * @example
+ * /akinator
+ * // Jawab pertanyaan dengan tombol hingga Akinator menebak
+ * 
+ * @author Naura Hoshino Development Team
+ * @version 2.4.0
+ */
+
 const fs = require("fs");
 const {
   SlashCommandBuilder,
@@ -9,7 +28,16 @@ const {
 } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 
+// ============================================================================
+// AKI-API MODULE LOADER
+// ============================================================================
+
 let Aki;
+
+/**
+ * Lazy loader untuk aki-api module dengan fallback SSL handling
+ * @returns {typeof import("aki-api").Aki | undefined} Aki class atau undefined jika gagal
+ */
 function getAki() {
   if (Aki) return Aki;
   try {
@@ -39,14 +67,56 @@ function getAki() {
 
 const ui = require("../../src/config/ui");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/**
+ * Timeout collector dalam milidetik (5 menit)
+ * @type {number}
+ */
+const COLLECTOR_TIMEOUT = 300000;
+
+/**
+ * Threshold progress untuk menebak karakter
+ * @type {number}
+ */
+const WIN_PROGRESS_THRESHOLD = 80;
+
+/**
+ * Maksimal step sebelum force win
+ * @type {number}
+ */
+const MAX_STEPS = 79;
+
+/**
+ * Region untuk Akinator API
+ * @type {string}
+ */
+const AKINATOR_REGION = "id";
+
+// ============================================================================
+// MODULE EXPORTS
+// ============================================================================
+
 module.exports = {
   isSubcommand: true,
+  
+  /**
+   * Definisi slash command untuk akinator
+   * @type {import('discord.js').SlashCommandSubcommandBuilder}
+   */
   data: new SlashCommandBuilder()
     .setName("akinator")
     .setDescription(
-      "🧞‍♂️ Akinator akan mencoba menebak karakter yang sedang kamu pikirkan!",
+      "\ud83e\uddde\u200d\u2642\ufe0f Akinator akan mencoba menebak karakter yang sedang kamu pikirkan!",
     ),
 
+  /**
+   * Handler eksekusi command akinator
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     await interaction.deferReply();
 
@@ -58,20 +128,24 @@ module.exports = {
       const errPayload = buildErrorContainerV2({
         title: "Akinator Offline",
         description:
-          "❌ Fitur Akinator saat ini sedang tidak tersedia karena masalah modul server.",
+          "\u274c Fitur Akinator saat ini sedang tidak tersedia karena masalah modul server.",
         footerText: ui.getFooter("core"),
       });
       return interaction.editReply(errPayload);
     }
 
     try {
-      const aki = new AkiModule({ region: "id" }); // Indonesian region
+      const aki = new AkiModule({ region: AKINATOR_REGION });
       await aki.start();
 
       const {
         buildContainerV2,
       } = require("../../src/utils/NauraContainerBuilder");
 
+      /**
+       * Membuat payload respons untuk pertanyaan Akinator
+       * @returns {Object} Payload Components V2
+       */
       const createPayload = () => {
         return buildContainerV2({
           accentColorHex: "#f1c40f",
@@ -79,7 +153,7 @@ module.exports = {
           title: `Pertanyaan ${aki.currentStep + 1} (Progress: ${Math.round(aki.progress)}%)`,
           iconURL:
             "https://en.akinator.com/bundles/elokencesite/images/akinator.png",
-          description: `### 🧞‍♂️ **${aki.question}**`,
+          description: `### \ud83e\uddde\u200d\u2642\ufe0f **${aki.question}**`,
           buttonsRow: [
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
@@ -106,7 +180,7 @@ module.exports = {
                 .setStyle(ButtonStyle.Primary),
               new ButtonBuilder()
                 .setCustomId("aki_back")
-                .setLabel("« Kembali")
+                .setLabel("\u00ab Kembali")
                 .setStyle(ButtonStyle.Secondary),
             ),
           ],
@@ -118,14 +192,14 @@ module.exports = {
 
       const collector = message.createMessageComponentCollector({
         componentType: ComponentType.Button,
-        time: 300000,
-      }); // 5 min timeout
+        time: COLLECTOR_TIMEOUT,
+      });
 
       collector.on("collect", async (i) => {
         if (i.user.id !== interaction.user.id) {
           return i.reply({
             content:
-              "❌ Ini bukan game-mu! Ketik `/akinator` untuk main sendiri.",
+              "\u274c Ini bukan game-mu! Ketik `/akinator` untuk main sendiri.",
             flags: MessageFlags.Ephemeral,
           });
         }
@@ -138,7 +212,7 @@ module.exports = {
           await aki.step(parseInt(action));
         }
 
-        if (aki.progress >= 80 || aki.currentStep >= 79) {
+        if (aki.progress >= WIN_PROGRESS_THRESHOLD || aki.currentStep >= MAX_STEPS) {
           await aki.win();
           const guess = aki.answers[0];
 
@@ -146,8 +220,8 @@ module.exports = {
             const winPayload = buildContainerV2({
               accentColorHex: "#2ecc71",
               authorName: "Akinator Genies",
-              title: "🧞‍♂️ Apakah ini karakter yang kamu pikirkan?",
-              description: `### **${guess.name}**\n*${guess.description}*\n\n> 🏆 Ranking: **#${guess.ranking}**`,
+              title: "\ud83e\uddde\u200d\u2642\ufe0f Apakah ini karakter yang kamu pikirkan?",
+              description: `### **${guess.name}**\n*${guess.description}*\n\n> \ud83c\udfc6 Ranking: **#${guess.ranking}**`,
               footerText: ui.getFooter("core"),
             });
 
@@ -155,7 +229,7 @@ module.exports = {
             collector.stop("won");
           } else {
             await i.update({
-              content: "🧞‍♂️ Aku menyerah! Aku tidak bisa menebak karaktermu.",
+              content: "\ud83e\uddde\u200d\u2642\ufe0f Aku menyerah! Aku tidak bisa menebak karaktermu.",
               embeds: [],
               components: [],
             });
@@ -170,7 +244,7 @@ module.exports = {
         if (reason === "time") {
           interaction
             .editReply({
-              content: "⏰ Waktu habis! Game Akinator dihentikan.",
+              content: "\u23f0 Waktu habis! Game Akinator dihentikan.",
               embeds: [],
               components: [],
             })
@@ -180,7 +254,7 @@ module.exports = {
     } catch (error) {
       logger.error("[Akinator Error]", error);
       await interaction.editReply(
-        "❌ Gagal memulai Akinator. Coba beberapa saat lagi.",
+        "\u274c Gagal memulai Akinator. Coba beberapa saat lagi.",
       );
     }
   },

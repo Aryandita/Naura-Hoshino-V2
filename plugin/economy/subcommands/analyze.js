@@ -1,6 +1,5 @@
 "use strict";
 
-const { MessageFlags } = require("discord.js");
 const {
   buildContainerV2,
   buildErrorContainerV2,

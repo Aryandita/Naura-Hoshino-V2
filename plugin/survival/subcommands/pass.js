@@ -1,5 +1,20 @@
 "use strict";
 
+/**
+ * @module pass
+ * @description Subcommand /survival pass - Seasonal Star Path (Battle Pass) dengan sistem klaim tier dan Star Pass premium.
+ * 
+ * Fitur Utama:
+ * - Progress tracking per tier berdasarkan survival XP
+ * - Dual track rewards: Free track dan Star Pass (premium) track
+ * - Klaim hadiah tier via atomic JSON mutation (rpg_state.season_claims)
+ * - Pembelian Star Pass dengan Voucher Beasiswa (VB)
+ * - Preview manfaat premium card
+ * - Collector 60 detik dengan disable-on-timeout
+ * - Fresh state reload sebelum setiap claim untuk mencegah race condition
+ */
+
+
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -12,10 +27,22 @@ const ui = require("../../../src/config/ui");
 const cacheManager = require("../../../src/managers/cacheManager");
 const seasonPassEngine = require("../../../src/survival/engines/seasonPassEngine");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const COLLECTOR_MS = 60000;
 const STAR_PASS_COST_COUPONS = 50;
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival pass
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const survival = await cacheManager.getUserSurvival(user.id);

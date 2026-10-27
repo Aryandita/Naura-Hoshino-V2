@@ -1,4 +1,31 @@
-"use strict";
+﻿"use strict";
+
+/**
+ * @module chop
+ * @description Subcommand /survival chop - Mini-game tebang pohon dengan quick-time button clicking.
+ * 
+ * Fitur Utama:
+ * - Deteksi kapak terbaik dari inventory (obsidian > diamond > iron > stone > wooden)
+ * - Quick-time event: tekan tombol CHOP! N kali dalam batas waktu
+ * - Reward kayu dengan chance bonus fiber atau extra wood
+ * - Seasonal event boost (drop multiplier + exclusive item 25% chance)
+ * - Atomic inventory write untuk mencegah race condition
+ * - Achievement unlock "forest_guardian" saat kumpul 500+ wood
+ * - World Pulse flavor text dan background dinamis
+ * - Quest progress increment untuk "collect" type
+ * - Time advancement 2 jam setelah berhasil
+ * 
+ * Mekanik Kapak:
+ * - obsidian_axe: 1 klik
+ * - diamond_axe: 2 klik
+ * - iron_axe: 3 klik
+ * - stone_axe/wooden_axe: 4 klik
+ * 
+ * Reward Table:
+ * - Base: 1-3 wood
+ * - 10% chance bonus: 50% fiber (2x) atau 50% extra wood (+3)
+ * - Seasonal: dropBoost multiplier + 25% exclusive item
+ */
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -15,12 +42,21 @@ const survivalUI = require("../../../src/utils/survivalUIHelper");
 const questGen = require("../../../src/survival/engines/questGenerator");
 const achievementHelper = require("../../../src/survival/helpers/achievementHelper");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const STAMINA_COST = 15;
 const TIME_LIMIT_MS = 15000;
 const WOOD_TARGET = 500;
+const BONUS_CHANCE_PERCENT = 90;
+const SEASONAL_ITEM_CHANCE = 0.25;
+const TIME_ADVANCE_HOURS = 2;
+const BASE_REWARD_MIN = 1;
+const BASE_REWARD_MAX = 3;
+const FIBER_AMOUNT = 2;
+const EXTRA_WOOD_BONUS = 3;
 
-// Kapak dari yang paling ringan sampai paling sakti.
-// Jumlah tebasan diseimbangkan agar ramah terhadap latensi jaringan Discord.
 const AXES = [
   { id: "obsidian_axe", clicks: 1 },
   { id: "diamond_axe", clicks: 2 },
@@ -29,11 +65,101 @@ const AXES = [
   { id: "wooden_axe", clicks: 4 },
 ];
 
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Mengambil emoji dari config atau fallback ke unicode
+ * @param {string} name - Nama emoji di config
+ * @param {string} fallback - Unicode emoji fallback
+ * @returns {string} Emoji string
+ */
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
+/**
+ * Membangun payload UI untuk progres tebang
+ * @param {number} progress - Jumlah klik saat ini
+ * @param {number} clicksNeeded - Total klik yang dibutuhkan
+ * @param {import('discord.js').User} user - User object
+ * @param {ActionRowBuilder} row - Button row
+ * @returns {object} Container V2 payload
+ */
+function buildChopPayload(progress, clicksNeeded, user, row) {
+  return buildContainerV2({
+    accentColorHex: "#22c55e",
+    authorName: "Naura Forest",
+    title: `${e("happy", "\uD83E\uDE93")} Ayo tebang pohonnya!`,
+    iconURL: user.displayAvatarURL(),
+    expression: "info",
+    description: [
+      "**Cepat tekan tombol CHOP!**",
+      `Kamu harus menebas **${clicksNeeded} kali** dalam waktu santai ${TIME_LIMIT_MS / 1000} detik. Naura hitung dari sini, semangat!`,
+      progress > 0
+        ? `\nProgres: **${progress} / ${clicksNeeded}** tebasan`
+        : "",
+    ].join("\n"),
+    buttonsRow: [row],
+    footerText: ui.getFooter("survival"),
+  });
+}
+
+/**
+ * Menghitung reward berdasarkan RNG dan seasonal boost
+ * @param {object|null} season - Season object dari getCurrentSeason()
+ * @returns {{rewardId: string, rewardName: string, rewardEmoji: string, rewardAmount: number, bonusLine: string, seasonDrops: Array}}
+ */
+function calculateReward(season) {
+  let rewardAmount = Math.floor(Math.random() * BASE_REWARD_MAX) + BASE_REWARD_MIN;
+  let rewardId = "wood";
+  let rewardName = "Kayu";
+  let rewardEmoji = e("wood", "\uD83E\uDEB5");
+  let bonusLine = "";
+  const seasonDrops = [];
+
+  if (Math.random() * 100 > BONUS_CHANCE_PERCENT) {
+    if (Math.random() > 0.5) {
+      rewardId = "fiber";
+      rewardName = "Serat Tumbuhan";
+      rewardEmoji = e("fiber", "\uD83C\uDF3F");
+      rewardAmount = FIBER_AMOUNT;
+      bonusLine = `${e("impressed", "\u2728")} Kamu juga menemukan serat tumbuhan yang jarang ada, lho!`;
+    } else {
+      rewardAmount += EXTRA_WOOD_BONUS;
+      bonusLine = `${e("shocked", "\u2728")} Pohonnya besar sekali, kayunya jadi berlimpah!`;
+    }
+  }
+
+  if (season) {
+    rewardAmount = Math.max(1, Math.floor(rewardAmount * season.dropBoost));
+    if (season.dropBoost > 1.0) {
+      bonusLine += `\n${e("impressed", "\u2728")} **[${season.label}]** Hasil tebangan meningkat x${season.dropBoost}!`;
+    }
+    if (season.exclusiveItem && Math.random() < SEASONAL_ITEM_CHANCE) {
+      seasonDrops.push({
+        id: season.exclusiveItem,
+        name: "Event Item",
+        amount: 1,
+        type: "material",
+      });
+      bonusLine += `\n${e("cheers", "\uD83C\uDF81")} **[${season.label}]** Kamu juga menemukan item eksklusif event!`;
+    }
+  }
+
+  return { rewardId, rewardName, rewardEmoji, rewardAmount, bonusLine, seasonDrops };
+}
+
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival chop
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const profile = await cacheManager.getUserProfile(user.id);
@@ -64,25 +190,7 @@ module.exports = {
 
     const row = new ActionRowBuilder().addComponents(chopBtn);
 
-    const buildChopPayload = (progress) =>
-      buildContainerV2({
-        accentColorHex: "#22c55e",
-        authorName: "Naura Forest",
-        title: `${e("happy", "\uD83E\uDE93")} Ayo tebang pohonnya!`,
-        iconURL: user.displayAvatarURL(),
-        expression: "info",
-        description: [
-          "**Cepat tekan tombol CHOP!**",
-          `Kamu harus menebas **${clicksNeeded} kali** dalam waktu santai ${TIME_LIMIT_MS / 1000} detik. Naura hitung dari sini, semangat!`,
-          progress > 0
-            ? `\nProgres: **${progress} / ${clicksNeeded}** tebasan`
-            : "",
-        ].join("\n"),
-        buttonsRow: [row],
-        footerText: ui.getFooter("survival"),
-      });
-
-    const first = buildChopPayload(0);
+    const first = buildChopPayload(0, clicksNeeded, user, row);
 
     const message = await interaction.editReply({
       ...first,
@@ -104,7 +212,7 @@ module.exports = {
         return i.deferUpdate().catch(() => {});
       }
 
-      const progress = buildChopPayload(clicks);
+      const progress = buildChopPayload(clicks, clicksNeeded, user, row);
       return i
         .update({
           ...progress,
@@ -132,51 +240,14 @@ module.exports = {
         return;
       }
 
-      let rewardAmount = Math.floor(Math.random() * 3) + 1;
-      let rewardId = "wood";
-      let rewardName = "Kayu";
-      let rewardEmoji = e("wood", "\uD83E\uDEB5");
-      let bonusLine = "";
-
-      if (Math.random() * 100 > 90) {
-        if (Math.random() > 0.5) {
-          rewardId = "fiber";
-          rewardName = "Serat Tumbuhan";
-          rewardEmoji = e("fiber", "\uD83C\uDF3F");
-          rewardAmount = 2;
-          bonusLine = `${e("impressed", "\u2728")} Kamu juga menemukan serat tumbuhan yang jarang ada, lho!`;
-        } else {
-          rewardAmount += 3;
-          bonusLine = `${e("shocked", "\u2728")} Pohonnya besar sekali, kayunya jadi berlimpah!`;
-        }
-      }
-
-      // === SEASONAL EVENT BOOST ===
       const {
         getCurrentSeason,
         checkNauraBirthdayEncounter,
       } = require("../../../src/survival/helpers/survivalContext");
       const season = getCurrentSeason();
-      const seasonDrops = [];
-      if (season) {
-        rewardAmount = Math.max(1, Math.floor(rewardAmount * season.dropBoost));
-        if (season.dropBoost > 1.0) {
-          bonusLine += `\n${e("impressed", "\u2728")} **[${season.label}]** Hasil tebangan meningkat x${season.dropBoost}!`;
-        }
-        if (season.exclusiveItem && Math.random() < 0.25) {
-          // 25% drop rate
-          seasonDrops.push({
-            id: season.exclusiveItem,
-            name: "Event Item",
-            amount: 1,
-            type: "material",
-          });
-          bonusLine += `\n${e("cheers", "\uD83C\uDF81")} **[${season.label}]** Kamu juga menemukan item eksklusif event!`;
-        }
-      }
 
-      // Barang masuk lewat jalur terkunci. Menulis ulang seluruh array
-      // inventory membuat hadiah lain yang tiba bersamaan ikut terhapus.
+      const { rewardId, rewardName, rewardEmoji, rewardAmount, bonusLine, seasonDrops } = calculateReward(season);
+
       const itemsToStore = [
         {
           id: rewardId,
@@ -249,10 +320,8 @@ module.exports = {
       const {
         advanceTime,
       } = require("../../../src/survival/helpers/survivalTime");
-      await advanceTime(user.id, 2).catch(() => {});
+      await advanceTime(user.id, TIME_ADVANCE_HOURS).catch(() => {});
 
-      // Dihitung dari inventory hasil transaksi, bukan dari salinan lama di
-      // memori, dan memakai countStack supaya tumpukan ikut terhitung.
       if (
         rewardId === "wood" &&
         countStack(stored.inventory, "wood") >= WOOD_TARGET

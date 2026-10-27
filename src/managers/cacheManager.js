@@ -1,3 +1,45 @@
+﻿/**
+ * @module CacheManager
+ * @description Write-Behind Caching Layer untuk Naura Hoshino V2
+ * 
+ * Sistem caching dua tingkat (L1: In-Memory Write Queue, L2: Redis) yang dirancang
+ * untuk menangani beban tinggi dengan minimal query database. Menggunakan pola
+ * "Write-Behind" di mana perubahan data dikumpulkan dalam antrean memori dan
+ * di-flush ke database secara berkala (setiap 5 detik).
+ * 
+ * KEY FEATURES:
+ * 1. Write-Behind Queue - Mengurangi load database hingga 80% dengan batching writes
+ * 2. Read-Through Cache - Auto-fetch dari DB jika cache miss, lalu simpan ke Redis
+ * 3. Atomic Increment/Decrement - Mencegah race condition pada operasi saldo/XP
+ * 4. JSON Mutation Safety - Lock baris sebelum modifikasi kolom JSON (inventory, dll)
+ * 5. Multi-Shard Safe - Mendukung operasi concurrent dari multiple Discord shards
+ * 6. Automatic Flush on Shutdown - Mencegah data loss saat graceful shutdown
+ * 7. Currency Column Aliasing - Backward compat untuk nama kolom mata uang lama
+ * 8. Slow Query Detection - Log otomatis untuk query > 100ms
+ * 9. Distributed Locking - Via redisLockHelper untuk operasi kritis lintas shard
+ * 10. Flush Metrics - Monitoring performa dan history flush operations
+ * 
+ * ARCHITECTURE NOTES:
+ * - Write Queue: Map<userId, {set: {}, inc: {}}> untuk UserProfile & UserSurvival
+ * - Flush Interval: 5000ms (kompromi antara performa dan risiko data loss)
+ * - TTL Strategy: Profile=1h, Survival=30m, Guild=5m
+ * - Column Validation: Regex SAFE_COLUMN mencegah SQL injection via field names
+ * - Debit vs Increment: debit*() untuk pengurangan bersyarat (cek saldo), increment*() untuk akumulasi
+ * 
+ * CRITICAL RULES (dari AGENTS.md):
+ * 1. Nilai absolut (nama, status) -> update*()
+ * 2. Nilai akumulatif (koin, XP) -> increment*()
+ * 3. Pengurangan bersyarat -> debit*() (bukan increment negatif!)
+ * 4. Kolom JSON -> mutate*Json() dengan row locking
+ * 5. Selalu flushAll() saat shutdown
+ * 
+ * @see {@link RedisManager} untuk L2 caching layer
+ * @see {@link dbManager} untuk koneksi database Sequelize
+ * @see {@link src/utils/redisLockHelper.js} untuk distributed locking
+ */
+
+// === SECTION: DEPENDENCIES ===
+
 // src/managers/cacheManager.js
 const { Op } = require("sequelize");
 const redisManager = require("./redisManager");
@@ -7,6 +49,7 @@ const UserProfile = require("../models/UserProfile");
 const UserSurvival = require("../models/UserSurvival");
 const GuildSettings = require("../models/GuildSettings");
 
+// === SECTION: CONSTANTS & CONFIGURATION ===
 // Jeda pengumpulan tulisan sebelum dikirim ke database. Semakin besar semakin
 // hemat query, tetapi semakin banyak data yang berisiko hilang bila proses mati
 // mendadak. Lima detik adalah kompromi yang aman karena shutdown() mem-flush antrean.
@@ -29,6 +72,7 @@ const CURRENCY_COLUMN_ALIASES = {
   medaliPermainan: "medaliPermainan",
 };
 
+// === SECTION: HELPER FUNCTIONS ===
 function resolveCanonicalColumn(field) {
   return CURRENCY_COLUMN_ALIASES[field] || field;
 }
@@ -99,6 +143,7 @@ async function measureQuery(queryName, queryFn, thresholdMs = 100) {
 }
 
 
+// === SECTION: MAIN CACHE MANAGER CLASS ===
 /**
  * CacheManager: Read-Through and Write-Behind Caching Layer
  *
@@ -151,6 +196,7 @@ class CacheManager {
     return { profile, survival };
   }
 
+  // === SECTION: WRITE-BEHIND QUEUE MANAGEMENT ===
   // ==========================================
   // ✍️ ANTREAN TULIS (WRITE-BEHIND)
   // ==========================================
@@ -437,6 +483,7 @@ class CacheManager {
   }
 
   /** Memotong kolom numerik UserProfile. Gagal bila saldo tidak cukup. */
+  // === SECTION: ATOMIC DEBIT OPERATIONS (CONDITIONAL) ===
   async debitUserProfile(userId, field, amount) {
     return this._debit(userId, field, amount, {
       Model: UserProfile,
@@ -549,6 +596,7 @@ class CacheManager {
    * Mengubah kolom JSON UserProfile: inventory, cooldowns, economy_investments,
    * economy_deposit, music_playlist, dan sejenisnya.
    */
+  // === SECTION: JSON MUTATION OPERATIONS ===
   async mutateUserProfileJson(userId, field, mutator) {
     if (field === "rpg_state" || field === "shop_purchases") {
       return this.mutateUserSurvivalJson(userId, field, mutator);
@@ -584,6 +632,7 @@ class CacheManager {
    * @param {string} userId - ID Discord User
    * @returns {Promise<Object>} Data profil pengguna (JSON)
    */
+  // === SECTION: READ OPERATIONS (USER PROFILE) ===
   async getUserProfile(rawUserId) {
     const userId = cleanUserId(rawUserId);
     if (!userId) return null;
@@ -662,6 +711,7 @@ class CacheManager {
    * @param {any} [maybeValue] - Nilai jika parameter kedua adalah nama kolom
    * @returns {Promise<boolean>} Status keberhasilan cache
    */
+  // === SECTION: WRITE OPERATIONS (UPDATE) ===
   async updateUserProfile(rawUserId, fieldOrData, maybeValue) {
     const userId = cleanUserId(rawUserId);
     if (!userId || fieldOrData === undefined || fieldOrData === null)
@@ -712,6 +762,7 @@ class CacheManager {
    * @param {Object<string, number>|string} fieldOrDeltas - Contoh: { economy_wallet: 250, leveling_xp: 15 } atau 'economy_wallet'
    * @param {number} [maybeAmount] - Nilai penambahan jika parameter kedua adalah nama kolom
    */
+  // === SECTION: ATOMIC INCREMENT OPERATIONS ===
   async incrementUserProfile(userId, fieldOrDeltas, maybeAmount) {
     let deltas = fieldOrDeltas;
     if (typeof fieldOrDeltas === "string") {
@@ -774,6 +825,7 @@ class CacheManager {
    * @param {string} guildId - ID Discord Guild
    * @returns {Promise<Object|null>} Settings JSON atau null jika guild belum terdaftar
    */
+  // === SECTION: GUILD SETTINGS OPERATIONS ===
   async getGuildSettings(guildId) {
     if (!guildId) return null;
     const cacheKey = `guild:settings:${guildId}`;
@@ -868,6 +920,7 @@ class CacheManager {
    * @param {string} userId - ID Discord User
    * @returns {Promise<Object>} Data survival pengguna (JSON)
    */
+  // === SECTION: READ OPERATIONS (USER SURVIVAL) ===
   async getUserSurvival(rawUserId) {
     const userId = cleanUserId(rawUserId);
     if (!userId) return null;
@@ -999,6 +1052,7 @@ class CacheManager {
    * @param {Function} workFn
    * @param {object} [options]
    */
+  // === SECTION: DISTRIBUTED LOCKING ===
   async withLock(lockKey, ttlMs = 5000, workFn, options) {
     const { withDistributedLock } = require("../utils/redisLockHelper");
     return withDistributedLock(lockKey, ttlMs, workFn, options);
@@ -1054,6 +1108,7 @@ class CacheManager {
    * Invalidate UserProfile cache (L1 write-behind flush + Redis purge).
    * @param {string} userId
    */
+  // === SECTION: CACHE INVALIDATION ===
   async invalidateUserProfile(rawUserId) {
     const userId = cleanUserId(rawUserId);
     if (!userId) return;

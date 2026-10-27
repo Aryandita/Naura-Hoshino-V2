@@ -1,6 +1,18 @@
 "use strict";
 
 /**
+ * @module forge
+ * @description Subcommand /survival forge - Crafting dan upgrading equipment di bengkel pandai besi.
+ * 
+ * Fitur Utama:
+ * - Recipe lookup dan material validation
+ * - Tier-based crafting system
+ * - Durability repair mechanic
+ * - Upgrade path dengan material langka
+ */
+
+
+/**
  * @namespace: plugin/survival/subcommands/forge.js
  * @type: Subcommand
  * @copyright 2026 Aryandita Praftian
@@ -16,6 +28,10 @@ const {
   ButtonStyle,
 } = require("discord.js");
 const { buildContainerV2, buildErrorContainerV2, disableContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -24,7 +40,15 @@ const DurabilityEngine = require("../../../src/survival/engines/durabilityEngine
 
 const COLLECTOR_MS = 60000;
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival forge
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const profile = await cacheManager.getUserProfile(user.id);

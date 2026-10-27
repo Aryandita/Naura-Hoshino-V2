@@ -1,5 +1,22 @@
 "use strict";
 
+/**
+ * @module work
+ * @description Subcommand /survival work - Pekerjaan part-time untuk mendapatkan SC/PD dengan stamina cost.
+ * 
+ * Fitur Utama:
+ * - Job type selection
+ * - Wage calculation berdasarkan INT/stat
+ * - Stamina consumption
+ * - Time advancement
+ * - Quest progress increment
+ */
+
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const {
@@ -70,7 +87,15 @@ function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival work
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (
       typeof interaction.deferUpdate === "function" &&

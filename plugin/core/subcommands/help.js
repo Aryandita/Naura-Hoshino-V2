@@ -17,7 +17,12 @@ async function handleHelp(interaction, client, lang) {
     return interaction.editReply(detailPayload);
   }
 
-  const payload = buildHelpPayload(lang, -1, false, interaction.user);
+  const payload = buildHelpPayload({
+    language: lang,
+    categoryIndex: -1,
+    disabled: false,
+    user: interaction.user,
+  });
 
   let response;
   if (interaction.reply && !interaction.deferred) {
@@ -46,13 +51,13 @@ async function handleHelp(interaction, client, lang) {
               catIndex = state.currentIndex;
               subPage = state.currentSubPage;
             }
-            const disabledData = buildHelpPayload(
-              lang,
-              catIndex,
-              true,
-              interaction.user,
-              subPage,
-            );
+            const disabledData = buildHelpPayload({
+              language: lang,
+              categoryIndex: catIndex,
+              disabled: true,
+              user: interaction.user,
+              subPage: subPage,
+            });
             await (latestMsg || response).edit({
               flags: disabledData.flags,
               components: disabledData.components,

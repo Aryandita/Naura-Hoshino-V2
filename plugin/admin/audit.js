@@ -1,3 +1,29 @@
+"use strict";
+
+/**
+ * 📋 Audit Command - Server Audit Logs - Naura Hoshino V2
+ * --------------------------------------------------------
+ * Retrieves and displays server audit logs for specific actions.
+ * Supports multiple action types with export capability for large results.
+ *
+ * Features:
+ * - 5 audit action types (Kick, Ban, Channel Delete, Role Delete, Message Delete)
+ * - Configurable result limit (1-50 entries)
+ * - Automatic text file export for >10 entries
+ * - Permission validation (ViewAuditLog required)
+ * - Formatted timestamp display
+ * - Reason display when available
+ *
+ * Action Types:
+ * - MemberKick      : Member di-kick dari server
+ * - MemberBanAdd    : Member di-ban dari server
+ * - ChannelDelete   : Channel dihapus
+ * - RoleDelete      : Role dihapus
+ * - MessageDelete   : Pesan dihapus oleh moderator
+ *
+ * @module plugin/admin/audit
+ */
+
 const {
   SlashCommandBuilder,
   PermissionsBitField,
@@ -11,6 +37,10 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -38,7 +68,18 @@ module.exports = {
         .setMaxValue(50),
     ),
 
+  // ============================================================================
+  // COMMAND EXECUTION
+  // ============================================================================
+
+  /**
+   * Execute audit command.
+   * Fetches and displays audit logs for specified action type.
+   * @param {object} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
+    // Validate permissions
     if (
       !interaction.member.permissions.has(
         PermissionsBitField.Flags.ViewAuditLog,
@@ -56,11 +97,14 @@ module.exports = {
     }
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    // Extract options
     const aksi = interaction.options.getString("aksi");
     const limitCount = interaction.options.getInteger("limit") || 5;
     const auditEvent = AuditLogEvent[aksi];
 
     try {
+      // Fetch audit logs
       const auditLogs = await interaction.guild.fetchAuditLogs({
         limit: limitCount,
         type: auditEvent,
@@ -68,6 +112,7 @@ module.exports = {
 
       const entries = auditLogs.entries;
 
+      // Handle empty results
       if (entries.size === 0) {
         const emptyPayload = buildContainerV2({
           accentColorHex: ui.getColor("primary") || "#2b2d31",
@@ -78,6 +123,7 @@ module.exports = {
         return interaction.editReply(emptyPayload);
       }
 
+      // Format audit log entries
       const descriptionText = entries
         .map((entry) => {
           const executor = entry.executor
@@ -100,6 +146,7 @@ module.exports = {
         footerText: ui.getFooter("core"),
       });
 
+      // Export to file if more than 10 entries
       if (entries.size > 10) {
         let logText = `=== AUDIT LOG EXPORT: ${aksi} ===\n\n`;
         entries.forEach((entry) => {

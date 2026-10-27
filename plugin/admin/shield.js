@@ -1,3 +1,13 @@
+/**
+ * @module shield
+ * @description Sistem pertahanan darurat Anti-Raid Panic Shield.
+ * @author Naura Hoshino V2 Development Team
+ * @version 2.4.0
+ * @since 1.0.0
+ */
+
+"use strict";
+
 const {
   SlashCommandBuilder,
   PermissionsBitField,
@@ -16,10 +26,19 @@ const {
   updateGuildSetting,
 } = require("../../src/managers/guildSettingsService");
 
+/**
+ * Membungkus payload dengan flag Ephemeral.
+ * @param {Object} payload - Payload respons
+ * @returns {Object} Payload dengan flag Ephemeral
+ */
 function ephemeral(payload) {
   return { ...payload, flags: (payload.flags || 0) | MessageFlags.Ephemeral };
 }
 
+/**
+ * Mapping level verifikasi Discord ke nama deskriptif.
+ * @type {Object.<number, string>}
+ */
 const VERIFICATION_NAMES = {
   0: "None (Bebas)",
   1: "Low (Email Terverifikasi)",

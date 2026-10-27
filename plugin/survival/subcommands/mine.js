@@ -1,6 +1,23 @@
 "use strict";
 
+/**
+ * @module mine
+ * @description Subcommand /survival mine - Mini-game menambang dengan QTE dan reward bijih mineral.
+ * 
+ * Fitur Utama:
+ * - Pickaxe tier detection dari inventory
+ * - Quick-time event button clicking
+ * - Ore reward table dengan rarity tiers
+ * - Seasonal event boost multiplier
+ * - Achievement tracking untuk mining milestones
+ */
+
+
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const {
   safeParseInventory,
@@ -88,7 +105,15 @@ function rollOre(bonus) {
   };
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival mine
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const profile = await cacheManager.getUserProfile(user.id);

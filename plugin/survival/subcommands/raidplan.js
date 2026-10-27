@@ -1,10 +1,24 @@
 "use strict";
 
-const { MessageFlags } = require("discord.js");
+/**
+ * @module raidplan
+ * @description Subcommand /survival raidplan - Raid planning tool dengan strategy discussion dan role assignment.
+ * 
+ * Fitur Utama:
+ * - Raid schedule coordination
+ * - Role assignment (tank, dps, support)
+ * - Strategy notes sharing
+ */
+
+
 const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const { logger } = require("../../../src/managers/logger");
@@ -111,9 +125,7 @@ class RaidStrategyPlanner {
     return suggestions;
   }
 
-  _generateStrategy(composition, bossData) {
-    const bossLevel = bossData.level || 50;
-
+  _generateStrategy(composition, _bossData) {
     if (!composition.hasTank || !composition.hasHealer) {
       return {
         formation: "defensive_circle",
@@ -179,10 +191,18 @@ class RaidStrategyPlanner {
 
 const planner = new RaidStrategyPlanner();
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
   name: "raidplan",
   description: "Analisis komposisi party dan strategi raid optimal",
 
+  /**
+   * Handler utama untuk command /survival raidplan
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const userId = interaction.user.id;
     const bossName = interaction.options.getString("boss") || "World Boss";

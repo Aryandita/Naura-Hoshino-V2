@@ -1,3 +1,26 @@
+/**
+ * @module plugin/admin/warn
+ * @description Sistem peringatan dan strike untuk moderasi anggota server.
+ * 
+ * FITUR UTAMA:
+ * - /warn add: Beri peringatan dengan eskalasi otomatis (mute/kick/tempban/ban)
+ * - /warn check: Lihat riwayat peringatan dan status strike anggota
+ * - /warn remove: Hapus satu peringatan berdasarkan ID
+ * - /warn clear: Bersihkan seluruh riwayat peringatan dengan konfirmasi tombol
+ * 
+ * SISTEM STRIKE:
+ * - Setiap warn menambah 1 strike
+ * - 3 strikes = Tempban 1 hari
+ * - 5 strikes = Ban permanen
+ * 
+ * TANGGA HUKUMAN:
+ * - Konfigurasi via guild settings (warn_punishments)
+ * - Eskalasi otomatis berdasarkan total peringatan
+ * 
+ * @author Naura Hoshino V2 Team
+ * @version 2.4.0
+ */
+
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -19,11 +42,29 @@ const { logger } = require("../../src/managers/logger");
 
 const MUTE_MS = 60 * 60 * 1000;
 const DESC_LIMIT = 3800;
+const STRIKE_THRESHOLD_BAN = 5;
+const STRIKE_THRESHOLD_TEMPBAN = 3;
+const TEMPBAN_DURATION_MS = 86400000;
+const CONFIRM_TIMEOUT_MS = 30000;
+const SEVERITY_COLOR_HIGH = "#EF4444";
+const SEVERITY_COLOR_MEDIUM = "#F59E0B";
+const SEVERITY_COLOR_LOW = "#10B981";
 
+/**
+ * Menambahkan flag ephemeral ke payload respons.
+ * @param {Object} payload - Payload respons Discord
+ * @returns {Object} Payload dengan flag ephemeral
+ */
 function ephemeral(payload) {
   return { ...payload, flags: (payload.flags || 0) | MessageFlags.Ephemeral };
 }
 
+/**
+ * Mengirim respons error ephemeral.
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction - Interaksi Discord
+ * @param {string} description - Pesan error
+ * @returns {Promise<void>}
+ */
 function deny(interaction, description) {
   return interaction.reply(
     ephemeral(
@@ -36,6 +77,13 @@ function deny(interaction, description) {
   );
 }
 
+/**
+ * Mengirim respons sukses.
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction - Interaksi Discord
+ * @param {string} description - Pesan sukses
+ * @param {string} [expression="success"] - Ekspresi maskot
+ * @returns {Promise<void>}
+ */
 function notice(interaction, description, expression) {
   return interaction.reply(
     buildContainerV2({
@@ -73,12 +121,22 @@ async function applyPunishment(action, member, totalWarns) {
   return null;
 }
 
+/**
+ * Mendapatkan tindakan eskalasi dari tangga hukuman guild.
+ * @param {string} guildId - ID guild
+ * @param {number} totalWarns - Total peringatan saat ini
+ * @returns {Promise<string|null>} Jenis hukuman atau null
+ */
 async function ladderAction(guildId, totalWarns) {
   const settings = await cacheManager.getGuildSettings(guildId);
   if (!settings || !settings.settings || !settings.settings.warn_punishments)
     return null;
   return settings.settings.warn_punishments[totalWarns] || null;
 }
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -133,6 +191,20 @@ module.exports = {
         ),
     ),
 
+  /**
+   * Handler eksekusi command /warn.
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction - Interaksi Discord
+   * @returns {Promise<void>}
+   */
+  // ============================================================================
+  // EXECUTION
+  // ============================================================================
+
+  /**
+   * Handler eksekusi command /warn.
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction - Interaksi Discord
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const guildId = interaction.guild.id;
@@ -192,12 +264,12 @@ module.exports = {
         strikeRecord.lastStrikeAt = new Date();
         currentStrikes = strikeRecord.strikes;
 
-        if (strikeRecord.strikes >= 5) {
+        if (strikeRecord.strikes >= STRIKE_THRESHOLD_BAN) {
           strikeAction = "ban";
-        } else if (strikeRecord.strikes >= 3) {
+        } else if (strikeRecord.strikes >= STRIKE_THRESHOLD_TEMPBAN) {
           strikeAction = "tempban";
           strikeRecord.isTempBanned = true;
-          strikeRecord.tempbanExpiresAt = new Date(Date.now() + 86400000); // 1 hari
+          strikeRecord.tempbanExpiresAt = new Date(Date.now() + TEMPBAN_DURATION_MS); // 1 hari
         }
 
         await strikeRecord.save({
@@ -226,7 +298,7 @@ module.exports = {
       // Utamakan action dari strike sistem (jika >=3 atau >=5)
       const finalAction = strikeAction || action;
 
-      const severityHex = currentStrikes >= 5 ? "#EF4444" : currentStrikes >= 3 ? "#F59E0B" : "#10B981";
+      const severityHex = currentStrikes >= STRIKE_THRESHOLD_BAN ? SEVERITY_COLOR_HIGH : currentStrikes >= STRIKE_THRESHOLD_TEMPBAN ? SEVERITY_COLOR_MEDIUM : SEVERITY_COLOR_LOW;
 
       await interaction.reply(
         buildContainerV2({
@@ -234,7 +306,7 @@ module.exports = {
           authorName: "Peringatan Diberikan",
           title: `Peringatan untuk ${user.username}`,
           iconURL: user.displayAvatarURL(),
-          expression: currentStrikes >= 3 ? "angry" : "warning",
+          expression: currentStrikes >= STRIKE_THRESHOLD_TEMPBAN ? "angry" : "warning",
           description: [
             `**Anggota:** ${user} (\`${user.tag}\`)`,
             `**Moderator:** ${interaction.user}`,
@@ -304,13 +376,13 @@ module.exports = {
       }).catch(() => null);
       const strikes = strikeRecord ? strikeRecord.strikes : 0;
 
-      let severityColor = "#10B981";
+      let severityColor = SEVERITY_COLOR_LOW;
       let severityBadge = "🟢 Ringan (1-2)";
-      if (warns.length >= 5 || strikes >= 5) {
-        severityColor = "#EF4444";
+      if (warns.length >= 5 || strikes >= STRIKE_THRESHOLD_BAN) {
+        severityColor = SEVERITY_COLOR_HIGH;
         severityBadge = "🔴 Kritis (5+)";
-      } else if (warns.length >= 3 || strikes >= 3) {
-        severityColor = "#F59E0B";
+      } else if (warns.length >= 3 || strikes >= STRIKE_THRESHOLD_TEMPBAN) {
+        severityColor = SEVERITY_COLOR_MEDIUM;
         severityBadge = "🟡 Peringatan Serius (3-4)";
       }
 
@@ -391,7 +463,7 @@ module.exports = {
     );
 
     const confirmPayload = buildContainerV2({
-      accentColorHex: ui.getColor("warning") || "#F59E0B",
+      accentColorHex: ui.getColor("warning") || SEVERITY_COLOR_MEDIUM,
       title: "Konfirmasi Pembersihan Peringatan",
       expression: "warning",
       description: [
@@ -415,7 +487,7 @@ module.exports = {
 
     const collector = reply.createMessageComponentCollector({
       componentType: ComponentType.Button,
-      time: 30000,
+      time: CONFIRM_TIMEOUT_MS,
       max: 1,
     });
 
@@ -444,7 +516,7 @@ module.exports = {
         await UserStrike.destroy({ where: { userId: user.id, guildId } }).catch(() => {});
 
         const successPayload = buildContainerV2({
-          accentColorHex: ui.getColor("success") || "#10B981",
+          accentColorHex: ui.getColor("success") || SEVERITY_COLOR_LOW,
           title: "Peringatan Berhasil Dibersihkan",
           expression: "success",
           description: `Semua catatan peringatan milik <@${user.id}> (${deletedCount} catatan) dan strike berhasil dibersihkan.`,

@@ -1,3 +1,29 @@
+"use strict";
+
+/**
+ * 📢 Announce Command - Server Announcements - Naura Hoshino V2
+ * --------------------------------------------------------------
+ * Creates structured announcements with categories, images, and pin options.
+ * Uses modal for content input to provide better UX.
+ *
+ * Features:
+ * - 5 announcement categories with custom colors and emojis
+ * - Image attachment support
+ * - Role and @everyone mentions
+ * - Optional message pinning
+ * - Modal-based content input
+ * - Permission validation
+ *
+ * Categories:
+ * - update   : Pembaruan (Update)
+ * - mt       : Perbaikan (Maintenance)
+ * - event    : Acara (Event)
+ * - warn     : Peringatan (Warning)
+ * - info     : Informasi Umum
+ *
+ * @module plugin/admin/announce
+ */
+
 const {
   SlashCommandBuilder,
   PermissionFlagsBits,
@@ -14,6 +40,80 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Maximum character count for title + description */
+const MAX_ANNOUNCEMENT_CHARS = 5500;
+
+/** Modal timeout in milliseconds (5 minutes) */
+const MODAL_TIMEOUT_MS = 300000;
+
+/** Category configuration mapping */
+const CATEGORY_CONFIG = {
+  update: {
+    emoji: "📢",
+    label: "Pembaruan",
+    colorKey: "announce_update",
+  },
+  mt: {
+    emoji: "🛠️",
+    label: "Pemeliharaan",
+    colorKey: "announce_mt",
+  },
+  event: {
+    emoji: "🎉",
+    label: "Acara Komunitas",
+    colorKey: "announce_event",
+  },
+  warn: {
+    emoji: "⚠️",
+    label: "Peringatan",
+    colorKey: "announce_warn",
+  },
+  info: {
+    emoji: "ℹ️",
+    label: "Informasi Umum",
+    colorKey: "announcement",
+  },
+};
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get category configuration by key.
+ * @param {string} kategori - Category key
+ * @returns {{emoji: string, label: string, color: string}} Category config
+ */
+function getCategoryConfig(kategori) {
+  const config = CATEGORY_CONFIG[kategori] || CATEGORY_CONFIG.info;
+  return {
+    emoji: config.emoji,
+    label: config.label,
+    color: ui.getColor(config.colorKey) || ui.getColor("primary"),
+  };
+}
+
+/**
+ * Build mention prefix string.
+ * @param {boolean} mentionEveryone - Include @everyone
+ * @param {object|null} mentionRole - Role object or null
+ * @returns {string} Mention prefix with newlines
+ */
+function buildMentionPrefix(mentionEveryone, mentionRole) {
+  const mentions = [];
+  if (mentionEveryone) mentions.push("@everyone");
+  if (mentionRole) mentions.push(`<@&${mentionRole.id}>`);
+  return mentions.length > 0 ? `${mentions.join(" ")}\n\n` : "";
+}
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -67,16 +167,26 @@ module.exports = {
         .setRequired(false),
     ),
 
+  // ============================================================================
+  // COMMAND EXECUTION
+  // ============================================================================
+
+  /**
+   * Execute announce command.
+   * Shows modal for content input, then sends formatted announcement.
+   * @param {object} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
+    // Extract options
     const targetChannel = interaction.options.getChannel("channel");
     const kategori = interaction.options.getString("kategori");
     const attachment = interaction.options.getAttachment("gambar");
     const mentionRole = interaction.options.getRole("mention_role");
-    const mentionEveryone =
-      interaction.options.getBoolean("mention_everyone") || false;
+    const mentionEveryone = interaction.options.getBoolean("mention_everyone") || false;
     const shouldPin = interaction.options.getBoolean("pin") || false;
 
-    // Pre-check permission
+    // Validate bot permissions in target channel
     const botPermissions = targetChannel.permissionsFor(
       interaction.guild.members.me,
     );
@@ -94,6 +204,7 @@ module.exports = {
       });
     }
 
+    // Create and show modal for content input
     const modalId = `announceModal_${interaction.id}`;
 
     const modal = new ModalBuilder()
@@ -123,80 +234,26 @@ module.exports = {
 
     await interaction.showModal(modal);
 
+    // Wait for modal submission
     const filter = (i) =>
       i.customId === modalId && i.user.id === interaction.user.id;
 
     try {
       const modalSubmit = await interaction.awaitModalSubmit({
         filter,
-        time: 300000,
+        time: MODAL_TIMEOUT_MS,
       });
 
+      // Extract modal values
       const title = modalSubmit.fields.getTextInputValue("announceTitle");
       const desc = modalSubmit.fields.getTextInputValue("announceDesc");
 
-      let categoryEmoji = "";
-      let categoryLabel = "Informasi";
-      let embedColor = ui.getColor("primary");
-
-      switch (kategori) {
-        case "update":
-          categoryEmoji = "📢";
-          categoryLabel = "Pembaruan";
-          embedColor = ui.getColor("announce_update");
-          break;
-        case "mt":
-          categoryEmoji = "🛠️";
-          categoryLabel = "Pemeliharaan";
-          embedColor = ui.getColor("announce_mt");
-          break;
-        case "event":
-          categoryEmoji = "🎉";
-          categoryLabel = "Acara Komunitas";
-          embedColor = ui.getColor("announce_event");
-          break;
-        case "warn":
-          categoryEmoji = "⚠️";
-          categoryLabel = "Peringatan";
-          embedColor = ui.getColor("announce_warn");
-          break;
-        case "info":
-        default:
-          categoryEmoji = "ℹ️";
-          categoryLabel = "Informasi Umum";
-          embedColor = ui.getColor("announcement");
-          break;
-      }
-
-      const finalTitle = `${categoryEmoji} ${title}`;
-
-      const files = [];
-      let bannerAttachmentName = null;
-      if (attachment?.url) {
-        files.push(attachment);
-        bannerAttachmentName = attachment.name;
-      }
-
-      const mentions = [];
-      if (mentionEveryone) mentions.push("@everyone");
-      if (mentionRole) mentions.push(`<@&${mentionRole.id}>`);
-      const mentionPrefix = mentions.length > 0 ? `${mentions.join(" ")}\n\n` : "";
-
-      const announcePayload = buildContainerV2({
-        accentColorHex: embedColor || ui.getColor("announcement"),
-        authorName: interaction.guild.name,
-        title: finalTitle,
-        description: `${mentionPrefix}${desc}`,
-        bannerAttachmentName,
-        files,
-        footerText: `Pengumuman oleh ${interaction.user.tag}`,
-      });
-
+      // Validate character limit
       const embedCharCount = title.length + desc.length;
-      if (embedCharCount > 5500) {
+      if (embedCharCount > MAX_ANNOUNCEMENT_CHARS) {
         const errPayload = buildErrorContainerV2({
           title: "Karakter Melebihi Batas",
-          description: "Jumlah teks judul dan deskripsi terlalu panjang (maksimum 5500 karakter).",
+          description: `Jumlah teks judul dan deskripsi terlalu panjang (maksimum ${MAX_ANNOUNCEMENT_CHARS} karakter).`,
           footerText: ui.getFooter("core"),
         });
         return modalSubmit.reply({
@@ -205,18 +262,50 @@ module.exports = {
         });
       }
 
+      // Get category configuration
+      const catConfig = getCategoryConfig(kategori);
+      const finalTitle = `${catConfig.emoji} ${title}`;
+
+      // Prepare attachments
+      const files = [];
+      let bannerAttachmentName = null;
+      if (attachment?.url) {
+        files.push(attachment);
+        bannerAttachmentName = attachment.name;
+      }
+
+      // Build mention prefix
+      const mentionPrefix = buildMentionPrefix(mentionEveryone, mentionRole);
+      const mentions = [];
+      if (mentionEveryone) mentions.push("@everyone");
+      if (mentionRole) mentions.push(`<@&${mentionRole.id}>`);
+
+      // Build announcement payload
+      const announcePayload = buildContainerV2({
+        accentColorHex: catConfig.color,
+        authorName: interaction.guild.name,
+        title: finalTitle,
+        description: `${mentionPrefix}${desc}`,
+        bannerAttachmentName,
+        files,
+        footerText: `Pengumuman oleh ${interaction.user.tag}`,
+      });
+
+      // Send announcement to target channel
       try {
         const sentMessage = await targetChannel.send(announcePayload);
 
+        // Pin message if requested
         if (shouldPin && sentMessage.pin) {
           await sentMessage.pin().catch((pinErr) => {
-            logger.warn("[Announce] Gagal menyematkan pesan:", pinErr.message);
+            logger.warn("[Announce] Failed to pin message:", pinErr.message);
           });
         }
 
+        // Build success response
         const successFields = [
           { name: "Saluran Tujuan", value: `<#${targetChannel.id}>`, inline: true },
-          { name: "Kategori", value: `${categoryEmoji} ${categoryLabel}`, inline: true },
+          { name: "Kategori", value: `${catConfig.emoji} ${catConfig.label}`, inline: true },
           { name: "Penyebutan", value: mentions.length > 0 ? mentions.join(", ") : "Tidak Ada", inline: true },
           { name: "Status Sematan", value: shouldPin ? "Ya (Disematkan)" : "Tidak", inline: true },
           { name: "Lampiran Gambar", value: attachment ? "Tersedia" : "Tidak Ada", inline: true },
@@ -245,6 +334,7 @@ module.exports = {
         });
       }
     } catch (err) {
+      // Handle modal timeout or other errors
       if (err.code !== "InteractionCollectorError") {
         logger.error("[Announce Error]:", err);
       }

@@ -1,4 +1,23 @@
-"use strict";
+﻿"use strict";
+
+/**
+ * @module rest
+ * @description Subcommand /survival rest - Sistem istirahat dan tidur untuk memulihkan vitalitas pemain.
+ * 
+ * Fitur Utama:
+ * - Tidur malam (8 jam) dengan regenerasi berdasarkan kualitas properti
+ * - Rehat siang (power nap 2 jam) dengan pemulihan terbatas
+ * - Bonus dekorasi tempat tidur meningkatkan kualitas istirahat
+ * - Drainase lapar/haus selama periode istirahat
+ * - Integrasi quest progress dan energy reset tracker
+ * - UI Components V2 dengan vitals bar real-time
+ * 
+ * Mekanik Regenerasi:
+ * - Base regen ditentukan oleh tipe properti (jalanan=50, mansion=100)
+ * - Dekorasi premium menambah bonus stamina recovery
+ * - HP pulih sebesar 50% dari stamina yang dipulihkan
+ * - Lapar/haus berkurang lebih sedikit saat rehat siang vs tidur malam
+ */
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const ui = require("../../../src/config/ui");
@@ -11,12 +30,23 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 
-const SLEEP_HOURS = 8;
-const MAX_STAT = 100;
-const HUNGER_DRAIN = 20;
-const THIRST_DRAIN = 20;
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-// Semakin nyaman tempat tinggalnya, semakin pulas tidurnya.
+const SLEEP_HOURS = 8;
+const NAP_HOURS = 2;
+const MAX_STAT = 100;
+const HUNGER_DRAIN_NIGHT = 20;
+const THIRST_DRAIN_NIGHT = 20;
+const HUNGER_DRAIN_NAP = 5;
+const THIRST_DRAIN_NAP = 5;
+const NAP_STAMINA_CAP = 40;
+const NAP_BASE_STAMINA = 30;
+const NAP_HP_REGEN = 15;
+const DAY_START_HOUR = 6;
+const DAY_END_HOUR = 18;
+
 const REGEN_BY_PROPERTY = {
   jalanan: 50,
   gudang: 60,
@@ -30,10 +60,25 @@ const DECO_BONUS = {
   deco_premium_bed: 20,
 };
 
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Mengambil emoji dari config atau fallback ke unicode
+ * @param {string} name - Nama emoji di config
+ * @param {string} fallback - Unicode emoji fallback
+ * @returns {string} Emoji string
+ */
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
+/**
+ * Menghitung bonus stamina dari dekorasi aktif
+ * @param {Array<{id: string}>} decorations - Array dekorasi aktif
+ * @returns {number} Total bonus stamina dari dekorasi
+ */
 function bonusFromDecorations(decorations) {
   return decorations.reduce(
     (total, deco) => total + (DECO_BONUS[deco?.id] || 0),
@@ -41,14 +86,31 @@ function bonusFromDecorations(decorations) {
   );
 }
 
+/**
+ * Menentukan apakah waktu sekarang adalah siang hari in-game
+ * @param {number} hour - Jam in-game (0-23)
+ * @returns {boolean} True jika siang hari
+ */
+function isDaytime(hour) {
+  return hour >= DAY_START_HOUR && hour < DAY_END_HOUR;
+}
+
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival rest
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: user.id },
     });
 
-    const isDaytime = survival.inGameHour >= 6 && survival.inGameHour < 18;
+    const daytime = isDaytime(survival.inGameHour);
     const rpgState = survival.rpg_state || {};
     const property = survival.propertyId || "jalanan";
 
@@ -61,18 +123,18 @@ module.exports = {
       (REGEN_BY_PROPERTY[property] || REGEN_BY_PROPERTY.jalanan) +
       bonusFromDecorations(rpgState.active_decorations || []);
     let regenHp = Math.round(regenStamina / 2);
-    let hungerDrain = HUNGER_DRAIN;
-    let thirstDrain = THIRST_DRAIN;
+    let hungerDrain = HUNGER_DRAIN_NIGHT;
+    let thirstDrain = THIRST_DRAIN_NIGHT;
     let titleText = `${e("sleepy", "\uD83D\uDECF\uFE0F")} Tidur Pulas Semalaman`;
     let introText = `Kamu merebahkan badan di **${property.toUpperCase()}** dan tertidur pulas selama ${hoursToAdvance} jam. Naura jagain mimpimu, kok.`;
 
-    if (isDaytime) {
-      // Rehat Sejenak / Power Nap di siang hari
-      hoursToAdvance = 2;
-      regenStamina = Math.min(40, 30 + Math.round(bonusFromDecorations(rpgState.active_decorations || []) / 2));
-      regenHp = 15;
-      hungerDrain = 5;
-      thirstDrain = 5;
+    if (daytime) {
+      hoursToAdvance = NAP_HOURS;
+      const decoBonus = bonusFromDecorations(rpgState.active_decorations || []);
+      regenStamina = Math.min(NAP_STAMINA_CAP, NAP_BASE_STAMINA + Math.round(decoBonus / 2));
+      regenHp = NAP_HP_REGEN;
+      hungerDrain = HUNGER_DRAIN_NAP;
+      thirstDrain = THIRST_DRAIN_NAP;
       titleText = `☕ Rehat Sejenak di Bawah Keteduhan`;
       introText = `Kamu duduk bersandar dan rehat sejenak di **${property.toUpperCase()}** selama ${hoursToAdvance} jam sambil menikmati semilir angin. Energimu terisi kembali!`;
     }
@@ -119,7 +181,7 @@ module.exports = {
     const description = [
       introText,
       "",
-      `**Yang pulih waktu kamu ${isDaytime ? "rehat" : "tidur"}:**`,
+      `**Yang pulih waktu kamu ${daytime ? "rehat" : "tidur"}:**`,
       `> ⚡ Stamina: \`${staBar.bar}\` *(+${regenStamina})*`,
       `> ❤️ HP: \`${hpBar.bar}\` *(+${regenHp})*`,
       `> 🔋 **Reset Energi (5 Jam):** ${energyResetInfo.reset ? "Energi telah pulih 100%!" : "Siap dalam " + energyResetInfo.formattedCountdown}`,
@@ -136,7 +198,7 @@ module.exports = {
     const files = bg ? [bg.attachment] : [];
 
     const payload = buildContainerV2({
-      accentColorHex: isDaytime ? survivalUI.getColor("river") : survivalUI.getColor("moss"),
+      accentColorHex: daytime ? survivalUI.getColor("river") : survivalUI.getColor("moss"),
       authorName: "Naura Survival Vitals",
       title: titleText,
       iconURL: interaction.client.user.displayAvatarURL(),

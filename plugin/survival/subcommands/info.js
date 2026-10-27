@@ -1,5 +1,29 @@
 "use strict";
 
+/**
+ * @module info
+ * @description Subcommand /survival info - Kartu profil petualangan lengkap dengan statistik, gear, dan visual canvas.
+ * 
+ * Fitur Utama:
+ * - Profil komprehensif: vitals, stat RPG, level, XP, lokasi, cuaca
+ * - Canvas profile image generation (fallback ke background statis)
+ * - Gear check (kapak, beliung, pancingan, senjata, zirah)
+ * - Pet companion display dan bonus stat
+ * - Marriage/spouse info dari UserNPC
+ * - Achievement title badge (active title + beat_extreme)
+ * - Skill tree path synergy display
+ * - World Pulse weather flavor text
+ * - Balance display (SC, PD, VB, BA, MP)
+ * - Perk/berkah aktif listing
+ * - Friendship buff dari NPC
+ * - Main quest objective tracking
+ * - Rescue alert jika pemain baru diselamatkan
+ * - Adaptive density view (newbie vs veteran)
+ * - Energy reset countdown tracker
+ * - Quick action buttons (Ransel, Toko, Kumpul, Farm, Dungeon, Skill Tree)
+ */
+
+
 // Kartu profil petualangan. Perhitungannya ada di plugin/survival/infoStats.js,
 // berkas ini fokus pada cara Naura menceritakan keadaan pemain.
 
@@ -24,13 +48,36 @@ const skillTree = require("../../../src/survival/engines/skillTreeEngine");
 const cacheManager = require("../../../src/managers/cacheManager");
 const { buildStats } = require("../../../src/survival/helpers/infoStats");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const IMAGE_NAME = "naura-survival.png";
 
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback || "";
 }
 
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Mengambil emoji dari config atau fallback ke unicode
+ * @param {string} name - Nama emoji di config
+ * @param {string} fallback - Unicode emoji fallback
+ * @returns {string} Emoji string
+ */
+
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival info
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (!interaction.deferred && !interaction.replied) {
       if (typeof interaction.deferUpdate === "function") {

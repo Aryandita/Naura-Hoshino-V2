@@ -1,5 +1,17 @@
 "use strict";
 
+/**
+ * @module market
+ * @description Subcommand /survival market - Player marketplace untuk jual-beli item antar pemain.
+ * 
+ * Fitur Utama:
+ * - Listing creation dengan price setting
+ * - Browse listings dengan filter
+ * - Purchase dengan atomic transaction
+ * - Cancel listing refund
+ */
+
+
 // Pasar Tradisional Desa. Stok dan transaksinya ada di plugin/survival/marketStock.js,
 // berkas ini hanya mengatur percakapan dan tampilannya.
 //
@@ -21,6 +33,10 @@ const {
   buildErrorContainerV2,
   disableContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
@@ -59,6 +75,10 @@ function hidden(payload) {
   };
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
   async autocomplete(interaction) {
     const {
@@ -95,6 +115,10 @@ module.exports = {
     return safeRespond(interaction, fuzzyFilter(available, focusedValue, 25));
   },
 
+  /**
+   * Handler utama untuk command /survival market
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const survival = await cacheManager.getUserSurvival(user.id);

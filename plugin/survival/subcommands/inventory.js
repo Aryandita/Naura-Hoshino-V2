@@ -4,6 +4,19 @@
 
 "use strict";
 
+/**
+ * @module inventory
+ * @description Subcommand /survival inventory - Ransel pemain dengan sorting, filtering, dan item management.
+ * 
+ * Fitur Utama:
+ * - Item list pagination
+ * - Sort by type/name/amount
+ * - Filter by category
+ * - Item detail view
+ * - Quick use/discard buttons
+ */
+
+
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -16,6 +29,10 @@ const {
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const { logger } = require("../../../src/managers/logger");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
@@ -31,7 +48,15 @@ function e(name, fallback) {
   return ui.getEmoji(name) || fallback || "";
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival inventory
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (!interaction.deferred && !interaction.replied) {
       if (typeof interaction.deferUpdate === "function") {

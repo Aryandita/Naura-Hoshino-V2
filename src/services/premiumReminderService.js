@@ -1,9 +1,32 @@
-"use strict";
+﻿"use strict";
 
 /**
- * @file premiumReminderService.js
- * @description Layanan pengingat kedaluwarsa VIP cerdas melalui DM ramah Naura
- * 24 jam sebelum masa aktif berakhir dengan tombol perpanjangan.
+ * 💎 Premium Reminder Service - VIP Expiry Notifications - Naura Hoshino V2
+ * --------------------------------------------------------------------------
+ * Orchestrates intelligent VIP expiry reminder notifications via Discord DM.
+ * Sends personalized reminders 24 hours before subscription expiration with
+ * one-click renewal buttons and anti-spam deduplication.
+ *
+ * Features:
+ * - Automatic 24-hour pre-expiry DM notifications
+ * - Personalized tier display names with emoji branding
+ * - Discord Components V2 container payloads
+ * - Anti-spam deduplication via notification_prefs tracking
+ * - Batch scanning of expiring subscriptions
+ * - Graceful fallback for DB query failures
+ *
+ * @module src/services/premiumReminderService
+ * @example
+ * const premiumReminder = require('./premiumReminderService');
+ *
+ * // Send individual reminder
+ * const sent = await premiumReminder.sendExpirationReminder(
+ *   client, userId, expiryDate, 'tier2', 'Username'
+ * );
+ *
+ * // Batch scan and notify all expiring subscriptions
+ * const stats = await premiumReminder.checkExpiringSubscriptions(client);
+ * console.log(`Notified: ${stats.notified}/${stats.checked}`);
  */
 
 const { Op } = require("sequelize");
@@ -14,62 +37,117 @@ const cacheManager = require("../managers/cacheManager");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Discord Snowflake ID validation pattern (17-20 digits) */
 const SNOWFLAKE_REGEX = /^\d{17,20}$/;
 
+/** Hours before expiry to send reminder notification */
 const REMINDER_WINDOW_HOURS = 24;
+
+/** Reminder window in milliseconds (derived from hours) */
 const REMINDER_WINDOW_MS = REMINDER_WINDOW_HOURS * 60 * 60 * 1000;
 
+/** Custom ID for VIP renewal button */
+const BUTTON_RENEW_CUSTOM_ID = "premium_renew_click";
+
+/** Custom ID for VIP benefits info button */
+const BUTTON_BENEFITS_CUSTOM_ID = "premium_benefits_info";
+
+/** Notification prefs key for tracking sent expiry reminders */
+const PREFS_KEY_REMIND_EXPIRY = "reminded_premium_expiry";
+
+/** Notification prefs key for last reminder timestamp */
+const PREFS_KEY_LAST_REMINDER_AT = "last_expiry_reminder_at";
+
+/** Tier display name mapping with emoji branding */
+const TIER_DISPLAY_NAMES = {
+  vip_starter: "🌱 Naura VIP Starter",
+  starter: "🌱 Naura VIP Starter",
+  tier1: "🌸 Naura Supporter",
+  supporter: "🌸 Naura Supporter",
+  tier2: "💎 Naura VIP Member",
+  friends: "💎 Naura Friends",
+  tier3: "👑 Naura VIP Bestie (VVIP)",
+  vip: "👑 Naura VVIP Elite",
+};
+
+/** Default tier display name when tier is unrecognized */
+const DEFAULT_TIER_DISPLAY = "💎 Naura VIP Member";
+
+/** Default username fallback for notifications */
+const DEFAULT_USERNAME = "Sahabat Naura";
+
+/** Fallback timestamp text when date is invalid */
+const FALLBACK_TIMESTAMP_TEXT = "waktu tidak diketahui";
+
+// ============================================================================
+// PREMIUM REMINDER SERVICE CLASS
+// ============================================================================
+
+/**
+ * Manages VIP expiry reminder notifications via Discord DM.
+ * Provides batch scanning, individual sending, and anti-spam deduplication.
+ */
 class PremiumReminderService {
   /**
-   * Format cap waktu Discord untuk tampilan ramah
-   * @param {Date} date
-   * @returns {string}
+   * Format Discord timestamp for user-friendly display.
+   * Returns both absolute (F) and relative (R) timestamp formats.
+   * @param {Date|string} date - Expiry date to format
+   * @returns {string} Formatted Discord timestamp string
+   * @example
+   * const formatted = service.formatTimestamp(new Date('2025-12-31'));
+   * // Returns: "<t:1735689600:F> (<t:1735689600:R>)"
    */
   formatTimestamp(date) {
-    if (!date) return "waktu tidak diketahui";
+    if (!date) return FALLBACK_TIMESTAMP_TEXT;
     const ts = Math.floor(new Date(date).getTime() / 1000);
     return `<t:${ts}:F> (<t:${ts}:R>)`;
   }
 
   /**
-   * Menghasilkan nama representasi tier untuk pesan notifikasi
-   * @param {string} tier
-   * @returns {string}
+   * Get localized tier display name with emoji branding.
+   * Maps internal tier identifiers to user-friendly names.
+   * @param {string} tier - Internal tier identifier (e.g., 'tier2', 'vip_starter')
+   * @returns {string} Display name with emoji prefix
+   * @example
+   * const name = service.getTierDisplayName('tier3');
+   * // Returns: "👑 Naura VIP Bestie (VVIP)"
    */
   getTierDisplayName(tier) {
-    const map = {
-      vip_starter: "🌱 Naura VIP Starter",
-      starter: "🌱 Naura VIP Starter",
-      tier1: "🌸 Naura Supporter",
-      supporter: "🌸 Naura Supporter",
-      tier2: "💎 Naura VIP Member",
-      friends: "💎 Naura Friends",
-      tier3: "👑 Naura VIP Bestie (VVIP)",
-      vip: "👑 Naura VVIP Elite",
-    };
-    return map[tier] || "💎 Naura VIP Member";
+    return TIER_DISPLAY_NAMES[tier] || DEFAULT_TIER_DISPLAY;
   }
 
   /**
-   * Membuat Container V2 payload untuk pengingat masa aktif VIP yang akan kedaluwarsa
-   * @param {object} params
-   * @param {string} [params.username]
-   * @param {Date} params.expiryDate
-   * @param {string} [params.tier]
-   * @returns {object} Container V2 payload
+   * Build Discord Components V2 payload for VIP expiry reminder.
+   * Creates a visually rich container with renewal buttons and personalized message.
+   * @param {Object} params - Payload parameters
+   * @param {string} [params.username='Sahabat Naura'] - User display name
+   * @param {Date} params.expiryDate - Subscription expiration date
+   * @param {string} [params.tier] - User's premium tier
+   * @returns {Object} Container V2 payload ready for Discord API
+   * @example
+   * const payload = service.buildReminderPayload({
+   *   username: 'JohnDoe',
+   *   expiryDate: new Date('2025-12-31'),
+   *   tier: 'tier2'
+   * });
+   * await user.send(payload);
    */
-  buildReminderPayload({ username = "Sahabat Naura", expiryDate, tier }) {
+  buildReminderPayload({ username = DEFAULT_USERNAME, expiryDate, tier }) {
     const clock = ui.getEmoji("time") || "⏳";
     const tierName = this.getTierDisplayName(tier);
     const expiryStr = this.formatTimestamp(expiryDate);
 
     const buttonsRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId("premium_renew_click")
+        .setCustomId(BUTTON_RENEW_CUSTOM_ID)
         .setLabel("💎 Perpanjang VIP")
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId("premium_benefits_info")
+        .setCustomId(BUTTON_BENEFITS_CUSTOM_ID)
         .setLabel("📋 Cek Keuntungan VIP")
         .setStyle(ButtonStyle.Secondary),
     );
@@ -96,13 +174,18 @@ class PremiumReminderService {
   }
 
   /**
-   * Mengirimkan pesan DM pengingat kepada pengguna spesifik
-   * @param {object} client - Discord Client
-   * @param {string} userId - Snowflake Discord user ID
-   * @param {Date} expiryDate - Tanggal kedaluwarsa
-   * @param {string} [tier] - Tier premium
-   * @param {string} [username] - Nama pengguna
-   * @returns {Promise<boolean>}
+   * Send VIP expiry reminder DM to a specific user.
+   * Validates user ID, fetches user from Discord, and delivers personalized notification.
+   * @param {Object} client - Discord.js Client instance
+   * @param {string} userId - Target user's Discord Snowflake ID
+   * @param {Date} expiryDate - Subscription expiration date
+   * @param {string} [tier] - User's premium tier for display
+   * @param {string} [username] - Optional username override
+   * @returns {Promise<boolean>} True if DM sent successfully, false otherwise
+   * @example
+   * const success = await service.sendExpirationReminder(
+   *   client, '123456789012345678', new Date('2025-12-31'), 'tier2'
+   * );
    */
   async sendExpirationReminder(client, userId, expiryDate, tier, username) {
     if (!client || !userId || !SNOWFLAKE_REGEX.test(String(userId)) || !expiryDate) return false;
@@ -130,12 +213,17 @@ class PremiumReminderService {
   }
 
   /**
-   * Memindai pengguna yang masa aktif VIP-nya akan habis dalam kurun 24 jam dan mengirimkan notifikasi
-   * @param {object} client - Discord Client
-   * @param {object} [options]
-   * @param {number} [options.hoursAhead=24]
-   * @param {Date} [options.now=new Date()]
-   * @returns {Promise<{checked: number, notified: number, skipped: number, errors: number}>}
+   * Scan and notify all users with subscriptions expiring within the reminder window.
+   * Queries database for active premiums nearing expiration, sends DMs, and marks
+   * users as notified to prevent duplicate reminders.
+   * @param {Object} client - Discord.js Client instance
+   * @param {Object} [options={}] - Scan options
+   * @param {number} [options.hoursAhead=24] - Hours ahead to check for expiry
+   * @param {Date} [options.now=new Date()] - Reference time for calculation
+   * @returns {Promise<ScanStats>} Statistics about the scan operation
+   * @example
+   * const stats = await service.checkExpiringSubscriptions(client);
+   * console.log(`Checked: ${stats.checked}, Notified: ${stats.notified}`);
    */
   async checkExpiringSubscriptions(client, { hoursAhead = REMINDER_WINDOW_HOURS, now = new Date() } = {}) {
     const stats = { checked: 0, notified: 0, skipped: 0, errors: 0 };
@@ -173,9 +261,8 @@ class PremiumReminderService {
         const expiryDate = new Date(profile.premiumUntil);
         const expiryIso = expiryDate.toISOString();
 
-        // Pemeriksaan anti-spam: Jangan kirim berulang untuk siklus expiry yang sama
         const prefs = profile.notification_prefs || {};
-        if (prefs.reminded_premium_expiry === expiryIso) {
+        if (prefs[PREFS_KEY_REMIND_EXPIRY] === expiryIso) {
           stats.skipped++;
           continue;
         }
@@ -193,8 +280,8 @@ class PremiumReminderService {
           if (typeof cacheManager.mutateUserProfileJson === "function") {
             await cacheManager.mutateUserProfileJson(userId, "notification_prefs", (cur) => {
               const obj = cur && typeof cur === "object" ? cur : {};
-              obj.reminded_premium_expiry = expiryIso;
-              obj.last_expiry_reminder_at = new Date().toISOString();
+              obj[PREFS_KEY_REMIND_EXPIRY] = expiryIso;
+              obj[PREFS_KEY_LAST_REMINDER_AT] = new Date().toISOString();
               return obj;
             }).catch(() => {});
           }
@@ -214,7 +301,29 @@ class PremiumReminderService {
   }
 }
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/**
+ * @typedef {Object} ScanStats
+ * @property {number} checked - Total profiles examined
+ * @property {number} notified - Successfully sent reminders
+ * @property {number} skipped - Skipped (already notified or invalid)
+ * @property {number} errors - Failed delivery attempts
+ */
+
+// ============================================================================
+// GLOBAL INSTANCE & EXPORTS
+// ============================================================================
+
+/**
+ * Global PremiumReminderService instance for application-wide reminder processing.
+ * @type {PremiumReminderService}
+ */
 const premiumReminderService = new PremiumReminderService();
+
+// Expose class and constants for external use
 premiumReminderService.PremiumReminderService = PremiumReminderService;
 premiumReminderService.REMINDER_WINDOW_HOURS = REMINDER_WINDOW_HOURS;
 premiumReminderService.REMINDER_WINDOW_MS = REMINDER_WINDOW_MS;

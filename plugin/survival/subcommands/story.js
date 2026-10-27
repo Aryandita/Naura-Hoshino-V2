@@ -1,5 +1,17 @@
 "use strict";
 
+/**
+ * @module story
+ * @description Subcommand /survival story - Main quest tracker dengan narasi cerita utama Naura Wilds.
+ * 
+ * Fitur Utama:
+ * - Arc/chapter tracking dari rpg_state
+ * - Narrative text per chapter dari questData
+ * - Challenge label dan objective display
+ * - Progress indicator (completed/in-progress)
+ */
+
+
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -11,6 +23,10 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const storyEngine = require("../../../src/survival/engines/storyEngine");
@@ -19,6 +35,10 @@ const npcBackstoryEngine = require("../../../src/survival/engines/npcBackstoryEn
 const npcScheduleEngine = require("../../../src/survival/engines/npcScheduleEngine");
 const cacheManager = require("../../../src/managers/cacheManager");
 const { createManagedCollector } = require("../../../src/utils/interactionPipeline");
+
+// ============================================================================
+// HANDLER
+// ============================================================================
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -64,6 +84,10 @@ module.exports = {
         .setDescription("Cek progres story mode kamu"),
     ),
 
+  /**
+   * Handler utama untuk command /survival story
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (!interaction.deferred && !interaction.replied) {
       await interaction.deferReply().catch(() => {});

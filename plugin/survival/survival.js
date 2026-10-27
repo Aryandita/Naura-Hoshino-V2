@@ -1,5 +1,21 @@
-// Orkestrator /survival. Definisi command ada di survivalData.js, sedangkan
-// interceptor balasan dan objek tiruan prefix ada di survivalContext.js.
+"use strict";
+
+/**
+ * 🏕️ Survival Command Router - Naura Wilds - Naura Hoshino V2
+ * -------------------------------------------------------------
+ * Main router for Naura Wilds survival commands.
+ * Handles subcommand routing, player onboarding checks, and prefix compatibility.
+ *
+ * Features:
+ * - Dynamic subcommand loading from subcommands/ directory
+ * - Player registration check (starter kit validation)
+ * - Autocomplete support with special roam handler
+ * - Prefix command compatibility with alias mapping
+ * - Error handling with localized messages
+ *
+ * @module plugin/survival/survival
+ */
+
 const fs = require("fs");
 const path = require("path");
 const { logger } = require("../../src/managers/logger");
@@ -15,17 +31,28 @@ const {
   createMockInteraction,
 } = require("../../src/survival/helpers/survivalContext");
 
-// Pemuat dinamis untuk seluruh subcommand di folder subcommands/.
+// ============================================================================
+// DYNAMIC SUBCOMMAND LOADING
+// ============================================================================
+
+/** @type {Map<string, object>} Loaded subcommand handlers */
 const subcommands = new Map();
+
+// Load all subcommand files dynamically
 const subCommandFiles = fs
   .readdirSync(path.join(__dirname, "subcommands"))
   .filter((file) => file.endsWith(".js"));
+
 for (const file of subCommandFiles) {
   const subCmd = require(`./subcommands/${file}`);
   subcommands.set(file.replace(".js", ""), subCmd);
 }
 
-// Alias perintah prefix.
+// ============================================================================
+// PREFIX ALIAS MAPPING
+// ============================================================================
+
+/** @type {Object.<string, string>} Prefix command aliases */
 const ALIAS_MAP = {
   w: "work",
   f: "fish",
@@ -42,54 +69,84 @@ const ALIAS_MAP = {
   craft: "craft",
 };
 
+// ============================================================================
+// COMMAND EXPORT
+// ============================================================================
+
 module.exports = {
+  /** Command definition from survivalData.js */
   data,
 
+  // ============================================================================
+  // AUTOCOMPLETE HANDLER
+  // ============================================================================
+
+  /**
+   * Handle autocomplete for survival subcommands.
+   * Includes special handling for roam subcommand.
+   * @param {object} interaction - Discord interaction
+   * @param {object} client - Discord client
+   * @returns {Promise<void>}
+   */
   async autocomplete(interaction, client) {
     const subCommandName = interaction.options.getSubcommand(false);
     if (!subCommandName) return interaction.respond([]).catch(() => {});
-    
-    // Handle roam autocomplete specially
+
+    // Special handling for roam autocomplete
     if (subCommandName === "roam" && typeof data.handleRoamAutocomplete === "function") {
       try {
         const choices = await data.handleRoamAutocomplete(interaction);
         return interaction.respond(choices).catch(() => {});
       } catch (error) {
-        logger.debug("[survival:roam-autocomplete] Error: " + (error?.message || error));
+        logger.debug(`[survival:roam-autocomplete] Error: ${error?.message || error}`);
       }
     }
-    
+
+    // Try subcommand-specific autocomplete
     const cmd = subcommands.get(subCommandName);
     if (cmd && typeof cmd.autocomplete === "function") {
       try {
         return await cmd.autocomplete(interaction, client);
       } catch (error) {
-        logger.debug("[survival:autocomplete] Galat pada rutinitas aplikasi: " + (error?.message || error));
+        logger.debug(`[survival:autocomplete] Error in autocomplete routine: ${error?.message || error}`);
       }
     }
+
+    // Fall back to dynamic autocomplete from data
     if (typeof data.handleDynamicAutocomplete === "function") {
       return await data.handleDynamicAutocomplete(interaction);
     }
+
     return interaction.respond([]).catch(() => {});
   },
 
+  // ============================================================================
+  // SLASH COMMAND EXECUTION
+  // ============================================================================
+
+  /**
+   * Execute survival slash command with onboarding check.
+   * Validates player registration before allowing subcommand execution.
+   * @param {object} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     const subCommandName = interaction.options.getSubcommand();
     const cmd = subcommands.get(subCommandName);
 
+    // Attach auto-delete handler
     attachAutoDelete(interaction);
 
-    // Defer secepatnya supaya tidak kena "didn't respond in time".
+    // Defer reply immediately to prevent timeout
     await interaction.deferReply().catch(() => {});
 
-    // Pastikan bahasa pilihan user sudah berada di cache sebelum teks dibangun,
-    // sehingga balasan pertama pun sudah memakai bahasa yang benar.
+    // Resolve language (ensure cached before building response)
     const lang =
       typeof interaction.fetchLang === "function"
         ? await interaction.fetchLang()
         : interaction.localeLang;
 
-    // Pengecekan pendaftaran (starter kit).
+    // Check player registration (except for /start command)
     if (subCommandName !== "start") {
       const profile = await cacheManager.getUserProfile(interaction.user.id);
       const inv = safeParseInventory(profile.inventory);
@@ -104,6 +161,7 @@ module.exports = {
       }
     }
 
+    // Validate subcommand exists
     if (!cmd) {
       return ui.sendError(
         interaction,
@@ -112,6 +170,7 @@ module.exports = {
       );
     }
 
+    // Execute subcommand with error handling
     try {
       await cmd.execute(interaction, interaction.client);
     } catch (error) {
@@ -124,23 +183,45 @@ module.exports = {
     }
   },
 
-  // --- DUKUNGAN PREFIX (LEGACY) ---
+  // ============================================================================
+  // PREFIX COMMAND EXECUTION (LEGACY)
+  // ============================================================================
+
+  /**
+   * Execute survival prefix command (legacy support).
+   * Creates mock interaction for unified handling with slash commands.
+   * Supports command aliases via ALIAS_MAP.
+   * @param {object} message - Discord message
+   * @param {Array<string>} args - Command arguments
+   * @param {object} client - Discord client
+   * @returns {Promise<void>}
+   */
   async executePrefix(message, args, client) {
+    // Parse subcommand from arguments
     let inputSubCmd = args[0] ? args[0].toLowerCase() : "info";
+
+    // Handle special case for combat subcommand
     if (inputSubCmd === "combat" && args[1]) {
       args.shift();
       inputSubCmd = args[0] ? args[0].toLowerCase() : "info";
     }
+
+    // Resolve alias to canonical name
     const subCmdName = ALIAS_MAP[inputSubCmd] || inputSubCmd;
     const cmd = subcommands.get(subCmdName);
 
+    // Resolve language
     const lang = await languageManager.getUserLanguage(message.author.id);
-    if (!cmd)
+
+    // Validate subcommand exists
+    if (!cmd) {
       return ui.sendError(
         message,
         languageManager.translateSync(lang, "err_sys_27"),
       );
+    }
 
+    // Create mock interaction for unified handling
     const mockInteraction = createMockInteraction({
       message,
       client,
@@ -148,6 +229,7 @@ module.exports = {
       args,
     });
 
+    // Execute with error handling
     try {
       await cmd.execute(mockInteraction, client);
     } catch (error) {

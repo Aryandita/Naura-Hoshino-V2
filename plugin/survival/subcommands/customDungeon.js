@@ -1,18 +1,41 @@
 "use strict";
 
+/**
+ * @module customDungeon
+ * @description Subcommand /survival customDungeon - Custom dungeon builder dengan konfigurasi difficulty.
+ * 
+ * Fitur Utama:
+ * - Dungeon parameter configuration
+ * - Difficulty scaling options
+ * - Custom loot table setup
+ */
+
+
 const { MessageFlags } = require("discord.js");
 const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const ui = require("../../../src/config/ui");
 const customDungeonEngine = require("../../../src/survival/engines/customDungeonEngine");
+
+// ============================================================================
+// HANDLER
+// ============================================================================
 
 module.exports = {
   name: "custom-dungeon",
   description:
     "🏰 Custom Community Dungeon Maker & Arena Tantangan Buatan Pemain",
 
+  /**
+   * Handler utama untuk command /survival customDungeon
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const action = interaction.options.getString("aksi") || "browse";
     const dungeonName = interaction.options.getString("nama");

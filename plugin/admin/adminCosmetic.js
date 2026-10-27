@@ -1,5 +1,25 @@
 "use strict";
 
+/**
+ * @module AdminCosmeticCommand
+ * @description Manajemen aset kosmetik canvas (background & border) untuk profil user.
+ * 
+ * Fitur Utama:
+ * - Tambah aset kosmetik baru ke database toko (background/border)
+ * - Hapus aset kosmetik berdasarkan ID database
+ * - List semua aset kosmetik yang terdaftar dengan metadata lengkap
+ * 
+ * Keamanan:
+ * - Hanya dapat diakses oleh Bot Owner (OWNER_IDS di env config)
+ * - Semua operasi ephemeral (hanya terlihat oleh executor)
+ * 
+ * Database:
+ * - Menggunakan Sequelize model CanvasAsset (PostgreSQL/Supabase)
+ * - Field: id, name, type, url, price, isPremiumOnly
+ * 
+ * Subcommand: true (bagian dari /admin command group)
+ */
+
 const {
   SlashCommandBuilder,
   PermissionFlagsBits,
@@ -9,11 +29,25 @@ const { logger } = require("../../src/managers/logger");
 const CanvasAsset = require("../../src/models/CanvasAsset");
 const env = require("../../src/config/env");
 
+// ============================================================================
+// SECTION 1: KONSTANTA
+// ============================================================================
+
+/** @constant {number} MAX_LIST_TEXT_LENGTH - Batas karakter Discord untuk pesan teks */
+const MAX_LIST_TEXT_LENGTH = 2000;
+
+/** @constant {number} LIST_TRUNCATE_LIMIT - Batas aman sebelum truncation (memberi ruang untuk ellipsis) */
+const LIST_TRUNCATE_LIMIT = 1990;
+
+// ============================================================================
+// SECTION 2: SLASH COMMAND DEFINITION
+// ============================================================================
+
 module.exports = {
   isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("admincosmetic")
-    .setDescription("🔧 [OWNER] Manajemen penambahan/penghapusan aset kosmetik")
+    .setDescription("\ud83d\udd27 [OWNER] Manajemen penambahan/penghapusan aset kosmetik")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand((subcommand) =>
       subcommand
@@ -68,12 +102,20 @@ module.exports = {
         .setDescription("Lihat semua ID aset yang terdaftar"),
     ),
 
+  /**
+   * Main executor untuk command /admin admincosmetic
+   * Router ke handler add/delete/list setelah validasi owner.
+   * 
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction - Discord interaction object
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
+    // Validasi ketat: hanya Bot Owner yang boleh mengakses
     const ownerIds = env.OWNER_IDS || [];
     if (!ownerIds.includes(interaction.user.id)) {
       return interaction.reply({
         content:
-          "❌ Anda tidak memiliki izin. Hanya Bot Owner yang dapat menggunakan command ini.",
+          "\u274c Anda tidak memiliki izin. Hanya Bot Owner yang dapat menggunakan command ini.",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -81,6 +123,9 @@ module.exports = {
     const subCmd = interaction.options.getSubcommand();
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
+    // ========================================================================
+    // HANDLER: ADD ASSET
+    // ========================================================================
     if (subCmd === "add") {
       const name = interaction.options.getString("name");
       const type = interaction.options.getString("type");
@@ -99,33 +144,43 @@ module.exports = {
         });
 
         return interaction.editReply(
-          `✅ Berhasil menambahkan aset!\n**ID:** \`${newAsset.id}\`\n**Nama:** ${newAsset.name}\n**Tipe:** ${newAsset.type}\n**Harga:** ${newAsset.price} NC`,
+          `\u2705 Berhasil menambahkan aset!\n**ID:** \`${newAsset.id}\`\n**Nama:** ${newAsset.name}\n**Tipe:** ${newAsset.type}\n**Harga:** ${newAsset.price} NC`,
         );
       } catch (err) {
         logger.error("[ADMIN] Gagal menambah aset:", err);
         return interaction.editReply(
-          "❌ Terjadi kesalahan saat menyimpan ke database.",
+          "\u274c Terjadi kesalahan saat menyimpan ke database.",
         );
       }
-    } else if (subCmd === "delete") {
+    }
+
+    // ========================================================================
+    // HANDLER: DELETE ASSET
+    // ========================================================================
+    if (subCmd === "delete") {
       const id = interaction.options.getInteger("id");
       try {
         const deleted = await CanvasAsset.destroy({ where: { id: id } });
         if (deleted) {
           return interaction.editReply(
-            `✅ Aset dengan ID \`${id}\` berhasil dihapus.`,
+            `\u2705 Aset dengan ID \`${id}\` berhasil dihapus.`,
           );
         } else {
           return interaction.editReply(
-            `❌ Aset dengan ID \`${id}\` tidak ditemukan.`,
+            `\u274c Aset dengan ID \`${id}\` tidak ditemukan.`,
           );
         }
       } catch (err) {
         return interaction.editReply(
-          "❌ Terjadi kesalahan database saat menghapus aset.",
+          "\u274c Terjadi kesalahan database saat menghapus aset.",
         );
       }
-    } else if (subCmd === "list") {
+    }
+
+    // ========================================================================
+    // HANDLER: LIST ASSETS
+    // ========================================================================
+    if (subCmd === "list") {
       try {
         const assets = await CanvasAsset.findAll();
         if (assets.length === 0) return interaction.editReply("Kosong.");
@@ -137,12 +192,13 @@ module.exports = {
           )
           .join("\n");
 
-        if (text.length > 2000) text = text.substring(0, 1990) + "...";
+        // Truncate jika melebihi batas karakter Discord
+        if (text.length > MAX_LIST_TEXT_LENGTH) text = text.substring(0, LIST_TRUNCATE_LIMIT) + "...";
 
         return interaction.editReply(text);
       } catch (err) {
         return interaction.editReply(
-          "❌ Terjadi kesalahan saat mengambil daftar.",
+          "\u274c Terjadi kesalahan saat mengambil daftar.",
         );
       }
     }

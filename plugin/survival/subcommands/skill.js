@@ -1,5 +1,17 @@
 "use strict";
 
+/**
+ * @module skill
+ * @description Subcommand /survival skill - Skill tree viewer dan unlock system dengan combat path synergy.
+ * 
+ * Fitur Utama:
+ * - Skill tree visualization per combat path
+ * - Unlock skill dengan SP (Skill Points)
+ * - Path synergy bonus calculation
+ * - Stat prerequisite checking
+ */
+
+
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -10,6 +22,10 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
@@ -117,7 +133,15 @@ function buildSkillView(survival, user) {
   return { container, row, unspent };
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival skill
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const survival = await cacheManager.getUserSurvival(user.id);

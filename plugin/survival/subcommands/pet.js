@@ -1,4 +1,17 @@
 ﻿"use strict";
+
+/**
+ * @module pet
+ * @description Subcommand /survival pet - Pet companion system dengan taming, feeding, dan idle gathering.
+ * 
+ * Fitur Utama:
+ * - Pet taming dengan success rate
+ * - Feeding dan care system
+ * - Idle gathering assignment
+ * - Pet stat bonus ke owner
+ * - Pet evolution/path
+ */
+
 const { logger } = require("../../../src/managers/logger");
 
 const {
@@ -7,6 +20,10 @@ const {
   ButtonStyle,
   MessageFlags,
 } = require("discord.js");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const UserPet = require("../../../src/models/UserPet");
@@ -86,6 +103,10 @@ function statLines(pet) {
   ].join("\n");
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
   async autocomplete(interaction) {
     const {
@@ -115,6 +136,10 @@ module.exports = {
     return safeRespond(interaction, fuzzyFilter(available, focusedValue, 25));
   },
 
+  /**
+   * Handler utama untuk command /survival pet
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     await UserSurvival.findOrCreate({ where: { userId: user.id } });

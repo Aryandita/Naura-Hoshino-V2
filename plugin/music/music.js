@@ -1,5 +1,28 @@
 "use strict";
 
+/**
+ * 🎵 Music Command Router - Naura Hoshino V2
+ * -------------------------------------------
+ * Main router for all music-related commands and subcommands.
+ * Handles both slash commands and prefix commands with unified logic.
+ *
+ * Subcommand Groups:
+ * - Playback: play, pause, resume, skip, stop, queue, nowplaying
+ * - Controls: volume, seek, sleep, loop, shuffle
+ * - Features: lyrics, filter, playlist, dedicate, party
+ * - Settings: audio, dj, 247, duplicates
+ * - Stats: profile, wrapped, aura
+ *
+ * Features:
+ * - Dynamic subcommand registration from separate modules
+ * - Voice channel validation with exceptions
+ * - Playlist management detection
+ * - Autocomplete support for music search
+ * - Prefix command compatibility
+ *
+ * @module plugin/music/music
+ */
+
 const { SlashCommandBuilder } = require("discord.js");
 const ui = require("../../src/config/ui");
 const env = require("../../src/config/env");
@@ -10,19 +33,90 @@ const {
 const { cleanArtistName } = require("../../src/music/spotifyResolver");
 const { formatDuration } = require("./helpers/musicShared");
 
+// ============================================================================
+// SUBCOMMAND REGISTRATION
+// ============================================================================
+
+/** @type {Map<string, Function>} Registered subcommand handlers */
 const subcommands = new Map();
+
+/**
+ * Register subcommand handlers from a module.
+ * @param {object} mod - Module with exported handler functions
+ */
 const registerSubcommands = (mod) => {
   for (const [name, fn] of Object.entries(mod)) {
     subcommands.set(name, fn);
   }
 };
 
+// Register all subcommand modules
 registerSubcommands(require("./subcommands/profileStats"));
 registerSubcommands(require("./subcommands/playEngine"));
 registerSubcommands(require("./subcommands/playbackControls"));
 registerSubcommands(require("./subcommands/playlistEngine"));
 registerSubcommands(require("./subcommands/musicFeatures"));
 
+// ============================================================================
+// VOICE CHANNEL VALIDATION
+// ============================================================================
+
+/** Subcommands that don't require voice channel connection */
+const NO_VOICE_NEEDED = [
+  "profile",
+  "aura",
+  "wrapped",
+  "audio",
+  "quality",
+  "cluster",
+];
+
+/**
+ * Check if subcommand is playlist management (no voice needed).
+ * @param {string} subcommand - Subcommand name
+ * @param {object} args - Command arguments
+ * @returns {boolean} True if playlist management
+ */
+function isPlaylistManagement(subcommand, args) {
+  const playlistCommands = ["myplaylist", "delete", "deleteplaylist", "save"];
+  if (playlistCommands.includes(subcommand)) return true;
+
+  if (subcommand === "playlist") {
+    const aksi = args?.aksi;
+    const query = args?.query?.toLowerCase();
+    return (
+      aksi === "list" ||
+      aksi === "delete" ||
+      aksi === "save" ||
+      (!aksi && !query) ||
+      query?.startsWith("delete ") ||
+      query?.startsWith("hapus ") ||
+      query?.startsWith("save ") ||
+      query?.startsWith("simpan ")
+    );
+  }
+
+  return false;
+}
+
+// ============================================================================
+// MAIN MUSIC LOGIC
+// ============================================================================
+
+/**
+ * Execute music command logic with context validation.
+ * @param {object} client - Discord client
+ * @param {object} user - User object
+ * @param {object} member - Guild member
+ * @param {object} guild - Guild object
+ * @param {object} channel - Channel object
+ * @param {string} subcommand - Subcommand name
+ * @param {object} args - Command arguments
+ * @param {Function} sendReply - Reply function
+ * @param {boolean} isSlash - Is slash command
+ * @param {Function} deleteReply - Delete reply function
+ * @returns {Promise<any>}
+ */
 async function runMusicLogic(
   client,
   user,
@@ -40,6 +134,7 @@ async function runMusicLogic(
   const memberVoice = member?.voice?.channel;
   const eError = ui.getEmoji("error") || "❌";
 
+  // Build context object for subcommand handlers
   const ctx = {
     client,
     user,
@@ -57,30 +152,15 @@ async function runMusicLogic(
     player: poru.players.get(guild.id),
   };
 
-  const isPlaylistManagement =
-    subcommand === "myplaylist" ||
-    subcommand === "delete" ||
-    subcommand === "deleteplaylist" ||
-    subcommand === "save" ||
-    (subcommand === "playlist" &&
-      (args?.aksi === "list" ||
-        args?.aksi === "delete" ||
-        args?.aksi === "save" ||
-        (!args?.aksi && !args?.query) ||
-        args?.query?.toLowerCase()?.startsWith("delete ") ||
-        args?.query?.toLowerCase()?.startsWith("hapus ") ||
-        args?.query?.toLowerCase()?.startsWith("save ") ||
-        args?.query?.toLowerCase()?.startsWith("simpan ")));
+  // Handle voteskip special case
+  if (subcommand === "skip" && args?.vote) {
+    const voteHandler = subcommands.get("voteskip");
+    if (voteHandler) return voteHandler(ctx);
+  }
 
-  const noVoiceNeeded = [
-    "profile",
-    "aura",
-    "wrapped",
-    "audio",
-    "quality",
-    "cluster",
-  ];
-  if (!noVoiceNeeded.includes(subcommand) && !isPlaylistManagement) {
+  // Validate voice channel (unless exempt)
+  const isPlaylistMgmt = isPlaylistManagement(subcommand, args);
+  if (!NO_VOICE_NEEDED.includes(subcommand) && !isPlaylistMgmt) {
     if (!memberVoice) {
       const errPayload = buildErrorContainerV2({
         title: "Koneksi Gagal",
@@ -100,11 +180,7 @@ async function runMusicLogic(
     }
   }
 
-  if (subcommand === "skip" && args?.vote) {
-    const voteHandler = subcommands.get("voteskip");
-    if (voteHandler) return voteHandler(ctx);
-  }
-
+  // Get and execute subcommand handler
   const handler = subcommands.get(subcommand);
   if (!handler) {
     const errPayload = buildErrorContainerV2({
@@ -117,6 +193,187 @@ async function runMusicLogic(
 
   return handler(ctx);
 }
+
+// ============================================================================
+// AUTOCOMPLETE HANDLER
+// ============================================================================
+
+/**
+ * Handle autocomplete for music search queries.
+ * Provides intelligent suggestions based on input and search engine.
+ * @param {object} interaction - Discord interaction
+ * @returns {Promise<void>}
+ */
+async function handleAutocomplete(interaction) {
+  const {
+    getCached,
+    setCache,
+    choice,
+    safeRespond,
+    respondWithFallback,
+    truncateLabel,
+  } = require("../../src/utils/autocompleteHelper");
+
+  const focusedValue = interaction.options.getFocused();
+
+  // Handle Spotify links
+  if (focusedValue.match(/^(https?:\/\/)?(open\.)?spotify\.com\//)) {
+    return safeRespond(interaction, [
+      choice("🎧 [Spotify Link] Tekan Enter untuk memutar", focusedValue),
+    ]);
+  }
+
+  // Handle direct URLs
+  if (focusedValue.match(/^https?:\/\//)) {
+    return safeRespond(interaction, [
+      choice("🔗 [Direct URL] Tekan Enter untuk memutar link", focusedValue),
+    ]);
+  }
+
+  // Handle empty input
+  if (!focusedValue || focusedValue.trim().length === 0) {
+    return respondWithFallback(interaction, "");
+  }
+
+  // Clean query from search engine prefix
+  const cleanQuery = focusedValue
+    .replace(
+      /^(sc:|ytm:|yt:|spsearch:|ytsearch:|scsearch:|ytmsearch:|amsearch:)/,
+      "",
+    )
+    .trim();
+
+  const fallbackChoice = {
+    name: `🔎 Cari: ${truncateLabel(cleanQuery, 85)}`,
+    value:
+      (cleanQuery.length > 100 ? cleanQuery.substring(0, 100) : cleanQuery) ||
+      focusedValue.substring(0, 100),
+  };
+
+  try {
+    const manager = interaction.client.musicManager;
+    if (!manager || !manager._poru) {
+      return respondWithFallback(interaction, cleanQuery);
+    }
+
+    const poru = manager._poru;
+    const defaultEngine = env.MUSIC_DEFAULT_SEARCH || "ytsearch";
+
+    // Show hints for short queries
+    if (cleanQuery.length < 2) {
+      const hints = [];
+      const activePlayer = poru.players?.get(interaction.guildId);
+      if (activePlayer && activePlayer.currentTrack) {
+        const ct = activePlayer.currentTrack.info;
+        const nowUri = ct.uri || `${defaultEngine}:${ct.title} ${ct.author}`;
+        hints.push(
+          choice(`🎵 Sedang diputar: ${ct.title} - ${ct.author}`, nowUri),
+        );
+      }
+      hints.push(
+        choice("☁️ SoundCloud (Stabil & Anti-Block)", "sc:"),
+        choice("▶️ YouTube", "yt:"),
+        choice("🎧 YouTube Music", "ytm:"),
+        choice("🔍 Ketik nama lagu atau artis untuk mencari...", " "),
+      );
+      return safeRespond(interaction, hints.slice(0, 5));
+    }
+
+    // Determine search engine
+    const searchEngine = focusedValue.startsWith("sc:")
+      ? "scsearch"
+      : focusedValue.startsWith("ytm:")
+        ? "ytmsearch"
+        : focusedValue.startsWith("yt:")
+          ? "ytsearch"
+          : "spsearch";
+
+    // Check cache
+    const guildId = interaction.guildId || "dm";
+    const cacheKey = `music:ac:${guildId}:${searchEngine}:${cleanQuery}`;
+    const cached = getCached(cacheKey);
+    if (cached) return safeRespond(interaction, cached);
+
+    // Calculate dynamic timeout based on node latency
+    let searchTimeout = 2200;
+    try {
+      const { lavalinkClusterManager } = require("../../src/managers/lavalinkClusterManager");
+      if (lavalinkClusterManager && poru && poru.nodes) {
+        const connectedNodes = [...poru.nodes.values()].filter((n) => n.connected);
+        if (connectedNodes.length > 0) {
+          let totalLatency = 0;
+          let count = 0;
+          for (const node of connectedNodes) {
+            const lat = lavalinkClusterManager.getNodeLatency(node.name);
+            if (lat && lat < 999) {
+              totalLatency += lat;
+              count++;
+            }
+          }
+          if (count > 0) {
+            searchTimeout = Math.min(3000, Math.max(1500, Math.round(totalLatency / count) * 2));
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Search with timeout
+    let res = await Promise.race([
+      poru.resolve({
+        query: `${searchEngine}:${cleanQuery}`,
+        requester: interaction.user,
+      }),
+      new Promise((resolve) => setTimeout(() => resolve(null), searchTimeout)),
+    ]);
+
+    // Fallback to YouTube Music if Spotify fails
+    if (
+      searchEngine === "spsearch" &&
+      (!res || !res.tracks || res.tracks.length === 0)
+    ) {
+      res = await Promise.race([
+        poru.resolve({
+          query: `ytmsearch:${cleanQuery}`,
+          requester: interaction.user,
+        }),
+        new Promise((resolve) => setTimeout(() => resolve(null), Math.floor(searchTimeout / 2))),
+      ]);
+    }
+
+    if (!res || !res.tracks || res.tracks.length === 0) {
+      return respondWithFallback(interaction, cleanQuery);
+    }
+
+    // Build choices from search results
+    const choices = res.tracks.slice(0, 24).map((track) => {
+      const title = track.info.title || "Unknown Track";
+      const author = cleanArtistName(track.info.author || "Unknown Artist");
+      const duration = formatDuration(track.info.length);
+      const label = `${title} - ${author} (${duration})`;
+
+      const uri = track.info.uri;
+      const val =
+        uri && uri.startsWith("http")
+          ? uri.substring(0, 100)
+          : `${searchEngine}:${title} ${author}`.substring(0, 100);
+
+      return choice(label, val);
+    });
+
+    if (choices.length < 25) {
+      choices.push(fallbackChoice);
+    }
+
+    setCache(cacheKey, choices);
+    return safeRespond(interaction, choices);
+  } catch {
+    return respondWithFallback(interaction, cleanQuery);
+  }
+}
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -424,162 +681,21 @@ module.exports = {
         ),
     ),
 
-  async autocomplete(interaction) {
-    const {
-      getCached,
-      setCache,
-      choice,
-      safeRespond,
-      respondWithFallback,
-      truncateLabel,
-    } = require("../../src/utils/autocompleteHelper");
+  /**
+   * Handle autocomplete interactions.
+   * @param {object} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
+  autocomplete: handleAutocomplete,
 
-    const focusedValue = interaction.options.getFocused();
-    if (focusedValue.match(/^(https?:\/\/)?(open\.)?spotify\.com\//)) {
-      return safeRespond(interaction, [
-        choice("🎧 [Spotify Link] Tekan Enter untuk memutar", focusedValue),
-      ]);
-    }
-
-    if (focusedValue.match(/^https?:\/\//)) {
-      return safeRespond(interaction, [
-        choice("🔗 [Direct URL] Tekan Enter untuk memutar link", focusedValue),
-      ]);
-    }
-
-    if (!focusedValue || focusedValue.trim().length === 0) {
-      return respondWithFallback(interaction, "");
-    }
-
-    const cleanQuery = focusedValue
-      .replace(
-        /^(sc:|ytm:|yt:|spsearch:|ytsearch:|scsearch:|ytmsearch:|amsearch:)/,
-        "",
-      )
-      .trim();
-    const fallbackChoice = {
-      name: `🔎 Cari: ${truncateLabel(cleanQuery, 85)}`,
-      value:
-        (cleanQuery.length > 100 ? cleanQuery.substring(0, 100) : cleanQuery) ||
-        focusedValue.substring(0, 100),
-    };
-
-    try {
-      const manager = interaction.client.musicManager;
-      if (!manager || !manager._poru) {
-        return respondWithFallback(interaction, cleanQuery);
-      }
-      const poru = manager._poru;
-      const defaultEngine = env.MUSIC_DEFAULT_SEARCH || "ytsearch";
-
-      if (cleanQuery.length < 2) {
-        const hints = [];
-        const activePlayer = poru.players?.get(interaction.guildId);
-        if (activePlayer && activePlayer.currentTrack) {
-          const ct = activePlayer.currentTrack.info;
-          const nowUri = ct.uri || `${defaultEngine}:${ct.title} ${ct.author}`;
-          hints.push(
-            choice(`🎵 Sedang diputar: ${ct.title} - ${ct.author}`, nowUri),
-          );
-        }
-        hints.push(
-          choice("☁️ SoundCloud (Stabil & Anti-Block)", "sc:"),
-          choice("▶️ YouTube", "yt:"),
-          choice("🎧 YouTube Music", "ytm:"),
-          choice("🔍 Ketik nama lagu atau artis untuk mencari...", " "),
-        );
-        return safeRespond(interaction, hints.slice(0, 5));
-      }
-
-      const searchEngine = focusedValue.startsWith("sc:")
-        ? "scsearch"
-        : focusedValue.startsWith("ytm:")
-          ? "ytmsearch"
-          : focusedValue.startsWith("yt:")
-            ? "ytsearch"
-            : "spsearch";
-
-      const guildId = interaction.guildId || "dm";
-      const cacheKey = `music:ac:${guildId}:${searchEngine}:${cleanQuery}`;
-      const cached = getCached(cacheKey);
-      if (cached) return safeRespond(interaction, cached);
-
-      let searchTimeout = 2200;
-      try {
-        const { lavalinkClusterManager } = require("../../src/managers/lavalinkClusterManager");
-        if (lavalinkClusterManager && poru && poru.nodes) {
-          const connectedNodes = [...poru.nodes.values()].filter((n) => n.connected);
-          if (connectedNodes.length > 0) {
-            let totalLatency = 0;
-            let count = 0;
-            for (const node of connectedNodes) {
-              const lat = lavalinkClusterManager.getNodeLatency(node.name);
-              if (lat && lat < 999) {
-                totalLatency += lat;
-                count++;
-              }
-            }
-            if (count > 0) {
-              searchTimeout = Math.min(3000, Math.max(1500, Math.round(totalLatency / count) * 2));
-            }
-          }
-        }
-      } catch (_) {}
-
-      let res = await Promise.race([
-        poru.resolve({
-          query: `${searchEngine}:${cleanQuery}`,
-          requester: interaction.user,
-        }),
-        new Promise((resolve) => setTimeout(() => resolve(null), searchTimeout)),
-      ]);
-
-      if (
-        searchEngine === "spsearch" &&
-        (!res || !res.tracks || res.tracks.length === 0)
-      ) {
-        res = await Promise.race([
-          poru.resolve({
-            query: `ytmsearch:${cleanQuery}`,
-            requester: interaction.user,
-          }),
-          new Promise((resolve) => setTimeout(() => resolve(null), Math.floor(searchTimeout / 2))),
-        ]);
-      }
-
-      if (!res || !res.tracks || res.tracks.length === 0) {
-        return respondWithFallback(interaction, cleanQuery);
-      }
-
-      const choices = res.tracks.slice(0, 24).map((track) => {
-        const title = track.info.title || "Unknown Track";
-        const author = cleanArtistName(track.info.author || "Unknown Artist");
-        const duration = formatDuration(track.info.length);
-        const label = `${title} - ${author} (${duration})`;
-
-        const uri = track.info.uri;
-        const val =
-          uri && uri.startsWith("http")
-            ? uri.substring(0, 100)
-            : `${searchEngine}:${title} ${author}`.substring(0, 100);
-
-        return choice(label, val);
-      });
-
-      if (choices.length < 25) {
-        choices.push(fallbackChoice);
-      }
-
-      setCache(cacheKey, choices);
-
-      return safeRespond(interaction, choices);
-    } catch {
-      return respondWithFallback(interaction, cleanQuery);
-    }
-  },
-
+  /**
+   * Execute slash command.
+   * @param {object} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     await interaction.deferReply();
+
     const subcommand = interaction.options.getSubcommand();
     const args = {
       query: interaction.options.getString("query"),
@@ -597,6 +713,7 @@ module.exports = {
       posisi: interaction.options.getString("posisi"),
       menit: interaction.options.getInteger("menit"),
     };
+
     const sendReply = async (payload, autoDelete = false) => {
       const msg = await interaction.editReply(payload).catch(() => {});
       if (autoDelete && msg) {
@@ -604,6 +721,7 @@ module.exports = {
       }
       return msg;
     };
+
     await runMusicLogic(
       interaction.client,
       interaction.user,
@@ -618,8 +736,16 @@ module.exports = {
     );
   },
 
+  /**
+   * Execute prefix command.
+   * @param {object} message - Discord message
+   * @param {Array<string>} args - Command arguments
+   * @param {object} client - Discord client
+   * @returns {Promise<void>}
+   */
   async executePrefix(message, args, client) {
     if (!args || args.length === 0) return ui.sendError(message, "err_sys_13");
+
     let subcommand = args.shift().toLowerCase();
     if (
       (subcommand === "settings" || subcommand === "stats") &&
@@ -627,6 +753,7 @@ module.exports = {
     ) {
       subcommand = args.shift().toLowerCase();
     }
+
     const parsedArgs = {
       query: args.join(" "),
       url: args[0],
@@ -637,13 +764,16 @@ module.exports = {
       posisi: args[0],
       menit: parseInt(args[0]),
     };
+
     const loadingPayload = buildContainerV2({
       accentColorHex: ui.getColor("dark") || "#0b0c10",
       title: "Audio Processor",
       description: "⏳ | `Memproses sistem audio...`",
       footerText: ui.getFooter("music"),
     });
+
     const sentMsg = await message.reply(loadingPayload);
+
     const sendReply = async (payload, autoDelete = false) => {
       const msg = await sentMsg.edit(payload).catch(() => {});
       if (autoDelete && msg) {
@@ -651,6 +781,7 @@ module.exports = {
       }
       return msg;
     };
+
     await runMusicLogic(
       client,
       message.author,

@@ -1,6 +1,22 @@
 "use strict";
 
+/**
+ * @module dailyQuest
+ * @description Subcommand /survival dailyQuest - Quest harian dengan refresh otomatis dan reward streak.
+ * 
+ * Fitur Utama:
+ * - Daily quest generation
+ * - Streak bonus multiplier
+ * - Quest completion tracking
+ * - Reward claim system
+ */
+
+
 const { MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const {
   generateDailyQuest,
@@ -23,6 +39,10 @@ const {
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 const STARTER_FLAG = "survival_started";
+
+// ============================================================================
+// HANDLER
+// ============================================================================
 
 module.exports = {
   async execute(interaction, client) {

@@ -1,3 +1,21 @@
+/**
+ * @module plugin/admin/lockdown
+ * @description Sistem penguncian channel dan server untuk situasi darurat.
+ * 
+ * FITUR UTAMA:
+ * - /lockdown channel: Kunci channel saat ini dari pesan publik
+ * - /lockdown server: Kunci SELURUH server (mode anti-raid)
+ * - /lockdown unlock: Buka kunci channel atau server
+ * 
+ * INTEGRASI:
+ * - Mengatur permission overwrites @everyone
+ * - Menyimpan status lockdown di guild settings (antiRaid.lockdown)
+ * - Logging otomatis ke modlog channel
+ * 
+ * @author Naura Hoshino V2 Team
+ * @version 2.4.0
+ */
+
 const { SlashCommandBuilder, PermissionsBitField } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
@@ -6,6 +24,17 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const { sendModLog } = require("../../src/utils/modLogHelper");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** @const {string} DEFAULT_REASON - Alasan default jika tidak diberikan */
+const DEFAULT_REASON = "Keadaan Darurat / Moderasi";
+
+// ============================================================================
+// HELPERS
+// ============================================================================
 
 module.exports = {
   isSubcommand: true,
@@ -58,10 +87,19 @@ module.exports = {
         ),
     ),
 
+  // ============================================================================
+  // EXECUTION
+  // ============================================================================
+
+  /**
+   * Handler eksekusi command /lockdown.
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction - Interaksi Discord
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const reason =
-      interaction.options.getString("alasan") || "Keadaan Darurat / Moderasi";
+      interaction.options.getString("alasan") || DEFAULT_REASON;
     const everyoneRole = interaction.guild.roles.everyone;
 
     await interaction.deferReply();

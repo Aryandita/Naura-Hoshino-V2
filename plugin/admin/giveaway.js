@@ -1,3 +1,28 @@
+/**
+ * @module plugin/admin/giveaway
+ * @description Sistem giveaway lengkap dengan persyaratan dan pengundian otomatis.
+ * 
+ * FITUR UTAMA:
+ * - /giveaway start: Mulai giveaway baru dengan durasi, hadiah, dan persyaratan
+ * - /giveaway end: Akhiri giveaway secara paksa sebelum waktunya
+ * - /giveaway reroll: Undi ulang pemenang dari peserta yang sama
+ * - /giveaway list: Lihat daftar giveaway aktif di server
+ * 
+ * PERSYARATAN GIVEAWAY:
+ * - Role wajib (requiredRoleId)
+ * - Level minimum server (minLevel)
+ * - Umur akun minimum (minAccountAgeDays)
+ * - Server Booster only (mustBeBooster)
+ * 
+ * INTEGRASI:
+ * - GiveawayManager untuk pengundian otomatis
+ * - Dynamic banner generation via canvas engine
+ * - Visual timeline UI dari uxHelper
+ * 
+ * @author Naura Hoshino V2 Team
+ * @version 2.4.0
+ */
+
 "use strict";
 
 const {
@@ -18,22 +43,60 @@ const {
 const GiveawayManager = require("../../src/managers/giveawayManager");
 const { generateGiveawayBanner } = require("../../src/canvas/dynamicBannerEngine");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** @const {string} PARTY - Emoji pesta untuk giveaway */
 const PARTY = "\u{1F389}";
 
+/** @const {number} MIN_DURATION_MS - Durasi minimum giveaway dalam milidetik (10 detik) */
+const MIN_DURATION_MS = 10000;
+
+/** @const {number} MAX_DURATION_MS - Durasi maksimum giveaway dalam milidetik (30 hari) */
+const MAX_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** @const {number} LIST_LIMIT - Batas jumlah giveaway dalam daftar */
+const LIST_LIMIT = 10;
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+
+
+/**
+ * Menambahkan flag ephemeral ke payload respons.
+ * @param {Object} payload - Payload respons Discord
+ * @returns {Object} Payload dengan flag ephemeral
+ */
 function ephemeral(payload) {
   return { ...payload, flags: (payload.flags || 0) | MessageFlags.Ephemeral };
 }
 
+/**
+ * Mendapatkan emoji bullet point dari UI config.
+ * @returns {string} Emoji atau karakter fallback
+ */
 function dot() {
   return ui.getEmoji("progressDot") || "\u2022";
 }
 
+/**
+ * Mendapatkan atau membuat instance GiveawayManager.
+ * @param {import('discord.js').Client} client - Discord client
+ * @returns {GiveawayManager} Instance manager giveaway
+ */
 function managerOf(client) {
   if (client.giveawayManager) return client.giveawayManager;
   client.giveawayManager = new GiveawayManager(client);
   client.giveawayManager.startChecking();
   return client.giveawayManager;
 }
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -130,6 +193,15 @@ module.exports = {
         ),
     ),
 
+  // ============================================================================
+  // EXECUTION
+  // ============================================================================
+
+  /**
+   * Handler eksekusi command /giveaway.
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction - Interaksi Discord
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     const subCmd = interaction.options.getSubcommand();
 
@@ -140,7 +212,7 @@ module.exports = {
       const durasiStr = interaction.options.getString("durasi");
       const durasiMs = ms(durasiStr);
 
-      if (!durasiMs || durasiMs < 10000 || durasiMs > ms("30d")) {
+      if (!durasiMs || durasiMs < MIN_DURATION_MS || durasiMs > MAX_DURATION_MS) {
         return interaction.reply(
           ephemeral(
             buildErrorContainerV2({
@@ -414,7 +486,7 @@ module.exports = {
       const activeGiveaways = await Giveaway.findAll({
         where: { guildId: interaction.guildId, ended: false },
         order: [["endTime", "ASC"]],
-        limit: 10,
+        limit: LIST_LIMIT,
       });
 
       if (activeGiveaways.length === 0) {

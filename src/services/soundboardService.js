@@ -1,9 +1,67 @@
-"use strict";
+﻿"use strict";
+
+/**
+ * 🎵 Soundboard Service - Audio Effects Management - Naura Hoshino V2
+ * -------------------------------------------------------------------
+ * Manages soundboard playback with preset and custom server sounds.
+ * Handles voice channel integration via Poru player, anti-spam cooldowns,
+ * and real-time event broadcasting to Socket.IO dashboard.
+ *
+ * Features:
+ * - 13 preset high-quality SFX (memes, reactions, gaming, fantasy)
+ * - Custom server soundboard support via guild settings
+ * - Anti-spam per-user cooldown enforcement (2.5 seconds)
+ * - Non-destructive playback (preserves current music playlist)
+ * - Automatic voice channel connection if bot not connected
+ * - Real-time event broadcasting via eventBus
+ * - VIP/Patron slot expansion (50 vs 20 custom sounds)
+ *
+ * @module src/services/soundboardService
+ * @example
+ * const soundboard = require('./soundboardService');
+ *
+ * // Get all available sounds for a guild
+ * const sounds = await soundboard.getAvailableSounds(guildId);
+ *
+ * // Play a soundboard effect
+ * const result = await soundboard.playSound({
+ *   client,
+ *   guildId: '123456789',
+ *   soundId: 'airhorn',
+ *   voiceChannelId: '987654321',
+ *   requester: interaction.user
+ * });
+ *
+ * // Check custom sound limit
+ * const maxSlots = soundboard.getMaxCustomSounds(isVipOrPatron);
+ */
 
 const { logger } = require("../managers/logger");
 const guildSettingsService = require("../managers/guildSettingsService");
 
-// Preset efek suara global berkualitas tinggi (SFX Web & Discord)
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Anti-spam cooldown duration in milliseconds per user per guild */
+const COOLDOWN_MS = 2500;
+
+/** Default maximum custom soundboard slots for standard servers */
+const DEFAULT_MAX_CUSTOM_SOUNDS = 20;
+
+/** Maximum custom soundboard slots for VIP/Patron servers */
+const VIP_MAX_CUSTOM_SOUNDS = 50;
+
+/** Default icon for custom server sounds */
+const CUSTOM_SOUND_ICON = "🎵";
+
+/** Default color for custom server sounds (cyan hex) */
+const CUSTOM_SOUND_COLOR = "#00FFFF";
+
+/** Category label for custom server sounds */
+const CUSTOM_SOUND_CATEGORY = "Custom Server";
+
+/** Preset sound effects library with metadata and CDN URLs */
 const PRESET_SOUNDS = [
   {
     id: "airhorn",
@@ -111,14 +169,25 @@ const PRESET_SOUNDS = [
   },
 ];
 
-// Anti-spam cooldown in memory (Key: guildId_userId)
+// ============================================================================
+// INTERNAL STATE
+// ============================================================================
+
+/** In-memory cooldown tracker (Key: `${guildId}_${userId}`) */
 const cooldownMap = new Map();
-const COOLDOWN_MS = 2500;
+
+// ============================================================================
+// SERVICE FUNCTIONS
+// ============================================================================
 
 /**
- * Mengambil seluruh sound yang tersedia untuk guild tertentu (preset + custom).
- * @param {string} guildId
- * @returns {Promise<Array>}
+ * Retrieve all available sounds for a guild (preset + custom).
+ * Merges global preset library with guild-specific custom uploads.
+ * @param {string} guildId - Discord guild ID
+ * @returns {Promise<SoundEntry[]>} Array of available sound entries
+ * @example
+ * const sounds = await getAvailableSounds('123456789');
+ * const airhorn = sounds.find(s => s.id === 'airhorn');
  */
 async function getAvailableSounds(guildId) {
   const result = [...PRESET_SOUNDS];
@@ -131,9 +200,9 @@ async function getAvailableSounds(guildId) {
         result.push({
           id: key,
           title: key.charAt(0).toUpperCase() + key.slice(1),
-          category: "Custom Server",
-          icon: "🎵",
-          color: "#00FFFF",
+          category: CUSTOM_SOUND_CATEGORY,
+          icon: CUSTOM_SOUND_ICON,
+          color: CUSTOM_SOUND_COLOR,
           url,
           isCustom: true,
         });
@@ -147,21 +216,33 @@ async function getAvailableSounds(guildId) {
 }
 
 /**
- * Memainkan soundboard ke voice channel melalui Poru player.
- * @param {object} params
- * @param {object} params.client - Discord client
- * @param {string} params.guildId - ID Guild Discord
- * @param {string} params.soundId - ID Sound yang diputar
- * @param {string} [params.voiceChannelId] - Voice Channel target jika belum terkoneksi
- * @param {object} [params.requester] - Discord user yang meminta pemutaran
- * @returns {Promise<{ success: boolean, message: string, sound?: object }>}
+ * Play a soundboard effect in a voice channel via Poru player.
+ * Handles cooldown enforcement, voice connection, and non-destructive playback.
+ * Preserves current music queue by reinserting main track after soundboard finishes.
+ * @param {Object} params - Playback parameters
+ * @param {Object} params.client - Discord.js Client instance
+ * @param {string} params.guildId - Target guild ID
+ * @param {string} params.soundId - Sound identifier (case-insensitive match)
+ * @param {string} [params.voiceChannelId] - Voice channel to connect if not already
+ * @param {Object} [params.requester] - Discord user who requested playback
+ * @returns {Promise<PlaySoundResult>} Playback result with success status and message
+ * @example
+ * const result = await playSound({
+ *   client,
+ *   guildId: '123456789',
+ *   soundId: 'airhorn',
+ *   voiceChannelId: '987654321',
+ *   requester: interaction.user
+ * });
+ * if (result.success) {
+ *   console.log(result.message);
+ * }
  */
 async function playSound({ client, guildId, soundId, voiceChannelId, requester }) {
   if (!guildId || !soundId) {
     return { success: false, message: "Guild ID dan Sound ID wajib disertakan." };
   }
 
-  // Cooldown check
   const reqId = requester?.id || "anon";
   const cooldownKey = `${guildId}_${reqId}`;
   const now = Date.now();
@@ -188,7 +269,6 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
   const poru = musicManager.poru;
   let player = poru.players.get(guildId);
 
-  // Jika bot belum di voice channel, coba sambungkan ke channel target
   if (!player) {
     if (!voiceChannelId) {
       return {
@@ -221,7 +301,6 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
     const sbTrack = resolveResult.tracks[0];
     cooldownMap.set(cooldownKey, now);
 
-    // Pemutaran soundboard tanpa memutus playlist
     if (player.isPlaying && player.currentTrack) {
       const mainTrack = player.currentTrack;
       mainTrack.info.resumePosition = player.position;
@@ -234,7 +313,6 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
       }
     }
 
-    // Siarkan realtime event ke eventBus & Socket.IO
     const eventBus = require("../core/eventBus");
     eventBus.emit("soundboard:played", {
       guildId: String(guildId),
@@ -254,24 +332,50 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
   }
 }
 
-const DEFAULT_MAX_CUSTOM_SOUNDS = 20;
-const VIP_MAX_CUSTOM_SOUNDS = 50;
-
 /**
- * Mendapatkan batas slot soundboard kustom berdasarkan status VIP / Patron.
- * @param {boolean} [isVipOrPatron=false]
- * @returns {number} 50 untuk VIP / Patron, 20 untuk server standar
+ * Get maximum custom soundboard slots based on VIP/Patron status.
+ * @param {boolean} [isVipOrPatron=false] - Whether server has VIP or Patron status
+ * @returns {number} Maximum custom sound slots (50 for VIP, 20 for standard)
+ * @example
+ * const maxSlots = getMaxCustomSounds(true); // Returns 50
+ * const standardSlots = getMaxCustomSounds(); // Returns 20
  */
 function getMaxCustomSounds(isVipOrPatron = false) {
   return isVipOrPatron ? VIP_MAX_CUSTOM_SOUNDS : DEFAULT_MAX_CUSTOM_SOUNDS;
 }
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/**
+ * @typedef {Object} SoundEntry
+ * @property {string} id - Unique sound identifier
+ * @property {string} title - Display name
+ * @property {string} category - Category label (Memes, Reaction, Gaming, etc.)
+ * @property {string} icon - Emoji icon for UI display
+ * @property {string} color - Hex color code for UI theming
+ * @property {string} url - Direct audio file URL
+ * @property {boolean} [isCustom] - True if custom server upload
+ */
+
+/**
+ * @typedef {Object} PlaySoundResult
+ * @property {boolean} success - Whether playback succeeded
+ * @property {string} message - Human-readable status message
+ * @property {SoundEntry} [sound] - Matched sound entry if successful
+ */
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
 module.exports = {
   PRESET_SOUNDS,
   DEFAULT_MAX_CUSTOM_SOUNDS,
   VIP_MAX_CUSTOM_SOUNDS,
+  COOLDOWN_MS,
   getMaxCustomSounds,
   getAvailableSounds,
   playSound,
 };
-

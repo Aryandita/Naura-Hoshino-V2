@@ -1,5 +1,21 @@
 "use strict";
 
+/**
+ * 👧 About Command - Naura Hoshino Identity - Naura Hoshino V2
+ * -------------------------------------------------------------
+ * Displays comprehensive information about Naura Hoshino bot.
+ * Includes ecosystem overview, privacy policy, and developer contact.
+ *
+ * Features:
+ * - 6-pillar ecosystem overview
+ * - Privacy & ToS compliance information
+ * - Developer contact details
+ * - Bilingual intro audio attachment
+ * - Dynamic banner display
+ *
+ * @module plugin/core/subcommands/about
+ */
+
 const fs = require("node:fs");
 const path = require("node:path");
 const { AttachmentBuilder } = require("discord.js");
@@ -7,22 +23,77 @@ const ui = require("../../../src/config/ui");
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
 const { e, face, createNavButtons } = require("../helpers/coreShared");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Audio file paths for intro greeting */
+const AUDIO_FILES = {
+  EN: "Intro (EN).mp3",
+  ID: "Intro (ID).mp3",
+};
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Detect if language is English based on code or title content.
+ * @param {object} lang - Language dictionary
+ * @returns {boolean} True if English
+ */
+function isEnglishLanguage(lang) {
+  return Boolean(lang && (lang.LANG_CODE === "en" || lang.ABOUT_TITLE?.includes("Meet")));
+}
+
+/**
+ * Build intro audio attachment if file exists.
+ * @param {boolean} isEn - Is English language
+ * @returns {AttachmentBuilder|null} Audio attachment or null
+ */
+function buildAudioAttachment(isEn) {
+  const fileName = isEn ? AUDIO_FILES.EN : AUDIO_FILES.ID;
+  const filePath = path.join(__dirname, "../../../assets/audio", fileName);
+
+  if (!fs.existsSync(filePath)) return null;
+
+  const outputName = `Naura_Intro_${isEn ? "EN" : "ID"}.mp3`;
+  return new AttachmentBuilder(filePath, { name: outputName });
+}
+
+// ============================================================================
+// MAIN HANDLER
+// ============================================================================
+
+/**
+ * Handle /core about command execution.
+ * Displays bot identity, ecosystem pillars, and developer information.
+ * @param {object} interaction - Discord interaction
+ * @param {object} client - Discord client
+ * @param {object} lang - Language dictionary
+ * @returns {Promise<void>}
+ */
 async function handleAbout(interaction, client, lang) {
+  // Defer reply for processing time
   if (!interaction.deferred) {
     await interaction.deferReply().catch(() => {});
     interaction.deferred = true;
   }
 
-  const eHeart = e("favorite", "\uD83D\uDC96");
-  const eSparkle = e("sparkle", "\u2728");
-  const eDeveloper = e("admin", "\uD83D\uDC51");
-  const eAbout = face("happy", "\uD83D\uDC67");
+  // Get emojis
+  const eHeart = e("favorite", "💖");
+  const eSparkle = e("sparkle", "✨");
+  const eDeveloper = e("admin", "👑");
+  const eAbout = face("happy", "👧");
 
+  // Clean title (remove leading ribbon emoji if present)
   const cleanTitle =
-    (lang.ABOUT_TITLE || "Meet Naura Hoshino!").replace(/^\uD83C\uDF80\s*/, "") || "Meet Naura Hoshino!";
+    (lang.ABOUT_TITLE || "Meet Naura Hoshino!").replace(/^\🎀\s*/, "") || "Meet Naura Hoshino!";
 
+  // Get banner
   const aboutBanner = ui.getBanner("about");
 
+  // Build main payload
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("accent") || "#C084FC",
     authorName: "Naura Hoshino Identity",
@@ -34,7 +105,7 @@ async function handleAbout(interaction, client, lang) {
       `*Tips: Ingin melihat spesifikasi telemetri shard & sistem? Jalankan \`/core stats\`. Tertarik bekerja sama memajukan server komunitas? Buka program \`/core partner\`.*`,
     fields: [
       {
-        name: `🌟 6 PILAR EKOSISTEM UTAMA`,
+        name: "🌟 6 PILAR EKOSISTEM UTAMA",
         value:
           "• **Bot Engine:** Discord Components V2 (5 Lapisan Mandiri)\n" +
           "• **Web Dashboard:** Vite MPA + 3D Three.js Avatar & Mascot Viewer\n" +
@@ -44,7 +115,7 @@ async function handleAbout(interaction, client, lang) {
           "• **Living AI:** Google Gemini 2.5 + Semantic Vector Memory",
       },
       {
-        name: `📜 KETENTUAN LAYANAN & KEBIJAKAN PRIVASI (TOS & PRIVACY)`,
+        name: "📜 KETENTUAN LAYANAN & KEBIJAKAN PRIVASI (TOS & PRIVACY)",
         value:
           "• **Vision AI & Gambar:** Gambar dianalisis secara *ephemeral/in-memory* dan tidak pernah disimpan permanen di disk bot setelah analisis selesai.\n" +
           "• **Sentimen Cuaca Kosmik:** Analisis suasana obrolan hanya menyampel pesan publik sementara secara anonim untuk skor cuaca server, tanpa profiling pribadi atau penjualan data.\n" +
@@ -64,27 +135,22 @@ async function handleAbout(interaction, client, lang) {
     footerText: ui.getFooter("core"),
   });
 
+  // Collect attachments
   const files = [];
+
+  // Add banner if available
   if (aboutBanner) {
     files.push(new AttachmentBuilder(aboutBanner, { name: "banner.png" }));
   }
 
-  const isEn =
-    lang && (lang.LANG_CODE === "en" || lang.ABOUT_TITLE?.includes("Meet"));
-  const audioFileName = isEn ? "Intro (EN).mp3" : "Intro (ID).mp3";
-  const audioFilePath = path.join(
-    __dirname,
-    "../../../assets/audio",
-    audioFileName,
-  );
-  if (fs.existsSync(audioFilePath)) {
-    files.push(
-      new AttachmentBuilder(audioFilePath, {
-        name: `Naura_Intro_${isEn ? "EN" : "ID"}.mp3`,
-      }),
-    );
+  // Add bilingual intro audio
+  const isEn = isEnglishLanguage(lang);
+  const audioAttachment = buildAudioAttachment(isEn);
+  if (audioAttachment) {
+    files.push(audioAttachment);
   }
 
+  // Attach files to payload
   if (files.length > 0) {
     payload.files = files;
   }

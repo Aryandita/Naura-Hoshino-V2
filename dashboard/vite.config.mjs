@@ -111,6 +111,32 @@ export default defineConfig({
 
   plugins: [
     {
+      name: "mpa-clean-urls",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (
+            req.method === "GET" &&
+            req.url &&
+            !req.url.includes(".") &&
+            !req.url.startsWith("/api") &&
+            !req.url.startsWith("/auth") &&
+            !req.url.startsWith("/socket.io")
+          ) {
+            const cleanPath = req.url.split("?")[0].replace(/^\//, "");
+            if (cleanPath) {
+              const htmlFile = resolve(__dirname, `src/pages/${cleanPath}.html`);
+              if (fs.existsSync(htmlFile)) {
+                req.url =
+                  `/src/pages/${cleanPath}.html` +
+                  (req.url.includes("?") ? "?" + req.url.split("?")[1] : "");
+              }
+            }
+          }
+          next();
+        });
+      },
+    },
+    {
       name: "copy-dist-index",
       closeBundle() {
         // Otomatis salin dist/src/pages/index.html ke dist/index.html

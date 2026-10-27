@@ -1,10 +1,26 @@
 "use strict";
 
+/**
+ * @module consume
+ * @description Subcommand /survival consume - Konsumsi item makanan/minuman untuk memulihkan vitals.
+ * 
+ * Fitur Utama:
+ * - Item effect lookup (hunger, thirst, hp, stamina)
+ * - Inventory consumption dengan atomic decrement
+ * - Cooldown tracking per item type
+ * - Buff application dari consumable spesial
+ */
+
+
 const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
 } = require("discord.js");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const cacheManager = require("../../../src/managers/cacheManager");
 const itemsConfig = require("../../../src/survival/data/items");
@@ -62,7 +78,15 @@ function optionEmoji(id) {
   return ui.parseEmoji(raw) || { name: "\uD83C\uDF72" };
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival consume
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (!interaction.deferred && !interaction.replied) {
       if (typeof interaction.deferUpdate === "function") {

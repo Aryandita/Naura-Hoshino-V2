@@ -1,4 +1,16 @@
 "use strict";
+
+/**
+ * @module farm
+ * @description Subcommand /survival farm - Sistem pertanian hidroponik greenhouse dengan siklus tanam.
+ * 
+ * Fitur Utama:
+ * - Plot management (tanam, siram, panen)
+ * - Growth timer dengan time advancement
+ * - Crop yield dengan fertilizer bonus
+ * - Auto-harvest untuk premium users
+ */
+
 const { logger } = require("../../../src/managers/logger");
 
 const {
@@ -12,6 +24,10 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const greenhouseEngine = require("../../../src/survival/engines/greenhouseEngine");
@@ -22,11 +38,19 @@ const {
   renderGreenhouseCard,
 } = require("../../../src/canvas/greenhouseCanvas");
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
   name: "farm",
   description:
     "🌿 Kelola Lahan Hidroponik Greenhouse, tanam benih kosmik, dan panen bahan kafe!",
 
+  /**
+   * Handler utama untuk command /survival farm
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (
       typeof interaction.deferUpdate === "function" &&

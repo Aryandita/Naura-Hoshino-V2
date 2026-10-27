@@ -1,4 +1,17 @@
 "use strict";
+
+/**
+ * @module npc
+ * @description Subcommand /survival npc - Interaksi dengan NPC penduduk desa dengan dialog dan friendship system.
+ * 
+ * Fitur Utama:
+ * - NPC location-based availability
+ * - Dialog tree dengan pilihan respons
+ * - Friendship level progression
+ * - Gift giving mechanic
+ * - Marriage proposal system (level 4)
+ */
+
 const { logger } = require("../../../src/managers/logger");
 
 const {
@@ -6,6 +19,10 @@ const {
   StringSelectMenuBuilder,
   AttachmentBuilder,
 } = require("discord.js");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const path = require("path");
 
 const UserSurvival = require("../../../src/models/UserSurvival");
@@ -95,7 +112,15 @@ async function composeGreeting(ctx) {
   return fallback;
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival npc
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const lang =

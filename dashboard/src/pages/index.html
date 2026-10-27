@@ -378,6 +378,11 @@
               <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
               <span>Dashboard</span>
             </a>
+            <a href="/lounge" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary);"></i></span>
+              <span>3D AI Lounge</span>
+              <span class="nav-badge" style="background:rgba(244,114,182,0.2);color:var(--primary);border:1px solid rgba(244,114,182,0.3);">3D · 31</span>
+            </a>
             <a href="/status" class="nav-item">
               <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
               <span>Live Status</span>
@@ -634,7 +639,10 @@
 
                   <!-- Direct Actions -->
                   <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <a href="/portfolio" class="btn btn-primary btn-sm">
+                    <a href="/lounge" class="btn btn-primary btn-sm" style="box-shadow: 0 0 15px rgba(244,114,182,0.35);">
+                      <i class="fa-solid fa-cube"></i> 3D AI Lounge (31 Animasi)
+                    </a>
+                    <a href="/portfolio" class="btn btn-ghost btn-sm">
                       <i class="fa-solid fa-id-badge"></i> Member Portfolio
                     </a>
                     <a href="/world" class="btn btn-ghost btn-sm">
@@ -647,16 +655,28 @@
                 </div>
               </div>
 
-              <!-- Pusat Operasional (Spacious 2x2 Flagship Matrix) -->
+              <!-- Pusat Operasional (Spacious 2x3 Flagship Matrix) -->
               <div>
                 <div class="section-title" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
                   <span style="display:flex;align-items:center;gap:8px;">
                     <i class="fa-solid fa-shapes" style="color:var(--primary);font-size:12px;"></i>
                     Pusat Operasional
                   </span>
-                  <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);font-weight:500;">4 Modul Utama</span>
+                  <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);font-weight:500;">6 Modul Unggulan</span>
                 </div>
                 <div class="quick-actions-grid">
+                  <a href="/lounge" class="quick-action" style="border-color: rgba(244,114,182,0.35); background: linear-gradient(135deg, rgba(244,114,182,0.1) 0%, rgba(139,92,246,0.06) 100%);">
+                    <div class="quick-action-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div class="quick-action-content">
+                      <span class="quick-action-label" style="display:flex;align-items:center;gap:6px;">
+                        3D AI Lounge
+                        <span class="badge badge-primary" style="font-size:8px;padding:1px 5px;">31 ANIM</span>
+                      </span>
+                      <span class="quick-action-desc">Mascot Studio &amp; Pose Viewer</span>
+                    </div>
+                  </a>
                   <a href="/music" class="quick-action">
                     <div class="quick-action-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);">
                       <i class="fa-solid fa-music"></i>
@@ -682,6 +702,15 @@
                     <div class="quick-action-content">
                       <span class="quick-action-label">Naura Wilds</span>
                       <span class="quick-action-desc">Survival RPG Map</span>
+                    </div>
+                  </a>
+                  <a href="/portfolio" class="quick-action">
+                    <div class="quick-action-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:var(--accent-green);">
+                      <i class="fa-solid fa-id-badge"></i>
+                    </div>
+                    <div class="quick-action-content">
+                      <span class="quick-action-label">Creator Portfolio</span>
+                      <span class="quick-action-desc">Karya &amp; Profil Interaktif</span>
                     </div>
                   </a>
                   <a href="/settings" class="quick-action">
@@ -746,6 +775,9 @@
                     <button id="naura3d-btn-halo" title="Toggle Halo" style="padding:4px 6px;border-radius:var(--r-md);font-size:9px;background:var(--amber-dim);border:1px solid var(--border-amber);color:var(--accent-amber);cursor:pointer;">✨</button>
                     <button id="naura3d-btn-reset" title="Reset Camera" style="padding:4px 6px;border-radius:var(--r-md);font-size:9px;background:var(--cyan-dim);border:1px solid var(--border-cyan);color:var(--accent-cyan);cursor:pointer;">↺</button>
                     <button id="naura3d-btn-snapshot" title="Foto" style="padding:4px 6px;border-radius:var(--r-md);font-size:9px;background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);cursor:pointer;">📷</button>
+                    <a href="/lounge" title="Buka 3D AI Lounge Studio (31 Animasi Lengkap)" style="padding:4px 8px;border-radius:var(--r-md);font-size:9px;font-weight:700;background:var(--primary);color:#070a14;text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);box-shadow:0 0 10px rgba(244,114,182,0.4);transition:transform var(--t-fast);">
+                      <i class="fa-solid fa-expand"></i> Studio 3D
+                    </a>
                   </div>
                 </div>
               </div>

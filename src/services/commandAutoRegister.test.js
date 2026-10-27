@@ -100,7 +100,13 @@ test("CommandAutoRegister - buildHelpPayload renders dynamic command lists for c
   commandRegistry.buildRegistry({ commands: mockCommands });
 
   // Panggil buildHelpPayload untuk music
-  const helpMusicPage1 = buildHelpPayload("id", 1, false, { username: "Tester" }, 0);
+  const helpMusicPage1 = buildHelpPayload({
+    language: "id",
+    categoryIndex: 1,
+    disabled: false,
+    user: { username: "Tester" },
+    subPage: 0,
+  });
   assert.ok(helpMusicPage1);
   assert.ok(helpMusicPage1.flags);
   assert.equal(helpMusicPage1._subPage, 0);
@@ -112,7 +118,13 @@ test("CommandAutoRegister - buildHelpPayload renders dynamic command lists for c
   assert.ok(rootComp.components.some((c) => c.content && c.content.includes("music_cmd_")));
 
   // Halaman 2
-  const helpMusicPage2 = buildHelpPayload("id", 1, false, { username: "Tester" }, 1);
+  const helpMusicPage2 = buildHelpPayload({
+    language: "id",
+    categoryIndex: 1,
+    disabled: false,
+    user: { username: "Tester" },
+    subPage: 1,
+  });
   assert.equal(helpMusicPage2._subPage, 1);
 });
 
@@ -165,7 +177,12 @@ test("CommandAutoRegister - buildHelpPayload handles dynamic non-standard catego
   assert.ok(categoryKeys.includes("custom_realm"), "custom_realm harus terdaftar di categoryKeys");
 
   // Overview payload must not crash and include custom_realm in selectOptions
-  const overviewPayload = buildHelpPayload("id", -1, false, { username: "Tester" });
+  const overviewPayload = buildHelpPayload({
+    language: "id",
+    categoryIndex: -1,
+    disabled: false,
+    user: { username: "Tester" },
+  });
   assert.ok(overviewPayload);
   assert.ok(overviewPayload.flags);
 
@@ -179,7 +196,12 @@ test("CommandAutoRegister - buildHelpPayload handles dynamic non-standard catego
   // Category page for custom_realm
   const customIndex = categoryKeys.indexOf("custom_realm");
   assert.ok(customIndex >= 0);
-  const customPayload = buildHelpPayload("id", customIndex, false, { username: "Tester" });
+  const customPayload = buildHelpPayload({
+    language: "id",
+    categoryIndex: customIndex,
+    disabled: false,
+    user: { username: "Tester" },
+  });
   assert.ok(customPayload);
   const customComps = customPayload.components[0].components;
   const hasQuestCommand = customComps.some((c) => c.content && c.content.includes("custom_quest"));

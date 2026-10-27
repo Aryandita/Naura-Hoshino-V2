@@ -1,3 +1,22 @@
+"use strict";
+
+/**
+ * ✏️ Nickname Command - Member Nickname Management - Naura Hoshino V2
+ * --------------------------------------------------------------------
+ * Forces nickname change for server members with role hierarchy validation.
+ * Supports reset to original username when empty string provided.
+ *
+ * Features:
+ * - Force nickname change for any member
+ * - Reset to original username (empty string)
+ * - Role hierarchy validation (cannot modify higher/equal roles)
+ * - Permission validation (ManageNicknames required)
+ * - Audit trail with requester tag
+ * - Before/after comparison display
+ *
+ * @module plugin/admin/nickname
+ */
+
 const {
   SlashCommandBuilder,
   PermissionsBitField,
@@ -9,6 +28,10 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 
 module.exports = {
   isSubcommand: true,
@@ -29,14 +52,26 @@ module.exports = {
         .setRequired(false),
     ),
 
+  // ============================================================================
+  // COMMAND EXECUTION
+  // ============================================================================
+
+  /**
+   * Execute nickname command.
+   * Changes or resets member nickname with validation.
+   * @param {object} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     const user = interaction.options.getUser("user");
     const newName = interaction.options.getString("nama_baru") || "";
 
+    // Fetch member from guild
     const member = await interaction.guild.members
       .fetch(user.id)
       .catch(() => null);
 
+    // Validate member exists
     if (!member) {
       const errPayload = buildErrorContainerV2({
         title: "User Tidak Ada",
@@ -49,6 +84,7 @@ module.exports = {
       });
     }
 
+    // Validate role hierarchy (bot cannot modify higher/equal roles)
     if (
       member.roles.highest.position >=
       interaction.guild.members.me.roles.highest.position
@@ -67,6 +103,8 @@ module.exports = {
 
     try {
       const oldName = member.displayName;
+
+      // Apply nickname change with audit reason
       await member.setNickname(newName, `Diminta oleh ${interaction.user.tag}`);
 
       const payload = buildContainerV2({

@@ -1,5 +1,20 @@
 "use strict";
 
+/**
+ * @module history
+ * @description Subcommand /survival history - Log aktivitas dan riwayat transaksi pemain.
+ * 
+ * Fitur Utama:
+ * - Transaction history pagination
+ * - Activity log filtering by type
+ * - Timestamp formatting
+ */
+
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const mongoManager = require("../../../src/managers/mongoManager");
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
@@ -12,7 +27,15 @@ function e(name, fallback) {
   return ui.getEmoji(name) || fallback || "";
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival history
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
 

@@ -68,7 +68,6 @@ gltf.animations.forEach((anim, idx) => {
     // Check time accessor
     const s0 = anim.samplers[0];
     const timeAcc = gltf.accessors[s0.input];
-    const durMin = timeAcc.min[0];
     const durMax = timeAcc.max[0];
     const frames = timeAcc.count;
 

@@ -1,5 +1,21 @@
 "use strict";
 
+/**
+ * @module quest
+ * @description Subcommand /survival quest - Quest tracker dengan active/completed tabs dan reward claiming.
+ * 
+ * Fitur Utama:
+ * - Active quest listing
+ * - Quest progress tracking
+ * - Reward claim button
+ * - Quest chain navigation
+ */
+
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const UserQuest = require("../../../src/models/UserQuest");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");

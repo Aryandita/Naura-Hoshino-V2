@@ -1,5 +1,21 @@
 "use strict";
+
+/**
+ * @module clan
+ * @description Subcommand /survival clan - Manajemen klan: buat, gabung, kelola anggota, dan riset.
+ * 
+ * Fitur Utama:
+ * - Clan creation dengan biaya
+ * - Member role management (leader, officer, member)
+ * - Clan research tree
+ * - Treasury contribution system
+ */
+
 const { logger } = require("../../../src/managers/logger");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const GuildClan = require("../../../src/models/GuildClan");
 const UserSurvival = require("../../../src/models/UserSurvival");
@@ -62,6 +78,10 @@ function card(interaction, { color, title, description, expression, footer, butt
 function bossMaxHp(level) {
   return BOSS_BASE_HP + ((level || 1) - 1) * BOSS_HP_PER_LEVEL;
 }
+
+// ============================================================================
+// HANDLER
+// ============================================================================
 
 module.exports = {
   async execute(interaction, client) {

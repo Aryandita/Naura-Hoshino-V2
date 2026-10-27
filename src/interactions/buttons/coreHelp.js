@@ -83,7 +83,13 @@ module.exports = [
         interaction.localeLang ||
         (await languageManager.getUserLanguage(interaction.user.id));
       const lang = languageManager.getLanguageSync(userLang);
-      const payload = buildHelpPayload(lang, -1, false, interaction.user, 0);
+      const payload = buildHelpPayload({
+        language: lang,
+        categoryIndex: -1,
+        disabled: false,
+        user: interaction.user,
+        subPage: 0,
+      });
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply(payload);
       }
@@ -112,13 +118,13 @@ module.exports = [
         targetIndex = state.currentIndex - 1;
       }
 
-      const payload = buildHelpPayload(
-        lang,
-        targetIndex,
-        false,
-        interaction.user,
-        targetSubPage,
-      );
+      const payload = buildHelpPayload({
+        language: lang,
+        categoryIndex: targetIndex,
+        disabled: false,
+        user: interaction.user,
+        subPage: targetSubPage,
+      });
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply(payload);
       }
@@ -154,13 +160,13 @@ module.exports = [
         );
       }
 
-      const payload = buildHelpPayload(
-        lang,
-        targetIndex,
-        false,
-        interaction.user,
-        targetSubPage,
-      );
+      const payload = buildHelpPayload({
+        language: lang,
+        categoryIndex: targetIndex,
+        disabled: false,
+        user: interaction.user,
+        subPage: targetSubPage,
+      });
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply(payload);
       }
@@ -181,13 +187,13 @@ module.exports = [
           ? getHelpCategoryKeys()
           : HELP_CATEGORY_KEYS;
       const targetIndex = categoryKeys.length - 1;
-      const payload = buildHelpPayload(
-        lang,
-        targetIndex,
-        false,
-        interaction.user,
-        0,
-      );
+      const payload = buildHelpPayload({
+        language: lang,
+        categoryIndex: targetIndex,
+        disabled: false,
+        user: interaction.user,
+        subPage: 0,
+      });
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply(payload);
       }

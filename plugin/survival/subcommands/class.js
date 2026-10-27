@@ -1,4 +1,24 @@
-"use strict";
+﻿"use strict";
+
+/**
+ * @module class
+ * @description Subcommand /survival class - Sistem pemilihan dan perpindahan kelas RPG.
+ * 
+ * Fitur Utama:
+ * - 4 kelas tersedia: Warrior, Mage, Assassin, Ranger
+ * - Bonus stat unik per kelas (HP, STR, AGI, INT, LUCK)
+ * - Skill tempur khas per kelas dengan damage multiplier berbeda
+ * - Biaya switch kelas: 10,000 PD (gratis untuk kelas pertama)
+ * - Pencabutan bonus kelas lama saat berpindah (mencegah stacking exploit)
+ * - Penyimpanan class_bonus di rpg_state untuk tracking akurat
+ * - Validasi input nama kelas case-insensitive
+ * 
+ * Kelas Tersedia:
+ * - warrior: HP+50, STR+5, Iron Slash 1.8x damage
+ * - mage: AGI+3, INT+8, Fireball 2.2x damage
+ * - assassin: AGI+8, LUCK+5, Shadow Strike 2.5x damage (bisa miss)
+ * - ranger: LUCK+8, AGI+5, Piercing Arrow 1.5x damage (high accuracy)
+ */
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -7,14 +27,12 @@ const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const SWITCH_FEE = 10000;
 
-function e(name, fallback) {
-  return ui.getEmoji(name) || fallback;
-}
-
-// Kunci bonus memakai nama kolom UserSurvival apa adanya supaya penerapannya
-// bisa dilakukan lewat satu loop, tanpa percabangan per kelas.
 const CLASSES = {
   warrior: {
     emoji: "class_warrior",
@@ -70,6 +88,25 @@ const STAT_LABELS = {
   luck: "LUCK",
 };
 
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Mengambil emoji dari config atau fallback ke unicode
+ * @param {string} name - Nama emoji di config
+ * @param {string} fallback - Unicode emoji fallback
+ * @returns {string} Emoji string
+ */
+function e(name, fallback) {
+  return ui.getEmoji(name) || fallback;
+}
+
+/**
+ * Format bonus stat menjadi string display
+ * @param {object} bonus - Object bonus stat {stat: value}
+ * @returns {string} Formatted bonus string
+ */
 function describeBonus(bonus) {
   return Object.entries(bonus)
     .map(([stat, value]) => `${STAT_LABELS[stat] || stat} **+${value}**`)
@@ -77,9 +114,10 @@ function describeBonus(bonus) {
 }
 
 /**
- * Terapkan bonus ke kolom stat. Dipakai dua arah: sign 1 untuk memberi bonus
- * kelas baru, sign -1 untuk mencabut bonus kelas lama. Tanpa pencabutan ini,
- * pemain bisa menumpuk bonus setiap kali berpindah kelas.
+ * Terapkan atau cabut bonus stat ke survival object
+ * @param {object} survival - UserSurvival instance
+ * @param {object|null} bonus - Object bonus stat
+ * @param {number} sign - 1 untuk apply, -1 untuk remove
  */
 function applyBonus(survival, bonus, sign) {
   if (!bonus) return;
@@ -90,9 +128,10 @@ function applyBonus(survival, bonus, sign) {
 }
 
 /**
- * Bonus kelas lama diambil dari catatan di rpg_state. Pemain lama yang sudah
- * punya kelas sebelum fitur ini ada belum punya catatan itu, jadi nilainya
- * ditebak dari tabel kelas.
+ * Ambil bonus kelas sebelumnya dari rpg_state atau fallback ke tabel
+ * @param {object} rpgState - RPG state object
+ * @param {string|null} currentClass - ID kelas saat ini
+ * @returns {object|null} Bonus object atau null
  */
 function previousBonusOf(rpgState, currentClass) {
   if (rpgState.class_bonus) return rpgState.class_bonus;
@@ -100,7 +139,15 @@ function previousBonusOf(rpgState, currentClass) {
   return null;
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival class
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const requested = (
@@ -108,8 +155,6 @@ module.exports = {
     ).toLowerCase();
     const chosen = CLASSES[requested];
 
-    // Penjaga ini penting: dulu nama kelas asing tetap tersimpan ke database
-    // dan kartunya tampil kosong tanpa penjelasan apa pun.
     if (!chosen) {
       const daftar = Object.keys(CLASSES)
         .map((key) => `\`${key}\``)
@@ -164,8 +209,6 @@ module.exports = {
 
     survival.rpg_state = rpgState;
     survival.changed("rpg_state", true);
-    // Rule 1.8: fields eksplisit. Kolom stat ikut ditulis karena applyBonus
-    // mengubahnya di memori; kolom lain tetap aman dari penimpaan.
     await survival.save({
       fields: [
         "rpg_state",

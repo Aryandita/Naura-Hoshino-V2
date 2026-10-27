@@ -1,4 +1,16 @@
 ﻿"use strict";
+
+/**
+ * @module raid
+ * @description Subcommand /survival raid - Co-op raid system dengan party formation dan boss mechanics.
+ * 
+ * Fitur Utama:
+ * - Party formation (up to 4 players)
+ * - Boss HP pool shared
+ * - Damage contribution tracking
+ * - Loot distribution rules
+ */
+
 const { logger } = require("../../../src/managers/logger");
 
 const {
@@ -13,12 +25,20 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const worldBossEngine = require("../../../src/survival/engines/worldBossEngine");
 const petActions = require("../../../src/survival/helpers/petActions");
 const UserPet = require("../../../src/models/UserPet");
 const { drawBossCard } = require("../../../src/canvas/bossCanvas");
+
+// ============================================================================
+// HANDLER
+// ============================================================================
 
 module.exports = {
   name: "raid",

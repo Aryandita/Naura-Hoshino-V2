@@ -1,4 +1,16 @@
 "use strict";
+
+/**
+ * @module conquest
+ * @description Subcommand /survival conquest - Territory war dan clan conquest system.
+ * 
+ * Fitur Utama:
+ * - Sector control tracking
+ * - Clan vs clan battle mechanics
+ * - Tax revenue distribution
+ * - Territory buff pasif
+ */
+
 const { logger } = require("../../../src/managers/logger");
 
 const { AttachmentBuilder } = require("discord.js");
@@ -6,17 +18,29 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const ui = require("../../../src/config/ui");
 const territoryWarEngine = require("../../../src/services/territoryWarEngine");
 const { drawTerritoryMap } = require("../../../src/canvas/territoryCanvas");
 const GuildClan = require("../../../src/models/GuildClan");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
   name: "conquest",
   description:
     "🏰 Perang Faksi Wilayah Klan & Klaim Pajak Sektor (Neo-Hoshino)",
 
+  /**
+   * Handler utama untuk command /survival conquest
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const action = interaction.options.getString("aksi") || "map";
     const sectorId = interaction.options.getString("sektor") || "SECTOR_DOCKS";

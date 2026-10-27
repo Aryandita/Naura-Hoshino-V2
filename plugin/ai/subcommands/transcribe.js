@@ -1,5 +1,23 @@
 "use strict";
 
+/**
+ * 🎧 Transcribe Subcommand - AI Speech-to-Text - Naura Hoshino V2
+ * -----------------------------------------------------------------
+ * Transcribes audio/video files to text using Whisper AI model.
+ * Supports multiple formats with automatic conversion to WAV.
+ *
+ * Features:
+ * - Whisper base model (Xenova/whisper-base) via transformers.js
+ * - Multi-format support (MP3, WAV, OGG, M4A, FLAC, MP4, WebM, MOV)
+ * - Automatic audio conversion to WAV mono 16kHz via FFmpeg
+ * - File size limit enforcement (25 MB max)
+ * - Chunked output for long transcriptions (3900 chars per chunk)
+ * - Lazy-loaded Whisper pipeline (loaded once, reused)
+ * - Temporary file cleanup after processing
+ *
+ * @module plugin/ai/subcommands/transcribe
+ */
+
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
@@ -14,8 +32,17 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 const { DomainError } = require("../../../src/errors/DomainError");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Maximum file size in bytes (25 MB) */
 const MAX_SIZE_BYTES = 25 * 1024 * 1024;
+
+/** Maximum characters per message chunk */
 const CHUNK_SIZE = 3900;
+
+/** Allowed MIME types for audio/video files */
 const ALLOWED_MIME = [
   "audio/mpeg",
   "audio/wav",
@@ -29,13 +56,28 @@ const ALLOWED_MIME = [
   "video/x-matroska",
 ];
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get emoji by name with fallback.
+ * @param {string} name - Emoji key
+ * @param {string} fallback - Fallback emoji
+ * @returns {string} Resolved emoji
+ */
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
+/** Cached Whisper pipeline instance (lazy-loaded) */
 let whisperPipeline = null;
 
-/** Model Whisper berat, jadi hanya dimuat sekali lalu dipakai ulang. */
+/**
+ * Get or initialize Whisper pipeline (heavy model, loaded once).
+ * Uses Xenova/whisper-base for automatic speech recognition.
+ * @returns {Promise<object|null>} Whisper pipeline or null if failed
+ */
 async function getWhisperPipeline() {
   if (!whisperPipeline) {
     try {
@@ -45,21 +87,32 @@ async function getWhisperPipeline() {
         "Xenova/whisper-base",
       );
     } catch (error) {
-      logger.error("[AI Transcribe] Gagal memuat model Whisper", error);
+      logger.error("[AI Transcribe] Failed to load Whisper model", error);
     }
   }
   return whisperPipeline;
 }
 
+/**
+ * Build standardized error card.
+ * @param {string} title - Error title
+ * @param {string} description - Error description
+ * @returns {object} Error payload
+ */
 function failCard(title, description) {
   return buildErrorContainerV2({
-    title: `${e("cry", "\u274C")} ${title}`,
+    title: `${e("cry", "❌")} ${title}`,
     description,
     footerText: ui.getFooter("core"),
   });
 }
 
-/** Whisper maunya WAV mono 16 kHz, jadi berkas lain dikonversi dulu. */
+/**
+ * Convert audio/video file to WAV mono 16kHz (Whisper requirement).
+ * @param {string} sourcePath - Input file path
+ * @param {string} targetPath - Output WAV file path
+ * @returns {Promise<string>} Path to converted WAV file
+ */
 async function toWav(sourcePath, targetPath) {
   const ffmpegStatic = require("ffmpeg-static");
   const ffmpeg = require("fluent-ffmpeg");
@@ -79,6 +132,11 @@ async function toWav(sourcePath, targetPath) {
   return targetPath;
 }
 
+/**
+ * Split long text into chunks for Discord message limits.
+ * @param {string} text - Text to split
+ * @returns {Array<string>} Array of text chunks
+ */
 function splitText(text) {
   const chunks = [];
   let rest = text;
@@ -89,17 +147,32 @@ function splitText(text) {
   return chunks.length > 0 ? chunks : [""];
 }
 
+/**
+ * Safely remove temporary file without throwing errors.
+ * @param {string} filePath - File path to remove
+ */
 function removeQuietly(filePath) {
   try {
     fs.unlinkSync(filePath);
   } catch (err) {
-    logger.debug("[transcribe:removeQuietly] Operasi berkas/proses sistem gagal: " + (err?.message || err));
+    logger.debug(`[transcribe:removeQuietly] File operation failed: ${err?.message || err}`);
   }
 }
 
+// ============================================================================
+// MAIN HANDLER
+// ============================================================================
+
+/**
+ * Execute transcribe subcommand.
+ * Downloads audio/video, converts to WAV, transcribes with Whisper, and returns text.
+ * @param {object} interaction - Discord interaction
+ * @returns {Promise<void>}
+ */
 module.exports = async function transcribe(interaction) {
   const attachment = interaction.options.getAttachment("file");
 
+  // Validate MIME type
   const mimeOk =
     attachment.contentType &&
     ALLOWED_MIME.some((m) => attachment.contentType.startsWith(m));
@@ -113,6 +186,7 @@ module.exports = async function transcribe(interaction) {
     );
   }
 
+  // Validate file size
   if (attachment.size > MAX_SIZE_BYTES) {
     return interaction.editReply(
       failCard(
@@ -122,6 +196,7 @@ module.exports = async function transcribe(interaction) {
     );
   }
 
+  // Show loading state
   await interaction.editReply(
     buildLoadingContainerV2({
       authorName: "Naura Whisper Transcriber",
@@ -136,11 +211,13 @@ module.exports = async function transcribe(interaction) {
   const tempFiles = [];
 
   try {
+    // Load Whisper model
     const whisper = await getWhisperPipeline();
     if (!whisper) {
       throw new DomainError("MODEL_LOAD_FAILED", "Model Whisper gagal dimuat ke memori.");
     }
 
+    // Download file to temp directory
     const tempDir = os.tmpdir();
     const stamp = Date.now();
     const ext = path.extname(attachment.name) || ".mp3";
@@ -153,6 +230,7 @@ module.exports = async function transcribe(interaction) {
     fs.writeFileSync(sourcePath, Buffer.from(download.data));
     tempFiles.push(sourcePath);
 
+    // Convert to WAV if needed (Whisper requires WAV mono 16kHz)
     let audioPath = sourcePath;
     if (ext !== ".wav") {
       const wavPath = path.join(tempDir, `naura_whisper_${stamp}.wav`);
@@ -160,6 +238,7 @@ module.exports = async function transcribe(interaction) {
       tempFiles.push(wavPath);
     }
 
+    // Transcribe audio
     const result = await whisper(audioPath, {
       chunk_length_s: 30,
       stride_length_s: 5,
@@ -169,6 +248,7 @@ module.exports = async function transcribe(interaction) {
     const text = result.text || "Naura tidak menangkap suara apa pun di sini.";
     const chunks = splitText(text);
 
+    // Send transcription results (chunked if long)
     for (let i = 0; i < chunks.length; i++) {
       const isFirst = i === 0;
       const isLast = i === chunks.length - 1;
@@ -177,14 +257,14 @@ module.exports = async function transcribe(interaction) {
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
         authorName: isFirst ? "Naura Whisper Transcriber" : undefined,
         title: isFirst
-          ? `${e("cheers", "\uD83C\uDFA7")} Ini hasil dengarnya!`
+          ? `${e("cheers", "🎧")} Ini hasil dengarnya!`
           : undefined,
         iconURL: isFirst
           ? interaction.client.user.displayAvatarURL()
           : undefined,
         description: chunks[i],
         footerText: isLast
-          ? `Powered by Whisper AI (base) \u2022 Diminta oleh ${interaction.user.username}`
+          ? `Powered by Whisper AI (base) • Diminta oleh ${interaction.user.username}`
           : undefined,
       });
 
@@ -192,7 +272,7 @@ module.exports = async function transcribe(interaction) {
       else await interaction.followUp(payload);
     }
   } catch (error) {
-    logger.error("[AI Transcribe] Gagal mentranskripsi", error);
+    logger.error("[AI Transcribe] Transcription failed", error);
     return interaction.editReply(
       failCard(
         "Naura gagal mendengarkan",
@@ -200,6 +280,7 @@ module.exports = async function transcribe(interaction) {
       ),
     );
   } finally {
+    // Cleanup temporary files
     tempFiles.forEach(removeQuietly);
   }
 };

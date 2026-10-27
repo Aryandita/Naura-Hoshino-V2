@@ -1,10 +1,24 @@
 "use strict";
 
-const { MessageFlags } = require("discord.js");
+/**
+ * @module chronicle
+ * @description Subcommand /survival chronicle - Lore dan catatan dunia Naura Wilds.
+ * 
+ * Fitur Utama:
+ * - Lore entry pagination
+ * - Category-based filtering
+ * - Unlock condition tracking
+ */
+
+
 const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const { logger } = require("../../../src/managers/logger");
@@ -109,10 +123,18 @@ class WorldEventNarrator {
 
 const narrator = new WorldEventNarrator();
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
   name: "chronicle",
   description: "Generate narasi sinematik dari peristiwa server",
 
+  /**
+   * Handler utama untuk command /survival chronicle
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const userId = interaction.user.id;
     const eventType = interaction.options.getString("type") || "generic";

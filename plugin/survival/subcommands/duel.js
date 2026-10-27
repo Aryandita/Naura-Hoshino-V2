@@ -1,5 +1,17 @@
 "use strict";
 
+/**
+ * @module duel
+ * @description Subcommand /survival duel - PvP duel system dengan taruhan dan ranking.
+ * 
+ * Fitur Utama:
+ * - Challenge request system
+ * - Turn-based combat mechanics
+ * - Bet/wager system
+ * - Ranking point adjustment
+ */
+
+
 // Battle Arena antar pemain. Perhitungan tempur ada di plugin/survival/duelEngine.js.
 //
 // Versi lama command ini mati total: `inviteRow` dan `row` dipakai tanpa pernah
@@ -17,6 +29,10 @@ const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const { logger } = require("../../../src/managers/logger");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
@@ -57,7 +73,15 @@ async function arenaImage(p1, p2, log) {
   }
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival duel
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const challenger = interaction.user;
     const opponent = interaction.options.getUser("lawan");

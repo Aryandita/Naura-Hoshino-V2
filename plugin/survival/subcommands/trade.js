@@ -1,5 +1,17 @@
 "use strict";
 
+/**
+ * @module trade
+ * @description Subcommand /survival trade - Direct trading system antar pemain dengan item exchange.
+ * 
+ * Fitur Utama:
+ * - Trade session creation
+ * - Item offer/counter-offer
+ * - Confirmation handshake
+ * - Atomic item swap
+ */
+
+
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -7,6 +19,10 @@ const {
   ComponentType,
   MessageFlags,
 } = require("discord.js");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
@@ -31,7 +47,15 @@ function reject(interaction, message) {
   return interaction.editReply({ ...payload, embeds: [] });
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival trade
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const targetUser = interaction.options.getUser("user");
     const amount =

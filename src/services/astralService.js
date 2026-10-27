@@ -1,9 +1,45 @@
 "use strict";
+
+/**
+ * @module astralService
+ * @description Layanan sistem cuaca kosmik dan ramalan bintang Naura Wilds.
+ * Mengintegrasikan analisis sentimen AI (Gemini) dengan cache Redis untuk menentukan
+ * cuaca astral harian yang mempengaruhi buff gameplay seluruh server.
+ * 
+ * Fitur Utama:
+ * - 6 tipe cuaca kosmik dengan buff unik (Aurora, Storm, Serenity, Eclipse, Sakura, Harmony)
+ * - Analisis sentimen obrolan via Gemini AI untuk penentuan cuaca dinamis
+ * - Fallback deterministik berbasis hash tanggal jika AI tidak tersedia
+ * - Sistem ramalan Omikuji 4 tier dengan reward koin dan stamina
+ * - Konstelasi harian dengan bonus Stardust
+ * - Cache Redis 24 jam untuk performa optimal
+ * - Integrasi lazy-load AIManager untuk menghindari circular dependency
+ * 
+ * Arsitektur:
+ * - AI-powered sentiment analysis dengan timeout protection
+ * - Redis caching layer dengan fallback graceful
+ * - Deterministic hash-based weather selection untuk konsistensi
+ * 
+ * @example
+ * const astralService = require('./astralService');
+ * 
+ * // Dapatkan cuaca astral hari ini untuk guild
+ * const weather = await astralService.evaluateGuildSentiment(guildId, sampleMessages);
+ */
+
 const { logger } = require("../managers/logger");
 
 const redisManager = require("../managers/redisManager");
 const { DomainError } = require("../errors/DomainError");
 
+// ============================================================================
+// KONSTANTA CUACA ASTRAL DAN RAMALAN
+// ============================================================================
+
+/**
+ * Daftar 6 tipe cuaca kosmik dengan buff dan lore unik
+ * @constant {Array<Object>}
+ */
 const ASTRAL_WEATHERS = [
   {
     id: "aurora_fortune",
@@ -97,6 +133,10 @@ const ASTRAL_WEATHERS = [
   },
 ];
 
+/**
+ * Tier ramalan Omikuji dari tertinggi ke terendah
+ * @constant {Array<Object>}
+ */
 const OMIKUJI_TIERS = [
   {
     tier: "DAI_KICHI",
@@ -136,6 +176,10 @@ const OMIKUJI_TIERS = [
   },
 ];
 
+/**
+ * Daftar konstelasi dengan bonus Stardust
+ * @constant {Array<Object>}
+ */
 const CONSTELLATIONS = [
   {
     name: "Lyra (Harpa Kosmik)",
@@ -174,6 +218,10 @@ const CONSTELLATIONS = [
     stardust: 220,
   },
 ];
+
+// ============================================================================
+// ASTRAL SERVICE CLASS
+// ============================================================================
 
 class AstralService {
   /**
@@ -411,5 +459,9 @@ class AstralService {
     };
   }
 }
+
+// ============================================================================
+// MODULE EXPORTS
+// ============================================================================
 
 module.exports = new AstralService();

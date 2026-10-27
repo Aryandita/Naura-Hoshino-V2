@@ -1,3 +1,22 @@
+/**
+ * ?? Sticky Command - Sticky Message Manager - Naura Hoshino V2
+ * ---------------------------------------------------------------
+ * Manages sticky messages that automatically repost in a channel.
+ * Requires ManageMessages permission.
+ *
+ * Features:
+ * - Set a sticky message for the current channel
+ * - Remove sticky message configuration
+ * - Stores config in guild settings (channelId, message, lastId)
+ *
+ * @module plugin/admin/sticky
+ */
+
+"use strict";
+
+// ============================================================================
+// DEPENDENCIES
+// ============================================================================
 const {
   SlashCommandBuilder,
   PermissionFlagsBits,
@@ -6,6 +25,9 @@ const {
 const guildSettingsService = require("../../src/managers/guildSettingsService");
 const ui = require("../../src/config/ui");
 
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("sticky")
@@ -28,6 +50,14 @@ module.exports = {
         .setDescription("Hapus sticky message dari server ini"),
     ),
 
+  // ========================================================================
+  // EXECUTION
+  // ========================================================================
+  /**
+   * Execute the sticky command.
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const sub = interaction.options.getSubcommand();
@@ -45,7 +75,7 @@ module.exports = {
         },
       );
       return interaction.editReply(
-        `${ui.getEmoji("success") || "✅"} Sticky message berhasil dipasang di channel ini!`,
+        `${ui.getEmoji("success") || "?"} Sticky message berhasil dipasang di channel ini!`,
       );
     } else {
       await guildSettingsService.updateGuildSetting(
@@ -59,7 +89,7 @@ module.exports = {
         },
       );
       return interaction.editReply(
-        `${ui.getEmoji("success") || "✅"} Sticky message berhasil dihapus.`,
+        `${ui.getEmoji("success") || "?"} Sticky message berhasil dihapus.`,
       );
     }
   },

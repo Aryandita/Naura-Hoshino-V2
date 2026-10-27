@@ -1,10 +1,32 @@
 "use strict";
 
 /**
- * @file entitlementService.js
+ * @module entitlementService
  * @description Layanan terpadu penanganan monetisasi Discord Entitlements, Premium Subscriptions API,
- * serta manajemen status VIP/Voter (Sequelize & Cache).
- * Mengonsolidasikan logika dari src/managers/entitlementService.js dan src/services/entitlementService.js.
+ * serta manajemen status VIP/Voter (Sequelize dan Cache).
+ * 
+ * Fitur Utama:
+ * - Verifikasi status premium user dan guild dengan fallback cache
+ * - Perpanjangan masa aktif premium secara atomik (SSOT)
+ * - Penanganan webhook Discord Entitlements (CREATE/UPDATE/DELETE)
+ * - Proteksi idempotensi ganda (memory set + persistent rpg_state)
+ * - Non-downgrade tier protection via TIER_WEIGHTS
+ * - Verifikasi signature Ed25519 untuk webhook keamanan
+ * - Reward distribution (coupons dan star fragments) saat aktivasi
+ * 
+ * Arsitektur:
+ * - Dual-layer persistence: PostgreSQL (primary) + Redis/cache (fallback)
+ * - Atomic transactions dengan row locking untuk mencegah race condition
+ * - Idempotency keys untuk mencegah duplikasi pemrosesan entitlement
+ * 
+ * @example
+ * const entitlementService = require("../services/entitlementService");
+ * 
+ * // Cek status premium
+ * const isPremium = await entitlementService.isUserPremium(userId);
+ * 
+ * // Aktivasi entitlement dari Discord webhook
+ * const result = await entitlementService.handleEntitlementCreate(entitlement);
  */
 
 const crypto = require("node:crypto");
@@ -14,7 +36,44 @@ const UserProfile = require("../models/UserProfile");
 const { sequelize } = require("../managers/dbManager");
 const env = require("../config/env");
 
-// SKU Mapping ke Benefit/Role
+// ============================================================================
+// KONSTANTA SKU DAN TIER
+// ============================================================================
+
+/**
+ * Durasi satu hari dalam milidetik
+ * @constant {number}
+ */
+const MS_PER_DAY = 86400 * 1000;
+
+/**
+ * Timeout operasi cache dalam milidetik
+ * @constant {number}
+ */
+const CACHE_TIMEOUT_MS = 100;
+
+/**
+ * Panjang public key Ed25519 dalam karakter hex (32 bytes)
+ * @constant {number}
+ */
+const ED25519_PUBLIC_KEY_LENGTH = 64;
+
+/**
+ * Panjang signature Ed25519 dalam karakter hex (64 bytes)
+ * @constant {number}
+ */
+const ED25519_SIGNATURE_LENGTH = 128;
+
+/**
+ * Prefix DER SPKI untuk Ed25519 public key
+ * @constant {string}
+ */
+const ED25519_SPKI_PREFIX = "302a300506032b6570032100";
+
+/**
+ * Mapping SKU Discord ke benefit dan konfigurasi tier
+ * @constant {Object}
+ */
 const DISCORD_SKUS = {
     SKU_STAR_PASS: {
         id: "sku_star_pass",
@@ -45,6 +104,11 @@ const DISCORD_SKUS = {
     },
 };
 
+/**
+ * Bobot tier untuk proteksi non-downgrade
+ * Higher value = higher priority tier
+ * @constant {Object<string, number>}
+ */
 const TIER_WEIGHTS = {
     none: 0,
     voter: 1,
@@ -58,11 +122,19 @@ const TIER_WEIGHTS = {
     vip: 4,
 };
 
+// ============================================================================
+// ENTITLEMENT SERVICE CLASS
+// ============================================================================
+
 class EntitlementService {
     constructor() {
         this.skus = DISCORD_SKUS;
         this.processedEntitlements = new Set();
     }
+
+    // ========================================================================
+    // STATUS VERIFICATION METHODS
+    // ========================================================================
 
     /**
      * Mengecek apakah user memiliki status premium aktif.
@@ -85,6 +157,10 @@ class EntitlementService {
         }
         return false;
     }
+
+    // ========================================================================
+    // PREMIUM EXTENSION (SSOT)
+    // ========================================================================
 
     /**
      * Memperpanjang durasi premium user secara atomik. Jika sudah kedaluwarsa, dimulai dari waktu sekarang.
@@ -177,7 +253,7 @@ class EntitlementService {
             if (typeof cacheManager.getUserProfile === "function") {
                 const profile = await Promise.race([
                     cacheManager.getUserProfile(userId),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 100)),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), CACHE_TIMEOUT_MS)),
                 ]).catch(() => null);
 
                 if (
@@ -239,6 +315,10 @@ class EntitlementService {
         return false;
     }
 
+    // ========================================================================
+    // DONATION HANDLER
+    // ========================================================================
+
     /**
      * Adapter handler untuk pembayaran/donasi pihak ketiga (Saweria, Trakteer, Top.gg).
      * @param {string} userId
@@ -251,6 +331,10 @@ class EntitlementService {
         );
         return { ok: true, userId, amount, provider: adapterName || "external" };
     }
+
+    // ========================================================================
+    // SKU RESOLUTION
+    // ========================================================================
 
     /**
      * Identifikasi benefit berdasarkan SKU ID Discord
@@ -275,6 +359,10 @@ class EntitlementService {
             tier: "tier1",
         };
     }
+
+    // ========================================================================
+    // ENTITLEMENT LIFECYCLE HANDLERS
+    // ========================================================================
 
     /**
      * Menangani saat langganan baru dibeli (ENTITLEMENT_CREATE)
@@ -308,7 +396,7 @@ class EntitlementService {
                 if (typeof cacheManager.getUserProfile === "function") {
                     const existingProfile = await Promise.race([
                         cacheManager.getUserProfile(userId),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 100)),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), CACHE_TIMEOUT_MS)),
                     ]).catch(() => null);
                     if (existingProfile?.premiumUntil) {
                         currentExpiry = new Date(existingProfile.premiumUntil);
@@ -328,7 +416,7 @@ class EntitlementService {
         }
 
         try {
-            const durationMs = plan.durationDays * 86400 * 1000;
+            const durationMs = plan.durationDays * MS_PER_DAY;
 
             let isDuplicateInState = false;
 
@@ -356,7 +444,7 @@ class EntitlementService {
                     if (typeof cacheManager.getUserProfile === "function") {
                         const existingProfile = await Promise.race([
                             cacheManager.getUserProfile(userId),
-                            new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 100)),
+                            new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), CACHE_TIMEOUT_MS)),
                         ]).catch(() => null);
                         if (existingProfile?.premiumUntil) {
                             currentExpiry = new Date(existingProfile.premiumUntil);
@@ -444,7 +532,7 @@ class EntitlementService {
 
         try {
             const endsAt = entitlement.endsAt || entitlement.ends_at;
-            const expiryDate = endsAt ? new Date(endsAt) : new Date(Date.now() + plan.durationDays * 86400 * 1000);
+            const expiryDate = endsAt ? new Date(endsAt) : new Date(Date.now() + plan.durationDays * MS_PER_DAY);
 
             await cacheManager.mutateUserProfileJson(userId, "rpg_state", (state) => {
                 state = state || {};
@@ -529,7 +617,7 @@ class EntitlementService {
                 if (typeof cacheManager.getUserProfile === "function") {
                     const profile = await Promise.race([
                         cacheManager.getUserProfile(userId),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 100)),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), CACHE_TIMEOUT_MS)),
                     ]).catch(() => null);
 
                     if (profile?.premiumUntil && new Date(profile.premiumUntil) > new Date()) {
@@ -589,6 +677,10 @@ class EntitlementService {
         }
     }
 
+    // ========================================================================
+    // SECURITY: SIGNATURE VERIFICATION
+    // ========================================================================
+
     /**
      * Verifikasi signature Discord Webhook Entitlements (Ed25519)
      * @param {string} signature
@@ -605,12 +697,12 @@ class EntitlementService {
         const cleanSig = typeof signature === "string" ? signature.trim() : "";
 
         // Discord public key must be 32 bytes (64 hex characters)
-        if (cleanKey.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(cleanKey)) {
+        if (cleanKey.length !== ED25519_PUBLIC_KEY_LENGTH || !/^[0-9a-fA-F]{64}$/.test(cleanKey)) {
             return false;
         }
 
         // Discord Ed25519 signature must be 64 bytes (128 hex characters)
-        if (cleanSig.length !== 128 || !/^[0-9a-fA-F]{128}$/.test(cleanSig)) {
+        if (cleanSig.length !== ED25519_SIGNATURE_LENGTH || !/^[0-9a-fA-F]{128}$/.test(cleanSig)) {
             return false;
         }
 
@@ -620,7 +712,7 @@ class EntitlementService {
                 Buffer.from(timestamp + rawBody),
                 crypto.createPublicKey({
                     key: Buffer.concat([
-                        Buffer.from("302a300506032b6570032100", "hex"),
+                        Buffer.from(ED25519_SPKI_PREFIX, "hex"),
                         Buffer.from(cleanKey, "hex"),
                     ]),
                     format: "der",
@@ -634,6 +726,10 @@ class EntitlementService {
         }
     }
 }
+
+// ============================================================================
+// MODULE EXPORTS
+// ============================================================================
 
 const entitlementService = new EntitlementService();
 entitlementService.EntitlementService = EntitlementService;

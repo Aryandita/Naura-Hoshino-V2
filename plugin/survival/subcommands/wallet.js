@@ -1,5 +1,17 @@
 "use strict";
 
+/**
+ * @module wallet
+ * @description Subcommand /survival wallet - Display dompet pemain dengan saldo semua mata uang dan kupon undian.
+ * 
+ * Fitur Utama:
+ * - Display saldo SC, PD, VB, BA, MP, Star Fragments
+ * - Kupon Astral Lottery dengan countdown reset harian
+ * - Integrasi cacheManager untuk data real-time
+ * - UI Components V2 dengan balance breakdown
+ */
+
+
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -7,6 +19,10 @@ const {
   MessageFlags,
 } = require("discord.js");
 
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const cacheManager = require("../../../src/managers/cacheManager");
 const currencyHelper = require("../../../src/survival/engines/currency");
@@ -20,7 +36,15 @@ function n(num) {
   return (Number(num) || 0).toLocaleString("id-ID");
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival wallet
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const profile = await cacheManager.getUserProfile(user.id);

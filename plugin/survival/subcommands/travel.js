@@ -1,4 +1,16 @@
 "use strict";
+
+/**
+ * @module travel
+ * @description Subcommand /survival travel - Perpindahan lokasi dengan biaya stamina dan waktu perjalanan.
+ * 
+ * Fitur Utama:
+ * - Location selector UI
+ * - Travel cost calculation
+ * - Time advancement per distance
+ * - Random encounter during travel
+ */
+
 const { logger } = require("../../../src/managers/logger");
 
 const {
@@ -7,6 +19,10 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -80,7 +96,15 @@ function findBackground(locKey, period) {
   return null;
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival travel
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const tujuan = interaction.options?.getString?.("lokasi") || null;

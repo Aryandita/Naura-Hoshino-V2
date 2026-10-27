@@ -1,3 +1,21 @@
+/**
+ * @module plugin/admin/report
+ * @description Context menu command untuk melaporkan pesan ke AI Automod.
+ * 
+ * FITUR UTAMA:
+ * - Klik kanan pesan -> Apps -> "Report Pesan"
+ * - Memicu analisis AI Automod hanya saat ada laporan user (bukan per-pesan)
+ * - Memerlukan AI Automod aktif di guild settings
+ * 
+ * INTEGRASI:
+ * - aiAutomodHelper untuk pemrosesan laporan
+ * - cacheManager untuk pengambilan guild settings
+ * - Logger untuk error tracking
+ * 
+ * @author Naura Hoshino V2 Team
+ * @version 2.4.0
+ */
+
 // plugin/admin/report.js
 // Context Menu Command, Right Click pada pesan → Apps → "⚑ Report Pesan"
 // Trigger AI Automod hanya saat ada laporan dari user (bukan per-pesan).
@@ -13,14 +31,29 @@ const {
 const { handleAIReport } = require("../../src/utils/aiAutomodHelper");
 const cacheManager = require("../../src/managers/cacheManager");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+// Tidak ada konstanta khusus untuk modul ini
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
+
 module.exports = {
   data: new ContextMenuCommandBuilder()
     .setName("⚑ Report Pesan")
     .setType(ApplicationCommandType.Message),
 
+  // ============================================================================
+  // EXECUTION
+  // ============================================================================
+
   /**
-   * Eksekusi context menu report.
-   * @param {import('discord.js').MessageContextMenuCommandInteraction} interaction
+   * Handler eksekusi context menu report.
+   * @param {import('discord.js').MessageContextMenuCommandInteraction} interaction - Interaksi Discord
+   * @returns {Promise<void>}
    */
   async execute(interaction) {
     // Pastikan hanya berjalan di server (bukan DM)

@@ -1,3 +1,13 @@
+/**
+ * @module setup
+ * @description Master Setup Dashboard Governance untuk konfigurasi modul bot.
+ * @author Naura Hoshino V2 Development Team
+ * @version 2.4.0
+ * @since 1.0.0
+ */
+
+"use strict";
+
 "use strict";
 
 const {
@@ -26,6 +36,15 @@ const ui = require("../../src/config/ui");
 // 🛠️ SUBCOMMAND HANDLERS
 // ==========================================
 
+/**
+ * Menampilkan dashboard utama dengan ringkasan konfigurasi server.
+ * Menyediakan menu interaktif untuk navigasi ke berbagai modul setup.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @returns {Promise<import("discord.js").Message>} Pesan respons yang dikirim
+ */
 async function handleDashboard(interaction, { currentSettings }) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -267,6 +286,16 @@ async function handleDashboard(interaction, { currentSettings }) {
   return msg;
 }
 
+/**
+ * Mengonfigurasi channel softban/honeypot untuk menjebak scammer.
+ * Channel yang diatur akan otomatis mem-ban user non-admin yang mengirim pesan.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleSoftban(interaction, { currentSettings, saveSettings }) {
   const trapChannel = interaction.options.getChannel("channel");
   currentSettings.softbanChannelId = trapChannel.id;
@@ -287,6 +316,15 @@ async function handleSoftban(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi pesan selamat datang (welcome) dan keluar (leave).
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleGreetings(interaction, { currentSettings, saveSettings }) {
   const welcomeChan = interaction.options.getChannel("channel");
   const enabled = interaction.options.getBoolean("aktif") ?? true;
@@ -312,6 +350,15 @@ async function handleGreetings(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi sistem automod dan anti-spam.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleAutomod(interaction, { currentSettings, saveSettings }) {
   const enabled = interaction.options.getBoolean("aktif");
   const logChan = interaction.options.getChannel("log");
@@ -331,6 +378,15 @@ async function handleAutomod(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi sistem modmail dengan kategori dan role staff.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleModmail(interaction, { currentSettings, saveSettings }) {
   const category = interaction.options.getChannel("kategori");
   const role = interaction.options.getRole("role");
@@ -349,6 +405,15 @@ async function handleModmail(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi sistem tiket bantuan dengan mode thread atau channel.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleTicket(interaction, { currentSettings, saveSettings }) {
   const mode = interaction.options.getString("mode");
   const category = interaction.options.getChannel("kategori");
@@ -408,6 +473,15 @@ async function handleTicket(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi TempVoice hub untuk voice channel dinamis.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleTempvoice(interaction, { currentSettings, saveSettings }) {
   const channel = interaction.options.getChannel("channel");
   currentSettings.tempvoiceChannel = channel.id;
@@ -423,6 +497,15 @@ async function handleTempvoice(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi auto-role untuk member baru yang bergabung.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleAutorole(interaction, { currentSettings, saveSettings }) {
   const role = interaction.options.getRole("role");
   currentSettings.autoroleId = role.id;
@@ -438,6 +521,15 @@ async function handleAutorole(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi vanity roles berdasarkan custom status member.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleVanity(interaction, { currentSettings, saveSettings }) {
   const vanityString = interaction.options.getString("vanity");
   const vanityRole = interaction.options.getRole("role");
@@ -456,6 +548,15 @@ async function handleVanity(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi integrasi Minecraft dengan chat bridge.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleMinecraft(interaction, { currentSettings, saveSettings }) {
   const serverIp = interaction.options.getString("ip");
   const serverPort = interaction.options.getInteger("port") || 25565;
@@ -480,6 +581,15 @@ async function handleMinecraft(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengelola daftar FAQ server (tambah, hapus, list).
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleFaq(interaction, { currentSettings, saveSettings }) {
   const aksi = interaction.options.getString("aksi") || "list";
   const slug = interaction.options.getString("slug")?.toLowerCase().trim();
@@ -574,6 +684,15 @@ async function handleFaq(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi channel koran harian pagi (The Hoshino Times).
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @returns {Promise<void>}
+ */
 async function handleChronicle(interaction, { currentSettings, saveSettings }) {
   const chronicleChannel = interaction.options.getChannel("channel");
   currentSettings.chronicleChannelId = chronicleChannel.id;
@@ -592,6 +711,17 @@ async function handleChronicle(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
+/**
+ * Mengonfigurasi modul AI (channel, automod, persona, knowledge base).
+ * Handler multi-fungsi untuk berbagai subcommand AI.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @param {Object} options - Opsi handler
+ * @param {Object} options.currentSettings - Pengaturan guild saat ini
+ * @param {Function} options.saveSettings - Fungsi untuk menyimpan pengaturan
+ * @param {string} subcommand - Nama subcommand yang dipanggil
+ * @returns {Promise<void>}
+ */
 async function handleAi(
   interaction,
   { currentSettings, saveSettings },
@@ -718,6 +848,13 @@ async function handleAi(
   }
 }
 
+/**
+ * Menampilkan wizard onboarding dengan preset template server.
+ * Memungkinkan admin menerapkan konfigurasi server secara instan.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @returns {Promise<void>}
+ */
 async function handleWizard(interaction) {
   const onboardingWizard = require("../../src/services/onboardingWizard");
   const presets = onboardingWizard.getPresetList();
@@ -808,6 +945,13 @@ async function handleWizard(interaction) {
   });
 }
 
+/**
+ * Menampilkan diagnostik kesehatan sistem (DB, Redis, AI, Worker Pool).
+ * Menyediakan tombol untuk flush cache dan perbaikan mandiri.
+ * 
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - Interaksi command
+ * @returns {Promise<void>}
+ */
 async function handleDiagnostics(interaction) {
   const env = require("../../src/config/env");
   const { sequelize } = require("../../src/managers/dbManager");
@@ -980,6 +1124,10 @@ async function handleDiagnostics(interaction) {
   });
 }
 
+/**
+ * Mapping subcommand ke handler function.
+ * @type {Object.<string, Function>}
+ */
 const handlers = {
   dashboard: handleDashboard,
   wizard: handleWizard,

@@ -1,3 +1,56 @@
+﻿/**
+ * @module dbManager
+ * @description Database Connection Management untuk Naura Hoshino V2
+ * 
+ * Manajer koneksi database yang menghandle Sequelize ORM setup, model registration,
+ * association definitions, migration execution, dan health monitoring. Mendukung
+ * multiple database backends (PostgreSQL/Supabase, MySQL, SQLite fallback).
+ * 
+ * KEY FEATURES:
+ * 1. Multi-Backend Support - PostgreSQL (Supabase), MySQL, SQLite fallback otomatis
+ * 2. Exponential Backoff Retry - 3 percobaan dengan jeda 2s, 4s, 8s untuk koneksi
+ * 3. Model Auto-Registration - Import dan registrasi 30+ Sequelize models otomatis
+ * 4. Association Setup - Define relasi hasOne/hasMany/belongsTo antar models
+ * 5. Safe Migration System - Production: manual migrate, Development: auto-migrate
+ * 6. Health Check Timer - Monitor koneksi setiap 30 detik dengan auto-reconnect
+ * 7. Fallback Sync - Sinkronisasi data dari SQLite ke production DB saat reconnect
+ * 8. Shard-Aware Migration - Hanya primary shard (SHARD_ID=0) yang jalankan migrasi
+ * 9. Production Safe-Sync - alter: false di production untuk mencegah data loss
+ * 10. Connection Status API - getDbStatus() untuk monitoring dan health endpoints
+ * 
+ * ARCHITECTURE NOTES:
+ * - Config Source: src/config/database.js (sequelize instance, pool settings)
+ * - Models Location: src/models/*.js (UserProfile, UserSurvival, GuildSettings, dll)
+ * - Migrator: src/managers/dbMigrator.js (versioned migrations dengan tracking table)
+ * - Supabase Integration: src/managers/supabaseManager.js untuk SDK client
+ * - Environment Detection: NODE_ENV=production vs development untuk behavior berbeda
+ * 
+ * MIGRATION STRATEGY:
+ * - Production: TIDAK auto-migrate saat boot. Wajib jalankan `npm run db:migrate` terpisah
+ * - Development: Auto-migrate oleh primary shard (SHARD_ID=0 atau undefined)
+ * - Reasoning: Mencegah multiple shards jalankan ALTER TABLE bersamaan (deadlock risk)
+ * - Tracking: schema_migrations table mencatat versi yang sudah dijalankan
+ * 
+ * HEALTH MONITORING:
+ * - Interval: 30000ms (30 detik)
+ * - Method: sequelize.authenticate() dengan retry
+ * - On Failure: Log alert + automatic reconnect attempt
+ * - On Success: Reset isDbOnline flag + sync fallback data jika perlu
+ * - Timer unref(): Mencegah event loop tetap hidup saat shutdown
+ * 
+ * FALLBACK BEHAVIOR:
+ * - Trigger: Tidak ada DATABASE_URL atau kredensial Supabase/MySQL
+ * - Action: Gunakan SQLite file ./naura_fallback.sqlite
+ * - Warning: Ditampilkan di console dengan highlight kuning
+ * - Sync: Data fallback dipindah ke production DB saat reconnect berhasil
+ * 
+ * @see {@link CacheManager} untuk caching layer di atas database
+ * @see {@link RedisManager} untuk distributed caching dan pub/sub
+ * @see {@link src/managers/dbMigrator.js} untuk migration system
+ */
+
+// === SECTION: DEPENDENCIES ===
+
 const {
   sequelize,
   hasMySQLConfig,
@@ -10,6 +63,7 @@ const env = require("../config/env");
 const supabaseManager = require("./supabaseManager");
 const { logger } = require("../managers/logger");
 
+// === SECTION: CONSTANTS & CONFIGURATION ===
 // ==========================================
 // KONFIGURASI RETRY DENGAN EXPONENTIAL BACKOFF
 // 3 percobaan, jeda 2s, 4s, 8s antara percobaan.
@@ -17,6 +71,7 @@ const { logger } = require("../managers/logger");
 const DB_RETRY_MAX = 3;
 const DB_BACKOFF_SEQUENCE_MS = [2000, 4000, 8000];
 
+// === SECTION: HELPER FUNCTIONS ===
 function dbSleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -45,11 +100,13 @@ async function dbRetryWithBackoff(fn, options = {}) {
 }
 
 
+// === SECTION: MODULE EXPORTS ===
 // ==========================================
 // EKSPOR SEQUELIZE
 // ==========================================
 module.exports = { sequelize, supabaseManager };
 
+// === SECTION: MODEL REGISTRATION ===
 // ==========================================
 // 3. IMPORT MODEL
 // ==========================================
@@ -94,6 +151,7 @@ require("../models/UserPlaylist");
 require("../models/WorldBoss");
 require("../models/ServerTreasury");
 
+// === SECTION: MODEL ASSOCIATIONS ===
 // ==========================================
 // 4. SETUP RELASI (ASSOCIATIONS)
 // ==========================================
@@ -183,6 +241,7 @@ function setupAssociations() {
 }
 setupAssociations();
 
+// === SECTION: DATABASE CONNECTION & SYNC ===
 // ==========================================
 // 5. FUNGSI KONEKSI DAN SINKRONISASI TABEL
 // ==========================================
@@ -207,6 +266,7 @@ function getDbStatus() {
 const isPrimaryProcess =
   typeof env.SHARD_ID === "undefined" || env.SHARD_ID === "0";
 
+// === SECTION: MAIN CONNECTION FUNCTION ===
 const connectToDatabase = async () => {
   try {
     // Inisialisasi Supabase SDK Client jika konfigurasi tersedia
@@ -408,6 +468,7 @@ module.exports.getDbStatus = getDbStatus;
 // 7. ANTI-SLEEP & AUTO-RECONNECT MECHANISM
 // ==========================================
 let isReconnecting = false;
+// === SECTION: HEALTH CHECK TIMER ===
 const healthCheckTimer = setInterval(async () => {
   try {
     await sequelize.query("SELECT 1");

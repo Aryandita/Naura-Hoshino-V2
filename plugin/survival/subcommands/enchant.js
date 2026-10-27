@@ -1,5 +1,17 @@
 "use strict";
 
+/**
+ * @module enchant
+ * @description Subcommand /survival enchant - Enchanting equipment dengan rune dan material khusus.
+ * 
+ * Fitur Utama:
+ * - Enchantment slot system
+ * - Rune compatibility check
+ * - Success rate dengan luck modifier
+ * - Enchantment effect display
+ */
+
+
 const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
@@ -9,6 +21,10 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
@@ -31,7 +47,15 @@ const SOCKETABLE_GEAR = [
   { id: "fishing_rod", name: "Pancingan Sakti 🎣", maxSockets: 2 },
 ];
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival enchant
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const profile = await cacheManager.getUserProfile(user.id);

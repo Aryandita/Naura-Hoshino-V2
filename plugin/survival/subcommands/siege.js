@@ -1,9 +1,25 @@
 "use strict";
 
 /**
+ * @module siege
+ * @description Subcommand /survival siege - Siege warfare event dengan defensive dan offensive phases.
+ * 
+ * Fitur Utama:
+ * - Siege timer tracking
+ * - Defense structure placement
+ * - Wave-based enemy spawning
+ * - Contribution scoring
+ */
+
+
+/**
  * plugin/survival/subcommands/siege.js
  * Subcommand /survival siege: Perang Wilayah GvG & Pengepungan Menara Relik Kuno.
  */
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const GuildClan = require("../../../src/models/GuildClan");
 const UserSurvival = require("../../../src/models/UserSurvival");
@@ -14,6 +30,10 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+
+// ============================================================================
+// HANDLER
+// ============================================================================
 
 module.exports = {
   name: "siege",

@@ -1,7 +1,24 @@
 "use strict";
+
+/**
+ * @module fish
+ * @description Subcommand /survival fish - Mini-game memancing dengan timing-based mechanic dan koleksi ikan.
+ * 
+ * Fitur Utama:
+ * - Fishing rod tier detection
+ * - Timing-based catch mechanic
+ * - Fish rarity table dengan bobot概率
+ * - Vivarium collection integration
+ * - Seasonal exclusive fish
+ */
+
 const { logger } = require("../../../src/managers/logger");
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const {
   safeParseInventory,
@@ -80,7 +97,15 @@ function rollCatch(hasBait = true) {
   };
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival fish
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
     const action = interaction.options?.getString("aksi") || "cast";

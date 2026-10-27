@@ -1,6 +1,22 @@
 "use strict";
 
+/**
+ * @module expedition
+ * @description Subcommand /survival expedition - Ekspedisi jarak jauh dengan risiko tinggi dan reward eksklusif.
+ * 
+ * Fitur Utama:
+ * - Expedition tier selection
+ * - Risk/reward calculation
+ * - Time-based completion
+ * - Exclusive loot pool
+ */
+
+
 const { MessageFlags } = require("discord.js");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const UserPet = require("../../../src/models/UserPet");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const redisManager = require("../../../src/managers/redisManager");
@@ -44,7 +60,15 @@ const EXPEDITION_DURATIONS = {
   },
 };
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival expedition
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const userId = interaction.user.id;
     const durationHours = interaction.options.getInteger("durasi") || 1;

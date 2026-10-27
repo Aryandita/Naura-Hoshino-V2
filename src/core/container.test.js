@@ -64,7 +64,7 @@ test("ServiceContainer - Deteksi Circular Dependency", () => {
     () => {
       container.resolve("serviceA");
     },
-    /Circular dependency terdeteksi/,
+    /(?:Circular dependency terdeteksi|Circular dependency detected)/,
     "Harus melempar error saat terdeteksi siklus A -> B -> A",
   );
 });
@@ -77,7 +77,7 @@ test("ServiceContainer - Error Layanan Belum Terdaftar", () => {
     () => {
       container.resolve("nonExistentService");
     },
-    /belum terdaftar di container/,
+    /(?:belum terdaftar di container|is not registered in the container)/,
   );
 });
 

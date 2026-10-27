@@ -1,6 +1,22 @@
 "use strict";
 
+/**
+ * @module federation
+ * @description Subcommand /survival federation - Sistem federasi antar server dan aliansi lintas wilayah.
+ * 
+ * Fitur Utama:
+ * - Federation alliance management
+ * - Cross-server diplomacy system
+ * - Resource sharing dan tribute
+ * - Federation rank dan benefits
+ */
+
+
 const { MessageFlags } = require("discord.js");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const guildFederationEngine = require("../../../src/survival/engines/guildFederationEngine");
 const GuildClan = require("../../../src/models/GuildClan");
 const UserSurvival = require("../../../src/models/UserSurvival");
@@ -11,10 +27,18 @@ const {
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
   name: "federation",
   description: "🌐 Hub Federasi Aliansi Klan Lintas-Server & Global Hall of Fame",
 
+  /**
+   * Handler utama untuk command /survival federation
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const action = interaction.options.getString("aksi") || "status";
     const user = interaction.user;

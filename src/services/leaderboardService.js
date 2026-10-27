@@ -1,5 +1,26 @@
 "use strict";
 
+/**
+ * @module leaderboardService
+ * @description Layanan papan peringkat global dengan Redis Sorted Sets untuk performa O(log N).
+ * Menyediakan sistem peringkat terpaginasi untuk berbagai kategori ekonomi dan gameplay.
+ * 
+ * Fitur Utama:
+ * - 7 kategori peringkat (Wallet, Bank, Fragments, Level, Survival, Card ELO, Reputation)
+ * - Redis Sorted Sets untuk ranking O(1) dan pagination O(log N + M)
+ * - Fallback ke database query jika Redis tidak tersedia
+ * - Pagination terpaginasi dengan validasi batas halaman
+ * - Format skor lokal Indonesia (toLocaleString)
+ * - Medal emoji untuk top 3
+ * - Real-time score update via ZADD
+ * 
+ * Arsitektur:
+ * - Dual-layer: Redis primary + Database fallback
+ * - Sorted Set key pattern: leaderboard:zset:{categoryId}
+ * - Graceful degradation saat Redis offline
+ */
+
+
 const UserProfile = require("../models/UserProfile");
 const UserSurvival = require("../models/UserSurvival");
 const UserCardDeck = require("../models/UserCardDeck");
@@ -338,6 +359,10 @@ async function renderLeaderboardPayload(categoryId = "wallet", page = 1, client 
     footerText: ui.getFooter("utility"),
   });
 }
+
+// ============================================================================
+// MODULE EXPORTS
+// ============================================================================
 
 module.exports = {
   LEADERBOARD_CATEGORIES,

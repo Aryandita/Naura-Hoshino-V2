@@ -1,3 +1,13 @@
+/**
+ * @module roleShop
+ * @description Toko role berbayar dengan sistem sewa (NSF, Coin, Coupon).
+ * @author Naura Hoshino V2 Development Team
+ * @version 2.4.0
+ * @since 1.0.0
+ */
+
+"use strict";
+
 const {
   SlashCommandBuilder,
   ActionRowBuilder,

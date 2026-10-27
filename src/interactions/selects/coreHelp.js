@@ -27,12 +27,12 @@ module.exports = [
         (await languageManager.getUserLanguage(interaction.user.id));
       const lang = languageManager.getLanguageSync(userLang);
 
-      const payload = buildHelpPayload(
-        lang,
-        categoryIndex,
-        false,
-        interaction.user,
-      );
+      const payload = buildHelpPayload({
+        language: lang,
+        categoryIndex: categoryIndex,
+        disabled: false,
+        user: interaction.user,
+      });
 
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply(payload);

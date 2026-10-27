@@ -1,4 +1,15 @@
-"use strict";
+﻿"use strict";
+
+/**
+ * @module guide
+ * @description Subcommand /survival guide - Panduan interaktif Naura Wilds dengan select menu navigasi bab.
+ * 
+ * Fitur Utama:
+ * - 5 bab panduan lengkap (Intro, Gathering, Economy, Combat, Lifestyle)
+ * - Select menu dropdown untuk navigasi antar bab
+ * - Collector 120 detik untuk interaksi select menu
+ * - UI Components V2 dengan accent color moss
+ */
 
 const {
   ActionRowBuilder,
@@ -7,6 +18,13 @@ const {
 
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const COLLECTOR_TIMEOUT_MS = 120000;
+const SELECT_MENU_ID = "guide_chapter_select";
 
 const CHAPTERS = {
   intro: {
@@ -109,12 +127,20 @@ const CHAPTERS = {
   },
 };
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival guide
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const user = interaction.user;
 
     const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId("guide_chapter_select")
+      .setCustomId(SELECT_MENU_ID)
       .setPlaceholder("📖 Pilih Bab Panduan yang ingin dipelajari...")
       .addOptions(
         Object.entries(CHAPTERS).map(([key, ch]) => ({
@@ -142,11 +168,11 @@ module.exports = {
 
     const collector = reply.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
-      time: 120000,
+      time: COLLECTOR_TIMEOUT_MS,
     });
 
     collector.on("collect", async (i) => {
-      if (i.customId === "guide_chapter_select") {
+      if (i.customId === SELECT_MENU_ID) {
         const selectedKey = i.values[0];
         const chapter = CHAPTERS[selectedKey] || CHAPTERS.intro;
 

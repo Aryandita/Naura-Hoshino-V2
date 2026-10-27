@@ -1,7 +1,25 @@
-"use strict";
+﻿"use strict";
 
-// Quick Action Menu untuk /survival quick - Select menu cepat untuk aksi survival terpopuler
-// tanpa perlu ketik command panjang.
+/**
+ * @module quick
+ * @description Subcommand /survival quick - Menu aksi cepat dengan select menu untuk navigasi fitur survival.
+ * 
+ * Fitur Utama:
+ * - Select menu kategori aksi (Gathering, Vitals, Combat, Economy, Inventory, Town, Premium)
+ * - Tombol shortcut ke panduan lengkap dan cek status diri
+ * - Autocomplete handler (placeholder, return empty)
+ * - Error handling dengan logger dan error container V2
+ * - UI Components V2 dengan emoji dan deskripsi per opsi
+ * 
+ * Kategori Aksi:
+ * - gathering: Tebang, tambang, mancing
+ * - vitals: Makan, minum, istirahat, HP
+ * - combat: Dungeon, duel, zona bahaya
+ * - economy: Toko, bank, dompet, nafkah
+ * - inventory: Ransel, craft, repair
+ * - town: Kafe, bank, warga, peta
+ * - premium: VIP tier, upgrade
+ */
 
 const {
   ActionRowBuilder,
@@ -14,16 +32,56 @@ const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const { logger } = require("../../../src/managers/logger");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const QUICK_SELECT_PREFIX = "survival_quick_select";
+const QUICK_INFO_PREFIX = "survival_quick_info";
+const QUICK_STATUS_PREFIX = "survival_quick_status";
+
+const ACTION_CATEGORIES = [
+  { label: "Kumpul Bahan", description: "Tebang pohon, tambang batu, atau mancing ikan", value: "gathering", emoji: "⛏️" },
+  { label: "Perawatan Diri", description: "Makan, minum, istirahat, pulihkan HP/stamina", value: "vitals", emoji: "❤️" },
+  { label: "Petualangan", description: "Masuk dungeon, duel, atau zona bahaya", value: "combat", emoji: "🗡️" },
+  { label: "Ekonomi", description: "Toko desa, bank, dompet, cari nafkah", value: "economy", emoji: "🛒" },
+  { label: "Inventaris", description: "Buka ransel, craft item, perbaiki alat", value: "inventory", emoji: "📦" },
+  { label: "Desa Sukamaju", description: "Kafe, bank, sapa warga, peta wilayah", value: "town", emoji: "🏘️" },
+  { label: "Premium Naura", description: "Lihat manfaat tier VIP, beli upgrade", value: "premium", emoji: "💎" },
+];
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Mengambil emoji dari config atau fallback ke unicode
+ * @param {string} name - Nama emoji di config
+ * @param {string} fallback - Unicode emoji fallback
+ * @returns {string} Emoji string
+ */
 function e(name, fallback) {
   const ui = require("../../../src/config/ui");
   return ui.getEmoji(name) || fallback || "";
 }
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Autocomplete handler (placeholder, tidak ada opsi dinamis)
+   * @param {import('discord.js').AutocompleteInteraction} interaction
+   */
   async autocomplete(interaction) {
     return interaction.respond([]).catch(() => {});
   },
 
+  /**
+   * Handler utama untuk command /survival quick
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     if (!interaction.deferred && !interaction.replied) {
       await interaction.deferReply().catch(() => {});
@@ -52,61 +110,18 @@ module.exports = {
         buttonsRow: [
           new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder()
-              .setCustomId(`survival_quick_select:${userId}`)
+              .setCustomId(`${QUICK_SELECT_PREFIX}:${userId}`)
               .setPlaceholder("Pilih kategori aksi...")
-              .addOptions([
-                {
-                  label: "Kumpul Bahan",
-                  description: "Tebang pohon, tambang batu, atau mancing ikan",
-                  value: "gathering",
-                  emoji: "⛏️",
-                },
-                {
-                  label: "Perawatan Diri",
-                  description: "Makan, minum, istirahat, pulihkan HP/stamina",
-                  value: "vitals",
-                  emoji: "❤️",
-                },
-                {
-                  label: "Petualangan",
-                  description: "Masuk dungeon, duel, atau zona bahaya",
-                  value: "combat",
-                  emoji: "🗡️",
-                },
-                {
-                  label: "Ekonomi",
-                  description: "Toko desa, bank, dompet, cari nafkah",
-                  value: "economy",
-                  emoji: "🛒",
-                },
-                {
-                  label: "Inventaris",
-                  description: "Buka ransel, craft item, perbaiki alat",
-                  value: "inventory",
-                  emoji: "📦",
-                },
-                {
-                  label: "Desa Sukamaju",
-                  description: "Kafe, bank, sapa warga, peta wilayah",
-                  value: "town",
-                  emoji: "🏘️",
-                },
-                {
-                  label: "Premium Naura",
-                  description: "Lihat manfaat tier VIP, beli upgrade",
-                  value: "premium",
-                  emoji: "💎",
-                },
-              ]),
+              .addOptions(ACTION_CATEGORIES),
           ),
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
-              .setCustomId(`survival_quick_info:${userId}`)
+              .setCustomId(`${QUICK_INFO_PREFIX}:${userId}`)
               .setLabel("Panduan Lengkap")
               .setStyle(ButtonStyle.Secondary)
               .setEmoji("📖"),
             new ButtonBuilder()
-              .setCustomId(`survival_quick_status:${userId}`)
+              .setCustomId(`${QUICK_STATUS_PREFIX}:${userId}`)
               .setLabel("Cek Status Diri")
               .setStyle(ButtonStyle.Primary)
               .setEmoji("👤"),

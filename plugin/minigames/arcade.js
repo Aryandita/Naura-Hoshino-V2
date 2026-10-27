@@ -1,3 +1,27 @@
+/**
+ * @module ArcadeMinigame
+ * @description Sistem Holo-Arcade dengan mini-game interaktif dan taruhan Star Fragments.
+ * 
+ * Fitur yang tersedia:
+ * - Cyber Trivia Royale: Kuis anime/gaming dengan taruhan opsional
+ * - Rhythm Tap: Game mengikuti pola warna berurutan
+ * - Cyber Roulette: Taruhan pada warna atau angka (0-36)
+ * 
+ * Mata Uang:
+ * - Menggunakan Star Fragments (NSF) untuk taruhan
+ * - Sesi game disimpan di Redis dengan TTL 60 detik
+ * 
+ * @example
+ * // Main trivia tanpa taruhan
+ * /arcade trivia
+ * 
+ * // Main roulette dengan taruhan
+ * /arcade roulette choice:RED bet:100
+ * 
+ * @author Naura Hoshino Development Team
+ * @version 2.4.0
+ */
+
 "use strict";
 
 const {
@@ -17,25 +41,92 @@ const ui = require("../../src/config/ui");
 const redisManager = require("../../src/managers/redisManager");
 const currency = require("../../src/survival/engines/currency");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/**
+ * Konfigurasi taruhan
+ * @type {Object}
+ */
+const BET_CONFIG = {
+  minValue: 10,
+  maxValue: 50000,
+};
+
+/**
+ * Pilihan warna valid untuk roulette
+ * @type {string[]}
+ */
+const ROULETTE_COLORS = ["RED", "BLACK", "GREEN"];
+
+/**
+ * TTL sesi game di Redis (detik)
+ * @type {number}
+ */
+const SESSION_TTL = 60;
+
+/**
+ * Emoji untuk warna roulette
+ * @type {Object<string, string>}
+ */
+const COLOR_EMOJIS = {
+  RED: "\ud83d\udd34",
+  BLACK: "\u26ab",
+  GREEN: "\ud83d\udfe2",
+};
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Menghasilkan session ID unik
+ * @returns {string} Session ID hex (12 karakter)
+ */
+function generateSessionId() {
+  return crypto.randomBytes(6).toString("hex");
+}
+
+/**
+ * Memvalidasi pilihan roulette
+ * @param {string} choice - Pilihan user
+ * @returns {boolean} True jika valid
+ */
+function isValidRouletteChoice(choice) {
+  if (ROULETTE_COLORS.includes(choice)) return true;
+  const numChoice = parseInt(choice, 10);
+  return !isNaN(numChoice) && numChoice >= 0 && numChoice <= 36;
+}
+
+// ============================================================================
+// MODULE EXPORTS
+// ============================================================================
+
 module.exports = {
   isSubcommand: true,
+  
+  /**
+   * Definisi slash command untuk arcade
+   * @type {import('discord.js').SlashCommandSubcommandBuilder}
+   */
   data: new SlashCommandBuilder()
     .setName("arcade")
     .setDescription(
-      "🕹️ Holo-Arcade: Mainkan mini-game interaktif dan kumpulkan Star Fragments!",
+      "\ud83d\udd79\ufe0f Holo-Arcade: Mainkan mini-game interaktif dan kumpulkan Star Fragments!",
     )
     .addSubcommand((sub) =>
       sub
         .setName("trivia")
         .setDescription(
-          "🧠 Cyber Trivia Royale: Jawab kuis anime/gaming dengan cepat!",
+          "\ud83e\udde0 Cyber Trivia Royale: Jawab kuis anime/gaming dengan cepat!",
         )
         .addIntegerOption((opt) =>
           opt
             .setName("bet")
             .setDescription("Taruhan Star Fragments (Opsional)")
-            .setMinValue(10)
-            .setMaxValue(50000)
+            .setMinValue(BET_CONFIG.minValue)
+            .setMaxValue(BET_CONFIG.maxValue)
             .setRequired(false),
         ),
     )
@@ -43,14 +134,14 @@ module.exports = {
       sub
         .setName("rhythm")
         .setDescription(
-          "🎶 Rhythm Tap: Ikuti urutan tombol warna cyber yang muncul!",
+          "\ud83c\udfb6 Rhythm Tap: Ikuti urutan tombol warna cyber yang muncul!",
         )
         .addIntegerOption((opt) =>
           opt
             .setName("bet")
             .setDescription("Taruhan Star Fragments (Opsional)")
-            .setMinValue(10)
-            .setMaxValue(50000)
+            .setMinValue(BET_CONFIG.minValue)
+            .setMaxValue(BET_CONFIG.maxValue)
             .setRequired(false),
         ),
     )
@@ -58,7 +149,7 @@ module.exports = {
       sub
         .setName("roulette")
         .setDescription(
-          "🎰 Cyber Roulette: Pasang taruhan pada warna atau angka keberuntungan!",
+          "\ud83c\udfb0 Cyber Roulette: Pasang taruhan pada warna atau angka keberuntungan!",
         )
         .addStringOption((opt) =>
           opt
@@ -72,16 +163,36 @@ module.exports = {
           opt
             .setName("bet")
             .setDescription("Jumlah taruhan Star Fragments")
-            .setMinValue(10)
-            .setMaxValue(50000)
+            .setMinValue(BET_CONFIG.minValue)
+            .setMaxValue(BET_CONFIG.maxValue)
             .setRequired(true),
         ),
     ),
 
+  /**
+   * Handler eksekusi command arcade
+   * @param {import('discord.js').ChatInputCommandInteraction} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const userId = interaction.user.id;
 
+    // Helper untuk mengirim error ephemeral
+    const sendEphemeralError = async (title, description) => {
+      return interaction.reply({
+        ...buildErrorContainerV2({
+          title,
+          description,
+          footerText: ui.getFooter("core"),
+        }),
+        flags: MessageFlags.Ephemeral,
+      });
+    };
+
+    // ========================================================================
+    // ROULETTE SUBCOMMAND
+    // ========================================================================
     if (subcommand === "roulette") {
       const choice = interaction.options
         .getString("choice")
@@ -89,29 +200,16 @@ module.exports = {
         .toUpperCase();
       const bet = interaction.options.getInteger("bet");
 
-      const validColors = ["RED", "BLACK", "GREEN"];
-      const numChoice = parseInt(choice, 10);
-      const isValidNum = !isNaN(numChoice) && numChoice >= 0 && numChoice <= 36;
-
-      if (!validColors.includes(choice) && !isValidNum) {
-        return interaction.reply({
-          ...buildErrorContainerV2({
-            title: "Pilihan Roulette Tidak Valid",
-            description:
-              "Pilihan harus berupa `RED`, `BLACK`, `GREEN`, atau angka antara `0` sampai `36`.",
-            footerText: ui.getFooter("core"),
-          }),
-          flags: MessageFlags.Ephemeral,
-        });
+      if (!isValidRouletteChoice(choice)) {
+        return sendEphemeralError(
+          "Pilihan Roulette Tidak Valid",
+          "Pilihan harus berupa `RED`, `BLACK`, `GREEN`, atau angka antara `0` sampai `36`.",
+        );
       }
 
       await interaction.deferReply();
 
-      const canDebit = await currency.charge(
-        "starFragments",
-        { userId },
-        bet,
-      );
+      const canDebit = await currency.charge("starFragments", { userId }, bet);
       if (!canDebit) {
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -125,39 +223,33 @@ module.exports = {
       const result = ArcadeEngine.spinRoulette(choice, bet);
 
       if (result.isWon) {
-        await currency.reward(
-          "starFragments",
-          { userId },
-          result.payout,
-        );
+        await currency.reward("starFragments", { userId }, result.payout);
       }
 
-      const colorEmoji =
-        result.color === "RED" ? "🔴" : result.color === "BLACK" ? "⚫" : "🟢";
+      const colorEmoji = COLOR_EMOJIS[result.color] || "";
       const statusText = result.isWon
-        ? `🎉 **SELAMAT! ANDA MENANG!**\n💰 Payout (${result.multiplier}x): **+${result.payout} Star Fragments** 🌟`
-        : `💀 **Sayang sekali, Anda kalah!**\nKehilangan **-${bet} Star Fragments**. Coba lagi di putaran berikutnya!`;
+        ? `\ud83c\udf89 **SELAMAT! ANDA MENANG!**\n\ud83d\udcb0 Payout (${result.multiplier}x): **+${result.payout} Star Fragments** \ud83c\udf1f`
+        : `\ud83d\udc80 **Sayang sekali, Anda kalah!**\nKehilangan **-${bet} Star Fragments**. Coba lagi di putaran berikutnya!`;
 
       const payload = buildContainerV2({
         accentColorHex: result.isWon ? "#FFD700" : "#E74C3C",
-        title: "🎰 Cyber Roulette Wheel Spin!",
-        description: `Bola berhenti di angka: ${colorEmoji} **${result.number} (${result.color})**\nTaruhan Anda: \`${choice}\` (${bet} NSF)\n\n${statusText}`,
+        title: "\ud83c\udfb0 Cyber Roulette Wheel Spin!",
+        description: "Bola berhenti di angka: " + colorEmoji + " **" + result.number + " (" + result.color + ")**\nTaruhan Anda: `" + choice + "` (" + bet + " NSF)\n\n" + statusText,
         footerText: "Holo-Arcade Casino Engine",
       });
 
       return interaction.editReply(payload);
     }
 
+    // ========================================================================
+    // TRIVIA SUBCOMMAND
+    // ========================================================================
     if (subcommand === "trivia") {
       const bet = interaction.options.getInteger("bet") || 0;
       await interaction.deferReply();
 
       if (bet > 0) {
-        const canDebit = await currency.charge(
-          "starFragments",
-          { userId },
-          bet,
-        );
+        const canDebit = await currency.charge("starFragments", { userId }, bet);
         if (!canDebit) {
           return interaction.editReply({
             ...buildErrorContainerV2({
@@ -170,7 +262,7 @@ module.exports = {
       }
 
       const trivia = ArcadeEngine.getRandomTrivia();
-      const sessionId = crypto.randomBytes(6).toString("hex");
+      const sessionId = generateSessionId();
 
       const sessionData = {
         userId,
@@ -182,7 +274,7 @@ module.exports = {
         `arcade:trivia:${sessionId}`,
         JSON.stringify(sessionData),
         "EX",
-        60,
+        SESSION_TTL,
       );
 
       const actionRow = new ActionRowBuilder();
@@ -197,8 +289,8 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: "#93C5FD",
-        title: `🧠 Cyber Trivia Royale [${trivia.category}]`,
-        description: `**Pertanyaan:**\n${trivia.q}\n\n⏱️ *Waktu menjawab: 60 detik!*\n💰 *Taruhan:* \`${bet} Star Fragments\``,
+        title: `\ud83e\udde0 Cyber Trivia Royale [${trivia.category}]`,
+        description: "**Pertanyaan:**\n" + trivia.q + "\n\n\u23f1\ufe0f *Waktu menjawab: 60 detik!*\n\ud83d\udcb0 *Taruhan:* `" + bet + " Star Fragments`",
         footerText: "Holo-Arcade Quiz Engine",
         buttonsRow: actionRow,
       });
@@ -206,16 +298,15 @@ module.exports = {
       return interaction.editReply(payload);
     }
 
+    // ========================================================================
+    // RHYTHM SUBCOMMAND
+    // ========================================================================
     if (subcommand === "rhythm") {
       const bet = interaction.options.getInteger("bet") || 0;
       await interaction.deferReply();
 
       if (bet > 0) {
-        const canDebit = await currency.charge(
-          "starFragments",
-          { userId },
-          bet,
-        );
+        const canDebit = await currency.charge("starFragments", { userId }, bet);
         if (!canDebit) {
           return interaction.editReply({
             ...buildErrorContainerV2({
@@ -228,7 +319,7 @@ module.exports = {
       }
 
       const sequence = ArcadeEngine.generateRhythmSequence(4);
-      const sessionId = crypto.randomBytes(6).toString("hex");
+      const sessionId = generateSessionId();
 
       const sessionData = {
         userId,
@@ -241,7 +332,7 @@ module.exports = {
         `arcade:rhythm:${sessionId}`,
         JSON.stringify(sessionData),
         "EX",
-        60,
+        SESSION_TTL,
       );
 
       const displayPattern = sequence.map((s) => s.emoji).join("  ");
@@ -249,26 +340,26 @@ module.exports = {
       const actionRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`arcade_rhythm_${sessionId}_RED`)
-          .setLabel("🔴 Red")
+          .setLabel("\ud83d\udd34 Red")
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
           .setCustomId(`arcade_rhythm_${sessionId}_BLUE`)
-          .setLabel("🔵 Blue")
+          .setLabel("\ud83d\udd35 Blue")
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
           .setCustomId(`arcade_rhythm_${sessionId}_GREEN`)
-          .setLabel("🟢 Green")
+          .setLabel("\ud83d\udfe2 Green")
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId(`arcade_rhythm_${sessionId}_YELLOW`)
-          .setLabel("🟡 Yellow")
+          .setLabel("\ud83d\udfe1 Yellow")
           .setStyle(ButtonStyle.Secondary),
       );
 
       const payload = buildContainerV2({
         accentColorHex: "#F9A8D4",
-        title: `${ui.getEmoji("music_note") || "🎶"} Rhythm Tap: Ikuti Pola Warna!`,
-        description: `Tekan tombol warna berikut secara berurutan:\n\n# ${displayPattern}\n\n${ui.getEmoji("clock") || "⏱️"} *Tekan tombol sesuai urutan dari kiri ke kanan!*`,
+        title: `${ui.getEmoji("music_note") || "\ud83c\udfb6"} Rhythm Tap: Ikuti Pola Warna!`,
+        description: `Tekan tombol warna berikut secara berurutan:\n\n# ${displayPattern}\n\n${ui.getEmoji("clock") || "\u23f1\ufe0f"} *Tekan tombol sesuai urutan dari kiri ke kanan!*`,
         footerText: "Holo-Arcade Rhythm Engine",
         buttonsRow: actionRow,
       });

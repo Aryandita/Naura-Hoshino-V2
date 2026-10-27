@@ -1,8 +1,24 @@
 "use strict";
 
+/**
+ * @module gacha
+ * @description Subcommand /survival gacha - Gacha system dengan pity counter dan banner rotation.
+ * 
+ * Fitur Utama:
+ * - Banner selection dengan rate display
+ * - Pity counter tracking
+ * - Pull animation delay
+ * - Duplicate conversion ke currency
+ */
+
+
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const ui = require("../../../src/config/ui");
 const cacheManager = require("../../../src/managers/cacheManager");
 const {
@@ -12,7 +28,15 @@ const {
   getBannerPool,
 } = require("../../../src/survival/data/gachaBanners");
 
+// ============================================================================
+// HANDLER
+// ============================================================================
+
 module.exports = {
+  /**
+   * Handler utama untuk command /survival gacha
+   * @param {import("discord.js").ChatInputCommandInteraction} interaction
+   */
   async execute(interaction) {
     const userId = interaction.user.id;
     const bannerId = interaction.options.getString("banner");

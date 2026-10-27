@@ -1,3 +1,26 @@
+"use strict";
+
+/**
+ * 🎙️ Soundboard Command - Custom Server Sound Effects - Naura Hoshino V2
+ * ----------------------------------------------------------------------
+ * Manages custom server soundboard system with official presets.
+ * Supports play, list, add, and delete operations with permission checks.
+ *
+ * Subcommands:
+ * - /soundboard play <nama>  : Play sound effect without cutting queue
+ * - /soundboard list         : View all available soundboards
+ * - /soundboard add <nama> <url>   : Add new soundboard (Admin)
+ * - /soundboard hapus <nama>       : Delete soundboard (Admin)
+ *
+ * Features:
+ * - Official preset soundboards (intro, welcome, AI greeting)
+ * - Custom URL soundboards per server (VIP: up to 50 slots)
+ * - Anti-prototype-pollution name validation
+ * - Queue-interrupt-safe playback
+ *
+ * @module plugin/music/soundboard
+ */
+
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const path = require("node:path");
 const fs = require("node:fs");
@@ -9,8 +32,12 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
-const { ValidationError } = require("../../src/errors/DomainError");
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Official preset soundboards with local audio files */
 const OFFICIAL_SOUNDBOARDS = {
   intro: {
     name: "intro",
@@ -43,6 +70,346 @@ const OFFICIAL_SOUNDBOARDS = {
     file: path.resolve(__dirname, "../../assets/audio/Server Join (EN).mp3"),
   },
 };
+
+/** Blacklisted names that could cause prototype pollution */
+const RESERVED_NAMES = ["__proto__", "constructor", "prototype"];
+
+/** Valid name pattern: 1-32 alphanumeric, underscore, or hyphen (lowercase) */
+const VALID_NAME_PATTERN = /^[a-z0-9_-]{1,32}$/;
+
+// ============================================================================
+// VALIDATION HELPERS
+// ============================================================================
+
+/**
+ * Validate soundboard name format and safety.
+ * Prevents prototype pollution and enforces naming convention.
+ * @param {string} nama - Raw soundboard name
+ * @returns {boolean} True if name is valid and safe
+ */
+function isValidSoundboardName(nama) {
+  return (
+    !RESERVED_NAMES.includes(nama) && VALID_NAME_PATTERN.test(nama)
+  );
+}
+
+/**
+ * Validate audio URL format (must be HTTP/HTTPS).
+ * @param {string} url - Raw URL string
+ * @returns {boolean} True if URL is valid
+ */
+function isValidAudioUrl(url) {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if user has Manage Server permission.
+ * @param {object} member - Guild member object
+ * @returns {boolean} True if has permission
+ */
+function hasManagePermission(member) {
+  return member.permissions.has(PermissionFlagsBits.ManageGuild);
+}
+
+/**
+ * Check if user is VIP or Patron.
+ * @param {string} userId - Discord user ID
+ * @returns {Promise<boolean>} True if premium user
+ */
+async function isVipOrPatron(userId) {
+  try {
+    const cacheManager = require("../../src/managers/cacheManager");
+    const profile = await cacheManager.getUserProfile(userId);
+    return Boolean(profile?.isPremium);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Build standardized error response.
+ * @param {string} title - Error title
+ * @param {string} description - Error description
+ * @returns {object} Error payload
+ */
+function buildError(title, description) {
+  return buildErrorContainerV2({
+    title,
+    description,
+    footerText: ui.getFooter("music"),
+  });
+}
+
+// ============================================================================
+// SUBCOMMAND HANDLERS
+// ============================================================================
+
+/**
+ * Handle /soundboard add subcommand.
+ * Adds custom soundboard URL to guild settings with validation.
+ * @param {object} interaction - Discord interaction
+ * @param {string} guildId - Guild ID
+ * @param {object} currentSettings - Current guild settings
+ * @returns {Promise<void>}
+ */
+async function handleAdd(interaction, guildId, currentSettings) {
+  // Permission check
+  if (!hasManagePermission(interaction.member)) {
+    return interaction.editReply(
+      buildError("Akses Ditolak", "❌ Kamu harus memiliki izin Manage Server untuk menambah soundboard."),
+    );
+  }
+
+  // Input validation
+  const rawNama = interaction.options.getString("nama") || "";
+  const nama = rawNama.trim().toLowerCase();
+  const url = (interaction.options.getString("url") || "").trim();
+
+  if (!isValidSoundboardName(nama)) {
+    return interaction.editReply(
+      buildError("Nama Tidak Valid", "❌ Nama soundboard hanya boleh 1-32 karakter alfanumerik (huruf kecil, angka, _, -) dan bukan kata kunci sistem."),
+    );
+  }
+
+  if (!isValidAudioUrl(url)) {
+    return interaction.editReply(
+      buildError("URL Tidak Valid", "❌ URL audio soundboard wajib menggunakan tautan HTTP atau HTTPS yang valid."),
+    );
+  }
+
+  // Slot limit check
+  const soundboardService = require("../../src/services/soundboardService");
+  const isPremium = await isVipOrPatron(interaction.user.id);
+  const maxSlots = soundboardService.getMaxCustomSounds(isPremium);
+
+  if (Object.keys(currentSettings.soundboards).length >= maxSlots) {
+    return interaction.editReply(
+      buildError("Batas Maksimum", `❌ Batas maksimal soundboard adalah ${maxSlots} per server.${!isPremium ? " Tingkatkan ke VIP atau Guild Patron untuk membuka hingga 50 slot!" : ""}`),
+    );
+  }
+
+  // Save to guild settings
+  await guildSettingsService.updateGuildSetting(guildId, (settings) => {
+    if (!settings.soundboards) settings.soundboards = {};
+    settings.soundboards[nama] = url;
+  });
+
+  const payload = buildContainerV2({
+    accentColorHex: ui.getColor("success") || "#22c55e",
+    title: "Soundboard Ditambahkan",
+    description: `✅ Soundboard **${nama}** berhasil ditambahkan!\nGunakan \`/soundboard play ${nama}\` untuk memutarnya.`,
+    footerText: ui.getFooter("music"),
+  });
+  return interaction.editReply(payload);
+}
+
+/**
+ * Handle /soundboard hapus subcommand.
+ * Removes custom soundboard from guild settings.
+ * @param {object} interaction - Discord interaction
+ * @param {string} guildId - Guild ID
+ * @param {object} currentSettings - Current guild settings
+ * @returns {Promise<void>}
+ */
+async function handleHapus(interaction, guildId, currentSettings) {
+  // Permission check
+  if (!hasManagePermission(interaction.member)) {
+    return interaction.editReply(
+      buildError("Akses Ditolak", "❌ Kamu harus memiliki izin Manage Server untuk menghapus soundboard."),
+    );
+  }
+
+  // Input validation
+  const rawNama = interaction.options.getString("nama") || "";
+  const nama = rawNama.trim().toLowerCase();
+
+  if (RESERVED_NAMES.includes(nama) || !currentSettings.soundboards[nama]) {
+    return interaction.editReply(
+      buildError("Tidak Ditemukan", "❌ Soundboard tidak ditemukan."),
+    );
+  }
+
+  // Remove from guild settings
+  await guildSettingsService.updateGuildSetting(guildId, (settings) => {
+    if (settings.soundboards) {
+      delete settings.soundboards[nama];
+    }
+  });
+
+  const payload = buildContainerV2({
+    accentColorHex: ui.getColor("error") || "#ef4444",
+    title: "Soundboard Dihapus",
+    description: `🗑️ Soundboard **${nama}** berhasil dihapus.`,
+    footerText: ui.getFooter("music"),
+  });
+  return interaction.editReply(payload);
+}
+
+/**
+ * Handle /soundboard list subcommand.
+ * Displays all available official and custom soundboards.
+ * @param {object} interaction - Discord interaction
+ * @param {object} currentSettings - Current guild settings
+ * @returns {Promise<void>}
+ */
+async function handleList(interaction, currentSettings) {
+  const customList = Object.keys(currentSettings.soundboards);
+  const officialList = Object.keys(OFFICIAL_SOUNDBOARDS);
+
+  const fields = [
+    {
+      name: "✨ Soundboard Resmi (Official)",
+      value: officialList
+        .map((name) => `• \`/soundboard play ${name}\` - *${OFFICIAL_SOUNDBOARDS[name].title}*`)
+        .join("\n"),
+    },
+  ];
+
+  if (customList.length > 0) {
+    fields.push({
+      name: "🎙️ Soundboard Kustom Server",
+      value: customList.map((name) => `• **${name}**`).join("\n"),
+    });
+  }
+
+  const payload = buildContainerV2({
+    accentColorHex: ui.getColor("primary") || "#FFB6C1",
+    title: "🎙️ Daftar Efek Suara Soundboard",
+    description: "Mainkan efek suara langsung di Voice Channel tanpa menghentikan antrean musik utama!",
+    fields,
+    footerText: "Gunakan /soundboard play <nama> untuk memutar",
+  });
+
+  return interaction.editReply(payload);
+}
+
+/**
+ * Handle /soundboard play subcommand.
+ * Plays sound effect in voice channel without interrupting main queue.
+ * @param {object} interaction - Discord interaction
+ * @param {string} guildId - Guild ID
+ * @param {object} currentSettings - Current guild settings
+ * @returns {Promise<void>}
+ */
+async function handlePlay(interaction, guildId, currentSettings) {
+  // Voice channel check
+  const voiceChannel = interaction.member.voice.channel;
+  if (!voiceChannel) {
+    return interaction.editReply(
+      buildError("Koneksi Gagal", "❌ Kamu harus berada di Voice Channel terlebih dahulu."),
+    );
+  }
+
+  const nama = interaction.options.getString("nama").toLowerCase();
+
+  // PATH 1: Official preset (local audio file)
+  const official = OFFICIAL_SOUNDBOARDS[nama];
+  if (official && fs.existsSync(official.file)) {
+    const played = await VoiceManager.playFile(official.file, interaction.member);
+
+    if (played) {
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: "🎙️ Naura Official Soundboard",
+        description: `✨ Memutar efek suara resmi: **${official.title}** di <#${voiceChannel.id}>!`,
+        footerText: ui.getFooter("music"),
+      });
+      return interaction.editReply(payload);
+    }
+  }
+
+  // PATH 2: Custom server soundboard URL
+  const url = currentSettings.soundboards[nama];
+  if (!url) {
+    return interaction.editReply(
+      buildError("Tidak Ditemukan", `❌ Soundboard **${nama}** tidak ditemukan. Gunakan \`/soundboard list\` untuk melihat daftar yang tersedia.`),
+    );
+  }
+
+  return playCustomSoundboard(interaction, guildId, voiceChannel, nama, url);
+}
+
+/**
+ * Play custom soundboard URL via Poru audio engine.
+ * Handles queue interruption gracefully.
+ * @param {object} interaction - Discord interaction
+ * @param {string} guildId - Guild ID
+ * @param {object} voiceChannel - Voice channel object
+ * @param {string} nama - Soundboard name
+ * @param {string} url - Audio URL
+ * @returns {Promise<void>}
+ */
+async function playCustomSoundboard(interaction, guildId, voiceChannel, nama, url) {
+  const poru = interaction.client.musicManager.poru;
+  let player = poru.players.get(guildId);
+
+  // Create or validate player connection
+  if (!player) {
+    player = poru.createConnection({
+      guildId,
+      voiceChannel: voiceChannel.id,
+      textChannel: interaction.channel.id,
+      deaf: true,
+    });
+  } else if (player.voiceChannel !== voiceChannel.id) {
+    return interaction.editReply(
+      buildError("Voice Channel Berbeda", "❌ Bot sedang berada di Voice Channel lain."),
+    );
+  }
+
+  try {
+    // Resolve audio track
+    const res = await poru.resolve({
+      query: url,
+      requester: interaction.user,
+    });
+
+    if (!res || !res.tracks || res.tracks.length === 0) {
+      return interaction.editReply(
+        buildError("Gagal Muat Audio", "❌ Gagal memuat efek suara. Pastikan URL valid."),
+      );
+    }
+
+    const sbTrack = res.tracks[0];
+    let desc;
+
+    // Handle queue interruption
+    if (player.isPlaying && player.currentTrack) {
+      const mainTrack = player.currentTrack;
+      mainTrack.info.resumePosition = player.position;
+      player.queue.unshift(mainTrack);
+      await player.play(sbTrack);
+      desc = `🎙️ Memutar efek suara **${nama}**... (Lagu utama dijeda sementara)`;
+    } else {
+      player.queue.unshift(sbTrack);
+      if (!player.isPlaying && !player.isPaused) player.play();
+      desc = `🎙️ Memutar efek suara **${nama}**...`;
+    }
+
+    const payload = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#00FFFF",
+      title: "🎙️ Soundboard FX",
+      description: desc,
+      footerText: ui.getFooter("music"),
+    });
+
+    return interaction.editReply(payload);
+  } catch (error) {
+    logger.error("[SOUNDBOARD ERROR]", error);
+    return interaction.editReply(
+      buildError("Gagal Jaringan", "❌ Terjadi kesalahan jaringan saat memuat efek suara."),
+    );
+  }
+}
+
+// ============================================================================
+// COMMAND DEFINITION
+// ============================================================================
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -91,6 +458,11 @@ module.exports = {
         ),
     ),
 
+  /**
+   * Execute soundboard command based on subcommand.
+   * @param {object} interaction - Discord interaction
+   * @returns {Promise<void>}
+   */
   async execute(interaction) {
     await interaction.deferReply();
 
@@ -101,277 +473,19 @@ module.exports = {
       (await guildSettingsService.getGuildSetting(guildId)) || {};
     if (!currentSettings.soundboards) currentSettings.soundboards = {};
 
-    if (subcommand === "add") {
-      if (
-        !interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)
-      ) {
-        const errPayload = buildErrorContainerV2({
-          title: "Akses Ditolak",
-          description:
-            "❌ Kamu harus memiliki izin Manage Server untuk menambah soundboard.",
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
-
-      const rawNama = interaction.options.getString("nama") || "";
-      const nama = rawNama.trim().toLowerCase();
-      const url = (interaction.options.getString("url") || "").trim();
-
-      // Validasi nama soundboard (anti-prototype pollution & format alphanumeric)
-      if (
-        nama === "__proto__" ||
-        nama === "constructor" ||
-        nama === "prototype" ||
-        !/^[a-z0-9_-]{1,32}$/.test(nama)
-      ) {
-        const errPayload = buildErrorContainerV2({
-          title: "Nama Tidak Valid",
-          description:
-            "❌ Nama soundboard hanya boleh 1-32 karakter alfanumerik (huruf kecil, angka, _, -) dan bukan kata kunci sistem.",
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
-
-      // Validasi URL: wajib http atau https yang valid
-      try {
-        const parsedUrl = new URL(url);
-        if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-          throw new ValidationError("Invalid protocol");
-        }
-      } catch (_) {
-        const errPayload = buildErrorContainerV2({
-          title: "URL Tidak Valid",
-          description:
-            "❌ URL audio soundboard wajib menggunakan tautan HTTP atau HTTPS yang valid.",
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
-
-      const soundboardService = require("../../src/services/soundboardService");
-      let isVipOrPatron = false;
-      try {
-        const cacheManager = require("../../src/managers/cacheManager");
-        const profile = await cacheManager.getUserProfile(interaction.user.id);
-        if (profile?.isPremium) {
-          isVipOrPatron = true;
-        }
-      } catch (_) {}
-
-      const maxSlots = soundboardService.getMaxCustomSounds(isVipOrPatron);
-      if (Object.keys(currentSettings.soundboards).length >= maxSlots) {
-        const errPayload = buildErrorContainerV2({
-          title: "Batas Maksimum",
-          description: `❌ Batas maksimal soundboard adalah ${maxSlots} per server.${!isVipOrPatron ? " Tingkatkan ke VIP atau Guild Patron untuk membuka hingga 50 slot!" : ""}`,
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
-
-      await guildSettingsService.updateGuildSetting(guildId, (settings) => {
-        if (!settings.soundboards) settings.soundboards = {};
-        settings.soundboards[nama] = url;
-      });
-
-      const payload = buildContainerV2({
-        accentColorHex: ui.getColor("success") || "#22c55e",
-        title: "Soundboard Ditambahkan",
-        description: `✅ Soundboard **${nama}** berhasil ditambahkan!\nGunakan \`/soundboard play ${nama}\` untuk memutarnya.`,
-        footerText: ui.getFooter("music"),
-      });
-      return interaction.editReply(payload);
-    }
-
-    if (subcommand === "hapus") {
-      if (
-        !interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)
-      ) {
-        const errPayload = buildErrorContainerV2({
-          title: "Akses Ditolak",
-          description:
-            "❌ Kamu harus memiliki izin Manage Server untuk menghapus soundboard.",
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
-
-      const rawNama = interaction.options.getString("nama") || "";
-      const nama = rawNama.trim().toLowerCase();
-      if (
-        nama === "__proto__" ||
-        nama === "constructor" ||
-        nama === "prototype" ||
-        !currentSettings.soundboards[nama]
-      ) {
-        const errPayload = buildErrorContainerV2({
-          title: "Tidak Ditemukan",
-          description: "❌ Soundboard tidak ditemukan.",
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
-
-      await guildSettingsService.updateGuildSetting(guildId, (settings) => {
-        if (settings.soundboards) {
-          delete settings.soundboards[nama];
-        }
-      });
-
-      const payload = buildContainerV2({
-        accentColorHex: ui.getColor("error") || "#ef4444",
-        title: "Soundboard Dihapus",
-        description: `🗑️ Soundboard **${nama}** berhasil dihapus.`,
-        footerText: ui.getFooter("music"),
-      });
-      return interaction.editReply(payload);
-    }
-
-    if (subcommand === "list") {
-      const customList = Object.keys(currentSettings.soundboards);
-      const officialList = Object.keys(OFFICIAL_SOUNDBOARDS);
-
-      const fields = [
-        {
-          name: "✨ Soundboard Resmi (Official)",
-          value: officialList
-            .map(
-              (name) =>
-                `• \`/soundboard play ${name}\` - *${OFFICIAL_SOUNDBOARDS[name].title}*`,
-            )
-            .join("\n"),
-        },
-      ];
-
-      if (customList.length > 0) {
-        fields.push({
-          name: "🎙️ Soundboard Kustom Server",
-          value: customList.map((name) => `• **${name}**`).join("\n"),
-        });
-      }
-
-      const payload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: "🎙️ Daftar Efek Suara Soundboard",
-        description:
-          "Mainkan efek suara langsung di Voice Channel tanpa menghentikan antrean musik utama!",
-        fields,
-        footerText: "Gunakan /soundboard play <nama> untuk memutar",
-      });
-
-      return interaction.editReply(payload);
-    }
-
-    if (subcommand === "play") {
-      const voiceChannel = interaction.member.voice.channel;
-      if (!voiceChannel) {
-        const errPayload = buildErrorContainerV2({
-          title: "Koneksi Gagal",
-          description: "❌ Kamu harus berada di Voice Channel terlebih dahulu.",
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
-
-      const nama = interaction.options.getString("nama").toLowerCase();
-      const official = OFFICIAL_SOUNDBOARDS[nama];
-
-      // JALUR 1: Official Preset (File Audio Lokal)
-      if (official && fs.existsSync(official.file)) {
-        const played = await VoiceManager.playFile(
-          official.file,
-          interaction.member,
+    switch (subcommand) {
+      case "add":
+        return handleAdd(interaction, guildId, currentSettings);
+      case "hapus":
+        return handleHapus(interaction, guildId, currentSettings);
+      case "list":
+        return handleList(interaction, currentSettings);
+      case "play":
+        return handlePlay(interaction, guildId, currentSettings);
+      default:
+        return interaction.editReply(
+          buildError("Subcommand Tidak Valid", "❌ Subcommand tidak dikenali."),
         );
-
-        if (played) {
-          const payload = buildContainerV2({
-            accentColorHex: ui.getColor("primary") || "#FFB6C1",
-            title: "🎙️ Naura Official Soundboard",
-            description: `✨ Memutar efek suara resmi: **${official.title}** di <#${voiceChannel.id}>!`,
-            footerText: ui.getFooter("music"),
-          });
-          return interaction.editReply(payload);
-        }
-      }
-
-      // JALUR 2: Custom Server Soundboard URL
-      const url = currentSettings.soundboards[nama];
-
-      if (!url) {
-        const errPayload = buildErrorContainerV2({
-          title: "Tidak Ditemukan",
-          description: `❌ Soundboard **${nama}** tidak ditemukan. Gunakan \`/soundboard list\` untuk melihat daftar yang tersedia.`,
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
-
-      const poru = interaction.client.musicManager.poru;
-      let player = poru.players.get(guildId);
-
-      if (!player) {
-        player = poru.createConnection({
-          guildId,
-          voiceChannel: voiceChannel.id,
-          textChannel: interaction.channel.id,
-          deaf: true,
-        });
-      } else if (player.voiceChannel !== voiceChannel.id) {
-        const errPayload = buildErrorContainerV2({
-          title: "Voice Channel Berbeda",
-          description: "❌ Bot sedang berada di Voice Channel lain.",
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
-
-      try {
-        const res = await poru.resolve({
-          query: url,
-          requester: interaction.user,
-        });
-        if (!res || !res.tracks || res.tracks.length === 0) {
-          const errPayload = buildErrorContainerV2({
-            title: "Gagal Muat Audio",
-            description: "❌ Gagal memuat efek suara. Pastikan URL valid.",
-            footerText: ui.getFooter("music"),
-          });
-          return interaction.editReply(errPayload);
-        }
-
-        const sbTrack = res.tracks[0];
-        let desc = "";
-
-        if (player.isPlaying && player.currentTrack) {
-          const mainTrack = player.currentTrack;
-          mainTrack.info.resumePosition = player.position;
-          player.queue.unshift(mainTrack);
-          await player.play(sbTrack);
-          desc = `🎙️ Memutar efek suara **${nama}**... (Lagu utama dijeda sementara)`;
-        } else {
-          player.queue.unshift(sbTrack);
-          if (!player.isPlaying && !player.isPaused) player.play();
-          desc = `🎙️ Memutar efek suara **${nama}**...`;
-        }
-
-        const payload = buildContainerV2({
-          accentColorHex: ui.getColor("primary") || "#00FFFF",
-          title: "🎙️ Soundboard FX",
-          description: desc,
-          footerText: ui.getFooter("music"),
-        });
-
-        return interaction.editReply(payload);
-      } catch (error) {
-        logger.error("[SOUNDBOARD ERROR]", error);
-        const errPayload = buildErrorContainerV2({
-          title: "Gagal Jaringan",
-          description: "❌ Terjadi kesalahan jaringan saat memuat efek suara.",
-          footerText: ui.getFooter("music"),
-        });
-        return interaction.editReply(errPayload);
-      }
     }
   },
 };

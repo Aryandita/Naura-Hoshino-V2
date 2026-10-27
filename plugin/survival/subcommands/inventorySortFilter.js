@@ -1,6 +1,21 @@
 "use strict";
 
+/**
+ * @module inventorySortFilter
+ * @description Helper module untuk sorting dan filtering inventory items.
+ * 
+ * Fitur Utama:
+ * - Multi-key sorting algorithms
+ * - Category-based filtering
+ * - Search by name substring
+ */
+
+
 const { logger } = require("../../../src/managers/logger");
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const { safeParseAndRemapInventory } = require("../../../src/survival/engines/inventoryHelper");
 
@@ -95,5 +110,9 @@ class InventorySortFilter {
     return [...SORT_MODES];
   }
 }
+
+// ============================================================================
+// HANDLER
+// ============================================================================
 
 module.exports = { InventorySortFilter, SORT_MODES, PAGE_SIZE };
