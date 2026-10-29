@@ -362,7 +362,9 @@ async function fetchFallbackMetadata(type, id) {
 function buildSearchQueries(meta) {
   const queries = [];
   if (!meta || !meta.name) return queries;
-  if (meta.isrc) queries.push(`ytsearch:"${meta.isrc}"`);
+  if (meta.isrc) {
+    queries.push(`ytsearch:"${meta.isrc}"`);
+  }
   const label =
     meta.artists && meta.artists.length ? meta.artists.join(", ") : "";
   if (label) {

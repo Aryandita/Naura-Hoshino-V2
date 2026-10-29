@@ -52,7 +52,6 @@ const MOVE_REASON = "Dipindahkan oleh moderator";
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("voicemod")
     .setDescription("\ud83c\udf99\ufe0f Alat moderasi khusus untuk Voice Channel.")

@@ -18,7 +18,7 @@ module.exports = {
 
     if (taruhan <= 0 || curNsf < taruhan) {
       return sendError(
-        `Taruhan tidak valid atau saldo Star Fragments (NSF) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+        `Taruhan tidak valid atau saldo Sukamaju Koin (SC) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
       );
     }
 
@@ -125,7 +125,7 @@ module.exports = {
           );
           msg = `${ui.getEmoji("skull") || "💀"} **KAMU KALAH!** Bot AI memenangkan taruhan **${taruhan.toLocaleString()}** ${coinEmoji}.`;
         } else {
-          msg = `${ui.getEmoji("handshake") || "🤝"} **SERI!** Permainan imbang, taruhan NSF dikembalikan.`;
+          msg = `${ui.getEmoji("handshake") || "🤝"} **SERI!** Permainan imbang, taruhan SC dikembalikan.`;
         }
         await i.update(renderTtt(msg, true));
         collector.stop();

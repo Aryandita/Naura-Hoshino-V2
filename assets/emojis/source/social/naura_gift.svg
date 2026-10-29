@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  
+    <defs>
+      <!-- Base Gradients Sesuai Token Resmi -->
+      <linearGradient id="gradient-skin" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFB6C1" />
+        <stop offset="100%" stop-color="#FFC0CB" />
+      </linearGradient>
+
+      <linearGradient id="gradient-skin-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFB6C1" />
+        <stop offset="100%" stop-color="#FFA0B0" />
+      </linearGradient>
+
+      <linearGradient id="gradient-cyber" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#00FFFF" />
+        <stop offset="100%" stop-color="#00C4D6" />
+      </linearGradient>
+
+      <linearGradient id="gradient-magic" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#C084FC" />
+        <stop offset="100%" stop-color="#9333EA" />
+      </linearGradient>
+
+      <linearGradient id="gradient-nature" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#22C55E" />
+        <stop offset="100%" stop-color="#4ADE80" />
+      </linearGradient>
+
+      <linearGradient id="gradient-amber" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFF7CC" />
+        <stop offset="50%" stop-color="#FFD700" />
+        <stop offset="100%" stop-color="#B8860B" />
+      </linearGradient>
+
+      <linearGradient id="gradient-gold-plate" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFF9D6" />
+        <stop offset="40%" stop-color="#FFD700" />
+        <stop offset="100%" stop-color="#B8860B" />
+      </linearGradient>
+
+      <linearGradient id="gradient-platinum" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" />
+        <stop offset="50%" stop-color="#E2E8F0" />
+        <stop offset="100%" stop-color="#94A3B8" />
+      </linearGradient>
+
+      <linearGradient id="gradient-magenta" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FF69B4" />
+        <stop offset="100%" stop-color="#DB2777" />
+      </linearGradient>
+
+      <linearGradient id="gradient-alert" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FF6B6B" />
+        <stop offset="100%" stop-color="#DC2626" />
+      </linearGradient>
+
+      <linearGradient id="gradient-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.08" />
+      </linearGradient>
+
+      <linearGradient id="gradient-dark-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#1E293B" stop-opacity="0.85" />
+        <stop offset="100%" stop-color="#0F172A" stop-opacity="0.95" />
+      </linearGradient>
+
+      <linearGradient id="gradient-blade" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" />
+        <stop offset="50%" stop-color="#00FFFF" />
+        <stop offset="100%" stop-color="#C084FC" />
+      </linearGradient>
+
+      <!-- Radial Glow & Blush Gradients -->
+      <radialGradient id="gradient-blush" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FF69B4" stop-opacity="0.5" />
+        <stop offset="60%" stop-color="#FF69B4" stop-opacity="0.2" />
+        <stop offset="100%" stop-color="#FF69B4" stop-opacity="0" />
+      </radialGradient>
+
+      <radialGradient id="gradient-cyan-bloom" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#00FFFF" stop-opacity="0.6" />
+        <stop offset="70%" stop-color="#00FFFF" stop-opacity="0.1" />
+        <stop offset="100%" stop-color="#00FFFF" stop-opacity="0" />
+      </radialGradient>
+
+      <radialGradient id="gradient-magic-bloom" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#C084FC" stop-opacity="0.6" />
+        <stop offset="70%" stop-color="#C084FC" stop-opacity="0.1" />
+        <stop offset="100%" stop-color="#C084FC" stop-opacity="0" />
+      </radialGradient>
+
+      <!-- Soft Glow Filters (Skia Compatible) -->
+      <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="glow-pink" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="glow-purple" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="glow-gold" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+  
+  
+    <!-- Cyber Gift Box Body (Naura Pink) -->
+    <rect x="30" y="50" width="68" height="54" rx="8" fill="url(#gradient-magenta)" stroke="#FFFFFF" stroke-width="2" filter="url(#glow-pink)" />
+    <!-- Glowing Cyan Vertical Ribbon -->
+    <rect x="58" y="50" width="12" height="54" fill="#00FFFF" filter="url(#glow-cyan)" />
+    <!-- Glowing Cyan Horizontal Ribbon -->
+    <rect x="30" y="70" width="68" height="12" fill="#00FFFF" filter="url(#glow-cyan)" />
+    <!-- Box Lid -->
+    <rect x="26" y="42" width="76" height="14" rx="4" fill="#FFB6C1" stroke="#FFFFFF" stroke-width="2" />
+    <rect x="58" y="42" width="12" height="14" fill="#00FFFF" />
+    <!-- Bow Loops on Top -->
+    <ellipse cx="50" cy="34" rx="12" ry="7" fill="#00FFFF" transform="rotate(-30 50 34)" />
+    <ellipse cx="78" cy="34" rx="12" ry="7" fill="#00FFFF" transform="rotate(30 78 34)" />
+    <circle cx="64" cy="36" r="5" fill="#FFFFFF" />
+    <!-- Sparkles Floating Off Gift -->
+    <path d="M 24 25 Q 24.88 29.12 29 30 Q 24.88 30.88 24 35 Q 23.12 30.88 19 30 Q 23.12 29.12 24 25 Z" fill="#FFD700"  />
+    <path d="M 104 26 Q 105.056 30.944 110 32 Q 105.056 33.056 104 38 Q 102.944 33.056 98 32 Q 102.944 30.944 104 26 Z" fill="#FFFFFF"  />
+  
+</svg>

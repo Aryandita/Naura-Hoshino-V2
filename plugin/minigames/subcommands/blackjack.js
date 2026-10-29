@@ -19,10 +19,10 @@ module.exports = {
     const taruhan = interaction.options.getInteger("taruhan") || 0;
 
     if (taruhan < 10) {
-      return sendError("Minimal taruhan untuk Blackjack adalah **10 NSF**!");
+      return sendError("Minimal taruhan untuk Blackjack adalah **10 SC**!");
     }
     if (taruhan > 50000) {
-      return sendError("Maksimal taruhan untuk Blackjack adalah **50.000 NSF**!");
+      return sendError("Maksimal taruhan untuk Blackjack adalah **50.000 SC**!");
     }
 
     const curSurv = await cacheManager.getUserSurvival(user.id);
@@ -32,7 +32,7 @@ module.exports = {
 
     if (curNsf < taruhan) {
       return sendError(
-        `Saldo Star Fragments (NSF) tidak mencukupi untuk taruhan **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+        `Saldo Sukamaju Koin (SC) tidak mencukupi untuk taruhan **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
       );
     }
 
@@ -190,15 +190,15 @@ module.exports = {
 
         const handLabel = playerHands.length > 1 ? `Tangan ${i + 1}: ` : "";
         if (payoutInfo.outcome === "BLACKJACK") {
-          roundSummaries.push(`${handLabel}🎉 Natural Blackjack (+${payoutInfo.payout.toLocaleString()} NSF)`);
+          roundSummaries.push(`${handLabel}🎉 Natural Blackjack (+${payoutInfo.payout.toLocaleString()} SC)`);
         } else if (payoutInfo.outcome === "WIN") {
-          roundSummaries.push(`${handLabel}✅ Menang (+${payoutInfo.payout.toLocaleString()} NSF)`);
+          roundSummaries.push(`${handLabel}✅ Menang (+${payoutInfo.payout.toLocaleString()} SC)`);
         } else if (payoutInfo.outcome === "PUSH") {
-          roundSummaries.push(`${handLabel}🤝 Seri (+${payoutInfo.payout.toLocaleString()} NSF refund)`);
+          roundSummaries.push(`${handLabel}🤝 Seri (+${payoutInfo.payout.toLocaleString()} SC refund)`);
         } else if (payoutInfo.outcome === "BUST") {
-          roundSummaries.push(`${handLabel}💥 Bust (-${hand.bet.toLocaleString()} NSF)`);
+          roundSummaries.push(`${handLabel}💥 Bust (-${hand.bet.toLocaleString()} SC)`);
         } else {
-          roundSummaries.push(`${handLabel}❌ Kalah (-${hand.bet.toLocaleString()} NSF)`);
+          roundSummaries.push(`${handLabel}❌ Kalah (-${hand.bet.toLocaleString()} SC)`);
         }
       }
 
@@ -302,7 +302,7 @@ module.exports = {
 
         if (!extraDebit || !extraDebit.ok) {
           return i.reply({
-            content: `❌ Saldo Star Fragments tidak mencukupi untuk Double Down (+${curHand.bet.toLocaleString()} NSF)!`,
+            content: `❌ Saldo Star Fragments tidak mencukupi untuk Double Down (+${curHand.bet.toLocaleString()} SC)!`,
             flags: MessageFlags.Ephemeral,
           });
         }
@@ -343,7 +343,7 @@ module.exports = {
 
         if (!splitDebit || !splitDebit.ok) {
           return i.reply({
-            content: `❌ Saldo Star Fragments tidak mencukupi untuk Split (+${curHand.bet.toLocaleString()} NSF)!`,
+            content: `❌ Saldo Star Fragments tidak mencukupi untuk Split (+${curHand.bet.toLocaleString()} SC)!`,
             flags: MessageFlags.Ephemeral,
           });
         }

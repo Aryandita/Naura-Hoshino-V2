@@ -129,7 +129,7 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("claim")
-        .setDescription("Klaim hadiah dividen harian eksklusif anggota V.I.P (Kupon, NSF, Mystery Box)."),
+        .setDescription("Klaim hadiah dividen harian eksklusif anggota V.I.P (Kupon, SC, Mystery Box)."),
     )
     .addSubcommand((sub) =>
       sub

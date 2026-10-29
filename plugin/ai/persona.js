@@ -9,7 +9,6 @@ const ui = require("../../src/config/ui");
 const personaEngine = require("../../src/ai/personaEngine");
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("persona")
     .setDescription("🤖 AI Multi-Persona Studio & Custom Companion Tuner")

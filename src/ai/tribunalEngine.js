@@ -1,8 +1,44 @@
 "use strict";
 
+/**
+ * @module tribunalEngine
+ * @description Engine simulasi sidang pengadilan komunitas "Cyber-Tribunal Court" untuk Naura Hoshino V2.
+ *
+ * ## Architecture Overview
+ * Modul ini mengimplementasikan sistem persidangan virtual berbasis AI yang mensimulasikan
+ * tiga babak persidangan anime komedi: Jaksa Penuntut, Pengacara Pembela, dan Hakim Agung.
+ * Menggunakan AiEnsembleRouter dengan task type TACTICAL_REASONING untuk menghasilkan
+ * argumen dan vonis dalam format JSON terstruktur. Dilengkapi procedural fallback
+ * deterministik saat semua provider AI tidak tersedia.
+ *
+ * ## Key Features
+ * - Three-persona jury system: Hakim Vespera, Jaksa Cyber-Fang, Pembela Lyra
+ * - AI-powered trial simulation via AiEnsembleRouter (TACTICAL_REASONING)
+ * - Structured JSON verdict parsing dengan markdown cleanup
+ * - Procedural fallback verdict generator (deterministic, no AI needed)
+ * - Graceful degradation: AI fail -> procedural fallback tanpa error ke user
+ * - Verdict status support: GUILTY, NOT_GUILTY, SETTLEMENT
+ * - Symbolic penalty system (kopi, koin, permintaan maaf)
+ * - Integration dengan AiEnsembleRouter circuit breaker untuk resiliensi
+ *
+ * ## Integration Points
+ * - {@link module:ai/aiEnsembleRouter} - Multi-model AI routing untuk generate verdict
+ * - {@link module:managers/logger} - Structured logging untuk AI failures
+ */
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const aiEnsembleRouter = require("./aiEnsembleRouter");
 const { logger } = require("../managers/logger");
 
+/**
+ * Definisi tiga persona juri Cyber-Tribunal Court.
+ * Setiap persona memiliki nama, gelar, dan tone bicara yang khas.
+ * @readonly
+ * @type {Object<string, {name: string, title: string, tone: string}>}
+ */
 const JURY_PERSONAS = {
   HAKIM_VESPERA: {
     name: "Hakim Agung Vespera ⚖️",
@@ -21,9 +57,36 @@ const JURY_PERSONAS = {
   },
 };
 
+// ============================================================================
+// CLASS: TribunalEngine
+// ============================================================================
+
+/**
+ * Engine utama untuk menjalankan simulasi sidang Cyber-Tribunal Court.
+ * Mengorkestrasi pemanggilan AI untuk menghasilkan argumen jaksa, pembela, dan vonis hakim.
+ */
 class TribunalEngine {
+  // ==========================================================================
+  // PUBLIC METHODS
+  // ==========================================================================
+
   /**
-   * Menjalankan sidang virtual pengadilan komunitas
+   * Menjalankan sidang virtual pengadilan komunitas Cyber-Tribunal Court.
+   *
+   * Alur eksekusi:
+   * 1. Validasi input (plaintiffName, defendantName, allegation wajib ada)
+   * 2. Generate procedural fallback verdict sebagai cadangan
+   * 3. Cek apakah ada provider AI yang terkonfigurasi
+   * 4. Jika ada, panggil AiEnsembleRouter dengan TACTICAL_REASONING
+   * 5. Parse respons JSON AI, fallback ke procedural jika parse gagal
+   * 6. Return hasil terstruktur dengan source indicator (AI provider atau PROCEDURAL)
+   *
+   * @param {Object} params
+   * @param {string} params.plaintiffName - Nama penggugat
+   * @param {string} params.defendantName - Nama terdakwa
+   * @param {string} params.allegation - Tuntutan/perkara
+   * @param {string} [params.evidenceText="Tidak ada bukti tambahan."] - Bukti teks
+   * @returns {Promise<{success: boolean, source?: string, prosecutor?: string, defense?: string, judge?: string, verdictStatus?: string, penalty?: string, reason?: string}>}
    */
   async conductTrial({
     plaintiffName,
@@ -112,6 +175,21 @@ Balas HANYA dengan JSON murni tanpa markdown backtick.`;
     };
   }
 
+  // ==========================================================================
+  // PRIVATE METHODS
+  // ==========================================================================
+
+  /**
+   * Menghasilkan vonis prosedural deterministik tanpa AI.
+   * Digunakan sebagai fallback saat semua provider AI tidak tersedia atau gagal.
+   * Memilih secara acak dari template GUILTY atau NOT_GUILTY.
+   *
+   * @private
+   * @param {string} plaintiff - Nama penggugat
+   * @param {string} defendant - Nama terdakwa
+   * @param {string} allegation - Tuntutan/perkara
+   * @returns {{prosecutorArgument: string, defenseArgument: string, judgeVerdict: string, verdictStatus: string, penalty: string}}
+   */
   _generateProceduralVerdict(plaintiff, defendant, allegation) {
     const verdicts = [
       {
@@ -135,6 +213,14 @@ Balas HANYA dengan JSON murni tanpa markdown backtick.`;
   }
 }
 
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+/**
+ * Singleton instance TribunalEngine dengan JURY_PERSONAS ter-attach.
+ * @type {TribunalEngine & {JURY_PERSONAS: typeof JURY_PERSONAS}}
+ */
 const engineInstance = new TribunalEngine();
 engineInstance.JURY_PERSONAS = JURY_PERSONAS;
 

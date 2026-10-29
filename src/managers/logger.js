@@ -40,15 +40,15 @@ const ANSI = {
 };
 
 /**
- * Format timestamp ringkas untuk terminal console (HH:mm:ss).
- * @returns {string}
+ * Format timestamp ringkas untuk terminal console dengan gaya cyber clock.
+ * @returns {string} Timestamp dengan aksen cyan dan ikon jam
  */
 function formatConsoleTimestamp() {
   const d = new Date();
   const h = String(d.getHours()).padStart(2, "0");
   const m = String(d.getMinutes()).padStart(2, "0");
   const s = String(d.getSeconds()).padStart(2, "0");
-  return `${h}:${m}:${s}`;
+  return ANSI.cyan + "⏰ " + h + ":" + m + ":" + s + ANSI.reset;
 }
 
 /**

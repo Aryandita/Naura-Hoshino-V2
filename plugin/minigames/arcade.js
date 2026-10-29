@@ -1,6 +1,6 @@
 /**
  * @module ArcadeMinigame
- * @description Sistem Holo-Arcade dengan mini-game interaktif dan taruhan Star Fragments.
+ * @description Sistem Holo-Arcade dengan mini-game interaktif dan taruhan MP.
  * 
  * Fitur yang tersedia:
  * - Cyber Trivia Royale: Kuis anime/gaming dengan taruhan opsional
@@ -8,7 +8,7 @@
  * - Cyber Roulette: Taruhan pada warna atau angka (0-36)
  * 
  * Mata Uang:
- * - Menggunakan Star Fragments (NSF) untuk taruhan
+ * - Menggunakan MP (MP) untuk taruhan
  * - Sesi game disimpan di Redis dengan TTL 60 detik
  * 
  * @example
@@ -39,7 +39,7 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const redisManager = require("../../src/managers/redisManager");
-const currency = require("../../src/survival/engines/currency");
+const arcadeContract = require("../../src/domain/contracts/arcadeContract");
 
 // ============================================================================
 // CONSTANTS
@@ -104,8 +104,6 @@ function isValidRouletteChoice(choice) {
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
-  
   /**
    * Definisi slash command untuk arcade
    * @type {import('discord.js').SlashCommandSubcommandBuilder}
@@ -113,7 +111,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("arcade")
     .setDescription(
-      "\ud83d\udd79\ufe0f Holo-Arcade: Mainkan mini-game interaktif dan kumpulkan Star Fragments!",
+      "\ud83d\udd79\ufe0f Holo-Arcade: Mainkan mini-game interaktif dan kumpulkan MP!",
     )
     .addSubcommand((sub) =>
       sub
@@ -124,7 +122,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("bet")
-            .setDescription("Taruhan Star Fragments (Opsional)")
+            .setDescription("Taruhan MP (Opsional)")
             .setMinValue(BET_CONFIG.minValue)
             .setMaxValue(BET_CONFIG.maxValue)
             .setRequired(false),
@@ -139,7 +137,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("bet")
-            .setDescription("Taruhan Star Fragments (Opsional)")
+            .setDescription("Taruhan MP (Opsional)")
             .setMinValue(BET_CONFIG.minValue)
             .setMaxValue(BET_CONFIG.maxValue)
             .setRequired(false),
@@ -162,7 +160,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("bet")
-            .setDescription("Jumlah taruhan Star Fragments")
+            .setDescription("Jumlah taruhan MP")
             .setMinValue(BET_CONFIG.minValue)
             .setMaxValue(BET_CONFIG.maxValue)
             .setRequired(true),
@@ -209,12 +207,12 @@ module.exports = {
 
       await interaction.deferReply();
 
-      const canDebit = await currency.charge("starFragments", { userId }, bet);
-      if (!canDebit) {
+      const chargeResult = await arcadeContract.chargeGameFee(userId);
+      if (!chargeResult.ok) {
         return interaction.editReply({
           ...buildErrorContainerV2({
-            title: "Saldo Star Fragments Kurang",
-            description: `Anda membutuhkan **${bet} Star Fragments** untuk bermain roulette.`,
+            title: "Saldo MP Kurang",
+            description: `Anda membutuhkan **${bet} MP** untuk bermain roulette.`,
             footerText: ui.getFooter("core"),
           }),
         });
@@ -223,18 +221,18 @@ module.exports = {
       const result = ArcadeEngine.spinRoulette(choice, bet);
 
       if (result.isWon) {
-        await currency.reward("starFragments", { userId }, result.payout);
+        await require("../../src/managers/cacheManager").incrementUserProfile(userId, { medaliPermainan: result.payout });
       }
 
       const colorEmoji = COLOR_EMOJIS[result.color] || "";
       const statusText = result.isWon
-        ? `\ud83c\udf89 **SELAMAT! ANDA MENANG!**\n\ud83d\udcb0 Payout (${result.multiplier}x): **+${result.payout} Star Fragments** \ud83c\udf1f`
-        : `\ud83d\udc80 **Sayang sekali, Anda kalah!**\nKehilangan **-${bet} Star Fragments**. Coba lagi di putaran berikutnya!`;
+        ? `\ud83c\udf89 **SELAMAT! ANDA MENANG!**\n\ud83d\udcb0 Payout (${result.multiplier}x): **+${result.payout} MP** \ud83c\udf1f`
+        : `\ud83d\udc80 **Sayang sekali, Anda kalah!**\nKehilangan **-${bet} MP**. Coba lagi di putaran berikutnya!`;
 
       const payload = buildContainerV2({
         accentColorHex: result.isWon ? "#FFD700" : "#E74C3C",
         title: "\ud83c\udfb0 Cyber Roulette Wheel Spin!",
-        description: "Bola berhenti di angka: " + colorEmoji + " **" + result.number + " (" + result.color + ")**\nTaruhan Anda: `" + choice + "` (" + bet + " NSF)\n\n" + statusText,
+        description: "Bola berhenti di angka: " + colorEmoji + " **" + result.number + " (" + result.color + ")**\nTaruhan Anda: `" + choice + "` (" + bet + " MP)\n\n" + statusText,
         footerText: "Holo-Arcade Casino Engine",
       });
 
@@ -249,12 +247,12 @@ module.exports = {
       await interaction.deferReply();
 
       if (bet > 0) {
-        const canDebit = await currency.charge("starFragments", { userId }, bet);
-        if (!canDebit) {
+        const chargeResult = await arcadeContract.chargeGameFee(userId);
+        if (!chargeResult.ok) {
           return interaction.editReply({
             ...buildErrorContainerV2({
-              title: "Saldo Kurang",
-              description: `Anda membutuhkan **${bet} Star Fragments** untuk taruhan kuis ini.`,
+              title: "Saldo MP Kurang",
+              description: `Anda membutuhkan **${bet} MP** untuk taruhan kuis ini.`,
               footerText: ui.getFooter("core"),
             }),
           });
@@ -290,7 +288,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#93C5FD",
         title: `\ud83e\udde0 Cyber Trivia Royale [${trivia.category}]`,
-        description: "**Pertanyaan:**\n" + trivia.q + "\n\n\u23f1\ufe0f *Waktu menjawab: 60 detik!*\n\ud83d\udcb0 *Taruhan:* `" + bet + " Star Fragments`",
+        description: "**Pertanyaan:**\n" + trivia.q + "\n\n\u23f1\ufe0f *Waktu menjawab: 60 detik!*\n\ud83d\udcb0 *Taruhan:* `" + bet + " MP`",
         footerText: "Holo-Arcade Quiz Engine",
         buttonsRow: actionRow,
       });
@@ -306,12 +304,12 @@ module.exports = {
       await interaction.deferReply();
 
       if (bet > 0) {
-        const canDebit = await currency.charge("starFragments", { userId }, bet);
-        if (!canDebit) {
+        const chargeResult = await arcadeContract.chargeGameFee(userId);
+        if (!chargeResult.ok) {
           return interaction.editReply({
             ...buildErrorContainerV2({
-              title: "Saldo Kurang",
-              description: `Anda membutuhkan **${bet} Star Fragments** untuk bermain Rhythm Tap.`,
+              title: "Saldo MP Kurang",
+              description: `Anda membutuhkan **${bet} MP** untuk bermain Rhythm Tap.`,
               footerText: ui.getFooter("core"),
             }),
           });

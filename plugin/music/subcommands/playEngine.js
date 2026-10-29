@@ -10,6 +10,7 @@ const {
 const { resolveSpotifyQuery } = require("../../../src/music/spotifyResolver");
 const { formatDuration } = require("../helpers/musicShared");
 const aiDjTrackService = require("../../../src/services/aiDjTrackService");
+const { logger } = require("../../../src/managers/logger");
 
 module.exports = {
   async lofi(ctx) {
@@ -181,12 +182,50 @@ module.exports = {
 
     const res = await resolveSpotifyQuery(poru, finalQuery, user);
 
+    // FALLBACK CHAIN YouTube bypass (Fix 2026-10-28):
+    // Prioritas: ytmsearch (YouTube Music) -> ytsearch (YouTube) -> scsearch (SoundCloud).
+    // ytmsearch: metadata musik terbaik & hasil paling relevan untuk lagu.
+    // ytsearch: hasil lebih luas untuk konten non-musik.
+    // scsearch: upaya terakhir karena kualitas audio inferior.
+    let finalRes = res;
+
+    const isResEmpty = (r) =>
+      !r ||
+      !r.tracks ||
+      r.tracks.length === 0 ||
+      r.loadType === "empty" ||
+      r.loadType === "NO_MATCHES" ||
+      r.loadType === "LOAD_FAILED";
+
+    if (!isDirectLink && isResEmpty(finalRes)) {
+      const fallbackChain =
+        searchSource === "ytmsearch"
+          ? ["ytsearch", "scsearch"]
+          : searchSource === "ytsearch"
+            ? ["scsearch"]
+            : [];
+
+      for (const fallbackSource of fallbackChain) {
+        try {
+          const fallbackRes = await poru.resolve({
+            query: fallbackSource + ":" + query,
+            requester: user,
+          });
+          if (!isResEmpty(fallbackRes)) {
+            finalRes = fallbackRes;
+            break;
+          }
+        } catch (_) {}
+      }
+    }
+
+
     if (
-      !res ||
-      !res.tracks ||
-      res.tracks.length === 0 ||
-      res.loadType === "empty" ||
-      res.loadType === "NO_MATCHES"
+      !finalRes ||
+      !finalRes.tracks ||
+      finalRes.tracks.length === 0 ||
+      finalRes.loadType === "empty" ||
+      finalRes.loadType === "NO_MATCHES"
     ) {
       const errPayload = buildErrorContainerV2({
         title: "Audio Tidak Ditemukan",
@@ -196,7 +235,7 @@ module.exports = {
       return sendReply(errPayload, true);
     }
 
-    const firstTrackSource = res.tracks[0]?.info?.sourceName || "";
+    const firstTrackSource = finalRes.tracks[0]?.info?.sourceName || "";
     let brandColor = searchSource === "scsearch" ? "#FF7700" : "#FF0000";
     let brandEmoji =
       searchSource === "scsearch"
@@ -207,7 +246,7 @@ module.exports = {
       query.includes("spotify.com") ||
       searchSource === "spsearch" ||
       firstTrackSource === "spotify" ||
-      res.pluginInfo?.source === "spotify-fallback"
+      finalRes.pluginInfo?.source === "spotify-fallback"
     ) {
       brandColor = "#1DB954";
       brandEmoji = ui.getEmoji("spotify") || "🎵";
@@ -225,9 +264,9 @@ module.exports = {
       brandEmoji = ui.getEmoji("apple") || "🍎";
     }
 
-    if (res.loadType === "playlist" || res.loadType === "PLAYLIST_LOADED") {
-      const trackToPlay = res.tracks[0];
-      for (const track of res.tracks) {
+    if (finalRes.loadType === "playlist" || finalRes.loadType === "PLAYLIST_LOADED") {
+      const trackToPlay = finalRes.tracks[0];
+      for (const track of finalRes.tracks) {
         track.info.requester = user;
         player.queue.add(track);
       }
@@ -236,7 +275,7 @@ module.exports = {
         title: brandEmoji + " Playlist Dimuat",
         iconURL: trackToPlay.info.image || client.user.displayAvatarURL(),
         description:
-          (ui.getEmoji("musicArtist") || "👤") + " **Total:** `" + res.tracks.length + " Lagu`\n⏳ Memasukkan ke antrean.",
+          (ui.getEmoji("musicArtist") || "👤") + " **Total:** `" + finalRes.tracks.length + " Lagu`\n⏳ Memasukkan ke antrean.",
         footerText: ui.getFooter("music"),
       });
       sendReply(playlistPayload, true);
@@ -244,7 +283,7 @@ module.exports = {
       return;
     }
 
-    const track = res.tracks[0];
+    const track = finalRes.tracks[0];
     track.info.requester = user;
 
     if (

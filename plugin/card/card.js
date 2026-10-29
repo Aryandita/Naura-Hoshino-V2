@@ -139,7 +139,7 @@ module.exports = {
       sub
         .setName("dye")
         .setDescription(
-          "Warnai bingkai kartu dengan warna Hex pilihanmu (Biaya: 100 NSF)",
+          "Warnai bingkai kartu dengan warna Hex pilihanmu (Biaya: 100 SC)",
         )
         .addStringOption((opt) =>
           opt
@@ -1046,7 +1046,7 @@ module.exports = {
           return interaction.editReply({
             ...buildErrorContainerV2({
               title: "Star Fragments Tidak Cukup",
-              description: `Saldo Star Fragments milikmu tidak mencukupi untuk menawarkan ${starFragOffer} NSF!`,
+              description: `Saldo Star Fragments milikmu tidak mencukupi untuk menawarkan ${starFragOffer} SC!`,
             }),
           });
         }

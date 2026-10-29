@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  
+    <defs>
+      <!-- Base Gradients Sesuai Token Resmi -->
+      <linearGradient id="gradient-skin" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFB6C1" />
+        <stop offset="100%" stop-color="#FFC0CB" />
+      </linearGradient>
+
+      <linearGradient id="gradient-skin-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFB6C1" />
+        <stop offset="100%" stop-color="#FFA0B0" />
+      </linearGradient>
+
+      <linearGradient id="gradient-cyber" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#00FFFF" />
+        <stop offset="100%" stop-color="#00C4D6" />
+      </linearGradient>
+
+      <linearGradient id="gradient-magic" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#C084FC" />
+        <stop offset="100%" stop-color="#9333EA" />
+      </linearGradient>
+
+      <linearGradient id="gradient-nature" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#22C55E" />
+        <stop offset="100%" stop-color="#4ADE80" />
+      </linearGradient>
+
+      <linearGradient id="gradient-amber" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFF7CC" />
+        <stop offset="50%" stop-color="#FFD700" />
+        <stop offset="100%" stop-color="#B8860B" />
+      </linearGradient>
+
+      <linearGradient id="gradient-gold-plate" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFF9D6" />
+        <stop offset="40%" stop-color="#FFD700" />
+        <stop offset="100%" stop-color="#B8860B" />
+      </linearGradient>
+
+      <linearGradient id="gradient-platinum" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" />
+        <stop offset="50%" stop-color="#E2E8F0" />
+        <stop offset="100%" stop-color="#94A3B8" />
+      </linearGradient>
+
+      <linearGradient id="gradient-magenta" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FF69B4" />
+        <stop offset="100%" stop-color="#DB2777" />
+      </linearGradient>
+
+      <linearGradient id="gradient-alert" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FF6B6B" />
+        <stop offset="100%" stop-color="#DC2626" />
+      </linearGradient>
+
+      <linearGradient id="gradient-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.08" />
+      </linearGradient>
+
+      <linearGradient id="gradient-dark-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#1E293B" stop-opacity="0.85" />
+        <stop offset="100%" stop-color="#0F172A" stop-opacity="0.95" />
+      </linearGradient>
+
+      <linearGradient id="gradient-blade" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" />
+        <stop offset="50%" stop-color="#00FFFF" />
+        <stop offset="100%" stop-color="#C084FC" />
+      </linearGradient>
+
+      <!-- Radial Glow & Blush Gradients -->
+      <radialGradient id="gradient-blush" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FF69B4" stop-opacity="0.5" />
+        <stop offset="60%" stop-color="#FF69B4" stop-opacity="0.2" />
+        <stop offset="100%" stop-color="#FF69B4" stop-opacity="0" />
+      </radialGradient>
+
+      <radialGradient id="gradient-cyan-bloom" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#00FFFF" stop-opacity="0.6" />
+        <stop offset="70%" stop-color="#00FFFF" stop-opacity="0.1" />
+        <stop offset="100%" stop-color="#00FFFF" stop-opacity="0" />
+      </radialGradient>
+
+      <radialGradient id="gradient-magic-bloom" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#C084FC" stop-opacity="0.6" />
+        <stop offset="70%" stop-color="#C084FC" stop-opacity="0.1" />
+        <stop offset="100%" stop-color="#C084FC" stop-opacity="0" />
+      </radialGradient>
+
+      <!-- Soft Glow Filters (Skia Compatible) -->
+      <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="glow-pink" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="glow-purple" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="glow-gold" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="glow-green" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+  
+  
+    <!-- 5-Pointed 3D Faceted Star Body -->
+    <g transform="translate(64, 64) scale(1.1) translate(-64, -64)">
+      <!-- Golden Star Base -->
+      <polygon points="64,18 78,48 110,52 86,74 92,106 64,90 36,106 42,74 18,52 50,48" fill="url(#gradient-gold-plate)" stroke="#B8860B" stroke-width="3" stroke-linejoin="round" filter="url(#glow-gold)" />
+      <!-- Facet Shading Lines -->
+      <line x1="64" y1="18" x2="64" y2="68" stroke="#FFFFFF" stroke-width="2" />
+      <line x1="110" y1="52" x2="64" y2="68" stroke="#B8860B" stroke-width="2" />
+      <line x1="92" y1="106" x2="64" y2="68" stroke="#B8860B" stroke-width="2" />
+      <line x1="36" y1="106" x2="64" y2="68" stroke="#B8860B" stroke-width="2" />
+      <line x1="18" y1="52" x2="64" y2="68" stroke="#FFFFFF" stroke-width="2" />
+    </g>
+    <!-- Sparkling Glints on Tips -->
+    <path d="M 64 7 Q 65.232 12.768 71 14 Q 65.232 15.232 64 21 Q 62.768 15.232 57 14 Q 62.768 12.768 64 7 Z" fill="#FFFFFF"  />
+    <path d="M 116 46 Q 117.056 50.944 122 52 Q 117.056 53.056 116 58 Q 114.944 53.056 110 52 Q 114.944 50.944 116 46 Z" fill="#00FFFF"  />
+  
+</svg>

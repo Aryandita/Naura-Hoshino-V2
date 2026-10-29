@@ -8,7 +8,7 @@ module.exports = {
     type: "teman",
     personality:
       "Ceria, sangat antusias dengan pernak-pernik kosmetik, selalu mempromosikan banner terbarunya.",
-    image: "gacha_npc.jpeg",
+    image: "luna_gacha.jpeg",
   },
   kades_tirto: {
     id: "kades_tirto",

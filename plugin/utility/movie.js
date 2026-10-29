@@ -223,7 +223,6 @@ async function searchMovieWaterfall(query, year) {
 }
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("movie")
     .setDescription(
@@ -290,6 +289,7 @@ module.exports = {
             actors: item.actors,
             synopsis: item.synopsis,
             sourceName: item.sourceName,
+            botAvatarURL: interaction.client.user.displayAvatarURL({ size: 64, extension: "png" }),
           });
           if (buffer) {
             cardCache.set(idx, buffer);

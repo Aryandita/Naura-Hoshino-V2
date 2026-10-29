@@ -86,7 +86,7 @@ async function runMinigameLogic(interaction) {
   const nsfMultiplier = getMinigameMultiplier(premiumTier);
 
   const nsfEmoji = ui.getEmoji("nsf") || ui.getEmoji("star_fragment") || "\u2b50";
-  const coinEmoji = `${nsfEmoji} NSF`;
+  const coinEmoji = `${nsfEmoji} SC`;
   const errorEmoji = ui.emojis.error || "\u274c";
   
   /**
@@ -149,7 +149,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("taruhan")
-            .setDescription("Jumlah Star Fragments (NSF) yang dipertaruhkan")
+            .setDescription("Jumlah Sukamaju Koin (SC) yang dipertaruhkan")
             .setRequired(true)
             .setMinValue(10)
             .setMaxValue(50000),
@@ -172,7 +172,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("taruhan")
-            .setDescription("Jumlah NSF yang dipertaruhkan (opsional)")
+            .setDescription("Jumlah SC yang dipertaruhkan (opsional)")
             .setRequired(false)
             .setMinValue(10)
             .setMaxValue(10000),

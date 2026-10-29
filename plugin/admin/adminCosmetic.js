@@ -44,7 +44,6 @@ const LIST_TRUNCATE_LIMIT = 1990;
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("admincosmetic")
     .setDescription("\ud83d\udd27 [OWNER] Manajemen penambahan/penghapusan aset kosmetik")

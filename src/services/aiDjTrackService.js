@@ -1,4 +1,6 @@
-﻿"use strict";
+"use strict";
+
+const fs = require("node:fs");
 
 const { AttachmentBuilder } = require("discord.js");
 const { logger } = require("../managers/logger");
@@ -18,12 +20,10 @@ const aiDjManager = require("../managers/aiDjManager");
  * @returns {Promise<{ttsTrack: Object, messageId: string}|null>}
  */
 async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, musicManager, memberVoice }) {
-  // Guard: Check if AI DJ is enabled and Fish Audio configured
   if (!aiDjManager.isDjEnabled(guildId) || !fishAudioService.isConfigured()) {
     return null;
   }
 
-  // Guard: Validate channel is sendable
   if (!channel || typeof channel.send !== 'function') {
     logger.warn(`[AiDjTrackService] Invalid channel object for guild ${guildId}`);
     return null;
@@ -37,17 +37,61 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
 
     const lang = await aiDjManager.detectVoiceLanguage(musicManager, guildId, voiceChannel);
     const { script, classification } = aiDjManager.generateDjScript(trackInfo, requesterName, [], lang);
+    const genreKey = classification.genre;
 
-    const audioBuffer = await fishAudioService.generateSpeech(script, {
-      format: "mp3",
-      latency: "low",
-    });
+    let audioBuffer = null;
+    
+    let isPremium = false;
+    try {
+      const cacheManager = require("../managers/cacheManager");
+      const profile = await cacheManager.getUserProfile(user.id);
+      if (profile && profile.isPremium && profile.premiumUntil && new Date(profile.premiumUntil) > new Date()) {
+        isPremium = true;
+      }
+    } catch (_) {}
+
+    if (isPremium) {
+      try {
+        audioBuffer = await fishAudioService.getOrGeneratePremiumAudio(
+          user.id,
+          requesterName,
+          script,
+          { format: "mp3", latency: "low" }
+        );
+        if (audioBuffer) {
+          logger.info(`[DjTrack] Using premium cached audio for ${requesterName}`);
+        }
+      } catch (err) {
+        logger.debug(`[DjTrack] Premium audio generation failed, falling back: ${err.message}`);
+      }
+    }
+
+    if (!audioBuffer) {
+      try {
+        const localPath = aiDjManager.getLocalDjAudioPath(genreKey, lang, 0);
+        if (localPath) {
+          audioBuffer = fs.readFileSync(localPath);
+          logger.info(`[DjTrack] Using local audio for genre: ${genreKey}`);
+        }
+      } catch (localErr) {
+        logger.debug(`[DjTrack] Local audio not available: ${localErr.message}`);
+      }
+    }
+
+    if (!audioBuffer) {
+      audioBuffer = await fishAudioService.generateSpeech(script, {
+        format: "mp3",
+        latency: "low",
+        genre: genreKey,
+        lang,
+        variant: 0,
+      });
+    }
 
     if (!audioBuffer) return null;
 
     const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_dj_intro.mp3" });
     
-    // Build container untuk display script text
     const ui = require("../config/ui");
     const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
     

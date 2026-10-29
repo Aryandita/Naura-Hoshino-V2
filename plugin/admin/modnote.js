@@ -1,3 +1,8 @@
+/**
+ * @module plugin/admin/modnote
+ * @description Perintah manajemen catatan moderator rahasia untuk anggota.
+ * Menyediakan subcommand add, list, dan delete untuk melacak riwayat perilaku anggota.
+ */
 const {
   SlashCommandBuilder,
   PermissionsBitField,

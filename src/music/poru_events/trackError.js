@@ -128,7 +128,13 @@ module.exports = {
           accentColorHex: ui.getColor("danger") || "#EF4444",
           authorName: "Naura Music Guard",
           title: `${ui.getEmoji("cross") || "⚠️"} Gagal Memutar Lagu`,
-          description: `Maaf ya, Naura tidak dapat memutar **${trackTitle}** karena sumber audio tidak merespons atau dibatasi.\n\n> *Detail:* \`${errorMessage}\``,
+          description: (() => {
+            const isBotDetection = /sign in|confirm you.re not a bot|bot detection|unavailable|requires login/i.test(errorMessage);
+            if (isBotDetection) {
+              return `Maaf ya, Naura tidak dapat memutar **${trackTitle}** karena YouTube mendeteksi akses otomatis.\n\n?? **Solusi:** Gunakan prefix \`sc:\` untuk mencari via SoundCloud, atau gunakan link Spotify langsung.`;
+            }
+            return `Maaf ya, Naura tidak dapat memutar **${trackTitle}** karena sumber audio tidak merespons atau dibatasi.\n\n> *Detail:* \`${errorMessage}\``;
+          })(),
           footerText: ui.getFooter("music"),
         });
 

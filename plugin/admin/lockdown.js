@@ -37,7 +37,6 @@ const DEFAULT_REASON = "Keadaan Darurat / Moderasi";
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("lockdown")
     .setDescription(

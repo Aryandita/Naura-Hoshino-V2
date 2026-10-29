@@ -76,7 +76,6 @@ function convertTimezone(timeStr, fromTz, toTz) {
 }
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("worldclock")
     .setDescription("Jam dunia terpadu & konversi waktu antar zona internasional")

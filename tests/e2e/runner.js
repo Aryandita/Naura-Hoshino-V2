@@ -30,6 +30,11 @@ const SUITES = [
     name: "R5: Smart Utilities (Carbon Codeview & High-Res Poll Chart)",
     file: "r5_utilities.e2e.test.js",
   },
+  {
+    id: "r6",
+    name: "R6: Custom Emojis Design System (90 Emojis, Tiers 0-5)",
+    file: "emojis.test.js",
+  },
 ];
 
 const ROOT_DIR = path.resolve(__dirname, "../..");
@@ -100,7 +105,7 @@ function main() {
 
     if (selectedSuites.length === 0) {
       console.error(`[Runner] Error: Tidak ada test suite yang cocok dengan filter "${filter}".`);
-      console.log("Pilihan yang tersedia: r1, r2, r3, r4, r5");
+      console.log("Pilihan yang tersedia: r1, r2, r3, r4, r5, r6, emojis");
       process.exit(1);
     }
   }
@@ -156,7 +161,7 @@ function main() {
     console.error("\x1b[31m[FAILED] Satu atau lebih test suite E2E gagal.\x1b[0m\n");
     process.exit(1);
   } else {
-    console.log("\x1b[32m[SUCCESS] Seluruh 5 pilar inovasi E2E lulus 100% tanpa cacat.\x1b[0m\n");
+    console.log(`\x1b[32m[SUCCESS] Seluruh ${results.length} pilar inovasi E2E lulus 100% tanpa cacat.\x1b[0m\n`);
     process.exit(0);
   }
 }

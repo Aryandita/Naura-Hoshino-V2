@@ -167,8 +167,7 @@ const env = {
   LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
   LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || "youshallnotpass",
   LAVA_SECURE: process.env.LAVALINK_SECURE === "true",
-  MUSIC_DEFAULT_SEARCH:
-    cleanEnv(process.env.MUSIC_DEFAULT_SEARCH) || "ytsearch",
+  MUSIC_DEFAULT_SEARCH: cleanEnv(process.env.MUSIC_DEFAULT_SEARCH) || "ytmsearch",
 
   // SPOTIFY (poru-spotify + LavaSrc node + spotifyResolver fallback)
   SPOTIFY_CLIENT_ID: cleanEnv(process.env.SPOTIFY_CLIENT_ID),

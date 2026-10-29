@@ -9,7 +9,6 @@ const {
 } = require("discord.js");
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("bug")
     .setDescription("🐛 Laporkan kendala, galat, atau bug teknis kepada pengembang Naura Hoshino"),

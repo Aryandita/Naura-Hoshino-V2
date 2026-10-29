@@ -103,8 +103,6 @@ function getRandomWord() {
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
-  
   /**
    * Definisi slash command untuk hangman
    * @type {import('discord.js').SlashCommandSubcommandBuilder}

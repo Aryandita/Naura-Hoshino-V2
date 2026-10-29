@@ -21,14 +21,14 @@ module.exports = {
     // Validate bet if placed
     if (taruhan > 0) {
       if (taruhan < 10) {
-        return sendError("Minimal taruhan untuk TypeRacer adalah **10 NSF**!");
+        return sendError("Minimal taruhan untuk TypeRacer adalah **10 SC**!");
       }
       if (taruhan > 10000) {
-        return sendError("Maksimal taruhan untuk TypeRacer adalah **10.000 NSF**!");
+        return sendError("Maksimal taruhan untuk TypeRacer adalah **10.000 SC**!");
       }
       if (curNsf < taruhan) {
         return sendError(
-          `Saldo Star Fragments (NSF) tidak mencukupi untuk taruhan **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo saat ini: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+          `Saldo Sukamaju Koin (SC) tidak mencukupi untuk taruhan **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo saat ini: ${curNsf.toLocaleString()} ${nsfEmoji})`,
         );
       }
 

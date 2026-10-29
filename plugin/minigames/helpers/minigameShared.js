@@ -182,7 +182,7 @@ const MINIGAME_INFOS = {
       "Uji seberapa cepat otakmu berhitung di bawah tekanan waktu!\n\n" +
       "**Cara Bermain:**\n" +
       "> 1. Jawab soal hitungan yang Naura berikan secepat mungkin.\n" +
-      "> 2. Semakin tinggi tingkat kesulitan, semakin besar hadiah NSF yang bisa kamu raih!\n" +
+      "> 2. Semakin tinggi tingkat kesulitan, semakin besar hadiah SC yang bisa kamu raih!\n" +
       "> 3. Hati-hati, jika waktu habis kamu dianggap salah lho ya~",
     tip: "Fokus dan jangan panik ya! Naura yakin kamu jago berhitung!",
   },
@@ -194,7 +194,7 @@ const MINIGAME_INFOS = {
       "**Cara Bermain:**\n" +
       "> 1. Naura akan memberikan pertanyaan pilihan ganda dari berbagai topik dunia.\n" +
       "> 2. Pilih salah satu tombol opsi jawaban yang menurutmu paling tepat.\n" +
-      "> 3. Jawaban benar akan memberimu hadiah NSF dan tambahan XP!",
+      "> 3. Jawaban benar akan memberimu hadiah SC dan tambahan XP!",
     tip: "Baca soalnya pelan-pelan yaa, jangan sampai terjebak opsi tipuan!",
   },
   rps: {
@@ -203,9 +203,9 @@ const MINIGAME_INFOS = {
     description:
       "Permainan klasik adu insting dan keberuntungan!\n\n" +
       "**Cara Bermain:**\n" +
-      "> 1. Pasang taruhan NSF dan pilih lawan bermain (AI Naura atau temanmu).\n" +
+      "> 1. Pasang taruhan SC dan pilih lawan bermain (AI Naura atau temanmu).\n" +
       "> 2. Pilih antara Batu 🪨, Gunting ✂️, atau Kertas 📄.\n" +
-      "> 3. Pemenang berhak membawa pulang seluruh taruhan NSF!",
+      "> 3. Pemenang berhak membawa pulang seluruh taruhan SC!",
     tip: "Batu mengalahkan gunting, gunting memotong kertas, kertas membungkus batu!",
   },
   tictactoe: {
@@ -271,7 +271,7 @@ const MINIGAME_INFOS = {
       "**Cara Bermain:**\n" +
       "> 1. Perhatikan susunan huruf yang diacak oleh Naura.\n" +
       "> 2. Ketik kata asli yang benar sebelum batas waktu habis.\n" +
-      "> 3. Raih hadiah NSF dan kebanggaan jika tebakanmu tepat!",
+      "> 3. Raih hadiah SC dan kebanggaan jika tebakanmu tepat!",
     tip: "Coba bunyikan rangkaian hurufnya di dalam hati untuk menemukan polanya!",
   },
   tebakgambar: {
@@ -313,7 +313,7 @@ const MINIGAME_INFOS = {
     description:
       "Tantang dealer Naura dalam permainan kartu Blackjack 21 standar!\n\n" +
       "**Cara Bermain:**\n" +
-      "> 1. Pasang taruhan Star Fragments (NSF) dan dapatkan 2 kartu awal.\n" +
+      "> 1. Pasang taruhan Sukamaju Koin (SC) dan dapatkan 2 kartu awal.\n" +
       "> 2. Pilih **Hit** untuk menambah kartu, **Stand** untuk bertahan, **Double** untuk menggandakan taruhan, atau **Split** jika kartumu kembar.\n" +
       "> 3. Dapatkan nilai sedekat mungkin dengan 21 tanpa melebihi 21 (Bust)!\n" +
       "> 4. Dealer wajib stand pada semua nilai 17 (Hard & Soft). Natural Blackjack membayar 3:2!",

@@ -10,7 +10,6 @@ const VoiceManager = require("../../src/managers/voiceManager");
 const aiManager = require("../../src/managers/aiManager");
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("voice")
     .setDescription("🎙️ Interaksi suara dengan Naura Voice Companion")

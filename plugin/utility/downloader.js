@@ -21,7 +21,6 @@ const {
 const { buildLoadingContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("downloader")
     .setDescription(

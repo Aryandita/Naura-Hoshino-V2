@@ -59,7 +59,7 @@ const DUNGEON_TIERS = [
 
 // Koleksi FAQ Umum
 const SYSTEM_FAQS = [
-  { id: "faq_nsf", name: "FAQ: Apa itu NSF (Star Fragments)?", desc: "Mata uang survival utama untuk belanja di toko desa, makan di kafe, dan upgrade alat.", category: "FAQ" },
+  { id: "faq_sc", name: "FAQ: Apa itu SC (Sukamaju Koin)?", desc: "Mata uang survival utama untuk belanja di toko desa, makan di kafe, dan upgrade alat.", category: "FAQ" },
   { id: "faq_nc", name: "FAQ: Apa itu NC (Naura Coins)?", desc: "Mata uang ekonomi server global untuk transfer antar pemain dan pasar saham.", category: "FAQ" },
   { id: "faq_coupons", name: "FAQ: Bagaimana cara mendapat Naura Coupon?", desc: "Kupon didapat dari reward Battle Pass, dungeon boss, dan event server khusus.", category: "FAQ" },
   { id: "faq_durability", name: "FAQ: Mengapa senjataku rusak?", desc: "Setiap alat memiliki durabilitas. Jika 0, perbaiki di /survival forge atau daur ulang.", category: "FAQ" },
@@ -194,7 +194,7 @@ module.exports = {
         choice("☕ Kafe: Sakura Blossom Latte", "sakura_latte"),
         choice("⚡ Command: /survival pass (Battle Pass)", "cmd_pass"),
         choice("🏰 Dungeon: The Neo-Abyss Raid", "abyss_floor_1"),
-        choice("❓ FAQ: Apa itu NSF (Star Fragments)?", "faq_nsf"),
+        choice("❓ FAQ: Apa itu SC (Sukamaju Koin)?", "faq_sc"),
       ];
       return safeRespond(interaction, defaults);
     }
@@ -274,8 +274,8 @@ module.exports = {
         "",
         `• **Kategori:** \`${detail.category.toUpperCase()}\``,
         `• **Kelangkaan:** **${detail.rarity}**`,
-        `• **Harga Beli:** \`${detail.price.toLocaleString("id-ID")} NSF\``,
-        `• **Harga Jual:** \`${detail.sellPrice.toLocaleString("id-ID")} NSF\``,
+        `• **Harga Beli:** \`${detail.price.toLocaleString("id-ID")} SC\``,
+        `• **Harga Jual:** \`${detail.sellPrice.toLocaleString("id-ID")} SC\``,
       ];
 
       if (detail.attributes && Object.keys(detail.attributes).length > 0) {
@@ -301,7 +301,7 @@ module.exports = {
           `*${detail.description}*`,
           "",
           `• **Tipe Menu:** \`${detail.category}\``,
-          `• **Harga Jual:** \`${detail.price} NSF\``,
+          `• **Harga Jual:** \`${detail.price} SC\``,
           `• **Minimal Level Kafe:** Level \`${detail.requiredLevel}\``,
         ];
 
@@ -326,7 +326,7 @@ module.exports = {
         descLines = [
           `Resep resmi fasilitas pandai besi & perakitan Alun-Alun Kota.`,
           "",
-          `• **Biaya Upah:** \`${detail.fee} ${detail.currency || "NSF"}\``,
+          `• **Biaya Upah:** \`${detail.fee} ${detail.currency || "SC"}\``,
           `• **Syarat Level:** Level \`${detail.reqLevel || 1}\``,
         ];
 

@@ -54,15 +54,41 @@ services:
       - naura_redis_data:/data
     command: redis-server --appendonly yes
 
+  # PO TOKEN PROVIDER (LAPIS 1 - YouTube bot detection bypass).
+  # Melayani endpoint /ping dan /get_pot untuk yt-dlp (LavaSrc ytdlp source)
+  # agar request YouTube dari IP datacenter tidak diblokir.
+  # Gunakan image prebuilt resmi; jangan expose port ke publik.
+  pot-server:
+    image: brainicism/bgutil-ytdlp-pot-provider:latest
+    container_name: naura_pot_server
+    restart: unless-stopped
+    # Port 4416 HANYA untuk jaringan internal docker; jangan publish
+    # ke host kecuali Lavalink berjalan di luar docker-compose ini.
+    expose:
+      - "4416"
+    # Hilangkan komentar bila Lavalink host berjalan di luar compose:
+    # ports:
+    #   - "127.0.0.1:4416:4416"
+
   lavalink:
-    image: ghcr.io/lavalink-devs/lavalink:4
+    # Image custom dengan yt-dlp preinstalled (lihat docker/lavalink/Dockerfile).
+    # vanilla ghcr.io/lavalink-devs/lavalink:4 tidak menyertakan yt-dlp.
+    build:
+      context: ./docker/lavalink
+      dockerfile: Dockerfile
     container_name: naura_lavalink
     restart: unless-stopped
     env_file:
       - .env
+    depends_on:
+      - pot-server
     environment:
       - SERVER_PORT=2333
       - LAVALINK_SERVER_PASSWORD=youshallnotpass
+      # Base URL provider PO token. Dirujuk application.yml lewat
+      # plugins.lavasrc.ytdlp.customLoadArgs/customPlaybackArgs sebagai
+      # --extractor-args youtubepot-bgutilhttp:base_url=... untuk yt-dlp.
+      - POT_PROVIDER_BASE_URL=http://pot-server:4416
     volumes:
       - ./docker/lavalink/application.yml:/opt/Lavalink/application.yml:ro
     ports:

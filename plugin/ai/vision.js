@@ -9,7 +9,6 @@ const aiManager = require("../../src/managers/aiManager");
 const { DomainError } = require("../../src/errors/DomainError");
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("vision")
     .setDescription("Analisis gambar, screenshot game, error koding, atau meme bertenaga Gemini Flash.")

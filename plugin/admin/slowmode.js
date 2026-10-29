@@ -41,7 +41,6 @@ const MAX_SLOWMODE_SECONDS = 21600;
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("slowmode")
     .setDescription("🐌 Atur mode lambat (slowmode) di channel ini.")

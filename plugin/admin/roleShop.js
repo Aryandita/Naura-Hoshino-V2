@@ -1,6 +1,6 @@
 /**
  * @module roleShop
- * @description Toko role berbayar dengan sistem sewa (NSF, Coin, Coupon).
+ * @description Toko role berbayar dengan sistem sewa (SC, Coin, Coupon).
  * @author Naura Hoshino V2 Development Team
  * @version 2.4.0
  * @since 1.0.0
@@ -43,7 +43,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("harga_nsf")
-            .setDescription("Harga dalam Naura Star Fragment (NSF)")
+            .setDescription("Harga dalam Sukamaju Koin (SC)")
             .setRequired(true),
         )
         .addIntegerOption((opt) =>
@@ -131,7 +131,7 @@ module.exports = {
         const roleName = roleObj ? roleObj.name : "Role Terhapus";
 
         desc += `**${index + 1}. ${roleName}** (${item.days} Hari)\n`;
-        desc += `> ${eNsf} ${item.prices.nsf} NSF\n`;
+        desc += `> ${eNsf} ${item.prices.nsf} SC\n`;
         desc += `> ${eCoin} ${item.prices.coin} Coin\n`;
         desc += `> ${eCoupon} ${item.prices.coupon} Coupon\n\n`;
 

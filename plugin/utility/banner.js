@@ -7,7 +7,6 @@ const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("banner")
     .setDescription("🖼️ Atur banner kosmetik atau generate Dynamic Motion Banner AI.")

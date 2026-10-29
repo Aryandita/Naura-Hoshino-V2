@@ -1,10 +1,39 @@
 "use strict";
 
 /**
- * @file semanticMemoryService.js
- * @description Service pengelola memori semantik berbasis embedding dan vector search.
- * Mendukung penyimpanan memori episodik user, aturan server, serta retrieval context untuk LLM.
+ * @module semanticMemoryService
+ * @description Service pengelola memori semantik berbasis embedding dan vector search untuk Naura Hoshino V2.
+ *
+ * ## Architecture Overview
+ * Modul ini mengimplementasikan sistem memori semantik (RAG - Retrieval Augmented Generation)
+ * yang memungkinkan AI Naura mengingat fakta pengguna, aturan server, dan lore secara persisten.
+ * Menggunakan Gemini text-embedding-004 untuk menghasilkan vektor embedding, kemudian
+ * menyimpannya di PostgreSQL via Sequelize. Pencarian menggunakan cosine similarity
+ * untuk menemukan memori yang paling relevan secara semantik terhadap query pengguna.
+ *
+ * ## Key Features
+ * - Vector embedding generation menggunakan Gemini text-embedding-004
+ * - Cosine similarity search untuk semantic retrieval (pure function, Law 5)
+ * - Multi-type memory support: USER_FACT, SERVER_RULE, LORE, reflection
+ * - Document ingestion pipeline untuk Server RAG (chunked document parsing)
+ * - Nightly reflection synthesis dari audit log MongoDB
+ * - Duplicate memory pruning dengan cosine similarity threshold
+ * - Age-based memory cleanup (maxAgeDays dengan importance score protection)
+ * - Graceful fallback saat embedding API tidak tersedia (return newest memories)
+ * - Document management: list, purge by filename
+ * - Context formatting untuk LLM prompt injection
+ *
+ * ## Integration Points
+ * - {@link module:models/SemanticMemory} - Sequelize model untuk storage vektor
+ * - {@link module:ai/geminiClient} - Gemini API client untuk embedding generation
+ * - {@link module:managers/logger} - Structured logging
+ * - {@link module:managers/mongoManager} - MongoDB audit logs untuk nightly reflection
+ * - {@link module:ai/documentParser} - Document parsing untuk RAG ingestion
  */
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const SemanticMemory = require("../models/SemanticMemory");
 const geminiClient = require("./geminiClient");
@@ -12,11 +41,22 @@ const { logger } = require("../managers/logger");
 
 const EMBEDDING_MODEL = "text-embedding-004";
 
+// ============================================================================
+// PURE FUNCTIONS (Law 5: Stateless Calculations)
+// ============================================================================
+
 /**
- * Menghitung cosine similarity antara dua vektor float murni (Law 5: Pure Calculation)
- * @param {number[]} vecA
- * @param {number[]} vecB
- * @returns {number} Nilai cosine similarity antara -1.0 s.d. 1.0
+ * Menghitung cosine similarity antara dua vektor float murni (Law 5: Pure Calculation).
+ * Digunakan untuk mengukur kemiripan semantik antara embedding query dan embedding memori.
+ *
+ * Algoritma:
+ * 1. Hitung dot product kedua vektor
+ * 2. Hitung magnitude (norm) masing-masing vektor
+ * 3. Return dot / (normA * normB)
+ *
+ * @param {number[]} vecA - Vektor pertama
+ * @param {number[]} vecB - Vektor kedua
+ * @returns {number} Nilai cosine similarity antara -1.0 s.d. 1.0, atau 0 jika invalid
  */
 function cosineSimilarity(vecA, vecB) {
   if (!vecA || !vecB || !Array.isArray(vecA) || !Array.isArray(vecB)) return 0;
@@ -38,9 +78,27 @@ function cosineSimilarity(vecA, vecB) {
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
+// ============================================================================
+// CLASS: SemanticMemoryService
+// ============================================================================
+
+/**
+ * Service utama untuk operasi memori semantik: simpan, cari, format, ingest, dan prune.
+ * Menggunakan Gemini embedding API untuk vektorisasi dan cosine similarity untuk pencarian.
+ */
 class SemanticMemoryService {
   /**
    * Menghasilkan representasi vector embedding dari teks menggunakan Gemini API
+   * @param {string} text - Teks yang akan di-embed
+   * @returns {Promise<number[]|null>} Array angka embedding atau null jika gagal
+   */
+  // ==========================================================================
+  // PUBLIC METHODS
+  // ==========================================================================
+
+  /**
+   * Menghasilkan representasi vector embedding dari teks menggunakan Gemini API.
+   * Model: text-embedding-004 (768 dimensi).
    * @param {string} text - Teks yang akan di-embed
    * @returns {Promise<number[]|null>} Array angka embedding atau null jika gagal
    */
@@ -71,14 +129,15 @@ class SemanticMemoryService {
   }
 
   /**
-   * Simpan memori semantik baru ke database
+   * Simpan memori semantik baru ke database.
+   * Alur: generate embedding -> simpan ke Sequelize dengan vektor.
    * @param {string} userId - ID pengguna Discord
    * @param {string} content - Konten teks memori
    * @param {object} [options]
    * @param {string} [options.guildId] - ID guild (opsional)
    * @param {string} [options.memoryType="USER_FACT"] - Tipe memori (USER_FACT, SERVER_RULE, LORE)
-   * @param {object} [options.metadata={}] - Data tambahan
-   * @returns {Promise<SemanticMemory|null>}
+   * @param {object} [options.metadata={}] - Data tambahan (fileName, chunkIndex, dll)
+   * @returns {Promise<SemanticMemory|null>} Record yang tersimpan atau null jika gagal
    */
   async saveMemory(userId, content, options = {}) {
     if (!userId || !content || typeof content !== "string") {
@@ -113,7 +172,15 @@ class SemanticMemoryService {
   }
 
   /**
-   * Cari memori yang paling relevan secara semantik terhadap query
+   * Cari memori yang paling relevan secara semantik terhadap query.
+   *
+   * Alur pencarian:
+   * 1. Ambil sampel 100 memori terbaru dari DB (filtered by userId/guildId/type)
+   * 2. Generate embedding untuk query
+   * 3. Hitung cosine similarity query vs setiap memori
+   * 4. Filter hasil >= minSimilarity, sort descending, slice top-N
+   * 5. Fallback: jika embedding API gagal, kembalikan memori terbaru
+   *
    * @param {string} query - Kalimat pertanyaan / konteks pengguna
    * @param {object} [filter]
    * @param {string} [filter.userId] - Batasi pada user tertentu
@@ -121,7 +188,7 @@ class SemanticMemoryService {
    * @param {string} [filter.memoryType] - Batasi pada tipe memori
    * @param {number} [filter.limit=3] - Jumlah maksimal memori yang dikembalikan
    * @param {number} [filter.minSimilarity=0.45] - Ambang batas minimal relevansi
-   * @returns {Promise<Array<{ content: string, memoryType: string, similarity: number }>>}
+   * @returns {Promise<Array<{id: number, content: string, memoryType: string, similarity: number, createdAt: Date}>>}
    */
   async searchMemories(query, filter = {}) {
     if (!query || typeof query !== "string") {
@@ -195,9 +262,10 @@ class SemanticMemoryService {
   }
 
   /**
-   * Format daftar memori hasil pencarian menjadi blok teks konteks siap pakai untuk LLM
-   * @param {Array<{ content: string, memoryType: string }>} memories
-   * @returns {string}
+   * Format daftar memori hasil pencarian menjadi blok teks konteks siap pakai untuk LLM.
+   * Output format: [MEMORI & FAKTA PENGGUNA TERSIMPAN DI DATABASE] dengan bullet points.
+   * @param {Array<{content: string, memoryType: string}>} memories - Hasil dari searchMemories
+   * @returns {string} Blok teks konteks atau empty string jika tidak ada memori
    */
   formatMemoriesForContext(memories) {
     if (!Array.isArray(memories) || memories.length === 0) {
@@ -215,8 +283,16 @@ class SemanticMemoryService {
   }
 
   /**
-   * Nightly Reflection: Mensintesis riwayat aktivitas & interaksi harian menjadi memori semantik jangka panjang.
+   * Nightly Reflection: Mensintesis riwayat aktivitas dan interaksi harian menjadi memori semantik jangka panjang.
    * Dipicu setiap malam via cronManager untuk memperkaya Living AI Naura.
+   *
+   * Alur:
+   * 1. Ambil 50 log interaksi terbaru dari MongoDB (24 jam terakhir)
+   * 2. Kelompokkan per userId, ambil top 3 command unik
+   * 3. Sintesis refleksi tekstual per user
+   * 4. Simpan sebagai memori tipe "reflection"
+   *
+   * @returns {Promise<{count: number, error?: string}>} Jumlah user yang direfleksikan
    */
   async synthesizeDailyMemories() {
     try {
@@ -263,12 +339,13 @@ class SemanticMemoryService {
   }
 
   /**
-   * Ingest dokumen hasil parsing ke dalam memori semantik (Server RAG)
-   * @param {string} guildId - ID server discord
+   * Ingest dokumen hasil parsing ke dalam memori semantik (Server RAG).
+   * Setiap chunk dokumen di-embed dan disimpan sebagai memori terpisah dengan metadata fileName/chunkIndex.
+   * @param {string} guildId - ID server Discord
    * @param {string} uploaderId - ID user pengunggah
-   * @param {object} parsedDocument - Hasil dari documentParser.parseDocument
-   * @param {string} [memoryType="SERVER_RULE"]
-   * @returns {Promise<{ success: boolean, fileName: string, chunksIngested: number, totalChunks: number }>}
+   * @param {object} parsedDocument - Hasil dari documentParser.parseDocument (harus punya .chunks array)
+   * @param {string} [memoryType="SERVER_RULE"] - Tipe memori untuk semua chunk
+   * @returns {Promise<{success: boolean, fileName?: string, chunksIngested?: number, totalChunks?: number, reason?: string}>}
    */
   async ingestDocument(guildId, uploaderId, parsedDocument, memoryType = "SERVER_RULE") {
     if (!guildId || !parsedDocument || !Array.isArray(parsedDocument.chunks)) {
@@ -307,9 +384,10 @@ class SemanticMemoryService {
   }
 
   /**
-   * Dapatkan daftar berkas dokumen pengetahuan yang terdaftar di guild
-   * @param {string} guildId
-   * @returns {Promise<Array<{ fileName: string, fileType: string, chunkCount: number, updatedAt: Date }>>}
+   * Dapatkan daftar berkas dokumen pengetahuan yang terdaftar di guild.
+   * Mengelompokkan record berdasarkan metadata.fileName dan menghitung chunk count.
+   * @param {string} guildId - ID server Discord
+   * @returns {Promise<Array<{fileName: string, fileType: string, chunkCount: number, updatedAt: Date}>>}
    */
   async listDocuments(guildId) {
     if (!guildId) return [];
@@ -350,10 +428,11 @@ class SemanticMemoryService {
   }
 
   /**
-   * Hapus seluruh memori semantik yang berasal dari berkas dokumen tertentu
-   * @param {string} guildId
-   * @param {string} fileName
-   * @returns {Promise<{ success: boolean, deletedCount: number }>}
+   * Hapus seluruh memori semantik yang berasal dari berkas dokumen tertentu.
+   * Iterasi semua record guild, cek metadata.fileName, destroy yang cocok.
+   * @param {string} guildId - ID server Discord
+   * @param {string} fileName - Nama file dokumen yang akan dihapus memorinya
+   * @returns {Promise<{success: boolean, deletedCount: number, error?: string}>}
    */
   async purgeDocument(guildId, fileName) {
     if (!guildId || !fileName) return { success: false, deletedCount: 0 };
@@ -386,11 +465,18 @@ class SemanticMemoryService {
   }
 
   /**
-   * Pemangkasan memori vektor berkala: de-duplikasi memori dengan cosine similarity > similarityThreshold
-   * dan pembersihan entri usang agar pencarian RAG tetap berada di bawah 5ms.
-   * @param {number} [similarityThreshold=0.92]
-   * @param {number} [maxAgeDays=90]
-   * @returns {Promise<{ prunedCount: number, duplicatesMerged: number }>}
+   * Pemangkasan memori vektor berkala: de-duplikasi dan pembersihan entri usang.
+   *
+   * Alur pruning:
+   * 1. Hapus memori berusia > maxAgeDays dengan importanceScore < 5
+   * 2. Kelompokkan memori per userId+memoryType
+   * 3. Bandingkan pasangan vektor dalam kelompok (O(n^2))
+   * 4. Jika similarity >= threshold, pertahankan yang importanceScore lebih tinggi
+   * 5. Increment importanceScore entri yang dipertahankan (max 10)
+   *
+   * @param {number} [similarityThreshold=0.92] - Ambang batas kemiripan untuk dianggap duplikat
+   * @param {number} [maxAgeDays=90] - Usia maksimum memori sebelum dihapus (kecuali high importance)
+   * @returns {Promise<{prunedCount: number, duplicatesMerged: number, error?: string}>}
    */
   async pruneDuplicateMemories(similarityThreshold = 0.92, maxAgeDays = 90) {
     try {
@@ -472,6 +558,10 @@ class SemanticMemoryService {
     }
   }
 }
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
 
 module.exports = {
   SemanticMemoryService,

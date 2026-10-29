@@ -355,22 +355,42 @@ class CommandHandler {
         }
       }
 
-      // 1. Daftar secara Global (agar tersedia di semua server, walau ada cache delay)
-      await rest.put(Routes.applicationCommands(clientId), {
-        body: commandsArray,
-      });
-      logger.info(
-        `[DEPLOY] ${commandsArray.length} command didaftarkan secara global.`,
-      );
+      // Deploy strategy: Guild-only in development (instant), Global in production.
+      // Deploying both simultaneously causes duplicate entries in Discord's command list.
+      const isDev = env.NODE_ENV !== "production";
 
-      // 2. Daftar ke Guild Spesifik jika ada (ini dijamin 100% instan untuk testing/server utama)
-      if (guildId) {
+      if (isDev && guildId) {
+        // Development: deploy to guild only (instant, no global pollution)
         await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
           body: commandsArray,
         });
         logger.info(
-          `[DEPLOY] ${commandsArray.length} command instan ke server ${guildId}.`,
+          `[DEPLOY] ${commandsArray.length} command didaftarkan ke guild ${guildId} (dev mode).`,
         );
+      } else {
+        // Production: deploy globally only (takes up to 1 hour to propagate)
+        await rest.put(Routes.applicationCommands(clientId), {
+          body: commandsArray,
+        });
+        logger.info(
+          `[DEPLOY] ${commandsArray.length} command didaftarkan secara global.`,
+        );
+
+        // Clear any leftover guild commands from dev mode to prevent duplicates
+        if (guildId) {
+          try {
+            await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+              body: [],
+            });
+            logger.info(
+              `[DEPLOY] Guild commands dibersihkan untuk mencegah duplikasi.`,
+            );
+          } catch (cleanErr) {
+            logger.warn(
+              `[DEPLOY] Gagal membersihkan guild commands: ${cleanErr.message}`,
+            );
+          }
+        }
       }
 
       writeDeployCache({

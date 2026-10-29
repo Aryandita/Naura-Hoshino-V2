@@ -36,7 +36,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("hadiah")
-            .setDescription("Jumlah Star Fragments (NSF) sebagai imbalan")
+            .setDescription("Jumlah Sukamaju Koin (SC) sebagai imbalan")
             .setRequired(true)
             .setMinValue(50),
         ),
@@ -182,7 +182,7 @@ module.exports = {
           ? openBounties
               .map(
                 (b) =>
-                  `• **[${b.bountyId}]** \`${b.title}\`\n  > 💰 Imbalan: \`${b.rewardNsf.toLocaleString("id-ID")} NSF\` • Status: \`${b.status.toUpperCase()}\``,
+                  `• **[${b.bountyId}]** \`${b.title}\`\n  > 💰 Imbalan: \`${b.rewardNsf.toLocaleString("id-ID")} SC\` • Status: \`${b.status.toUpperCase()}\``,
               )
               .join("\n")
           : "*Belum ada sayembara aktif di server ini. Buat dengan `/bounty create`!*";

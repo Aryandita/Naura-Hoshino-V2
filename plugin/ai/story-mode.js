@@ -334,7 +334,6 @@ ${
 }
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("story")
     .setDescription(

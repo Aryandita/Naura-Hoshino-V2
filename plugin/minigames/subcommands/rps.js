@@ -18,7 +18,7 @@ module.exports = {
 
     if (taruhan <= 0 || curNsf < taruhan) {
       return sendError(
-        `Taruhan tidak valid atau saldo Star Fragments (NSF) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+        `Taruhan tidak valid atau saldo Sukamaju Koin (SC) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
       );
     }
 
@@ -73,7 +73,7 @@ module.exports = {
       let color = "#FFD700";
 
       if (userChoice === botChoice) {
-        result = `SERI! Kalian berdua memilih **${userChoice}**.\nTaruhan NSF dikembalikan.`;
+        result = `SERI! Kalian berdua memilih **${userChoice}**.\nTaruhan SC dikembalikan.`;
         color = "#FFFF00";
       } else if (
         (userChoice === "batu" && botChoice === "gunting") ||

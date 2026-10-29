@@ -66,6 +66,7 @@ async function renderMovieCard(payload) {
       actors = "N/A",
       synopsis = "Tidak ada sinopsis.",
       sourceName = "IMDb / OMDB",
+      botAvatarURL = null,
     } = payload;
 
     const W = 960;
@@ -153,7 +154,8 @@ async function renderMovieCard(payload) {
     drawRoundedRect(ctx, rightX, badgeY, 130, 34, 10, "rgba(245, 197, 24, 0.2)", "#f5c518", 1.2);
     ctx.fillStyle = "#fbbf24";
     ctx.font = "bold 14px MontserratBold, InterBold, sans-serif";
-    const cleanRating = String(rating).replace(/[^0-9.]/g, "") || "8.2";
+    const ratingMatch = String(rating).match(/(\d+(?:\.\d+)?)/);
+    const cleanRating = ratingMatch ? ratingMatch[1] : "8.2";
     ctx.fillText(`IMDb ★ ${cleanRating} / 10`, rightX + 12, badgeY + 22);
 
     // Runtime Pill
@@ -214,10 +216,36 @@ async function renderMovieCard(payload) {
       ctx.fillText(l, rightX + 16, synY + 28 + idx * 22);
     });
 
-    // Footer Watermark
-    ctx.fillStyle = "rgba(148, 163, 184, 0.4)";
+    // Footer Watermark with Bot Avatar
+    const footerText = "NAURA HOSHINO CINEMA INTELLIGENCE • HOLLYWOOD & WORLD REGISTRY";
     ctx.font = "11px Inter, sans-serif";
-    ctx.fillText("NAURA HOSHINO CINEMA INTELLIGENCE • HOLLYWOOD & WORLD REGISTRY", rightX, H - 20);
+    const footerTextWidth = ctx.measureText(footerText).width;
+    const avatarSize = 24;
+    const footerGap = 8;
+    const footerStartX = rightX;
+
+    let avatarDrawn = false;
+    if (botAvatarURL) {
+      try {
+        const avatarImg = await loadImage(botAvatarURL);
+        const avatarX = footerStartX;
+        const avatarY = H - 20 - avatarSize / 2 - 3;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatarImg, avatarX, avatarY, avatarSize, avatarSize);
+        ctx.restore();
+        avatarDrawn = true;
+      } catch (err) {
+        logger.warn("[movieCanvas:renderMovieCard] Avatar load failed: " + (err?.message || err));
+      }
+    }
+
+    const textX = avatarDrawn ? footerStartX + avatarSize + footerGap : footerStartX;
+    ctx.fillStyle = "rgba(148, 163, 184, 0.4)";
+    ctx.fillText(footerText, textX, H - 20);
 
     return canvas.toBuffer("image/png");
   });

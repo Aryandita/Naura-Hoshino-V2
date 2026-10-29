@@ -10,6 +10,9 @@
 
 "use strict";
 
+const path = require("node:path");
+const fsp = require("node:fs");
+
 const env = require("../config/env.js");
 const { logger } = require("./logger.js");
 const fishAudioService = require("../services/fishAudioService.js");
@@ -167,56 +170,59 @@ class AiDjManager {
   generateDjScript(trackInfo, requesterName, listenerNames = [], lang = "id") {
     const title = trackInfo.title || (lang === "en" ? "your favorite song" : "lagu favorit kalian");
     const author = trackInfo.author || (lang === "en" ? "an awesome musician" : "musisi hebat");
-    const name = requesterName || (lang === "en" ? "Naura's best friend" : "sobat setia Naura");
+    const rawName = typeof requesterName === "string" ? requesterName.trim() : "";
+    const name = rawName
+      ? (lang === "id" ? (rawName.startsWith("Kak ") ? rawName : `Kak ${rawName}`) : rawName)
+      : (lang === "en" ? "you" : "kamu");
     const classification = classifyTrack(trackInfo);
 
     // Sapa pendengar aktif di voice jika ada selain requester
-    let listenerGreeting = "";
-    const otherListeners = listenerNames.filter((n) => n && n !== name);
+    let listenerGreeting = '';
+    const otherListeners = listenerNames.filter((n) => n && n !== name && n !== rawName);
     if (otherListeners.length > 0) {
-      const luckyListener = otherListeners[Math.floor(Math.random() * otherListeners.length)];
-      listenerGreeting = lang === "en"
-        ? ` Warm greetings to ${luckyListener} and friends in the voice channel!`
-        : ` Sapaan hangat juga buat Kak ${luckyListener} dan teman-teman di voice channel!`;
+      listenerGreeting = lang === 'en'
+        ? ' Warm greetings to everyone in the voice channel!'
+        : ' Sapaan hangat juga buat teman-teman di voice channel!';
     }
+
 
     // Koleksi template tematik per-genre
     const templatesByGenre = {
       [GENRES.LOFI]: [
-        `Meredupkan lampu studio sebentar... Suasana adem nan syahdu mengudara lewat ${title} karya ${author} untuk Kak ${name}.${listenerGreeting} Tarik napas pelan-pelan, selamat menikmati ketenangannya ya~`,
-        `Waktunya rehat sejenak dari hiruk-pikuk hari ini! Naura putarkan ${title} karya ${author} spesial buat Kak ${name}.${listenerGreeting} Pas banget buat teman belajar atau santai malam ini.`,
+        `Meredupkan lampu studio sebentar... Suasana adem nan syahdu mengudara lewat ${title} karya ${author} untuk ${name}.${listenerGreeting} Tarik napas pelan-pelan, selamat menikmati ketenangannya ya~`,
+        `Waktunya rehat sejenak dari hiruk-pikuk hari ini! Naura putarkan ${title} karya ${author} spesial buat ${name}.${listenerGreeting} Pas banget buat teman belajar atau santai malam ini.`,
       ],
       [GENRES.ANIME]: [
-        `Kyaa! Gelombang anime mengudara di frekuensi kita! Ini dia ${title} karya ${author} untuk Kak ${name}.${listenerGreeting} Yuk kita sing-along bareng Naura di voice channel!`,
-        `Vibes jejepangan yang selalu bikin bersemangat! Naura putarkan ${title} pilihan keren dari Kak ${name}.${listenerGreeting} Siap-siap larut dalam melodinya yaa!`,
+        `Kyaa! Gelombang anime mengudara di frekuensi kita! Ini dia ${title} karya ${author} untuk ${name}.${listenerGreeting} Yuk kita sing-along bareng Naura di voice channel!`,
+        `Vibes jejepangan yang selalu bikin bersemangat! Naura putarkan ${title} pilihan keren dari ${name}.${listenerGreeting} Siap-siap larut dalam melodinya yaa!`,
       ],
       [GENRES.ROCK]: [
-        `Whoaaa! Pasang sabuk pengaman kalian, distorsi gitar cadas mulai menggelegar! Trek ${title} oleh ${author} hadir untuk Kak ${name}.${listenerGreeting} Bikin adrenalin langsung memuncak!`,
-        `Energi tanpa batas! Riff membara dari ${author} dalam ${title} siap mengguncang server untuk Kak ${name}.${listenerGreeting} Naikkan volume dan nikmati hentakannya!`,
+        `Whoaaa! Pasang sabuk pengaman kalian, distorsi gitar cadas mulai menggelegar! Trek ${title} oleh ${author} hadir untuk ${name}.${listenerGreeting} Bikin adrenalin langsung memuncak!`,
+        `Energi tanpa batas! Riff membara dari ${author} dalam ${title} siap mengguncang server untuk ${name}.${listenerGreeting} Naikkan volume dan nikmati hentakannya!`,
       ],
       [GENRES.EDM]: [
-        `Turn up the bass! Dentuman beat menghentak siap membakar suasana! Naura putarkan ${title} karya ${author} untuk Kak ${name}.${listenerGreeting} Jangan ragu buat seru-seruan bareng di sini!`,
-        `Party vibes on air! Pilihan luar biasa dari Kak ${name}, ini dia ${title} oleh ${author}.${listenerGreeting} Rasakan gelombang energinya ya semuanya!`,
+        `Turn up the bass! Dentuman beat menghentak siap membakar suasana! Naura putarkan ${title} karya ${author} untuk ${name}.${listenerGreeting} Jangan ragu buat seru-seruan bareng di sini!`,
+        `Party vibes on air! Pilihan luar biasa dari ${name}, ini dia ${title} oleh ${author}.${listenerGreeting} Rasakan gelombang energinya ya semuanya!`,
       ],
       [GENRES.KPOP]: [
-        `Irama stylish dan ritmis khas K-Pop siap memikat hari kalian! Lagu ${title} dari ${author} mengudara untuk Kak ${name}.${listenerGreeting} Melodi yang asyik banget buat sing-along!`,
-        `Visual soundstage menyala! Naura hadirkan ${title} oleh ${author} untuk Kak ${name}.${listenerGreeting} Beat-nya beneran nagih di telinga!`,
+        `Irama stylish dan ritmis khas K-Pop siap memikat hari kalian! Lagu ${title} dari ${author} mengudara untuk ${name}.${listenerGreeting} Melodi yang asyik banget buat sing-along!`,
+        `Visual soundstage menyala! Naura hadirkan ${title} oleh ${author} untuk ${name}.${listenerGreeting} Beat-nya beneran nagih di telinga!`,
       ],
       [GENRES.ACOUSTIC]: [
-        `Petikan nada yang hangat dan menyentuh hati... Ini dia ${title} persembahan ${author} untuk Kak ${name}.${listenerGreeting} Biarkan melodinya menemani relung hatimu ya~`,
-        `Sentuhan nada lembut yang menenangkan jiwa. Naura hadirkan karya manis dari ${author}, ${title}, untuk Kak ${name}.${listenerGreeting} Selamat meresapi kehangatannya.`,
+        `Petikan nada yang hangat dan menyentuh hati... Ini dia ${title} persembahan ${author} untuk ${name}.${listenerGreeting} Biarkan melodinya menemani relung hatimu ya~`,
+        `Sentuhan nada lembut yang menenangkan jiwa. Naura hadirkan karya manis dari ${author}, ${title}, untuk ${name}.${listenerGreeting} Selamat meresapi kehangatannya.`,
       ],
       [GENRES.GAMING]: [
-        `Panggilan petualangan berbunyi! Soundtrack epik ${title} karya ${author} mulai mengalun untuk Kak ${name}.${listenerGreeting} Rasakan atmosfer dunia fantasi yang megah!`,
-        `Siapkan perlengkapanmu, penjelajah! Irama legendaris ${title} oleh ${author} hadir untuk Kak ${name}.${listenerGreeting} Musik yang pas buat temani grinding atau santai!`,
+        `Panggilan petualangan berbunyi! Soundtrack epik ${title} karya ${author} mulai mengalun untuk ${name}.${listenerGreeting} Rasakan atmosfer dunia fantasi yang megah!`,
+        `Siapkan perlengkapanmu, penjelajah! Irama legendaris ${title} oleh ${author} hadir untuk ${name}.${listenerGreeting} Musik yang pas buat temani grinding atau santai!`,
       ],
       [GENRES.STREAM]: [
-        `Sesi marathon siaran panjang telah dimulai! Naura hadirkan trek fokus ${title} untuk Kak ${name}.${listenerGreeting} Naura bakal tetap standby menemani aktivitasmu sampai selesai ya~`,
-        `Siaran berdurasi panjang untuk fokus maksimal. Naura temani Kak ${name} dan kawan-kawan di voice channel.${listenerGreeting} Duduk manis dan nikmati alurnya!`,
+        `Sesi marathon siaran panjang telah dimulai! Naura hadirkan trek fokus ${title} untuk ${name}.${listenerGreeting} Naura bakal tetap standby menemani aktivitasmu sampai selesai ya~`,
+        `Siaran berdurasi panjang untuk fokus maksimal. Naura temani ${name} dan kawan-kawan di voice channel.${listenerGreeting} Duduk manis dan nikmati alurnya!`,
       ],
       [GENRES.POP_DEFAULT]: [
-        `Halo halo semuanya! Lagu spesial berikutnya, ${title} oleh ${author} mengudara untuk Kak ${name}.${listenerGreeting} Selamat mendengarkan bersama Naura ya!`,
-        `Pilihan yang manis dan menyenangkan dari Kak ${name}! Sekarang Naura putarkan ${title} karya ${author}.${listenerGreeting} Yuk kita nikmati bareng-bareng!`,
+        `Halo halo semuanya! Lagu spesial berikutnya, ${title} oleh ${author} mengudara untuk ${name}.${listenerGreeting} Selamat mendengarkan bersama Naura ya!`,
+        `Pilihan yang manis dan menyenangkan dari ${name}! Sekarang Naura putarkan ${title} karya ${author}.${listenerGreeting} Yuk kita nikmati bareng-bareng!`,
       ],
     };
 
@@ -452,40 +458,21 @@ class AiDjManager {
    * @param {object} rpgContext - { location, weather, timeOfDay, playerActivity }
    * @returns {{ mood: string, suggestedTrack: object, promptPrepared: string, readyForAiActivation: boolean }}
    */
-  generateAmbientFromRpgContext(rpgContext = {}) {
-    try {
-      const location = rpgContext.location || "village";
-      const weather = rpgContext.weather || "clear";
-      const timeOfDay = rpgContext.timeOfDay || "day";
 
-      let promptTemplate = `Buat deskripsi musik ambient untuk game RPG:\n`;
-      promptTemplate += `Lokasi: ${location}. Cuaca: ${weather}. Waktu: ${timeOfDay}.\n`;
-      promptTemplate += `Berikan rekomendasi track dalam format JSON: { title, mood, instruments[], tempo }.`;
-
-      const moodMap = {
-        dungeon: "tense", boss_arena: "epic", village: "peaceful",
-        forest: "peaceful", cafe: "relaxed", battlefield: "intense",
-      };
-      const mood = moodMap[location] || "neutral";
-
-      const tracks = {
-        tense: { title: `Danger in ${location}`, mood: "suspense", instruments: ["drums", "strings"], tempo: 120 },
-        epic: { title: `Glory of ${location}`, mood: "triumphant", instruments: ["orchestra", "choir"], tempo: 140 },
-        peaceful: { title: `${location} Serenity`, mood: "calm", instruments: ["flute", "harp"], tempo: 70 },
-        relaxed: { title: `${location} Vibes`, mood: "chill", instruments: ["piano", "guitar"], tempo: 80 },
-        neutral: { title: `${location} Ambience`, mood: "ambient", instruments: ["synth", "nature"], tempo: 90 },
-      };
-
-      return {
-        mood,
-        suggestedTrack: tracks[mood] || tracks.neutral,
-        promptPrepared: promptTemplate,
-        readyForAiActivation: true,
-      };
-    } catch (error) {
-      logger.error("[AiDjManager:AmbientContext] Error:", error);
-      return { mood: "neutral", suggestedTrack: { title: "Ambient", mood: "neutral" }, promptPrepared: "", readyForAiActivation: false };
-    }
+  /**
+   * Get path to local pre-generated DJ audio file.
+   * Returns null if file doesn't exist (triggers API fallback).
+   * @param {string} genre - Genre key (lofi, anime, rock, edm, kpop, acoustic, gaming, stream, pop_default)
+   * @param {string} lang - Language code (id, en)
+   * @param {number} [variant=0] - Template variant index (0 or 1)
+   * @returns {string|null} Absolute path to .mp3 file or null
+   */
+  getLocalDjAudioPath(genre, lang, variant = 0) {
+    const fs = require('fs');
+    const path = require('path');
+    const fileName = `${genre}_${variant}.mp3`;
+    const filePath = path.join(process.cwd(), 'assets', 'audio', 'dj', lang, fileName);
+    return fs.existsSync(filePath) ? filePath : null;
   }
 }
 

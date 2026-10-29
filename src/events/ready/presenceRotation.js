@@ -230,7 +230,10 @@ module.exports = {
             const UserProfile = require("../../models/UserProfile");
             const { Op } = require("sequelize");
             const count = await UserProfile.count({ 
-              where: { premium_tier: { [Op.gt]: 0 } } 
+              where: { 
+                premiumUntil: { [Op.gt]: new Date() },
+                isPremium: true,
+              } 
             });
             return count.toLocaleString('id-ID');
           },

@@ -286,7 +286,6 @@ async function searchAnimeWaterfall(query) {
 }
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("anime")
     .setDescription(
@@ -349,6 +348,7 @@ module.exports = {
             seasonYear: item.seasonYear,
             synopsis: item.synopsis,
             sourceName: item.sourceName,
+            botAvatarURL: interaction.client.user.displayAvatarURL({ size: 64, extension: "png" }),
           });
           if (buffer) {
             cardCache.set(idx, buffer);

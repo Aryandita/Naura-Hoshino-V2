@@ -263,6 +263,54 @@ class FishAudioService {
    * @throws {SystemError} When concurrency limit reached
    * @private
    */
+
+  /**
+   * Find local pre-generated audio file matching DJ template patterns.
+   * @param {string} text - Text to match against known templates
+   * @param {Object} options - Generation options
+   * @returns {Buffer|null} Audio buffer if local file found, null otherwise
+   * @private
+   */
+  _findLocalAudio(text, options) {
+    try {
+      const aiDjManager = require("../managers/aiDjManager");
+      const genres = ["lofi", "anime", "rock", "edm", "kpop", "acoustic", "gaming", "stream", "pop_default"];
+      const langs = ["id", "en"];
+      
+      for (const lang of langs) {
+        for (const genre of genres) {
+          for (let variant = 0; variant < 2; variant++) {
+            const audioPath = aiDjManager.getLocalDjAudioPath(genre, lang, variant);
+            if (audioPath) {
+              // Check if text contains key phrases from this template
+              const textLower = text.toLowerCase();
+              const genreKeywords = {
+                lofi: ["meredupkan", "rehat", "chill", "peaceful", "tranquility"],
+                anime: ["kyaa", "gelombang anime", "jejepangan", "anime waves"],
+                rock: ["whoaaa", "distorsi", "adrenalin", "seatbelts", "blazing"],
+                edm: ["turn up the bass", "dentuman", "party vibes"],
+                kpop: ["k-pop", "stylish", "ritmis"],
+                acoustic: ["petikan", "hangat", "menyentuh", "warm", "heart-touching"],
+                gaming: ["petualangan", "soundtrack epik", "adventure", "grinding"],
+                stream: ["marathon", "siaran panjang", "fokus maksimal"],
+                pop_default: ["halo halo", "lagu spesial", "hello hello", "special song"]
+              };
+              
+              const keywords = genreKeywords[genre] || [];
+              if (keywords.some(kw => textLower.includes(kw))) {
+                logger.debug(`[FishAudio] Found local audio: ${audioPath}`);
+                return fs.readFileSync(audioPath);
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      logger.debug(`[FishAudio] Local audio check failed: ${err.message}`);
+    }
+    return null;
+  }
+
   async _acquireSlot() {
     const now = Date.now();
     this.requestTimestamps = this.requestTimestamps.filter(
@@ -365,6 +413,27 @@ class FishAudioService {
     const voiceId = options.referenceId || env.FISH_AUDIO_VOICE_ID || "";
     const format = options.format || DEFAULT_AUDIO_FORMAT;
     const cacheKey = this._getCacheKey(cleanText, voiceId, format);
+
+
+    // === LOCAL AUDIO PRIORITY ===
+    // Check for pre-generated local audio before making API calls.
+    // This eliminates rate limiting risk and provides zero-delay playback.
+    if (options.useLocal !== false && options.genre && options.lang) {
+      try {
+        const aiDjManager = require('../managers/aiDjManager');
+        const variant = options.variant || Math.floor(Math.random() * 2);
+        const localPath = aiDjManager.getLocalDjAudioPath(options.genre, options.lang, variant);
+        if (localPath) {
+          const fs = require('fs');
+          logger.info(`[FishAudio] Using local pre-generated audio: ${require('path').basename(localPath)}`);
+          return fs.readFileSync(localPath);
+        }
+      } catch (localErr) {
+        logger.debug(`[FishAudio] Local audio lookup failed, falling back to API: ${localErr.message}`);
+      }
+    }
+    // === END LOCAL AUDIO PRIORITY ===
+
 
     try {
       if (redisManager.isReady && redisManager.client) {
@@ -806,6 +875,82 @@ class FishAudioService {
         reason: "GENERATION_FAILED",
         readyForAiActivation: true,
       };
+    }
+  }
+
+  /**
+   * Get or generate cached DJ audio for a premium user.
+   * Uses display name for personalization. Caches permanently on disk.
+   * 
+   * @param {string} userId - Discord user ID
+   * @param {string} displayName - User's current display name
+   * @param {string} templateText - DJ script text with name already replaced
+   * @param {object} options - TTS options (voice model, etc.)
+   * @returns {Promise<Buffer|null>} Audio buffer or null on failure
+   */
+  async getOrGeneratePremiumAudio(userId, displayName, templateText, options = {}) {
+    const premiumDir = path.join(process.cwd(), 'assets', 'audio', 'dj', 'premium');
+    
+    const sanitizedName = displayName.replace(/[^a-zA-Z0-9\u00C0-\u024F\s]/g, '').trim().replace(/\s+/g, '_').substring(0, 30);
+    const fileName = userId + '_' + sanitizedName + '.mp3';
+    const filePath = path.join(premiumDir, fileName);
+    const manifestPath = path.join(premiumDir, 'manifest.json');
+    
+    if (!fs.existsSync(premiumDir)) {
+      try {
+        fs.mkdirSync(premiumDir, { recursive: true });
+      } catch (err) {
+        logger.warn('[FishAudio] Failed to create premium audio directory: ' + err.message);
+        return null;
+      }
+    }
+    
+    let manifest = {};
+    if (fs.existsSync(manifestPath)) {
+      try {
+        manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      } catch (e) { manifest = {}; }
+    }
+    
+    const cachedEntry = manifest[userId];
+    if (cachedEntry && cachedEntry.displayName === displayName && fs.existsSync(filePath)) {
+      logger.info('[FishAudio] Using cached premium audio for ' + displayName + ' (' + userId + ')');
+      try {
+        return fs.readFileSync(filePath);
+      } catch (err) {
+        logger.warn('[FishAudio] Failed to read cached premium audio: ' + err.message);
+      }
+    }
+    
+    if (!this.isConfigured()) {
+      logger.debug('[FishAudio] Cannot generate premium audio: API not configured');
+      return null;
+    }
+    
+    logger.info('[FishAudio] Generating premium audio for ' + displayName + ' (' + userId + ') - one-time generation');
+    try {
+      const audioBuffer = await this.generateSpeech(templateText, options);
+      
+      if (!audioBuffer) {
+        logger.warn('[FishAudio] Premium audio generation returned null for ' + displayName);
+        return null;
+      }
+      
+      fs.writeFileSync(filePath, audioBuffer);
+      
+      manifest[userId] = {
+        displayName: displayName,
+        fileName: fileName,
+        generatedAt: new Date().toISOString(),
+        templateHash: crypto.createHash('md5').update(templateText).digest('hex'),
+      };
+      fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+      
+      logger.info('[FishAudio] Premium audio cached: ' + fileName);
+      return audioBuffer;
+    } catch (err) {
+      logger.error('[FishAudio] Failed to generate premium audio for ' + displayName + ': ' + err.message);
+      return null;
     }
   }
 }

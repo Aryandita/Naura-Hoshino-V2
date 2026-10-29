@@ -34,7 +34,6 @@ const {
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("nickname")
     .setDescription("✏️ Paksa ganti nama panggilan (nickname) member.")

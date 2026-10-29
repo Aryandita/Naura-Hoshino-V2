@@ -4,7 +4,6 @@ const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const { DomainError } = require("../../src/errors/DomainError");
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("quote")
     .setDescription("📖 Dapatkan kutipan inspirasional acak."),

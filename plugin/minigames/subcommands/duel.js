@@ -26,12 +26,12 @@ module.exports = {
       const oppNsf = Number(opponentSurvival.starFragments || 0);
       if (userNsf < taruhan) {
         return sendError(
-          `Saldo Star Fragments (NSF) kamu tidak cukup untuk bertaruh sebesar **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo: ${userNsf.toLocaleString()} ${nsfEmoji})`,
+          `Saldo Sukamaju Koin (SC) kamu tidak cukup untuk bertaruh sebesar **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo: ${userNsf.toLocaleString()} ${nsfEmoji})`,
         );
       }
       if (oppNsf < taruhan) {
         return sendError(
-          `Saldo Star Fragments (NSF) <@${opponent.id}> tidak cukup untuk taruhan ini!`,
+          `Saldo Sukamaju Koin (SC) <@${opponent.id}> tidak cukup untuk taruhan ini!`,
         );
       }
     }

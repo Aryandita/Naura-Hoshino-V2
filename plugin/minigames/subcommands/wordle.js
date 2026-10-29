@@ -17,7 +17,7 @@ module.exports = {
 
     if (taruhan <= 0 || curNsf < taruhan) {
       return sendError(
-        `Taruhan tidak valid atau saldo Star Fragments (NSF) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+        `Taruhan tidak valid atau saldo Sukamaju Koin (SC) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
       );
     }
 

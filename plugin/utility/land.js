@@ -131,7 +131,7 @@ module.exports = {
           "",
           `📊 **Total Kapling Dimiliki:** \`${clanStats.plotsOwned} Plot\``,
           `🛡️ **Bonus Pertahanan Klan:** \`+${clanStats.totalDefense} DEF\``,
-          `💰 **Kapasitas Ekstra Brankas:** \`+${clanStats.totalVaultBonus.toLocaleString("id-ID")} NSF\``,
+          `💰 **Kapasitas Ekstra Brankas:** \`+${clanStats.totalVaultBonus.toLocaleString("id-ID")} SC\``,
           `👥 **Kapasitas Ekstra Anggota:** \`+${clanStats.maxMembersBonus} Member\``,
           "",
           "📍 **Daftar Kapling & Fasilitas:**",

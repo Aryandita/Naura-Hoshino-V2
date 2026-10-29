@@ -3,7 +3,6 @@ const ui = require("../../src/config/ui");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("diceroll")
     .setDescription("🎲 Lempar dadu (pilih jumlah sisi).")

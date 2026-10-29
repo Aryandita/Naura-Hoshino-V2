@@ -254,27 +254,31 @@ module.exports = {
           aiDialog = contextualDialog;
         }
 
-        // Potret NPC - gunakan variant portrait jika tersedia
+        // Potret NPC - hanya coba variant jika NPC punya schedule eksplisit
         let portrait = null;
-        if (npcState.portraitVariant) {
+
+        // Cek apakah NPC ini punya schedule yang didefinisikan
+        const hasSchedule = npcScheduleEngine.schedules && npcScheduleEngine.schedules[currentNpcId];
+
+        if (hasSchedule && npcState.portraitVariant) {
+          // Hanya ambil variant portrait jika NPC memang punya schedule
           portrait = npcScheduleEngine.getPortraitPath(currentNpcId, npcState.portraitVariant);
         }
-        
-        // Fallback ke default portrait
+
+        // Selalu fallback ke base portrait dari config npcs.js
         if (!portrait) {
           portrait = findPortrait(npc);
         }
 
         const files = [];
-        let iconURL;
+        let iconURL = null; // Jangan default ke bot avatar
 
         if (portrait) {
           const fileName = `npc_${npc.id}${path.extname(portrait)}`;
           files.push(new AttachmentBuilder(portrait, { name: fileName }));
           iconURL = `attachment://${fileName}`;
-        } else {
-          iconURL = interaction.client.user.displayAvatarURL({ size: 512 });
         }
+        // Jika tidak ada portrait sama sekali, iconURL tetap null (header tanpa icon)
 
         // Build description dengan activity info
         const activityInfo = npcState.isAvailable 

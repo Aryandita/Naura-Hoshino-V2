@@ -1,15 +1,46 @@
 "use strict";
 
 /**
- * aiEnsembleRouter.js - Cross-Model Ensemble Router & Living AI Gateway
+ * @module aiEnsembleRouter
+ * @description Cross-Model Ensemble Router and Living AI Gateway untuk Naura Hoshino V2.
  *
- * Mengatur rute pemanggilan model AI secara cerdas berdasarkan tipe tugas (Task Type):
- * 1. Gemini (Google GenAI): Unggul untuk chat umum, analisis multimodal (gambar/vision), dan konteks besar.
- * 2. Groq (LLaMA 3.3 70B): Unggul untuk penalaran taktis cepat (~250 token/detik), persidangan, dan opsi cerita RPG.
- * 3. Ollama / Fallback: Penyelamat darurat saat terjadi pemadaman koneksi cloud.
+ * ## Architecture Overview
+ * Modul ini merupakan gateway sentral yang mengatur rute pemanggilan model AI secara cerdas
+ * berdasarkan tipe tugas (Task Type). Sistem menggunakan arsitektur ensemble dengan tiga
+ * provider AI utama yang memiliki spesialisasi berbeda:
  *
- * Dilengkapi Circuit Breaker per provider untuk mengalihkan beban secara otomatis bila terjadi HTTP 429 / timeout.
+ * 1. **Gemini (Google GenAI)**: Unggul untuk chat umum, analisis multimodal (gambar/vision),
+ *    dan konteks besar. Model default: gemini-2.5-flash.
+ * 2. **Groq (LLaMA 3.3 70B)**: Unggul untuk penalaran taktis cepat (~250 token/detik),
+ *    persidangan tribunal, dan opsi cerita RPG. Memiliki failover model bertingkat.
+ * 3. **Ollama / Fallback**: Penyelamat darurat saat terjadi pemadaman koneksi cloud.
+ *    Berjalan lokal dengan timeout 4 detik.
+ *
+ * ## Key Features
+ * - Task-based intelligent routing dengan prioritas provider per tipe tugas
+ * - Circuit Breaker pattern per provider (CLOSED -> OPEN -> HALF_OPEN) untuk failover otomatis
+ * - HTTP 429 / rate limit detection dengan cooldown 60 detik
+ * - Persona system dengan 5 karakter AI (default, tsundere, kuudere, gamer, butler)
+ * - User quota management berbasis Redis dengan fallback in-memory
+ * - VIP tier-aware quota (unlimited untuk Owner dan VIP Tier 2+)
+ * - Groq model cascade failover (70B -> 8B -> 1B)
+ * - Telemetry metrics untuk Web Dashboard monitoring
+ * - Graceful degradation ke i18n fallback saat semua provider gagal
+ * - Dual API signature: routeTask(taskType, payload) dan routeTask(options)
+ *
+ * ## Integration Points
+ * - geminiClient - Google Gemini API client
+ * - config/env - Environment configuration (API keys, models)
+ * - managers/cacheManager - User profile dan premium tier lookup
+ * - managers/redisManager - Quota tracking dan caching
+ * - managers/languageManager - i18n fallback responses
+ * - adapters/aiBoundaryAdapter - Response normalization
+ * - errors/DomainError - Structured error types
  */
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
 const env = require("../config/env");
 const { logger } = require("../managers/logger");
@@ -18,6 +49,12 @@ const geminiClient = require("./geminiClient");
 const { SystemError, ExternalAPIError, DomainError } = require("../errors/DomainError");
 const languageManager = require("../managers/languageManager");
 
+/**
+ * Enum kategori tugas AI yang menentukan prioritas routing provider.
+ * Setiap task type dipetakan ke urutan provider preferensi di DEFAULT_ROUTING_MAP.
+ * @readonly
+ * @enum {string}
+ */
 const TASK_TYPES = Object.freeze({
   GENERAL_CHAT: "GENERAL_CHAT",
   GENERAL_CONVERSATION: "GENERAL_CONVERSATION",
@@ -30,6 +67,11 @@ const TASK_TYPES = Object.freeze({
   OFFLINE_FALLBACK: "OFFLINE_FALLBACK",
 });
 
+/**
+ * Peta routing default: setiap task type memiliki urutan prioritas provider.
+ * Provider pertama adalah preferensi utama, berikutnya adalah failover.
+ * @type {Object<string, string[]>}
+ */
 const DEFAULT_ROUTING_MAP = {
   [TASK_TYPES.GENERAL_CHAT]: ["gemini", "groq", "ollama"],
   [TASK_TYPES.GENERAL_CONVERSATION]: ["gemini", "groq", "ollama"],
@@ -42,6 +84,12 @@ const DEFAULT_ROUTING_MAP = {
   [TASK_TYPES.OFFLINE_FALLBACK]: ["ollama", "groq", "gemini"],
 };
 
+/**
+ * Definisi persona AI yang tersedia untuk modifikasi gaya bicara Naura.
+ * Setiap persona memiliki prompt modifier yang disuntikkan ke system instruction.
+ * @readonly
+ * @type {Object<string, {key: string, name: string, description: string, promptModifier: string}>}
+ */
 const PERSONAS = Object.freeze({
   default: {
     key: "default",
@@ -75,7 +123,29 @@ const PERSONAS = Object.freeze({
   },
 });
 
+// ============================================================================
+// CLASS: CircuitBreaker
+// ============================================================================
+
+/**
+ * Implementasi Circuit Breaker pattern untuk proteksi failover provider AI.
+ *
+ * State machine:
+ * - CLOSED: Normal operasi, request diteruskan. Failure dihitung.
+ * - OPEN: Provider dianggap down, request ditolak sampai cooldown berakhir.
+ * - HALF_OPEN: Cooldown berakhir, satu request percobaan diperbolehkan.
+ *
+ * Trigger transisi ke OPEN:
+ * - HTTP 429 / rate limit / quota exhausted (langsung OPEN)
+ * - Failure count mencapai failureThreshold (default 3)
+ */
 class CircuitBreaker {
+  /**
+   * @param {string} name - Nama provider (gemini, groq, ollama)
+   * @param {Object} [options]
+   * @param {number} [options.failureThreshold=3] - Jumlah kegagalan sebelum circuit terbuka
+   * @param {number} [options.cooldownMs=60000] - Durasi cooldown dalam milidetik
+   */
   constructor(name, options = {}) {
     this.name = name;
     this.failureThreshold = options.failureThreshold || 3;
@@ -88,6 +158,11 @@ class CircuitBreaker {
     this.successCount = 0;
   }
 
+  /**
+   * Memeriksa apakah provider tersedia untuk menerima request.
+   * Mengelola transisi state OPEN -> HALF_OPEN berdasarkan cooldown.
+   * @returns {boolean} True jika provider boleh menerima request
+   */
   isAvailable() {
     if (this.state === "CLOSED") return true;
     if (this.state === "OPEN") {
@@ -101,6 +176,11 @@ class CircuitBreaker {
     return true; // HALF_OPEN
   }
 
+  /**
+   * Mencatat keberhasilan request dan mereset failure counter.
+   * Menyimpan latency untuk perhitungan metrik rata-rata (rolling window 20).
+   * @param {number} latencyMs - Waktu respons dalam milidetik
+   */
   recordSuccess(latencyMs) {
     this.failureCount = 0;
     this.state = "CLOSED";
@@ -112,6 +192,10 @@ class CircuitBreaker {
     }
   }
 
+  /**
+   * Mencatat kegagalan request. Memicu transisi ke OPEN jika rate limit atau threshold tercapai.
+   * @param {Error} error - Error yang terjadi
+   */
   recordFailure(error) {
     this.failureCount++;
     this.totalRequests++;
@@ -134,6 +218,10 @@ class CircuitBreaker {
     }
   }
 
+  /**
+   * Mengembalikan metrik performa provider untuk telemetri dashboard.
+   * @returns {{name: string, state: string, failureCount: number, totalRequests: number, successCount: number, avgLatencyMs: number}}
+   */
   getMetrics() {
     const avgLatency =
       this.rollingLatencies.length > 0
@@ -153,6 +241,7 @@ class CircuitBreaker {
     };
   }
 
+  /** Reset circuit breaker ke kondisi awal (untuk unit test). */
   reset() {
     this.state = "CLOSED";
     this.failureCount = 0;
@@ -161,6 +250,14 @@ class CircuitBreaker {
   }
 }
 
+// ============================================================================
+// CLASS: AiEnsembleRouter
+// ============================================================================
+
+/**
+ * Router utama yang mengorkestrasi pemanggilan AI multi-provider dengan failover bertingkat.
+ * Singleton instance diekspor sebagai default export modul ini.
+ */
 class AiEnsembleRouter {
   constructor() {
     this.routingMap = { ...DEFAULT_ROUTING_MAP };
@@ -176,6 +273,10 @@ class AiEnsembleRouter {
    * @param {string} provider
    * @returns {boolean}
    */
+  // ==========================================================================
+  // PUBLIC METHODS
+  // ==========================================================================
+
   isProviderConfigured(provider) {
     switch (provider) {
       case "gemini":
@@ -343,6 +444,22 @@ class AiEnsembleRouter {
   /**
    * Eksekusi panggilan ke Google Gemini API
    * @private
+   */
+  // ==========================================================================
+  // PRIVATE METHODS
+  // ==========================================================================
+
+  /**
+   * Eksekusi panggilan ke Google Gemini API.
+   * Menyuntikkan system instruction sebagai prefix part jika ada.
+   * @private
+   * @param {Object} params
+   * @param {Array<Object>} params.parts - Content parts untuk Gemini
+   * @param {Array<Object>} params.history - Riwayat percakapan
+   * @param {string} [params.systemInstruction] - System instruction/persona
+   * @param {Object} params.config - Konfigurasi generation
+   * @param {Object} [params.message] - Discord message untuk function calling
+   * @returns {Promise<{text: string, provider: string, model: string}>}
    */
   async _callGemini({ parts, history, systemInstruction, config, message }) {
     const finalParts = [...parts];
@@ -700,6 +817,10 @@ class AiEnsembleRouter {
     };
   }
 
+  /**
+   * Mengambil metrik circuit breaker semua provider.
+   * @returns {Object<string, {name: string, state: string, failureCount: number, totalRequests: number, successCount: number, avgLatencyMs: number}>}
+   */
   getCircuitBreakerMetrics() {
     const metrics = {};
     for (const [name, breaker] of Object.entries(this.breakers)) {
@@ -709,6 +830,14 @@ class AiEnsembleRouter {
   }
 }
 
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+/**
+ * Singleton instance AiEnsembleRouter dengan constants ter-attach.
+ * @type {AiEnsembleRouter & {TASK_TYPES: typeof TASK_TYPES, PERSONAS: typeof PERSONAS, AiEnsembleRouter: typeof AiEnsembleRouter, CircuitBreaker: typeof CircuitBreaker}}
+ */
 const ensembleRouter = new AiEnsembleRouter();
 ensembleRouter.TASK_TYPES = TASK_TYPES;
 ensembleRouter.PERSONAS = PERSONAS;

@@ -1,29 +1,98 @@
 "use strict";
 
+/**
+ * @module musicContract
+ * @description Music Public Domain Contract - Antarmuka publik terisolasi untuk
+ * manipulasi pemputaran audio, antrean lagu Poru v5, node Lavalink v4, dan
+ * penyiaran telemetri status musik melalui EventBus.
+ *
+ * ## Interface Methods
+ * - `SetMusicManager(manager)` - Suntikkan instance MusicManager
+ * - `getManager()` - Ambil instance MusicManager (lokal atau ServiceContainer)
+ * - `getPoru()` - Ambil instance Poru aktif
+ * - `getPlayer(guildId)` - Ambil player Poru di guild tertentu
+ * - `getState(guildId)` - Baca status pemputaran audio di guild
+ * - `skip(guildId)` - Lewati lagu yang sedang diputar
+ * - `pause(guildId)` - Jeda pemputaran musik
+ * - `resume(guildId)` - Lanjutkan pemputaran musik
+ * - `stop(guildId)` - Hentikan pemputaran dan bersihkan antrean
+ * - `setVolume(guildId, volume)` - Atur volume (0-100)
+ * - `getQueue(guildId)` - Ambil daftar lagu di antrean
+ * - `getClusterStatus()` - Ambil status kluster node Lavalink
+ *
+ * @example
+ * const music = require("./musicContract");
+ * const state = music.getState("guild-id-here");
+ * music.skip("guild-id-here");
+ * music.setVolume("guild-id-here", 75);
+ */
+
 const eventBus = require("../../core/eventBus");
 const { lavalinkClusterManager } = require("../../managers/lavalinkClusterManager");
 
+// ========================================================================
+// CONSTANTS
+// ========================================================================
+
+/** @type {number} Volume minimum yang diizinkan */
+const VOLUME_MIN = 0;
+
+/** @type {number} Volume maksimum yang diizinkan */
+const VOLUME_MAX = 100;
+
+/** @type {number} Volume default saat player tidak tersedia */
+const VOLUME_DEFAULT = 100;
+
+/** @type {string} Kode alasan: tidak ada player aktif di guild */
+const REASON_NO_ACTIVE_PLAYER = "NO_ACTIVE_PLAYER";
+
 /**
- * Music Public Domain Contract
- * Menyediakan antarmuka publik terisolasi untuk manipulasi pemutaran audio,
- * antrean lagu Poru v5, node Lavalink v4, dan penyiaran telemetri status.
+ * @type {Readonly<object>} State musik default untuk guild tanpa player aktif
+ */
+const INACTIVE_STATE = Object.freeze({
+  isActive: false,
+  isPlaying: false,
+  isPaused: false,
+  currentTrack: null,
+  position: 0,
+  volume: 0,
+  queueLength: 0,
+});
+
+/**
+ * @type {Readonly<{currentTrack: null, queue: Array}>} Antrean kosong default
+ */
+const EMPTY_QUEUE = Object.freeze({ currentTrack: null, queue: [] });
+
+// =======================================================================
+// INTERFACE DEFINITION
+// =========================================================================
+
+/**
+ * Kelas kontrak domain musik yang menyediakan antarmuka publik terisolasi
+ * untuk kontrol pemputaran audio, antrean Poru v5, dan node Lavalink v4.
  */
 class MusicContract {
   constructor() {
+    /** @type {object|null} Instance MusicManager lokal (lazy-loaded) */
     this._musicManager = null;
   }
 
   /**
-   * Suntikkan atau daftarkan instance MusicManager.
-   * @param {object} manager
+   * Menyuntikkan atau mendaftarkan instance MusicManager secara manual.
+   * Gunakan ini jika MusicManager sudah tersedia sebelum akses pertama.
+   *
+   * @param {object} manager - Instance MusicManager yang memiliki properti `poru`
    */
   setMusicManager(manager) {
     this._musicManager = manager;
   }
 
   /**
-   * Ambil instance MusicManager dari lokal atau ServiceContainer.
-   * @returns {object|null}
+   * Mengambil instance MusicManager dari penyimpanan lokal atau ServiceContainer.
+   * Jiba belum diset, mencoba resolve dari container secara lazy.
+   *
+   * @returns {object|null} Instance MusicManager atau null jika tidak tersedia
    */
   getManager() {
     if (this._musicManager) return this._musicManager;
@@ -37,7 +106,9 @@ class MusicContract {
   }
 
   /**
-   * Mengambil instance Poru aktif.
+   * Mengambil instance Poru (Lavalink client wrapper) yang aktif.
+   *
+   * @returns {object|null} Instance Poru atau null jika MusicManager tidak tersedia
    */
   getPoru() {
     const manager = this.getManager();
@@ -45,9 +116,10 @@ class MusicContract {
   }
 
   /**
-   * Mengambil player Poru aktif di guild.
-   * @param {string} guildId
-   * @returns {object|null}
+   * Mengambil player Poru aktif di guild tertentu.
+   *
+   * @param {string} guildId - Discord Guild Snowflake ID
+   * @returns {object|null} Instance Poru Player atau null jika tidak ada player aktif
    */
   getPlayer(guildId) {
     if (!guildId) return null;
@@ -56,23 +128,17 @@ class MusicContract {
   }
 
   /**
-   * Membaca status pemutaran audio saat ini di suatu guild.
-   * @param {string} guildId
-   * @returns {Readonly<object>}
+   * Membaca status pemputaran audio saat ini di suatu guild.
+   * Mengembalikan state inactive jika tidak ada player aktif.
+   *
+   * @param {string} guildId - Discord Guild Snowflake ID
+   * @returns {Readonly<object>} Status pemputaran beku dengan properti:
+   *   guildId, isActive, isPlaying, isPaused, currentTrack, position, volume, queueLength
    */
   getState(guildId) {
     const player = this.getPlayer(guildId);
     if (!player) {
-      return Object.freeze({
-        guildId,
-        isActive: false,
-        isPlaying: false,
-        isPaused: false,
-        currentTrack: null,
-        position: 0,
-        volume: 0,
-        queueLength: 0,
-      });
+      return Object.freeze({ guildId, ...INACTIVE_STATE });
     }
 
     const current = player.currentTrack;
@@ -91,20 +157,22 @@ class MusicContract {
           }
         : null,
       position: player.position || 0,
-      volume: player.volume || 100,
+      volume: player.volume || VOLUME_DEFAULT,
       queueLength: player.queue?.length || 0,
     });
   }
 
   /**
-   * Melewati lagu yang sedang diputar.
-   * @param {string} guildId
-   * @returns {Readonly<{ ok: boolean, reason?: string }>}
+   * Melew_ti lagu yang sedang diputar di guild.
+   * Memancarkan event music:skip dan music:state setelah skip.
+   *
+   * @param {string} guildId - Discord Guild Snowflake ID
+   * @returns {Readonly<{ok: boolean, reason?: string}>} Hasil operasi
    */
   skip(guildId) {
     const player = this.getPlayer(guildId);
     if (!player) {
-      return Object.freeze({ ok: false, reason: "NO_ACTIVE_PLAYER" });
+      return Object.freeze({ ok: false, reason: REASON_NO_ACTIVE_PLAYER });
     }
 
     if (typeof player.stop === "function") {
@@ -118,14 +186,16 @@ class MusicContract {
   }
 
   /**
-   * Menjeda pemutaran musik di guild.
-   * @param {string} guildId
-   * @returns {Readonly<{ ok: boolean, reason?: string }>}
+   * Menjida pemputaran musik di guild.
+   * Memancarkan event music:state setelah pause.
+   *
+   * @param {string} guildId - Discord Guild Snowflake ID
+   * @returns {Readonly<{ok: boolean, reason?: string}>} Hasil operasi
    */
   pause(guildId) {
     const player = this.getPlayer(guildId);
     if (!player) {
-      return Object.freeze({ ok: false, reason: "NO_ACTIVE_PLAYER" });
+      return Object.freeze({ ok: false, reason: REASON_NO_ACTIVE_PLAYER });
     }
 
     if (typeof player.pause === "function") {
@@ -137,14 +207,16 @@ class MusicContract {
   }
 
   /**
-   * Melanjutkan pemutaran musik di guild.
-   * @param {string} guildId
-   * @returns {Readonly<{ ok: boolean, reason?: string }>}
+   * Melajutkan pemputaran musik yang sedang dijeda di guild.
+   * Memancarkan event music:state setelah resume.
+   *
+   * @param {string} guildId - Discord Guild Snowflake ID
+   * @returns {Readonly<{ok: boolean, reason?: string}>} Hasil operasi
    */
   resume(guildId) {
     const player = this.getPlayer(guildId);
     if (!player) {
-      return Object.freeze({ ok: false, reason: "NO_ACTIVE_PLAYER" });
+      return Object.freeze({ ok: false, reason: REASON_NO_ACTIVE_PLAYER });
     }
 
     if (typeof player.pause === "function") {
@@ -156,14 +228,17 @@ class MusicContract {
   }
 
   /**
-   * Menghentikan pemutaran musik dan membersihkan antrean.
-   * @param {string} guildId
-   * @returns {Readonly<{ ok: boolean, reason?: string }>}
+   * Menghentikan pemputaran musik dan mengbersihan antrean di guild.
+   * Memanggil queue.clear() lalu player.destroy().
+   * Memancarkan event music:state dengan status inactive.
+   *
+   * @param {string} guildId - Discord Guild Snowflake ID
+   * @returns {Readonly<{ok: boolean, reason?: string}>} Hasil operasi
    */
   stop(guildId) {
     const player = this.getPlayer(guildId);
     if (!player) {
-      return Object.freeze({ ok: false, reason: "NO_ACTIVE_PLAYER" });
+      return Object.freeze({ ok: false, reason: REASON_NO_ACTIVE_PLAYER });
     }
 
     if (player.queue && typeof player.queue.clear === "function") {
@@ -175,29 +250,26 @@ class MusicContract {
 
     eventBus.emit("music:state", {
       guildId,
-      isActive: false,
-      isPlaying: false,
-      isPaused: false,
-      currentTrack: null,
-      position: 0,
-      volume: 0,
-      queueLength: 0,
+      ...INACTIVE_STATE,
     });
 
     return Object.freeze({ ok: true });
   }
 
   /**
-   * Mengatur volume pemutaran musik (0 - 100).
-   * @param {string} guildId
-   * @param {number} volume
-   * @returns {Readonly<{ ok: boolean, volume: number, reason?: string }>>}
+   * Mengatur volume pemputaran musik di guild.
+   * Nilai dijepit (clamped) antara 0-100 dan dibulatkan ke integer.
+   *
+   * @param {string} guildId - Discord Guild Snowflake ID
+   * @param {number} volume - Tingkat volume yang diinginkan (0-100)
+   * @returns {Readonly<{ok: boolean, volume: number, reason?: string}>}
+   *   Hasil operasi dengan volume aktual yang diterapkan
    */
   setVolume(guildId, volume) {
-    const safeVol = Math.max(0, Math.min(100, Math.floor(Number(volume) || 0)));
+    const safeVol = Math.max(VOLUME_MIN, Math.min(VOLUME_MAX, Math.floor(Number(volume) || 0)));
     const player = this.getPlayer(guildId);
     if (!player) {
-      return Object.freeze({ ok: false, volume: 0, reason: "NO_ACTIVE_PLAYER" });
+      return Object.freeze({ ok: false, volume: 0, reason: REASON_NO_ACTIVE_PLAYER });
     }
 
     if (typeof player.setVolume === "function") {
@@ -209,14 +281,16 @@ class MusicContract {
   }
 
   /**
-   * Mengambil daftar lagu di dalam antrean.
-   * @param {string} guildId
-   * @returns {Readonly<{ currentTrack: object|null, queue: Array<object> }>}
+   * Mengambil daftar lagu di dalam antrean guild.
+   *
+   * @param {string} guildId - Discord Guild Snowflake ID
+   * @returns {Readonly<{currentTrack: object|null, queue: Array<object>}>}
+   *   Lagu yang sedang diputar dan array antrean yang dibekukan
    */
   getQueue(guildId) {
     const player = this.getPlayer(guildId);
     if (!player) {
-      return Object.freeze({ currentTrack: null, queue: [] });
+      return EMPTY_QUEUE;
     }
 
     const queueList = player.queue ? Array.from(player.queue) : [];
@@ -227,12 +301,18 @@ class MusicContract {
   }
 
   /**
-   * Mengambil status kluster node Lavalink.
+   * Mengambil status kluster node Lavalink dari lavalinkClusterManager.
+   *
+   * @returns {object} Status kluster node Lavalink
    */
   getClusterStatus() {
     return lavalinkClusterManager.getStatus(this.getPoru());
   }
 }
+
+// ========================================================================
+// EXPORTS
+// =======================================================================
 
 const musicContract = new MusicContract();
 musicContract.MusicContract = MusicContract;

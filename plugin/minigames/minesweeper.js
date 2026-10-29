@@ -127,8 +127,6 @@ function gridToString(grid) {
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
-  
   /**
    * Definisi slash command untuk minesweeper
    * @type {import('discord.js').SlashCommandSubcommandBuilder}

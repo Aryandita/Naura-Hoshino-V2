@@ -39,7 +39,6 @@ const CDN_BASE_URL = "https://cdn.discordapp.com/emojis";
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("steal")
     .setDescription("Mencuri emoji custom untuk dimasukkan ke server ini")

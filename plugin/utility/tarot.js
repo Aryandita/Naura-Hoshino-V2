@@ -11,8 +11,6 @@ const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 
 module.exports = {
-  isSubcommand: true,
-
   /**
    * Eksekutor subcommand /astral spread dengan Discord Components V2 layout 5-lapisan.
    * @param {import("discord.js").ChatInputCommandInteraction} interaction

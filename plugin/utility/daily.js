@@ -36,45 +36,42 @@ const GRACE_PERIOD_MS = 48 * 60 * 60 * 1000; // 48 jam sebelum streak putus
 
 // Tabel Hadiah Berjenjang (Day 1 - 7 Milestone Cycle)
 const REWARD_TABLE = [
-  { day: 1, gold: 1000, starFragments: 500, xp: 50, coupons: 0, bonus: null },
-  { day: 2, gold: 1500, starFragments: 750, xp: 75, coupons: 0, bonus: null },
+  { day: 1, sukamajuCoins: 1000, xp: 50, scholarshipVouchers: 0, bonus: null },
+  { day: 2, sukamajuCoins: 1500, xp: 75, scholarshipVouchers: 0, bonus: null },
   {
     day: 3,
-    gold: 2000,
-    starFragments: 1000,
+    sukamajuCoins: 2000,
     xp: 100,
-    coupons: 0,
+    scholarshipVouchers: 0,
     bonus: "📦 1x Mystery Lootbox",
   },
-  { day: 4, gold: 2500, starFragments: 1500, xp: 150, coupons: 0, bonus: null },
+  { day: 4, sukamajuCoins: 2500, xp: 150, scholarshipVouchers: 0, bonus: null },
   {
     day: 5,
-    gold: 3500,
-    starFragments: 2000,
+    sukamajuCoins: 3500,
     xp: 200,
-    coupons: 1,
-    bonus: "🎟️ 1x Naura Coupon",
+    scholarshipVouchers: 1,
+    bonus: "🎟️ 1x Voucher Beasiswa",
   },
-  { day: 6, gold: 5000, starFragments: 2500, xp: 250, coupons: 0, bonus: null },
+  { day: 6, sukamajuCoins: 5000, xp: 250, scholarshipVouchers: 0, bonus: null },
   {
     day: 7,
-    gold: 10000,
-    starFragments: 5000,
+    sukamajuCoins: 10000,
     xp: 500,
-    coupons: 3,
-    bonus: "🌟 3x Naura Coupon + 🎴 Rare Card Pack",
+    scholarshipVouchers: 3,
+    bonus: "🌟 3x Voucher Beasiswa + 🎴 Rare Card Pack",
   },
 ];
 
 function getStreakCalendarCard(currentDay) {
   const activeIndex = ((currentDay - 1) % 7) + 1;
   const days = [
-    { day: 1, label: "Day 1", reward: "1.000 NSF", icon: "🪙" },
-    { day: 2, label: "Day 2", reward: "1.500 NSF", icon: "🪙" },
+    { day: 1, label: "Day 1", reward: "1.000 SC", icon: "🪙" },
+    { day: 2, label: "Day 2", reward: "1.500 SC", icon: "🪙" },
     { day: 3, label: "Day 3", reward: "Mystery Box", icon: "📦" },
-    { day: 4, label: "Day 4", reward: "2.500 NSF", icon: "🪙" },
-    { day: 5, label: "Day 5", reward: "1x Kupon", icon: "🎟️" },
-    { day: 6, label: "Day 6", reward: "5.000 NSF", icon: "🪙" },
+    { day: 4, label: "Day 4", reward: "2.500 SC", icon: "🪙" },
+    { day: 5, label: "Day 5", reward: "1x VB", icon: "🎟️" },
+    { day: 6, label: "Day 6", reward: "5.000 SC", icon: "🪙" },
     { day: 7, label: "Day 7", reward: "Jackpot Kosmik", icon: "👑" },
   ];
 
@@ -209,11 +206,10 @@ module.exports = {
       const reward = REWARD_TABLE[dayInCycle - 1];
 
       await Promise.all([
-        cacheManager.incrementUserProfile(userId, "economy_wallet", reward.gold),
+        cacheManager.incrementUserSurvival(userId, "sukamajuCoins", reward.sukamajuCoins),
         cacheManager.incrementUserProfile(userId, "leveling_xp", reward.xp),
-        cacheManager.incrementUserSurvival(userId, "starFragments", reward.starFragments),
-        reward.coupons > 0
-          ? cacheManager.incrementUserSurvival(userId, "coupons", reward.coupons)
+                reward.scholarshipVouchers > 0
+          ? cacheManager.incrementUserSurvival(userId, "scholarshipVouchers", reward.scholarshipVouchers)
           : Promise.resolve(),
         cacheManager.mutateUserProfileJson(userId, "cooldowns", (cd) => {
           cd.daily = new Date(now).toISOString();
@@ -248,10 +244,10 @@ module.exports = {
         `${getStreakCalendarCard(newStreak)}`,
         ``,
         `**Perolehan Hadiah (Hari ke-${dayInCycle}):**`,
-        `• 💵 **+${reward.gold.toLocaleString("id-ID")} Gold** (Saldo dompet)`,
-        `• ⭐ **+${reward.starFragments.toLocaleString("id-ID")} Star Fragments**`,
+        `• 🪙 **+${reward.sukamajuCoins.toLocaleString("id-ID")} Sukamaju Koin (SC)**`,
+
         `• 💬 **+${reward.xp} Chat XP**`,
-        reward.coupons > 0 ? `• 🎟️ **+${reward.coupons} Naura Coupon** (Mata uang langka)` : "",
+        reward.scholarshipVouchers > 0 ? `• 🎟️ **+${reward.scholarshipVouchers} Voucher Beasiswa (VB)**` : "",
         reward.bonus ? `• **Bonus Tambahan:** ${reward.bonus}` : "",
         ``,
         `-# Tips: Pasang jimat di toko survival agar streak tetap terlindungi jika berhalangan.`,
@@ -299,8 +295,8 @@ module.exports = {
         `${getStreakCalendarCard(currentStreak)}`,
         ``,
         `**Pratinjau Hadiah Berikutnya (Hari ke-${nextDay}):**`,
-        `• 💵 \`+${nextReward.gold.toLocaleString("id-ID")} Gold\``,
-        `• ⭐ \`+${nextReward.starFragments.toLocaleString("id-ID")} Star Fragments\``,
+        `• 🪙 \`+${nextReward.sukamajuCoins.toLocaleString("id-ID")} SC\``,
+
         `• 💬 \`+${nextReward.xp} XP\``,
         nextReward.bonus ? `• ${nextReward.bonus}` : "",
       ].filter(Boolean).join("\n");
@@ -364,7 +360,7 @@ function setupDailyCollector(message, interaction, userId, questsCompleted, tota
         `2. **Taklukkan Monster Dungeon:** \`${dCount}/1 Selesai\` ${dCount >= 1 ? "✅" : "⏳"} *(Gunakan \`/survival dungeon\`)*`,
         `3. **Kumpulkan Bahan Alam:** \`${cCount}/3 Selesai\` ${cCount >= 3 ? "✅" : "⏳"} *(Gunakan \`/survival collect\`)*`,
         ``,
-        `🎁 **Hadiah Penyelesaian Semua Misi:** \`+2.500 NSF\`, \`+150 XP\`, \`+1x Mystery Crate\``,
+        `🎁 **Hadiah Penyelesaian Semua Misi:** \`+2.500 SC\`, \`+150 XP\`, \`+1x Mystery Crate\``,
         claimed ? `\n✅ *Semua hadiah misi harian telah berhasil diklaim hari ini!*` : `\n💡 *Selesaikan ketiga misi di atas lalu jalankan \`/survival quest\` untuk klaim hadiah!*`,
       ].join("\n");
 

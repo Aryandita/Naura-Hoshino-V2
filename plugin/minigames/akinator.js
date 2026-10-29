@@ -100,8 +100,6 @@ const AKINATOR_REGION = "id";
 // ============================================================================
 
 module.exports = {
-  isSubcommand: true,
-  
   /**
    * Definisi slash command untuk akinator
    * @type {import('discord.js').SlashCommandSubcommandBuilder}

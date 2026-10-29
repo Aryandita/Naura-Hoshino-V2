@@ -15,7 +15,6 @@ const ui = require("../../src/config/ui");
 const mysteryEngine = require("../../src/ai/mysteryEngine");
 
 module.exports = {
-  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("mystery")
     .setDescription("🕵️‍♂️ Game Deduksi Sosial & AI Murder Mystery Game Master")
