@@ -109,7 +109,7 @@ module.exports = {
    * @type {import('discord.js').SlashCommandSubcommandBuilder}
    */
   data: new SlashCommandBuilder()
-    .setName("arcade")
+    .setName("holo-arcade")
     .setDescription(
       "\ud83d\udd79\ufe0f Holo-Arcade: Mainkan mini-game interaktif dan kumpulkan MP!",
     )

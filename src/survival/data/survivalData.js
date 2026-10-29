@@ -140,7 +140,7 @@ builder.addSubcommand((sub) =>
     ),
 );
 
-const { data } = optimizeCommandBuilder(builder, 0, 38);
+const { data } = optimizeCommandBuilder(builder, 3, 10, 15);
 
 // Autocomplete handler untuk roam command
 async function handleRoamAutocomplete(interaction) {
