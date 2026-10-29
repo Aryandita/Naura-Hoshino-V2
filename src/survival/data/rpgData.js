@@ -8,6 +8,6 @@ const builder = new SlashCommandBuilder()
 
 addRpgSubcommands(builder);
 
-const { data } = optimizeCommandBuilder(builder, 2, 20, 25);
+const { data } = optimizeCommandBuilder(builder, 2, 100);
 
 module.exports = data;
