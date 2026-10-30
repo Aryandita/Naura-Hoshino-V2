@@ -33,6 +33,56 @@ function writeDeployCache(data) {
   }
 }
 
+// Command yang TIDAK didaftarkan sebagai slash command, tetapi tetap dimuat
+// ke dalam Collection (prefix, alias, /help, dan pemanggilan dari hub tetap jalan).
+//
+// Alasannya: Discord membatasi 100 CHAT_INPUT + 15 USER + 15 MESSAGE per scope,
+// dan bulk overwrite menolak array di atas 130 entri dengan BASE_TYPE_MAX_LENGTH
+// "Must be 130 or fewer in length". Bot ini mendaftarkan 132 command, sehingga
+// SELURUH deploy gagal dan tidak ada satu pun slash command yang terdaftar.
+//
+// Setiap entri di bawah sudah diverifikasi punya jalur akses lain, jadi tidak
+// ada fitur yang hilang:
+// - "hub": modulnya dipanggil langsung oleh handler hub (hubSelects/hubModals),
+//   jadi tetap tersedia lewat /fun, /tool, /ai, /minigame.
+// - "subcommand:/x": command induk /x me-require file handler yang persis sama.
+//
+// Catatan: command yang punya subcommand sendiri (mystery, persona, story,
+// voice, holo-arcade, minigame) SENGAJA tidak dimasukkan, karena handler hub
+// memanggil execute() yang membaca getSubcommand() dan akan gagal tanpa
+// registrasi slash.
+const SLASH_DEPLOY_EXCLUDE = new Map([
+  // Terjangkau dari hub /fun, /tool, /ai, /minigame (15)
+  ["akinator", "hub:/minigame"],
+  ["calculator", "hub:/tool"],
+  ["coinflip", "hub:/fun"],
+  ["color", "hub:/tool"],
+  ["diceroll", "hub:/fun"],
+  ["downloader", "hub:/tool"],
+  ["fortune", "hub:/fun"],
+  ["hangman", "hub:/minigame"],
+  ["meme", "hub:/fun"],
+  ["minesweeper", "hub:/minigame"],
+  ["password", "hub:/tool"],
+  ["qr", "hub:/tool"],
+  ["quote", "hub:/fun"],
+  ["sensei", "hub:/ai"],
+  ["shorten", "hub:/tool"],
+  // Sudah jadi subcommand di hub yang me-require file handler yang sama (10)
+  ["anime", "subcommand:/media"],
+  ["movie", "subcommand:/media"],
+  ["github", "subcommand:/dev"],
+  ["npm", "subcommand:/dev"],
+  ["run", "subcommand:/dev"],
+  ["nickname", "subcommand:/moderation"],
+  ["slowmode", "subcommand:/moderation"],
+  ["steal", "subcommand:/moderation"],
+  ["lockdown", "subcommand:/moderation"],
+  ["voicemod", "subcommand:/moderation"],
+  // Duplikat fungsi: /core language melakukan hal yang sama (1)
+  ["language", "subcommand:/core"],
+]);
+
 function signatureOf(payload) {
   return crypto
     .createHash("sha256")
@@ -92,6 +142,7 @@ class CommandHandler {
     const commandsArray = [];
     const commandNames = new Set();
     const pendingAliases = [];
+    const excludedFromSlash = [];
 
     try {
       // Menggunakan fast-glob untuk pencarian rekursif
@@ -159,23 +210,29 @@ class CommandHandler {
             }
 
             if (command.data) {
-              const json = command.data.toJSON();
-              // Apps Anywhere (User-Installable Apps): Izinkan perintah personal dijalankan di mana saja
-              const USER_INSTALLABLE_COMMANDS = new Set([
-                "profile",
-                "ask",
-                "weather",
-                "card",
-                "translate",
-                "calculator",
-                "coinflip",
-                "8ball",
-              ]);
-              if (USER_INSTALLABLE_COMMANDS.has(cmdName)) {
-                if (!json.integration_types) json.integration_types = [0, 1];
-                if (!json.contexts) json.contexts = [0, 1, 2];
+              // Command tetap masuk Collection (prefix/alias/help jalan),
+              // tapi tidak dikirim ke Discord bila sudah punya jalur akses lain.
+              if (SLASH_DEPLOY_EXCLUDE.has(cmdName)) {
+                excludedFromSlash.push([cmdName, SLASH_DEPLOY_EXCLUDE.get(cmdName)]);
+              } else {
+                const json = command.data.toJSON();
+                // Apps Anywhere (User-Installable Apps): Izinkan perintah personal dijalankan di mana saja
+                const USER_INSTALLABLE_COMMANDS = new Set([
+                  "profile",
+                  "ask",
+                  "weather",
+                  "card",
+                  "translate",
+                  "calculator",
+                  "coinflip",
+                  "8ball",
+                ]);
+                if (USER_INSTALLABLE_COMMANDS.has(cmdName)) {
+                  if (!json.integration_types) json.integration_types = [0, 1];
+                  if (!json.contexts) json.contexts = [0, 1, 2];
+                }
+                commandsArray.push(json);
               }
-              commandsArray.push(json);
             }
           }
         } catch (err) {
@@ -271,6 +328,13 @@ class CommandHandler {
         `[COMMANDS] Memuat ${this.commands.size} command dan ${aliasCount} alias.`,
       );
 
+      if (excludedFromSlash.length > 0) {
+        logger.info(
+          `[COMMANDS] ${excludedFromSlash.length} command tidak didaftarkan sebagai slash ` +
+            `(tetap aktif via prefix/hub): ${excludedFromSlash.map(([n, why]) => `${n} [${why}]`).join(", ")}`,
+        );
+      }
+
       try {
         const commandRegistry = require("../services/commandRegistry");
         commandRegistry.buildRegistry(this.client);
@@ -355,6 +419,30 @@ class CommandHandler {
         }
       }
 
+      // Pre-flight check jumlah command. Discord membatasi 100 CHAT_INPUT +
+      // 15 USER + 15 MESSAGE per scope, dan bulk overwrite menolak array di
+      // atas 130 entri dengan BASE_TYPE_MAX_LENGTH "Must be 130 or fewer".
+      // Tanpa penjagaan ini seluruh deploy gagal dan bot tampil tanpa satu
+      // pun slash command, padahal hanya beberapa yang kelebihan.
+      const MAX_TOTAL_COMMANDS = 130;
+      const MAX_CHAT_INPUT = 100;
+      const chatInputCount = commandsArray.filter(
+        (c) => !c.type || c.type === 1,
+      ).length;
+
+      if (commandsArray.length > MAX_TOTAL_COMMANDS) {
+        logger.error(
+          `[DEPLOY ERROR] Total ${commandsArray.length} command dikirim, MELEBIHI batas Discord (${MAX_TOTAL_COMMANDS}). ` +
+            `Deploy pasti ditolak. Kurangi jumlah command atau gabungkan beberapa ke dalam subcommand.`,
+        );
+      }
+      if (chatInputCount > MAX_CHAT_INPUT) {
+        logger.error(
+          `[DEPLOY ERROR] ${chatInputCount} slash command (CHAT_INPUT) terdaftar, MELEBIHI batas Discord (${MAX_CHAT_INPUT}). ` +
+            `Gabungkan command sejenis menjadi subcommand dari satu command induk.`,
+        );
+      }
+
       // Deploy strategy: Guild-only in development (instant), Global in production.
       // Deploying both simultaneously causes duplicate entries in Discord's command list.
       const isDev = env.NODE_ENV !== "production";
@@ -405,7 +493,18 @@ class CommandHandler {
     } catch (error) {
       if (error.rawError && error.rawError.errors) {
         for (const [key, val] of Object.entries(error.rawError.errors)) {
-          const offendingCmd = commandsArray[parseInt(key)];
+          // "_errors" adalah galat level dokumen (mis. array command terlalu
+          // panjang), bukan index command. Sebelumnya key ini di-parseInt
+          // menjadi NaN sehingga log menyebut "index #_errors (/unknown)"
+          // dan menyembunyikan penyebab sebenarnya.
+          if (key === "_errors") {
+            logger.error(
+              `[DEPLOY DETAIL] Galat pada keseluruhan payload (bukan satu command tertentu): ${JSON.stringify(val)}`,
+            );
+            continue;
+          }
+          const idx = parseInt(key, 10);
+          const offendingCmd = Number.isNaN(idx) ? null : commandsArray[idx];
           logger.error(
             `[DEPLOY DETAIL] Galat pada command index #${key} (/${offendingCmd?.name || "unknown"}):`,
             JSON.stringify(val),

@@ -46,6 +46,7 @@ module.exports = [
       "dashboard/tests/**",
       "vitest.config.js",
       "playwright.config.js",
+      "loader.js",
     ],
   },
   {

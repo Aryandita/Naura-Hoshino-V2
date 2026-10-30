@@ -78,6 +78,11 @@ naura_NEW_fixed*.glb
 *.apk
 Naura_Hoshino_V2_*.zip
 
+# Loader deploy lokal (bukan bagian repository) & backup-nya
+loader.js
+.loader_backup/
+.perch/index.json
+
 # Artefak tools offline & testing lokal
 tools/*.npz
 tools/apply_skin_fix.*
