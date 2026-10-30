@@ -1,4 +1,4 @@
-# PRD: Perombakan Total Katalog Item Naura Wilds (v2.3.0)
+# PRD: Perombakan Total Katalog Item Naura Wilds (v2.4.0)
 
 ## 1. Ringkasan & Latar Belakang
 Sistem item pada Naura Wilds saat ini terfragmentasi di berbagai berkas (`items_catalog.js`, `items_static.js`, `items_extra.js`, `items_wooden.js`, `items_refined.js`, dll) dengan inkonsistensi skema atribut, harga yang tidak berimbang, dan sistem 6-tier yang kurang padat. 

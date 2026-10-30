@@ -154,7 +154,7 @@ async function renderAnimeCard(payload) {
     // Judul Bahasa Jepang / Subtitle
     if (titleJapanese) {
       ctx.fillStyle = "#94a3b8";
-      ctx.font = "15px Inter, sans-serif";
+      ctx.font = '15px "SystemCJKWindows", "SystemCJKWindows2", "SystemCJKLinux", "Yu Gothic", "MS Gothic", Inter, sans-serif';
       ctx.fillText(titleJapanese, rightX, 134);
     }
 
@@ -165,8 +165,19 @@ async function renderAnimeCard(payload) {
     drawRoundedRect(ctx, rightX, badgeY, 120, 34, 10, "rgba(245, 158, 11, 0.2)", "#f59e0b", 1.2);
     ctx.fillStyle = "#fbbf24";
     ctx.font = "bold 14px MontserratBold, InterBold, sans-serif";
-    const scoreMatch = String(score).match(/(\d+(?:\.\d+)?)/);
-    const cleanScore = scoreMatch ? scoreMatch[1] : "8.5";
+    // Sanitize score: strip Discord custom emojis and markdown first
+    let cleanScore = "8.5";
+    if (payload.rawScore && payload.rawScore !== "N/A") {
+      const match = String(payload.rawScore).match(/(\d+(?:\.\d+)?)/);
+      if (match) cleanScore = match[1];
+    } else if (score && score !== "N/A") {
+      const stripped = String(score)
+        .replace(/<a?:[a-zA-Z0-9_]+:\d+>/g, "")
+        .replace(/\*\*/g, "")
+        .trim();
+      const match = stripped.match(/(\d+(?:\.\d+)?)/);
+      if (match) cleanScore = match[1];
+    }
     ctx.fillText(`★  ${cleanScore} / 10`, rightX + 14, badgeY + 22);
 
     // Format Pill
@@ -193,21 +204,31 @@ async function renderAnimeCard(payload) {
     const metaY = badgeY + 48;
     drawRoundedRect(ctx, rightX, metaY, rightW, 44, 12, "rgba(15, 23, 42, 0.65)", "rgba(255, 255, 255, 0.08)", 1);
 
-    ctx.fillStyle = "#e2e8f0";
     ctx.font = "14px Inter, sans-serif";
     const studioText = studio && studio !== "N/A" ? studio : "Studio Produksi";
     const seasonText = seasonYear && seasonYear !== "N/A" ? seasonYear : "Rilis";
-    ctx.fillText(`🎨 Studio: `, rightX + 16, metaY + 27);
+
+    const studioLabel = "🎨 Studio: ";
+    const studioLabelW = ctx.measureText(studioLabel).width;
+    ctx.fillStyle = "#e2e8f0";
+    ctx.fillText(studioLabel, rightX + 16, metaY + 27);
+
+    const studioValX = rightX + 16 + studioLabelW + 4;
     ctx.fillStyle = "#38bdf8";
     ctx.font = "bold 14px InterBold, sans-serif";
-    ctx.fillText(studioText, rightX + 85, metaY + 27);
+    ctx.fillText(studioText, studioValX, metaY + 27);
+    const studioValW = ctx.measureText(studioText).width;
 
+    const musimStartX = Math.max(rightX + 240, studioValX + studioValW + 24);
     ctx.fillStyle = "#94a3b8";
     ctx.font = "14px Inter, sans-serif";
-    ctx.fillText(` •  Musim: `, rightX + 260, metaY + 27);
+    const musimLabel = "• Musim: ";
+    const musimLabelW = ctx.measureText(musimLabel).width;
+    ctx.fillText(musimLabel, musimStartX, metaY + 27);
+
     ctx.fillStyle = "#f472b6";
     ctx.font = "bold 14px InterBold, sans-serif";
-    ctx.fillText(seasonText, rightX + 335, metaY + 27);
+    ctx.fillText(seasonText, musimStartX + musimLabelW + 4, metaY + 27);
 
     // 6. Genre Pills
     const genreY = metaY + 54;
@@ -239,7 +260,6 @@ async function renderAnimeCard(payload) {
     // Footer Watermark with Bot Avatar
     const footerText = "NAURA HOSHINO ANIME SPOTLIGHT • GLOBAL ANIME INTELLIGENCE";
     ctx.font = "11px Inter, sans-serif";
-    const footerTextWidth = ctx.measureText(footerText).width;
     const avatarSize = 24;
     const footerGap = 8;
     const footerStartX = rightX;

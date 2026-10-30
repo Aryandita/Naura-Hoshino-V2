@@ -13,8 +13,8 @@ try {
   packageJson = { version: "2.4.0" };
 }
 
-const BOT_VERSION = packageJson.version || "2.4.0";
-const ENGINE_VERSION = packageJson.version || "2.4.0";
+const BOT_VERSION = packageJson.version;
+const ENGINE_VERSION = packageJson.version;
 const CODENAME = "Celestial Bloom";
 const AUTHOR = "Aryandita";
 

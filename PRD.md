@@ -230,7 +230,7 @@ Untuk menjamin kualitas dan stabilitas rilis, fitur diklasifikasikan ke dalam 4 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           PRIORITAS FITUR (MoSCoW)                          │
 ├──────────────────────────────────────┬──────────────────────────────────────┤
-│ 🔴 MUST-HAVE (Wajib Ada di v2.2/2.3) │ 🟡 SHOULD-HAVE (Sangat Dianjurkan)   │
+│ 🔴 MUST-HAVE (Wajib Ada di v2.4)     │ 🟡 SHOULD-HAVE (Sangat Dianjurkan)   │
 │ • Engine Discord Components V2       │ • Web Soundboard Studio              │
 │ • Transaksi atomik saldo & item      │ • Town Square Living City NPC        │
 │ • Currency V2 Closed-Loop Pool       │ • Co-Op The Neo-Abyss Celestial Raid │
@@ -239,7 +239,7 @@ Untuk menjamin kualitas dan stabilitas rilis, fitur diklasifikasikan ke dalam 4 
 │ • 3D Mascot PBR & VRM Three.js       │ • Global Guild Federation Hub        │
 │ • Total Canvas Worker Offloading     │ • Cross-Server Caravan Cartel PvP    │
 ├──────────────────────────────────────┼──────────────────────────────────────┤
-│ 🟢 COULD-HAVE (Penyempurnaan Nanti)  │ ⚪ WON'T-HAVE (Di Luar Cakupan v2.2) │
+│ 🟢 COULD-HAVE (Penyempurnaan Nanti)  │ ⚪ WON'T-HAVE (Di Luar Cakupan v2.4) │
 │ • Chibi 2.5D Room Decorator Live Grid│ • Integrasi Blockchain / Web3 / NFT  │
 │ • Galactic Caravan Live Radar Web    │ • Transaksi uang nyata antar pemain  │
 │ • Voice Intermezzo Federation Raid   │ • Self-hosted LLM on-premise lokal   │

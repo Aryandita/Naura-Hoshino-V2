@@ -149,7 +149,7 @@ class NauraViewerClass {
               <div class="nv-hero-info">
                 <div class="nv-hero-name">
                   <span>Naura Hoshino</span>
-                  <span class="text-[10px] text-emerald-400 font-mono">v2.1 3D AI</span>
+                  <span class="text-[10px] text-emerald-400 font-mono">v2.4.0 3D AI</span>
                 </div>
                 <div class="nv-hero-status" id="nv-chat-mood-text">Ceria & Siap Menemanimu ✨</div>
               </div>

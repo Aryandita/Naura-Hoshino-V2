@@ -8,6 +8,9 @@ const {
   buildLoadingContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 
+const { SLASH_DEPLOY_EXCLUDE } = require("../../src/managers/CommandHandler");
+const { getContextMenuCommands } = require("../../src/interactions/contextMenus");
+
 module.exports = {
   name: "deploy",
   aliases: ["sync"],
@@ -29,27 +32,69 @@ module.exports = {
     });
     const msg = await message.reply(loadingPayload);
 
-    const globalCommands = [];
-    const guildCommands = [];
+    const commandsData = [];
     const loadedNames = [];
+
+    const USER_INSTALLABLE_COMMANDS = new Set([
+      "profile",
+      "ask",
+      "weather",
+      "card",
+      "translate",
+      "calculator",
+      "coinflip",
+      "8ball",
+    ]);
 
     client.commands.forEach((command) => {
       if (command.data) {
-        const cmdJson = command.data.toJSON();
-        if (command.data.name === "naura") {
-          guildCommands.push(cmdJson);
-        } else {
-          globalCommands.push(cmdJson);
+        const cmdName = command.data.name;
+        if (SLASH_DEPLOY_EXCLUDE && SLASH_DEPLOY_EXCLUDE.has(cmdName)) {
+          return;
         }
-        loadedNames.push(command.data.name);
+        const cmdJson = command.data.toJSON();
+        if (USER_INSTALLABLE_COMMANDS.has(cmdName)) {
+          if (!cmdJson.integration_types) cmdJson.integration_types = [0, 1];
+          if (!cmdJson.contexts) cmdJson.contexts = [0, 1, 2];
+        }
+        commandsData.push(cmdJson);
+        loadedNames.push(cmdName);
       }
     });
 
+    try {
+      const contextMenus = getContextMenuCommands();
+      for (const cm of contextMenus) {
+        commandsData.push(cm);
+      }
+    } catch (err) {
+      logger.warn(`[DEPLOY] Gagal memuat context menu: ${err.message}`);
+    }
+
+    const MAX_TOTAL_COMMANDS = 130;
+    const MAX_CHAT_INPUT = 100;
+    const chatInputCount = commandsData.filter(
+      (c) => !c.type || c.type === 1,
+    ).length;
+
+    if (
+      commandsData.length > MAX_TOTAL_COMMANDS ||
+      chatInputCount > MAX_CHAT_INPUT
+    ) {
+      const limitError = `Batas Discord terlampaui! CHAT_INPUT: ${chatInputCount}/${MAX_CHAT_INPUT}, Total: ${commandsData.length}/${MAX_TOTAL_COMMANDS}.`;
+      logger.error(`[DEPLOY ERROR] ${limitError}`);
+      const errPayload = buildErrorContainerV2({
+        authorName: "Naura Deploy System",
+        title: "Deploy Dibatalkan (Quota Exceeded)",
+        errorMessage: limitError,
+        withBanner: true,
+        footerText: ui.getFooter("core"),
+      });
+      return msg.edit(errPayload);
+    }
+
     const guildId =
       args[0] === "global" ? null : env.GUILD_ID || message.guild.id;
-    const commandsData = guildId
-      ? [...globalCommands, ...guildCommands]
-      : globalCommands;
 
     if (commandsData.length === 0) {
       const errPayload = buildErrorContainerV2({

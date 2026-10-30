@@ -76,7 +76,7 @@ function checkRotateCentralLog() {
 function buildSessionHeader() {
   const now = new Date();
   const timeIso = now.toISOString();
-  const botVer = env.BOT_VERSION || "2.4.0";
+  const botVer = env.BOT_VERSION;
   const nodeVer = process.version;
   const platform = `${os.platform()} ${os.arch()}`;
   const shardTxt = env.SHARD_ID != null ? `Shard #${env.SHARD_ID}` : "Standalone";

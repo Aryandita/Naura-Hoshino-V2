@@ -14,11 +14,11 @@ let isInitialized = false;
 function initSupabase() {
   if (isInitialized) return supabaseClient;
 
-  const url = env.SUPABASE_URL || "https://ceqkjzvrxyifxzgxtkig.supabase.co";
+  const url = env.SUPABASE_URL;
   const key =
     env.SUPABASE_KEY ||
     env.SUPABASE_ANON_KEY ||
-    "sb_publishable_9gd0-5FflbVgYPCd7WGAwQ_dJLMxyRX";
+    env.SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !key) {
     logger.warn(
@@ -38,7 +38,7 @@ function initSupabase() {
 
     isInitialized = true;
     logger.success(
-      `[SUPABASE] Supabase JS Client aktif (${env.SUPABASE_PROJECT_ID || "ceqkjzvrxyifxzgxtkig"}).`,
+      `[SUPABASE] Supabase JS Client aktif (${env.SUPABASE_PROJECT_ID || "remote"}).`,
     );
     return supabaseClient;
   } catch (error) {

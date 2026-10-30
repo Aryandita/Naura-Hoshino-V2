@@ -67,6 +67,9 @@ const ALIAS_MAP = {
   store: "shop",
   forge: "forge",
   craft: "craft",
+  hub: "hub",
+  menu: "hub",
+  center: "hub",
 };
 
 // ============================================================================
@@ -131,7 +134,11 @@ module.exports = {
    * @returns {Promise<void>}
    */
   async execute(interaction) {
-    const subCommandName = interaction.options.getSubcommand();
+    const subCommandName = (
+      typeof interaction.options.getSubcommand === "function"
+        ? interaction.options.getSubcommand(false)
+        : null
+    ) || "hub";
     const cmd = subcommands.get(subCommandName);
 
     // Attach auto-delete handler
@@ -198,7 +205,7 @@ module.exports = {
    */
   async executePrefix(message, args, client) {
     // Parse subcommand from arguments
-    let inputSubCmd = args[0] ? args[0].toLowerCase() : "info";
+    let inputSubCmd = args[0] ? args[0].toLowerCase() : "hub";
 
     // Handle special case for combat subcommand
     if (inputSubCmd === "combat" && args[1]) {

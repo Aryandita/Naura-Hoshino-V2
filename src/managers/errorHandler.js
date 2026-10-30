@@ -82,7 +82,7 @@ const sendErrorLog = async (err, type, client) => {
         if (owner) {
           const errEmbed = new EmbedBuilder()
             .setColor("#00FFFF")
-            .setTitle(`\u26a0\ufe0f Naura Versi ${env.BOT_VERSION || "2.4.0"} - ${type}`)
+            .setTitle(`\u26a0\ufe0f Naura Versi ${env.BOT_VERSION} - ${type}`)
             .setDescription(
               `\`\`\`js\n${String(err?.stack || err).substring(0, 4000)}\n\`\`\``,
             )

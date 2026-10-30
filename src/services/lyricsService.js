@@ -22,7 +22,7 @@ class LyricsService {
 
       const searchUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(cleanQuery)}`;
       const res = await globalThis.fetch(searchUrl, {
-        headers: { "User-Agent": `NauraHoshinoBot/${env.BOT_VERSION || "2.4.0"}` },
+        headers: { "User-Agent": `NauraHoshinoBot/${env.BOT_VERSION}` },
         signal: AbortSignal.timeout(6000),
       });
 

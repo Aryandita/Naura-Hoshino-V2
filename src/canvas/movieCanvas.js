@@ -154,8 +154,19 @@ async function renderMovieCard(payload) {
     drawRoundedRect(ctx, rightX, badgeY, 130, 34, 10, "rgba(245, 197, 24, 0.2)", "#f5c518", 1.2);
     ctx.fillStyle = "#fbbf24";
     ctx.font = "bold 14px MontserratBold, InterBold, sans-serif";
-    const ratingMatch = String(rating).match(/(\d+(?:\.\d+)?)/);
-    const cleanRating = ratingMatch ? ratingMatch[1] : "8.2";
+    // Sanitize rating: strip Discord custom emojis (<:name:id>) and markdown (**) first
+    let cleanRating = "8.2";
+    if (payload.rawRating && payload.rawRating !== "N/A") {
+      const match = String(payload.rawRating).match(/(\d+(?:\.\d+)?)/);
+      if (match) cleanRating = match[1];
+    } else if (rating && rating !== "N/A") {
+      const stripped = String(rating)
+        .replace(/<a?:[a-zA-Z0-9_]+:\d+>/g, "")
+        .replace(/\*\*/g, "")
+        .trim();
+      const match = stripped.match(/(\d+(?:\.\d+)?)/);
+      if (match) cleanRating = match[1];
+    }
     ctx.fillText(`IMDb ★ ${cleanRating} / 10`, rightX + 12, badgeY + 22);
 
     // Runtime Pill
@@ -175,19 +186,27 @@ async function renderMovieCard(payload) {
     const credY = badgeY + 48;
     drawRoundedRect(ctx, rightX, credY, rightW, 76, 14, "rgba(15, 23, 42, 0.65)", "rgba(255, 255, 255, 0.08)", 1);
 
-    ctx.fillStyle = "#94a3b8";
     ctx.font = "14px Inter, sans-serif";
-    ctx.fillText("🎬 Sutradara: ", rightX + 16, credY + 28);
+    const dirLabel = "🎬 Sutradara: ";
+    const actLabel = "👥 Pemeran: ";
+    const maxCredLabelW = Math.max(
+      ctx.measureText(dirLabel).width,
+      ctx.measureText(actLabel).width,
+    );
+    const credValX = rightX + 16 + maxCredLabelW + 6;
+
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText(dirLabel, rightX + 16, credY + 28);
     ctx.fillStyle = "#38bdf8";
     ctx.font = "bold 14px InterBold, sans-serif";
-    ctx.fillText(String(director).substring(0, 38), rightX + 105, credY + 28);
+    ctx.fillText(String(director).substring(0, 38), credValX, credY + 28);
 
     ctx.fillStyle = "#94a3b8";
     ctx.font = "14px Inter, sans-serif";
-    ctx.fillText("👥 Pemeran: ", rightX + 16, credY + 56);
+    ctx.fillText(actLabel, rightX + 16, credY + 56);
     ctx.fillStyle = "#e2e8f0";
     ctx.font = "14px Inter, sans-serif";
-    ctx.fillText(String(actors).substring(0, 42), rightX + 105, credY + 56);
+    ctx.fillText(String(actors).substring(0, 42), credValX, credY + 56);
 
     // 6. Genre Pills
     const genreY = credY + 88;
@@ -219,7 +238,6 @@ async function renderMovieCard(payload) {
     // Footer Watermark with Bot Avatar
     const footerText = "NAURA HOSHINO CINEMA INTELLIGENCE • HOLLYWOOD & WORLD REGISTRY";
     ctx.font = "11px Inter, sans-serif";
-    const footerTextWidth = ctx.measureText(footerText).width;
     const avatarSize = 24;
     const footerGap = 8;
     const footerStartX = rightX;

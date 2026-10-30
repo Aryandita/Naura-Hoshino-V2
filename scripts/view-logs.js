@@ -65,7 +65,7 @@ const C = {
  * Menampilkan ASCII Art Banner sistem log ke terminal.
  */
 function displayAsciiArtBanner() {
-  const botVer = env.BOT_VERSION || "2.3.0";
+  const botVer = env.BOT_VERSION || "2.4.0";
   const shardTxt = env.SHARD_ID != null ? `Shard #${env.SHARD_ID}` : "Standalone";
 
   const lines = [

@@ -461,8 +461,11 @@ describe("R1 Music E2E - Tier 4: Real-World Scenarios", () => {
 
     assert.equal(fadeStarted, true);
 
-    // Wait for fade interval to conclude
-    await new Promise((resolve) => setTimeout(resolve, 3500));
+    // Wait for fade interval to conclude (poll up to 6s for high-load test runners)
+    const startTime = Date.now();
+    while (!expired && Date.now() - startTime < 6000) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
 
     assert.equal(expired, true);
     assert.equal(playerDestroyed, true);

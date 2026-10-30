@@ -29,6 +29,11 @@ const SUBCOMMAND_WORDS = Object.freeze([
   "play",
   "chat",
   "imagine",
+  "anime",
+  "movie",
+  "run",
+  "npm",
+  "github",
 ]);
 
 // Pemetaan alias subcommand ke nama subcommand kanonisnya
@@ -162,6 +167,44 @@ function buildMockInteraction(
     return await message.channel.send(normalizedPayload);
   };
 
+  const cmdJson = targetCommand?.data
+    ? (typeof targetCommand.data.toJSON === "function"
+        ? targetCommand.data.toJSON()
+        : targetCommand.data)
+    : null;
+
+  const rawTokens = [...commandArguments];
+  const firstToken = rawTokens[0]?.toLowerCase();
+  let activeSubcommand = null;
+
+  if (
+    firstToken &&
+    (SUBCOMMAND_ALIAS_MAP[firstToken] ||
+      SUBCOMMAND_WORDS.includes(firstToken) ||
+      cmdJson?.options?.some(
+        (opt) => opt.type === 1 && opt.name.toLowerCase() === firstToken,
+      ))
+  ) {
+    activeSubcommand = SUBCOMMAND_ALIAS_MAP[firstToken] || firstToken;
+    rawTokens.shift();
+  }
+
+  let declaredOptions = [];
+  if (cmdJson?.options && Array.isArray(cmdJson.options)) {
+    if (activeSubcommand) {
+      const subObj = cmdJson.options.find(
+        (opt) => opt.type === 1 && opt.name.toLowerCase() === activeSubcommand,
+      );
+      if (subObj?.options) {
+        declaredOptions = subObj.options;
+      }
+    } else {
+      declaredOptions = cmdJson.options.filter(
+        (opt) => opt.type !== 1 && opt.type !== 2,
+      );
+    }
+  }
+
   return {
     isChatInputCommand: () => true,
     isButton: () => false,
@@ -187,19 +230,67 @@ function buildMockInteraction(
     locale: message.localeLang,
 
     options: {
-      getSubcommand: () => commandArguments[0]?.toLowerCase() || null,
+      getSubcommand: () =>
+        activeSubcommand || commandArguments[0]?.toLowerCase() || null,
       getSubcommandGroup: () => null,
-      getString: () => {
-        if (commandArguments.length === 0) return null;
-        const argumentTokens = [...commandArguments];
-        const firstToken = argumentTokens[0]?.toLowerCase();
-        if (
-          SUBCOMMAND_ALIAS_MAP[firstToken] ||
-          SUBCOMMAND_WORDS.includes(firstToken)
-        ) {
-          argumentTokens.shift();
+      getString: (name) => {
+        if (rawTokens.length === 0) return null;
+
+        // 1. Format eksplisit key:value atau --key value
+        if (name) {
+          const keyPrefix = `${name.toLowerCase()}:`;
+          const explicitToken = rawTokens.find((t) =>
+            t.toLowerCase().startsWith(keyPrefix),
+          );
+          if (explicitToken) {
+            return (
+              explicitToken
+                .slice(keyPrefix.length)
+                .replace(/^["']|["']$/g, "")
+                .trim() || null
+            );
+          }
         }
-        return argumentTokens.join(" ") || null;
+
+        // 2. Pemetaan posisi berbasis schema slash command jika opsi didefinisikan
+        if (name && declaredOptions.length > 0) {
+          const targetOpt = declaredOptions.find(
+            (o) => o.name.toLowerCase() === name.toLowerCase(),
+          );
+          if (targetOpt) {
+            if (
+              Array.isArray(targetOpt.choices) &&
+              targetOpt.choices.length > 0
+            ) {
+              const matchedChoice = rawTokens.find((token) =>
+                targetOpt.choices.some(
+                  (c) => String(c.value).toLowerCase() === token.toLowerCase(),
+                ),
+              );
+              if (matchedChoice) return matchedChoice;
+            }
+
+            const optIdx = declaredOptions.indexOf(targetOpt);
+            if (optIdx >= rawTokens.length) {
+              return null;
+            }
+            if (optIdx === declaredOptions.length - 1) {
+              return rawTokens.slice(optIdx).join(" ") || null;
+            }
+            return rawTokens[optIdx] || null;
+          }
+        }
+
+        // 3. Fallback jika nama tidak diberikan atau tidak terdaftar pada schema
+        if (!name) {
+          return rawTokens.join(" ") || null;
+        }
+
+        if (rawTokens.length === 1) {
+          return rawTokens[0];
+        }
+
+        return rawTokens.join(" ") || null;
       },
       getUser: () => message.mentions.users.first() || null,
       getMember: () => message.mentions.members?.first() || message.member,

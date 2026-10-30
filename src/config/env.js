@@ -47,7 +47,7 @@ try {
 } catch {
   packageJson = { version: "2.4.0" };
 }
-const BASE_VERSION = packageJson.version || "2.4.0";
+const BASE_VERSION = packageJson.version;
 
 const env = {
   // RUNTIME & DEBUG
@@ -111,7 +111,7 @@ const env = {
     process.env.DB_HOST ||
       process.env.SUPABASE_DB_HOST ||
       process.env.MYSQL_HOST ||
-      "db.ceqkjzvrxyifxzgxtkig.supabase.co",
+      "localhost",
   ),
   DB_PORT:
     parseInt(
@@ -156,9 +156,6 @@ const env = {
   DB_POOL_BUDGET: parseInt(process.env.DB_POOL_BUDGET) || 80,
   DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX) || 0,
 
-  // MODMAIL
-  STAFF_GUILD: cleanEnv(process.env.STAFF_GUILD_ID),
-  MODMAIL_CATEGORY: cleanEnv(process.env.MODMAIL_CATEGORY_ID),
 
   // LAVALINK & AUDIO
   LAVA_NODES:
@@ -239,11 +236,6 @@ const env = {
   CALLBACK_URL: cleanEnv(process.env.DISCORD_CALLBACK_URL),
   OWNER_EVAL_ENABLED: cleanEnv(process.env.OWNER_EVAL_ENABLED) === "true",
   USE_CLUSTERING: cleanEnv(process.env.USE_CLUSTERING) === "true",
-
-  // DASHBOARD V2 (Modern React Dashboard)
-  DASHBOARD_V2_PORT: parseInt(process.env.DASHBOARD_V2_PORT) || 3001,
-  DASHBOARD_V2_CLIENT_URL: cleanEnv(process.env.DASHBOARD_V2_CLIENT_URL) || "http://localhost:5174",
-  DASHBOARD_V2_JWT_SECRET: cleanEnv(process.env.DASHBOARD_V2_JWT_SECRET) || cleanEnv(process.env.SESSION_SECRET) || "",
 };
 
 // Variabel yang wajib ada sebelum bot boleh menyala

@@ -52,13 +52,11 @@ function writeDeployCache(data) {
 // memanggil execute() yang membaca getSubcommand() dan akan gagal tanpa
 // registrasi slash.
 const SLASH_DEPLOY_EXCLUDE = new Map([
-  // Terjangkau dari hub /fun, /tool, /ai, /minigame (15)
+  // Terjangkau dari hub /fun, /tool, /ai, /minigame (13)
   ["akinator", "hub:/minigame"],
-  ["calculator", "hub:/tool"],
   ["coinflip", "hub:/fun"],
   ["color", "hub:/tool"],
   ["diceroll", "hub:/fun"],
-  ["downloader", "hub:/tool"],
   ["fortune", "hub:/fun"],
   ["hangman", "hub:/minigame"],
   ["meme", "hub:/fun"],
@@ -79,8 +77,11 @@ const SLASH_DEPLOY_EXCLUDE = new Map([
   ["steal", "subcommand:/moderation"],
   ["lockdown", "subcommand:/moderation"],
   ["voicemod", "subcommand:/moderation"],
-  // Duplikat fungsi: /core language melakukan hal yang sama (1)
+  // Duplikat fungsi atau dikonsolidasikan ke command induk (4)
   ["language", "subcommand:/core"],
+  ["user", "subcommand:/whois"],
+  ["worldclock", "subcommand:/time"],
+  ["minigame", "subcommand:/arcade"],
 ]);
 
 function signatureOf(payload) {
@@ -519,4 +520,4 @@ class CommandHandler {
   }
 }
 
-module.exports = { CommandHandler };
+module.exports = { CommandHandler, SLASH_DEPLOY_EXCLUDE };

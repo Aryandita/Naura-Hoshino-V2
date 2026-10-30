@@ -41,7 +41,7 @@ Naura OS Android combines the flexibility of modern responsive web development (
    - Mixed content mode configured safely with restrictive file access flags.
 
 2. **JavaScript Interface Bridge (`window.NauraNative`)**:
-   - `getAppVersion()`: Returns current Android wrapper version (`2.3.0`).
+   - `getAppVersion()`: Returns current Android wrapper version (`2.4.0`).
    - `isOnline()`: Checks active network capability in real-time.
    - `vibrate(durationMs)`: Native haptic feedback via Vibrator / VibratorManager.
    - `showToast(message)`: Native Android toast notification.

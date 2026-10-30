@@ -79,6 +79,7 @@ async function fetchFromOMDB(query, year) {
             m.imdbRating && m.imdbRating !== "N/A"
               ? `${ui.getEmoji("star") || "⭐"} **${m.imdbRating}** / 10`
               : "N/A",
+          rawRating: m.imdbRating && m.imdbRating !== "N/A" ? m.imdbRating : null,
           runtime: m.Runtime || "N/A",
           awards: m.Awards && m.Awards !== "N/A" ? m.Awards : "Tidak ada",
           url: m.imdbID ? `https://www.imdb.com/title/${m.imdbID}` : null,
@@ -283,6 +284,7 @@ module.exports = {
             title: item.title,
             posterURL: item.posterURL,
             rating: item.rating,
+            rawRating: item.rawRating,
             runtime: item.runtime,
             genres: item.genres,
             director: item.director,

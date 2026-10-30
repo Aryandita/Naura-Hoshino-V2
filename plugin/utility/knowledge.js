@@ -5,7 +5,7 @@
  * @type: Command
  * @copyright 2026 Aryandita Praftian
  * @assistant Naura Hoshino
- * @version 2.3.0
+ * @version 2.4.0
  * @description Server RAG Knowledge Base Engine (Upload PDF, DOCX, XLSX, TXT & Tanya Jawab AI)
  */
 

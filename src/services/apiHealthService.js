@@ -28,7 +28,7 @@ class ApiHealthService {
       const config = {
         timeout: endpoint.timeout,
         method: endpoint.method || "GET",
-        headers: { "User-Agent": `NauraBot-HealthCheck/${env.BOT_VERSION || "2.4.0"}` },
+        headers: { "User-Agent": `NauraBot-HealthCheck/${env.BOT_VERSION}` },
       };
 
       if (endpoint.body) {

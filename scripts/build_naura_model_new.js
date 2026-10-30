@@ -372,11 +372,11 @@ if (fs.existsSync(THUMB_PNG)) {
 // Left Leg: Node 15 = LeftUpLeg, Node 16 = LeftLeg, Node 17 = LeftFoot
 // Right Leg: Node 18 = RightUpLeg, Node 19 = RightLeg, Node 20 = RightFoot
 const vrmExtension = {
-  exporterVersion: "NauraEngine-2.3.0-NEW",
+  exporterVersion: "NauraEngine-2.4.0-NEW",
   specVersion: "0.0",
   meta: {
     title: "Naura Hoshino NEW",
-    version: "2.3.0",
+    version: "2.4.0",
     author: "Aryandita Praftian",
     contactInformation: "https://naurahoshino.my.id",
     reference: "https://naurahoshino.my.id",

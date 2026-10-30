@@ -21,6 +21,7 @@ const {
 const { buildLoadingContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
+  aliases: ["dl", "download"],
   data: new SlashCommandBuilder()
     .setName("downloader")
     .setDescription(
@@ -39,6 +40,80 @@ module.exports = {
         .setRequired(false)
         .addChoices(...core.QUALITY_CHOICES),
     ),
+
+  async executePrefix(message, args, client) {
+    if (!args || args.length === 0) {
+      return message.reply(render.invalidUrlCard());
+    }
+
+    let url = "";
+    let qualityChoice = "auto";
+
+    const urlIndex = args.findIndex((arg) => /^<?https?:\/\//i.test(arg));
+    if (urlIndex !== -1) {
+      url = args[urlIndex].replace(/[<>]/g, "").trim();
+      const remainingArgs = args.filter((_, idx) => idx !== urlIndex);
+      if (remainingArgs.length > 0) {
+        qualityChoice = remainingArgs[0].toLowerCase().trim();
+      }
+    } else {
+      url = args[0].replace(/[<>]/g, "").trim();
+      if (args.length > 1) {
+        qualityChoice = args[1].toLowerCase().trim();
+      }
+    }
+
+    if (!url.startsWith("http")) {
+      return message.reply(render.invalidUrlCard());
+    }
+
+    let sentMsg = null;
+    const mockInteraction = {
+      id: message.id,
+      user: message.author,
+      member: message.member,
+      guild: message.guild,
+      channel: message.channel,
+      client,
+      isChatInputCommand: () => true,
+      options: {
+        getString: (name) => {
+          if (name === "url") return url;
+          if (name === "quality") return qualityChoice;
+          return null;
+        },
+      },
+      deferReply: async () => {},
+      editReply: async (payload) => {
+        const normalized = typeof payload === "string" ? { content: payload } : { ...payload };
+        delete normalized.ephemeral;
+        delete normalized.fetchReply;
+        if (sentMsg) {
+          try {
+            return await sentMsg.edit(normalized);
+          } catch {
+            sentMsg = await message.channel.send(normalized);
+            return sentMsg;
+          }
+        }
+        sentMsg = await message.reply(normalized);
+        return sentMsg;
+      },
+      followUp: async (payload) => {
+        const normalized = typeof payload === "string" ? { content: payload } : { ...payload };
+        delete normalized.ephemeral;
+        return await message.channel.send(normalized);
+      },
+      reply: async (payload) => {
+        const normalized = typeof payload === "string" ? { content: payload } : { ...payload };
+        delete normalized.ephemeral;
+        sentMsg = await message.reply(normalized);
+        return sentMsg;
+      },
+    };
+
+    return this.execute(mockInteraction);
+  },
 
   async execute(interaction) {
     const limited = await RateLimiter.isRateLimited(

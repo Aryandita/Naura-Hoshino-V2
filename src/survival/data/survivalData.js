@@ -28,6 +28,13 @@ builder.addSubcommand((sub) =>
     .setDescription("🚀 Menu aksi cepat survival via select menu"),
 );
 
+// Command Center Hub
+builder.addSubcommand((sub) =>
+  sub
+    .setName("hub")
+    .setDescription("🌿 Buka Command Center Survival Naura Wilds"),
+);
+
 // Sistem Quest Harian
 builder.addSubcommand((sub) =>
   sub

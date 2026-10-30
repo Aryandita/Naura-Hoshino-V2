@@ -108,7 +108,7 @@ const urlCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 100;
 
-setInterval(
+const cacheSweeper = setInterval(
   () => {
     const now = Date.now();
     for (const [key, val] of urlCache.entries()) {
@@ -117,6 +117,7 @@ setInterval(
   },
   10 * 60 * 1000,
 );
+if (cacheSweeper.unref) cacheSweeper.unref();
 
 const getCachedResult = (url) => {
   const cached = urlCache.get(url);

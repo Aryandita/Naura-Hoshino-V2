@@ -143,7 +143,7 @@ function printBanner() {
   const cyan = "\x1b[38;5;87m";
   const reset = "\x1b[0m";
   const dim = "\x1b[90m";
-  const botVer = env.BOT_VERSION || "2.4.0";
+  const botVer = env.BOT_VERSION;
 
   const lines = [
     `${cyan}╔══════════════════════════════════════════════════════════════════════════════╗${reset}`,

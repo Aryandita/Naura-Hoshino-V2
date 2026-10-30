@@ -60,10 +60,10 @@ function patchContextPrototype(canvasApi) {
               if (enriched.includes("sans-serif")) {
                 enriched = enriched.replace(
                   "sans-serif",
-                  '"EmojiFont", "SymbolFont", sans-serif',
+                  '"EmojiFont", "SymbolFont", "SystemCJKWindows", "SystemCJKWindows2", "SystemCJKLinux", sans-serif',
                 );
               } else {
-                enriched = enriched + ', "EmojiFont", "SymbolFont"';
+                enriched = enriched + ', "EmojiFont", "SymbolFont", "SystemCJKWindows", "SystemCJKWindows2", "SystemCJKLinux"';
               }
             } else if (!enriched.includes("SymbolFont")) {
               enriched = enriched.replace(
@@ -131,6 +131,17 @@ function registerFontsOnce() {
     const systemFallbacks = [
       { path: "C:/Windows/Fonts/seguiemj.ttf", name: "SystemEmoji" },
       { path: "C:/Windows/Fonts/seguisym.ttf", name: "SystemSymbol" },
+      { path: "C:/Windows/Fonts/msgothic.ttc", name: "SystemCJKWindows" },
+      { path: "C:/Windows/Fonts/YuGothM.ttc", name: "SystemCJKWindows2" },
+      { path: "C:/Windows/Fonts/meiryo.ttc", name: "SystemCJKWindows3" },
+      {
+        path: "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        name: "SystemCJKLinux",
+      },
+      {
+        path: "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+        name: "SystemCJKLinux2",
+      },
       {
         path: "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",
         name: "SystemEmojiLinux",

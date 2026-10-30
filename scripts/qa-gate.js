@@ -2,15 +2,16 @@
 
 /**
  * qa-gate.js - Automated QA Gate Runner (Naura Hoshino V2)
- * Menjalankan 8 tahapan pengujian standar kualitas sesuai AGENTS.md:
+ * Menjalankan 9 tahapan pengujian standar kualitas sesuai AGENTS.md:
  * 1. ESLint linter & styling check
  * 2. Em-dash prohibition check (\u2014)
  * 3. i18n Locales parity strict check (id.json vs en.json)
- * 4. Internal module require graph check
- * 5. Inline <script> syntax check untuk halaman dashboard
- * 6. Credential leak scan (kredensial tidak boleh masuk repo)
- * 7. Drift arsitektur verification
- * 8. Automated unit test suite (node --test)
+ * 4. Paritas versi SSOT (check-version-parity.js)
+ * 5. Internal module require graph check
+ * 6. Inline <script> syntax check untuk halaman dashboard
+ * 7. Credential leak scan (kredensial tidak boleh masuk repo)
+ * 8. Drift arsitektur verification
+ * 9. Automated unit test suite (node --test)
  *
  * Penggunaan:
  *   node scripts/qa-gate.js
@@ -81,7 +82,7 @@ async function run() {
 
   // 1. ESLint
   results.push(
-    await runStep("1/8 ESLint & Standar Kode", "node", [
+    await runStep("1/9 ESLint & Standar Kode", "node", [
       "node_modules/eslint/bin/eslint.js",
       ".",
     ]),
@@ -89,50 +90,57 @@ async function run() {
 
   // 2. Em dash check
   results.push(
-    await runStep("2/8 Cek Larangan Karakter Em Dash", "node", [
+    await runStep("2/9 Cek Larangan Karakter Em Dash", "node", [
       "scripts/check-em-dash.js",
     ]),
   );
 
   // 3. Paritas Kamus Bahasa
   results.push(
-    await runStep("3/8 Paritas Kamus Bahasa (Strict)", "node", [
+    await runStep("3/9 Paritas Kamus Bahasa (Strict)", "node", [
       "scripts/validate-locales.js",
       "--strict",
     ]),
   );
 
-  // 4. Resolusi Require
+  // 4. Paritas Versi SSOT
   results.push(
-    await runStep("4/8 Integritas Resolusi Require", "node", [
+    await runStep("4/9 Paritas Versi SSOT (package.json)", "node", [
+      "scripts/check-version-parity.js",
+    ]),
+  );
+
+  // 5. Resolusi Require
+  results.push(
+    await runStep("5/9 Integritas Resolusi Require", "node", [
       "scripts/check-requires.js",
     ]),
   );
 
-  // 5. Inline script HTML dashboard
+  // 6. Inline script HTML dashboard
   results.push(
-    await runStep("5/8 Sintaks Script Inline Dashboard", "node", [
+    await runStep("6/9 Sintaks Script Inline Dashboard", "node", [
       "scripts/check-inline-scripts.js",
     ]),
   );
 
-  // 6. Pemindaian kebocoran kredensial
+  // 7. Pemindaian kebocoran kredensial
   results.push(
-    await runStep("6/8 Pemindaian Kebocoran Kredensial", "node", [
+    await runStep("7/9 Pemindaian Kebocoran Kredensial", "node", [
       "scripts/check-secrets.js",
     ]),
   );
 
-  // 7. Drift Arsitektur
+  // 8. Drift Arsitektur
   results.push(
-    await runStep("7/8 Verifikasi Drift Arsitektur", "node", [
+    await runStep("8/9 Verifikasi Drift Arsitektur", "node", [
       "scripts/verify-drift.js",
     ]),
   );
 
-  // 8. Automated Unit Tests (100% full coverage across src, dashboard, and plugin)
+  // 9. Automated Unit Tests (100% full coverage across src, dashboard, and plugin)
   results.push(
-    await runStep("8/8 Automated Unit Test Suite", "node", [
+    await runStep("9/9 Automated Unit Test Suite", "node", [
       "--test",
       "--test-timeout=30000",
       "src/**/*.test.js",

@@ -352,6 +352,45 @@ describe("Smart Utilities - Anime & Movie Showcase Cards", () => {
     assert.ok(buffer.length > 8000);
     assert.equal(buffer[0], 0x89);
   });
+
+  it("renderMovieCard handles custom emoji snowflake in rating and rawRating cleanly", async () => {
+    const buffer = await renderMovieCard({
+      title: "Cars (2006)",
+      rating: "<:star:1492731787057519666> **7.1** / 10",
+      rawRating: "7.1",
+      runtime: "1h 57m",
+      genres: "Animation, Adventure, Comedy",
+      director: "John Lasseter, Joe Ranft",
+      actors: "Owen Wilson, Bonnie Hunt, Paul Newman",
+      synopsis: "While traveling to California for the dispute...",
+      sourceName: "IMDb / OMDB",
+    });
+
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 8000);
+    assert.equal(buffer[0], 0x89);
+  });
+
+  it("renderAnimeCard handles custom emoji snowflake in score and Japanese kanji title", async () => {
+    const buffer = await renderAnimeCard({
+      title: "Wandering Witch: The Journey of Elaina",
+      titleJapanese: "魔女の旅々",
+      score: "<:star:1492731787057519666> **7.4** / 10",
+      rawScore: "7.4",
+      type: "TV",
+      episodes: "12 Ep",
+      status: "Finished",
+      genres: "Adventure, Fantasy, Slice of Life",
+      studio: "C2C",
+      seasonYear: "FALL 2020",
+      synopsis: "Inspired by her favorite book, Elaina ventures out to see the world...",
+      sourceName: "AniList",
+    });
+
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 8000);
+    assert.equal(buffer[0], 0x89);
+  });
 });
 
 describe("Smart Utilities - Canvas Worker Pool Integration", () => {

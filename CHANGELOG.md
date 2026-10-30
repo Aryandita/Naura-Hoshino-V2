@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.4.1] - 2026-10-25
+## [2.4.0] - 2026-10-25
 
 ### 🚀 Added
 
@@ -139,7 +139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.4.0] - Previous Release
+## [2.3.0] - Previous Release
 
 See [git history](https://github.com/Aryandita/Naura-Hoshino-V2/commits/main) for details.
 
@@ -147,8 +147,7 @@ See [git history](https://github.com/Aryandita/Naura-Hoshino-V2/commits/main) fo
 
 ## Version History
 
-- **2.4.1** - Feature expansion & quality improvements (2026-10-25)
-- **2.4.0** - Major milestone release
+- **2.4.0** - Feature expansion & quality improvements (2026-10-25)
 - **2.3.x** - Previous iterations
 
 ---

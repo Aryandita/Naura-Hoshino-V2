@@ -10,8 +10,6 @@ const {
 const { resolveSpotifyQuery } = require("../../../src/music/spotifyResolver");
 const { formatDuration } = require("../helpers/musicShared");
 const aiDjTrackService = require("../../../src/services/aiDjTrackService");
-const { logger } = require("../../../src/managers/logger");
-
 module.exports = {
   async lofi(ctx) {
     return module.exports.radio(ctx);

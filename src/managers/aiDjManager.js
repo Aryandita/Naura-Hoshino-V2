@@ -10,9 +10,6 @@
 
 "use strict";
 
-const path = require("node:path");
-const fsp = require("node:fs");
-
 const env = require("../config/env.js");
 const { logger } = require("./logger.js");
 const fishAudioService = require("../services/fishAudioService.js");

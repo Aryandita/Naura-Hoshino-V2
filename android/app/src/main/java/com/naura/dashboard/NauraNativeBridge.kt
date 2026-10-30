@@ -24,7 +24,7 @@ class NauraNativeBridge(private val context: Context, private val onReloadReques
 
     @JavascriptInterface
     fun getAppVersion(): String {
-        return "2.3.0"
+        return "2.4.0"
     }
 
     @JavascriptInterface

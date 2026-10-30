@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
 
         // Custom User-Agent tag
         val defaultUserAgent = settings.userAgentString
-        settings.userAgentString = "$defaultUserAgent NauraOS-Android/2.3.0"
+        settings.userAgentString = "$defaultUserAgent NauraOS-Android/2.4.0"
 
         // JavaScript Interface Bridge
         webView.addJavascriptInterface(

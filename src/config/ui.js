@@ -71,7 +71,7 @@ module.exports = {
 
     const env = require("./env");
     const { BOT_VERSION } = require("./version");
-    const ver = env.BOT_VERSION || BOT_VERSION || "2.4.0";
+    const ver = env.BOT_VERSION || BOT_VERSION;
     let result;
     
     if (lang) {
