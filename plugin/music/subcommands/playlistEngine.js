@@ -490,7 +490,12 @@ const playlistEngine = {
               ? trackItem.uri || `${trackItem.title} ${trackItem.author || ""}`.trim()
               : trackItem;
 
-          const defaultSearch = env.MUSIC_DEFAULT_SEARCH || "scsearch";
+          const configuredSearch = String(env.MUSIC_DEFAULT_SEARCH || "").toLowerCase();
+          const defaultSearch = ["ytmsearch", "ytsearch", "spsearch", "amsearch"].includes(
+            configuredSearch,
+          )
+            ? configuredSearch
+            : "ytmsearch";
           const finalQuery = query.match(
             /^(?:https?:\/\/|spsearch:|ytmsearch:|ytsearch:|scsearch:|amsearch:)/,
           )

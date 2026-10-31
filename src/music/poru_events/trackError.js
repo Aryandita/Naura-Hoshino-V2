@@ -21,8 +21,12 @@ module.exports = {
       );
 
     if (isBotDetection) {
-      logger.warn(
-        `[trackError] YouTube bot detection terdeteksi pada [${trackTitle}]: ${errorMessage}. Mengupayakan pemulihan otomatis...`,
+      const compactError = String(errorMessage)
+        .split(/\r?\n/)[0]
+        .trim()
+        .slice(0, 240);
+      logger.info(
+        `[trackError] YouTube menolak stream [${trackTitle}] (${compactError}). Fallback SoundCloud dijalankan.`,
       );
     } else {
       logger.error(

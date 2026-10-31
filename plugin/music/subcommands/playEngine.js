@@ -134,14 +134,15 @@ module.exports = {
       return player;
     };
 
-    // YouTube sedang menolak request node Lavalink publik dengan bot detection.
-    // Jangan biarkan env lama (mis. MUSIC_DEFAULT_SEARCH=ytsearch) membuat
-    // pencarian biasa selalu gagal. Prefix eksplisit yt:/ytsearch: tetap
-    // tersedia untuk pengguna yang memang ingin mencoba YouTube.
+    // YouTube menjadi sumber pencarian utama karena ranking dan metadata musik
+    // lebih tepat. SoundCloud tetap dipakai sebagai fallback playback bila node
+    // Lavalink gagal mengambil stream YouTube.
     const configuredSearch = String(env.MUSIC_DEFAULT_SEARCH || "").toLowerCase();
-    const defaultSearch = ["scsearch", "spsearch", "amsearch"].includes(configuredSearch)
+    const defaultSearch = ["ytmsearch", "ytsearch", "spsearch", "amsearch"].includes(
+      configuredSearch,
+    )
       ? configuredSearch
-      : "scsearch";
+      : "ytmsearch";
     let searchSource = defaultSearch;
     let finalQuery = query;
     const isDirectLink = !!query.match(/^(https?:\/\/)/);
@@ -199,9 +200,9 @@ module.exports = {
       logger.warn(`[playEngine] Resolve awal gagal untuk "${finalQuery}": ${err?.message || err}`);
     }
 
-    // FALLBACK CHAIN YouTube bypass (Fix 2026-10-28):
-    // Prioritas fallback: scsearch (SoundCloud) lebih dulu karena tidak terkena
-    // bot detection, lalu ytmsearch, lalu ytsearch sebagai upaya terakhir.
+    // Pencarian utama memakai YouTube. SoundCloud hanya cadangan pencarian.
+    // Jika playback YouTube terkena bot detection, trackError.js mengalihkan
+    // track yang sama ke SoundCloud tanpa mengubah hasil pencarian pengguna.
     let finalRes = res;
 
     const isResEmpty = (r) =>
@@ -216,7 +217,7 @@ module.exports = {
       const cleanRawQuery = query
         .replace(/^(?:scsearch|ytsearch|ytmsearch|amsearch|spsearch|dzsearch|sc|yt|ytm|am|sp|dz):/i, "")
         .trim();
-      const fallbackChain = ["scsearch", "ytmsearch", "ytsearch"].filter(
+      const fallbackChain = ["ytmsearch", "ytsearch", "scsearch"].filter(
         (s) => s !== searchSource,
       );
 

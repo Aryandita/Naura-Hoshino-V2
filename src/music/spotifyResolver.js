@@ -368,12 +368,13 @@ function buildSearchQueries(meta) {
   const label =
     meta.artists && meta.artists.length ? meta.artists.join(", ") : "";
   if (label) {
-    queries.push(`scsearch:${label} - ${meta.name}`);
-    queries.push(`ytsearch:${label} - ${meta.name}`);
     queries.push(`ytmsearch:${label} ${meta.name}`);
+    queries.push(`ytsearch:${label} - ${meta.name}`);
+    queries.push(`scsearch:${label} - ${meta.name}`);
   } else {
-    queries.push(`scsearch:${meta.name}`);
+    queries.push(`ytmsearch:${meta.name}`);
     queries.push(`ytsearch:${meta.name}`);
+    queries.push(`scsearch:${meta.name}`);
   }
   return queries;
 }
