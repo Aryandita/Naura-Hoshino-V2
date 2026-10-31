@@ -272,7 +272,7 @@ async function aggregateUserReadiness(userId, client = null, options = {}) {
       questReady = true;
     } else if (qState.quest && !qState.claimed) {
       questStatus = "IN_PROGRESS";
-      questReady = true;
+      questReady = false;
     } else if (qState.claimed) {
       questStatus = "COMPLETED";
       questReady = false;
@@ -570,15 +570,22 @@ async function checkAndDispatchAdventureDigest(userId, client, options = {}) {
     }
   }
 
+  // 3.5. Optimistic in-memory reservation to prevent concurrent duplicate sends
+  if (!force) {
+    digestCooldownCache.set(userId, now);
+  }
+
   // 4. Evaluasi status kesiapan multi-sistem
   const readiness = await aggregateUserReadiness(userId, client, { profile, prefs });
   if (!readiness.hasAnyEligible) {
+    if (!force) digestCooldownCache.delete(userId);
     return { sent: false, reason: "NO_ELIGIBLE_ITEMS", readiness };
   }
 
   // 5. Pastikan DM terotorisasi
   const authorized = await ensureDmAuthorized(client, userId, profile);
   if (!authorized) {
+    if (!force) digestCooldownCache.delete(userId);
     return { sent: false, reason: "DM_NOT_AUTHORIZED" };
   }
 
@@ -586,6 +593,7 @@ async function checkAndDispatchAdventureDigest(userId, client, options = {}) {
   try {
     const user = await client.users.fetch(userId).catch(() => null);
     if (!user) {
+      if (!force) digestCooldownCache.delete(userId);
       return { sent: false, reason: "USER_FETCH_FAILED" };
     }
 
@@ -620,6 +628,7 @@ async function checkAndDispatchAdventureDigest(userId, client, options = {}) {
       readiness,
     };
   } catch (err) {
+    if (!force) digestCooldownCache.delete(userId);
     logger.warn(`[NotificationCenter] Gagal dispatch Adventure Digest ke ${userId}: ${err.message}`);
     return { sent: false, reason: "DISPATCH_ERROR", error: err.message };
   }

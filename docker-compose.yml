@@ -57,9 +57,9 @@ services:
   # PO TOKEN PROVIDER (LAPIS 1 - YouTube bot detection bypass).
   # Melayani endpoint /ping dan /get_pot untuk yt-dlp (LavaSrc ytdlp source)
   # agar request YouTube dari IP datacenter tidak diblokir.
-  # Gunakan image prebuilt resmi; jangan expose port ke publik.
+  # Gunakan image prebuilt resmi dengan versi yang dipin sama dengan plugin.
   pot-server:
-    image: brainicism/bgutil-ytdlp-pot-provider:latest
+    image: brainicism/bgutil-ytdlp-pot-provider:2.0.2
     container_name: naura_pot_server
     restart: unless-stopped
     # Port 4416 HANYA untuk jaringan internal docker; jangan publish

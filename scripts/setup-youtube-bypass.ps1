@@ -47,8 +47,8 @@ if (Test-Path "$INSTALL_DIR\.git") {
     Pop-Location
 } else {
     Write-Log "Cloning bgutil-ytdlp-pot-provider ke $INSTALL_DIR..."
-    git clone --single-branch --branch $POT_BRANCH $POT_REPO $INSTALL_DIR `
-        || $(Write-Fail "git clone gagal. Cek koneksi internet atau proxy Anda.")
+    git clone --single-branch --branch $POT_BRANCH $POT_REPO $INSTALL_DIR
+    if ($LASTEXITCODE -ne 0) { Write-Fail "git clone gagal. Cek koneksi internet atau proxy Anda." }
 }
 
 # ----------------------------------------
@@ -56,9 +56,11 @@ if (Test-Path "$INSTALL_DIR\.git") {
 # ----------------------------------------
 Push-Location "$INSTALL_DIR\server"
 Write-Log "Menginstall dependensi server (npm ci)..."
-npm ci || $(Write-Fail "npm ci gagal.")
+npm ci
+if ($LASTEXITCODE -ne 0) { Write-Fail "npm ci gagal." }
 Write-Log "Membangun TypeScript (npx tsc)..."
-npx tsc || $(Write-Fail "npx tsc gagal.")
+npx tsc
+if ($LASTEXITCODE -ne 0) { Write-Fail "npx tsc gagal." }
 Pop-Location
 
 # ----------------------------------------
@@ -96,9 +98,11 @@ if ($ytdlpPath) {
 } else {
     Write-Log "yt-dlp tidak ditemukan, mencoba install via pip..."
     if (Get-Command pip3 -ErrorAction SilentlyContinue) {
-        pip3 install -U yt-dlp || $(Write-Fail "pip3 install yt-dlp gagal.")
+        pip3 install -U yt-dlp
+        if ($LASTEXITCODE -ne 0) { Write-Fail "pip3 install yt-dlp gagal." }
     } elseif (Get-Command pip -ErrorAction SilentlyContinue) {
-        pip install -U yt-dlp || $(Write-Fail "pip install yt-dlp gagal.")
+        pip install -U yt-dlp
+        if ($LASTEXITCODE -ne 0) { Write-Fail "pip install yt-dlp gagal." }
     } else {
         Write-Warn "pip tidak tersedia. Install yt-dlp manual dari https://github.com/yt-dlp/yt-dlp/wiki/Installation"
     }

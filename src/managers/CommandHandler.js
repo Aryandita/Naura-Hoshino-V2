@@ -54,7 +54,6 @@ function writeDeployCache(data) {
 const SLASH_DEPLOY_EXCLUDE = new Map([
   // Terjangkau dari hub /fun, /tool, /ai, /minigame (13)
   ["akinator", "hub:/minigame"],
-  ["coinflip", "hub:/fun"],
   ["color", "hub:/tool"],
   ["diceroll", "hub:/fun"],
   ["fortune", "hub:/fun"],
@@ -377,12 +376,16 @@ class CommandHandler {
     const rawGuildId = env.GUILD_ID ? String(env.GUILD_ID).trim() : "";
     const guildId = /^\d{17,20}$/.test(rawGuildId) ? rawGuildId : null;
 
-    // Tanda tangan ikut memuat clientId dan guildId. Tanpa itu, memindahkan
-    // bot ke aplikasi lain atau mengganti server pengembangan tidak akan
+    const isDev = env.NODE_ENV !== "production";
+    const deploymentScope = isDev && guildId ? `guild:${guildId}` : "global";
+
+    // Tanda tangan ikut memuat clientId, guildId, dan scope deployment. Tanpa itu,
+    // memindahkan bot ke aplikasi lain atau mengganti server pengembangan tidak akan
     // memicu deploy ulang, padahal seharusnya iya.
     const signature = signatureOf({
       clientId,
       guildId,
+      scope: deploymentScope,
       commands: commandsArray,
     });
     const force = process.argv.includes("--deploy");
@@ -446,7 +449,7 @@ class CommandHandler {
 
       // Deploy strategy: Guild-only in development (instant), Global in production.
       // Deploying both simultaneously causes duplicate entries in Discord's command list.
-      const isDev = env.NODE_ENV !== "production";
+      let cleanupFailed = false;
 
       if (isDev && guildId) {
         // Development: deploy to guild only (instant, no global pollution)
@@ -475,11 +478,17 @@ class CommandHandler {
               `[DEPLOY] Guild commands dibersihkan untuk mencegah duplikasi.`,
             );
           } catch (cleanErr) {
+            cleanupFailed = true;
             logger.warn(
               `[DEPLOY] Gagal membersihkan guild commands: ${cleanErr.message}`,
             );
           }
         }
+      }
+
+      if (cleanupFailed) {
+        logger.warn("[DEPLOY] Cache deployment dilewati karena pembersihan guild commands gagal.");
+        return false;
       }
 
       writeDeployCache({

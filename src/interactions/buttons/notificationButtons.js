@@ -23,7 +23,9 @@ function renderNotificationPanel(displayName, currentPrefs) {
     `${eFire} **Pengingat Daily Streak:** ${statusIcon(currentPrefs.daily_streak)}\n` +
     `${eChart} **Peringatan Saham $NRA:** ${statusIcon(currentPrefs.stock_alert)}\n` +
     `${eCafe} **Panen Kafe & Vivarium:** ${statusIcon(currentPrefs.idle_revenue)}\n` +
-    `${eVote} **Pengingat Vote Cooldown:** ${statusIcon(currentPrefs.vote_reminder)}\n\n` +
+    `${eVote} **Pengingat Vote Cooldown:** ${statusIcon(currentPrefs.vote_reminder)}\n` +
+    `🧭 **Adventure Digest:** ${statusIcon(currentPrefs.adventure_digest)}\n` +
+    `🎯 **Reset Misi Harian:** ${statusIcon(currentPrefs.quest_reset)}\n\n` +
     "*Klik tombol di bawah ini untuk mengubah status notifikasi secara instan:*";
 
   const row1 = new ActionRowBuilder().addComponents(
@@ -57,12 +59,25 @@ function renderNotificationPanel(displayName, currentPrefs) {
       .setEmoji(ui.parseEmoji(ui.getEmoji("topgg")) || { name: "🗳️" }),
   );
 
+  const row3 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("toggle_notif_adventure_digest")
+      .setLabel(`Digest: ${currentPrefs.adventure_digest ? "ON" : "OFF"}`)
+      .setStyle(currentPrefs.adventure_digest ? ButtonStyle.Success : ButtonStyle.Secondary)
+      .setEmoji(ui.parseEmoji("🧭") || { name: "🧭" }),
+    new ButtonBuilder()
+      .setCustomId("toggle_notif_quest_reset")
+      .setLabel(`Misi: ${currentPrefs.quest_reset ? "ON" : "OFF"}`)
+      .setStyle(currentPrefs.quest_reset ? ButtonStyle.Success : ButtonStyle.Secondary)
+      .setEmoji(ui.parseEmoji("🎯") || { name: "🎯" }),
+  );
+
   return buildContainerV2({
     accentColorHex: "#38BDF8",
     title: `${eBell} Pusat Notifikasi Pribadi`,
     description: desc,
     expression: "smile",
-    buttonsRow: [row1, row2],
+    buttonsRow: [row1, row2, row3],
     footerText: ui.getFooter("utility"),
   });
 }

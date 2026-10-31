@@ -16,8 +16,14 @@ const {
   _setYtDlpInstanceForTesting,
 } = require("../src/downloader/downloaderYtdlp");
 
-test("CHALLENGE 1: getYoutubeCookieConfig with valid default cookies.txt", () => {
+test("CHALLENGE 1: getYoutubeCookieConfig with valid default cookies.txt", (t) => {
   const orig = env.YOUTUBE_COOKIE_PATH;
+  const cookiePath = path.resolve(process.cwd(), "cookies.txt");
+  let created = false;
+  if (!fs.existsSync(cookiePath)) {
+    fs.writeFileSync(cookiePath, "# Netscape HTTP Cookie File\n");
+    created = true;
+  }
   try {
     env.YOUTUBE_COOKIE_PATH = "cookies.txt";
     const config = lavalinkClusterManager.getYoutubeCookieConfig();
@@ -31,6 +37,9 @@ test("CHALLENGE 1: getYoutubeCookieConfig with valid default cookies.txt", () =>
     assert.ok(fs.statSync(config.path).isFile(), "Path berkas harus berupa berkas reguler");
   } finally {
     env.YOUTUBE_COOKIE_PATH = orig;
+    if (created && fs.existsSync(cookiePath)) {
+      try { fs.unlinkSync(cookiePath); } catch (_) {}
+    }
   }
 });
 

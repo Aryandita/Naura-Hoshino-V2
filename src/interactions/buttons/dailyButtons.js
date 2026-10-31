@@ -8,6 +8,7 @@ const { safeParseInventory, findItem, takeItemsAtomic } = require("../../surviva
 const UserQuest = require("../../models/UserQuest");
 const canvasWorkerPool = require("../../canvas/canvasWorkerPool");
 const { logger } = require("../../managers/logger");
+const { withDistributedLock } = require("../../utils/redisLockHelper");
 
 const COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const GRACE_PERIOD_MS = 48 * 60 * 60 * 1000;
@@ -98,8 +99,9 @@ function buildDailyHubRow(isClaimedToday, shieldCount) {
 
 async function handleDailyClaim(interaction) {
   const userId = interaction.user.id;
-  const displayName = ui.ux.resolveUserName(interaction);
-  const now = Date.now();
+  return withDistributedLock(`daily_claim:${userId}`, async () => {
+    const displayName = ui.ux.resolveUserName(interaction);
+    const now = Date.now();
 
   const profile = await cacheManager.getUserProfile(userId);
   const cooldowns = profile?.cooldowns || {};
@@ -272,7 +274,8 @@ async function handleDailyClaim(interaction) {
     files.push(new AttachmentBuilder(cardBuf, { name: "daily_card.png" }));
   }
 
-  return interaction.editReply({ ...container, files });
+    return interaction.editReply({ ...container, files });
+  });
 }
 
 module.exports = [

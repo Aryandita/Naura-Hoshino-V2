@@ -4,8 +4,8 @@
  * @module economyContract
  * @description Economy Public Domain Contract - Antarmuka publik untuk semua operasi
  * ekonomi Naura Hoshino V2 termasuk saldo Naura Coins (NC), bank, pajak transfer,
- * dan ServerTreasury. Seluruh operasi bersifat atomik dan satu arah tanpa
- * ketergantungan balik ke domain lain.
+ * dan ServerTreasury. Operasi mutasi saldo individu bersifat atomik via
+ * CacheManager/Redis, sedangkan operasi transfer dikoordinasikan secara defensif.
  *
  * ## Interface Methods
  * - `getBalance(userId)` - Ambil saldo wallet dan bank pengguna

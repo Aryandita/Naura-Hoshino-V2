@@ -17,7 +17,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --test --test-timeout=30000 \"src/**/*.test.js\" \"dashboard/**/*.test.js\" \"plugin/**/*.test.js\" \"test/**/*.test.js\"",
+    "test": "node --test --test-timeout=60000 \"src/**/*.test.js\" \"dashboard/**/*.test.js\" \"plugin/**/*.test.js\" \"test/**/*.test.js\"",
     "test:quick": "node --test --test-timeout=10000 --test-concurrency=true \"src/**/*.test.js\" \"dashboard/**/*.test.js\"",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

@@ -21,7 +21,7 @@
  * @example
  * const survival = require("./survivalContract");
  * const char = await survival.getCharacter("123456789");
- * await survival.updateVitals("123456789", { hp: -10, hunger: -5 });
+ * await survival.updateVitals("123456789", { hp: 90, hunger: 80 });
  * await survival.rewardFragments("123456789", 50, { source: "daily_quest" });
  */
 

@@ -295,7 +295,7 @@
   "HELP_CAT_RECOVERY_DESC": "大量BAN解除、ロール復元、チャンネルバックアップの緊急復旧ツール。",
   "HELP_ERR_NOT_YOURS": "❌ このメニューはあなたのものではありません。`/core help` を入力してください。",
   "LANG_SUCCESS": "✅ システム言語を **日本語** に変更しました。",
-  "LANG_NOT_FOUND": "❌ 言語が見つかりません! オプション: `id`, `en`, `ja`。",
+  "LANG_NOT_FOUND": "❌ 言語が見つかりません! オプション: `id`, `en`, `ja`, `es`。",
   "CLEANER_BTN_LABEL": "クリーンアップ(+3 SC)",
   "CLEANER_SUCCESS_TITLE": "メッセージを清掃!(+3 SC)",
   "CLEANER_DAILY_LIMIT": "デイリー清掃報酬上限に達しました",

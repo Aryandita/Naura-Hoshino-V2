@@ -51,7 +51,7 @@ test("CacheManager - Signature Normalization & Write-Behind Safety", async (t) =
 
       const queued = cacheManager.survivalQueue.get(userId);
       assert.ok(queued, "Entry should exist in survivalQueue");
-      assert.equal(queued.inc.starFragments, 250);
+      assert.equal(queued.inc.sukamajuCoins ?? queued.inc.starFragments, 250);
       assert.equal(
         queued.inc["0"],
         undefined,
@@ -75,8 +75,8 @@ test("CacheManager - Signature Normalization & Write-Behind Safety", async (t) =
 
       const queued = cacheManager.survivalQueue.get(userId);
       assert.ok(queued, "Entry should exist in survivalQueue");
-      assert.equal(queued.inc.starFragments, 100);
-      assert.equal(queued.inc.coupons, 2);
+      assert.equal(queued.inc.sukamajuCoins ?? queued.inc.starFragments, 100);
+      assert.equal(queued.inc.scholarshipVouchers ?? queued.inc.coupons, 2);
 
       cacheManager.survivalQueue.delete(userId);
     },
@@ -91,7 +91,7 @@ test("CacheManager - Signature Normalization & Write-Behind Safety", async (t) =
 
       const queued = cacheManager.writeQueue.get(userId);
       assert.ok(queued, "Entry should exist in writeQueue");
-      assert.equal(queued.inc.economy_wallet, 500);
+      assert.equal(queued.inc.pratamaDollars ?? queued.inc.economy_wallet, 500);
       assert.equal(
         queued.inc["0"],
         undefined,

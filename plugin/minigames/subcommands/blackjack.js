@@ -19,10 +19,10 @@ module.exports = {
     const taruhan = interaction.options.getInteger("taruhan") || 0;
 
     if (taruhan < 10) {
-      return sendError("Minimal taruhan untuk Blackjack adalah **10 SC**!");
+      return sendError("Minimal taruhan untuk Blackjack adalah **10 NSF**!");
     }
     if (taruhan > 50000) {
-      return sendError("Maksimal taruhan untuk Blackjack adalah **50.000 SC**!");
+      return sendError("Maksimal taruhan untuk Blackjack adalah **50.000 NSF**!");
     }
 
     const curSurv = await cacheManager.getUserSurvival(user.id);
@@ -32,7 +32,7 @@ module.exports = {
 
     if (curNsf < taruhan) {
       return sendError(
-        `Saldo Sukamaju Koin (SC) tidak mencukupi untuk taruhan **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+        `Saldo Star Fragments (NSF) tidak mencukupi untuk taruhan **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
       );
     }
 

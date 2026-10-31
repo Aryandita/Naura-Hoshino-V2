@@ -193,8 +193,8 @@ async function renderAnimeCard(payload) {
       const matches = stripped.match(/\b(10(?:\.0)?|[0-9](?:\.[0-9]+)?)\b/);
       return matches ? matches[1] : null;
     };
-    const cleanScore = parseScore(payload.rawScore) || parseScore(score) || "8.5";
-    const scoreLabel = `★ ${cleanScore} / 10`;
+    const cleanScore = parseScore(payload.rawScore) || parseScore(score);
+    const scoreLabel = cleanScore ? `★ ${cleanScore} / 10` : "★ N/A";
 
     // Format Pill
     const formatLabel = String(type || "TV").toUpperCase();
@@ -208,7 +208,10 @@ async function renderAnimeCard(payload) {
     if (
       upperStatus.includes("NOT YET") ||
       upperStatus.includes("BELUM") ||
-      upperStatus.includes("TO BE AIRED")
+      upperStatus.includes("TO BE AIRED") ||
+      upperStatus.includes("UNRELEASED") ||
+      upperStatus.includes("UPCOMING") ||
+      upperStatus.includes("TBA")
     ) {
       statusLabel = "Belum Rilis";
       statusColor = "#38bdf8";
@@ -226,7 +229,7 @@ async function renderAnimeCard(payload) {
     ) {
       statusLabel = "Tayang";
       statusColor = "#f59e0b";
-    } else if (upperStatus.includes("CANCEL")) {
+    } else if (upperStatus.includes("CANCEL") || upperStatus.includes("DIBATALKAN") || upperStatus.includes("BATAL")) {
       statusLabel = "Dibatalkan";
       statusColor = "#ef4444";
     } else if (upperStatus.includes("HIATUS")) {

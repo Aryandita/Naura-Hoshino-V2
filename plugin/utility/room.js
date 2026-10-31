@@ -331,9 +331,14 @@ module.exports = {
         buffer = null;
       }
 
-      const attachment = new AttachmentBuilder(buffer, {
-        name: "room-preview.png",
-      });
+      const files = [];
+      if (buffer) {
+        files.push(
+          new AttachmentBuilder(buffer, {
+            name: "room-preview.png",
+          }),
+        );
+      }
 
       const payload = buildContainerV2({
         authorName: "NAURA LIVING ROOM 2.5D",
@@ -348,11 +353,12 @@ module.exports = {
           "> *Jika tata letak sudah pas, simpan pengaturan dekorasi kamarmu melalui Web Dashboard atau menu `/room decorate`.*",
         ].join("\n"),
         footerText: ui.getFooter("survival"),
+        imageURL: buffer ? "attachment://room-preview.png" : null,
       });
 
       return interaction.editReply({
         ...payload,
-        files: [attachment],
+        files,
         flags: MessageFlags.IsComponentsV2,
       });
     }

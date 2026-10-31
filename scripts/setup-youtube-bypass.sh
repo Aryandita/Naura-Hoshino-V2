@@ -32,8 +32,8 @@ if ! command -v node >/dev/null 2>&1; then
   fail "Node.js tidak ditemukan. Install Node.js >= 20 dari https://nodejs.org lalu jalankan ulang script ini."
 fi
 NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
-if [ "$NODE_MAJOR" -lt 20 ]; then
-  fail "Node.js versi ${NODE_MAJOR} terlalu lama. Butuh >= 20 (server bgutil memakai API modern)."
+if [ "$NODE_MAJOR" -lt 22 ]; then
+  fail "Node.js versi ${NODE_MAJOR} terlalu lama. Butuh >= 22 (server bgutil memakai API modern)."
 fi
 log "Node.js $(node --version) OK."
 
@@ -83,9 +83,9 @@ if command -v yt-dlp >/dev/null 2>&1; then
 else
   log "yt-dlp tidak ditemukan, mencoba install via pip..."
   if command -v pip3 >/dev/null 2>&1; then
-    pip3 install -U yt-dlp || fail "pip3 install yt-dlp gagal."
+    pip3 install -U yt-dlp bgutil-ytdlp-pot-provider || fail "pip3 install yt-dlp bgutil-ytdlp-pot-provider gagal."
   elif command -v pip >/dev/null 2>&1; then
-    pip install -U yt-dlp || fail "pip install yt-dlp gagal."
+    pip install -U yt-dlp bgutil-ytdlp-pot-provider || fail "pip install yt-dlp bgutil-ytdlp-pot-provider gagal."
   else
     warn "pip tidak tersedia. Install yt-dlp manual dari https://github.com/yt-dlp/yt-dlp/wiki/Installation"
   fi

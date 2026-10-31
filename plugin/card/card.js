@@ -1045,7 +1045,7 @@ module.exports = {
           return interaction.editReply({
             ...buildErrorContainerV2({
               title: "Star Fragments Tidak Cukup",
-              description: `Saldo Star Fragments milikmu tidak mencukupi untuk menawarkan ${starFragOffer} SC!`,
+              description: `Saldo Star Fragments milikmu tidak mencukupi untuk menawarkan ${starFragOffer} Star Fragments (NSF)!`,
             }),
           });
         }

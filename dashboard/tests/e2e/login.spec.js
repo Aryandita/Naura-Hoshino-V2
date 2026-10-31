@@ -26,13 +26,12 @@ test.describe("Login Flow", () => {
     await dashboardPage.mockAuthStatus(false);
 
     const authBtn = page.locator("#headerAuthBtn");
-    if (await authBtn.isVisible()) {
-      await authBtn.click();
+    await expect(authBtn).toBeVisible();
+    await authBtn.click();
 
-      const modal = await loginPage.getAuthModal();
-      if (await modal.count() > 0) {
-        await expect(modal).toHaveClass(/open/);
-      }
+    const modal = await loginPage.getAuthModal();
+    if (await modal.count() > 0) {
+      await expect(modal).toHaveClass(/open/);
     }
   });
 
@@ -77,8 +76,21 @@ test.describe("Login Flow", () => {
 
     const logoutLink = page.locator("a[href*=\"/auth/logout\"], .logout-btn");
     if (await logoutLink.count() > 0) {
+      await page.route("**/auth/status", (route) => {
+        route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ authenticated: false, user: null }),
+        });
+      });
       await logoutLink.first().click();
       await page.waitForURL("**/");
+
+      const authStatus = await page.evaluate(async () => {
+        const res = await fetch("/auth/status");
+        return res.json();
+      });
+      expect(authStatus.authenticated).toBe(false);
     }
   });
 
@@ -93,8 +105,10 @@ test.describe("Login Flow", () => {
 
     await page.waitForTimeout(500);
 
-    const response = await page.request.get("/auth/status");
-    const data = await response.json();
+    const data = await page.evaluate(async () => {
+      const res = await fetch("/auth/status");
+      return res.json();
+    });
     expect(data.authenticated).toBe(true);
   });
 

@@ -16,7 +16,7 @@ module.exports = {
       (typeof error === "string" ? error : "Lavalink gagal memutar stream");
 
     const isBotDetection =
-      /sign in|confirm you.re not a bot|bot detection|unavailable|requires login|All clients failed to load the item/i.test(
+      /sign in|confirm you.re not a bot|bot detection|video unavailable|this video is unavailable|requires login|All clients failed to load the item/i.test(
         errorMessage,
       );
 

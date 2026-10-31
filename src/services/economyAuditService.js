@@ -10,7 +10,7 @@ const EconomyAuditLog = require("../models/mongo/EconomyAuditLog");
 class EconomyAuditService {
   /**
    * Mencatat mutasi saldo ke MongoDB.
-   * Operasi bersifat asynchronous dan non-blocking agar tidak memperlambat eksekusi bot.
+   * Operasi bersifat asynchronous dan mengembalikan entri log yang tersimpan.
    *
    * @param {Object} params
    * @param {string} params.actorId - ID aktor (admin, owner, user, atau SYSTEM)

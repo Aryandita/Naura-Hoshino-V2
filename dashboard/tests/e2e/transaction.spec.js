@@ -75,10 +75,14 @@ test.describe("Transaction Flow", () => {
 
     await inventoryPage.goto();
 
-    const response = await page.request.post("/api/inventory/action", {
-      data: { itemId: "wood", itemIdx: 0, action: "sell" },
+    const data = await page.evaluate(async () => {
+      const res = await fetch("/api/inventory/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: "wood", itemIdx: 0, action: "sell" }),
+      });
+      return res.json();
     });
-    const data = await response.json();
 
     expect(actionCalled || data.success).toBeTruthy();
   });
@@ -220,13 +224,21 @@ test.describe("Transaction Flow", () => {
 
     await inventoryPage.goto();
 
-    const response = await page.request.post("/api/inventory/action", {
-      data: { itemId: "junk", itemIdx: 0, action: "trash" },
+    const data = await page.evaluate(async () => {
+      const res = await fetch("/api/inventory/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: "junk", itemIdx: 0, action: "trash" }),
+      });
+      return res.json();
     });
-    const data = await response.json();
 
     expect(data.success).toBe(true);
-    expect(balanceChanged).toBe(false);
+    const meRes = await page.evaluate(async () => {
+      const res = await fetch("/api/me");
+      return res.json();
+    });
+    expect(meRes.db.economy_wallet).toBe(initialBalance);
   });
 
   test("should validate item ownership before transaction", async ({ page }) => {

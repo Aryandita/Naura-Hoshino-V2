@@ -171,9 +171,9 @@ async function renderMovieCard(payload) {
       const matches = stripped.match(/\b(10(?:\.0)?|[0-9](?:\.[0-9]+)?)\b/);
       return matches ? matches[1] : null;
     };
-    const cleanRating = parseRating(payload.rawRating) || parseRating(rating) || "8.2";
+    const cleanRating = parseRating(payload.rawRating) || parseRating(rating);
     const ratingSource = sourceName && sourceName.includes("TVMaze") ? "TVMaze" : "IMDb";
-    const ratingLabel = `${ratingSource} ★ ${cleanRating} / 10`;
+    const ratingLabel = cleanRating ? `${ratingSource} ★ ${cleanRating} / 10` : `${ratingSource} ★ N/A`;
 
     // Runtime Pill
     const cleanRuntime = runtime && runtime !== "N/A" ? String(runtime).replace(/_/g, " ").trim() : "Durasi Standar";

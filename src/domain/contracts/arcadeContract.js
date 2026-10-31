@@ -23,14 +23,16 @@ class ArcadeContract {
   }
 
   /**
-   * Memotong biaya bermain (5 MP) secara atomik
+   * Memotong biaya bermain (5 MP atau custom amount) secara atomik
    * @param {string} userId
+   * @param {number} [amount=5]
    * @returns {Promise<{ ok: boolean, balance: number, reason?: string }>}
    */
-  async chargeGameFee(userId) {
+  async chargeGameFee(userId, amount = GAME_FEE_MP) {
     if (!userId) return { ok: false, balance: 0, reason: "INVALID_USER" };
+    const fee = Number(amount) > 0 ? Number(amount) : GAME_FEE_MP;
 
-    const result = await cacheManager.debitUserProfile(userId, "medaliPermainan", GAME_FEE_MP);
+    const result = await cacheManager.debitUserProfile(userId, "medaliPermainan", fee);
     if (!result.ok) {
       const current = await this.getBalance(userId);
       return { ok: false, balance: current, reason: result.reason || "INSUFFICIENT_MP" };

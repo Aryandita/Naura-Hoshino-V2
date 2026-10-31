@@ -26,12 +26,12 @@ const SPRITESHEETS_DIR = path.join(ASSETS_ROOT, "spritesheets");
 
 const MAX_FILE_SIZE_BYTES = 256 * 1024; // 256 KB strict ceiling
 
-// Determine if physical asset files are present on disk
-const assetsPresent =
-  fs.existsSync(STATIC_DIR) &&
-  fs.existsSync(ANIMATED_DIR) &&
-  fs.existsSync(SOURCE_DIR) &&
-  fs.existsSync(SPRITESHEETS_DIR);
+// Ensure physical asset directories are present on disk
+assert.ok(fs.existsSync(STATIC_DIR), `Missing static emoji directory: ${STATIC_DIR}`);
+assert.ok(fs.existsSync(ANIMATED_DIR), `Missing animated emoji directory: ${ANIMATED_DIR}`);
+assert.ok(fs.existsSync(SOURCE_DIR), `Missing source emoji directory: ${SOURCE_DIR}`);
+assert.ok(fs.existsSync(SPRITESHEETS_DIR), `Missing spritesheets emoji directory: ${SPRITESHEETS_DIR}`);
+const assetsPresent = true;
 
 describe("Custom Emojis E2E - Tier 0: Engine & Binary Parser Integrity", () => {
   it("TC-E0.1: PNG parser validates valid 128x128 RGBA buffer correctly", () => {
@@ -359,7 +359,7 @@ describe("Custom Emojis E2E - Tier 2: Boundary & Corner Cases (Dimensions, Alpha
         const parsed = parseGifHeader(buf);
         assert.ok(parsed, `Failed to parse GIF header for ${name}`);
         assert.ok(
-          parsed.fps >= 10 && parsed.fps <= 16,
+          parsed.fps >= 12 && parsed.fps <= 15,
           `GIF ${name} FPS out of range: ${parsed.fps.toFixed(2)} (expected ~12-15 FPS)`,
         );
       }

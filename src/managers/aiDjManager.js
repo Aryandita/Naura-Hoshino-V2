@@ -216,10 +216,28 @@ class AiDjManager {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    const safeId = String(identifier || "track").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const safeId = String(identifier || "track").replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 32);
     const filename = `intro_${Date.now()}_${safeId}.mp3`;
     const filePath = path.join(dir, filename);
     fs.writeFileSync(filePath, audioBuffer);
+
+    // Prune stale intro files (keep directory bounded, older than 24h)
+    try {
+      const files = fs.readdirSync(dir);
+      const now = Date.now();
+      const MAX_AGE_MS = 24 * 60 * 60 * 1000;
+      for (const f of files) {
+        if (!f.startsWith("intro_") || f === filename) continue;
+        const full = path.join(dir, f);
+        try {
+          const stat = fs.statSync(full);
+          if (now - stat.mtimeMs > MAX_AGE_MS) {
+            fs.unlinkSync(full);
+          }
+        } catch (_) {}
+      }
+    } catch (_) {}
+
     return filePath;
   }
 
@@ -560,16 +578,20 @@ class AiDjManager {
    * @param {number} [variant=0] - Template variant index (0 or 1)
    * @returns {string|null} Absolute path to .mp3 file or null
    */
-  getLocalDjAudioPath(genre, lang, variant = 0) {
+  getLocalDjAudioPath(genre, lang = "id", variant = 0) {
     const fs = require('fs');
     const path = require('path');
+    const cleanGenre = String(genre || "pop_default").toLowerCase().replace(/[^a-z0-9_]/g, "_");
+    const cleanLang = String(lang || "id").toLowerCase().startsWith("en") ? "en" : "id";
+    const vNum = Number(variant) || 0;
     const candidates = [
-      `${genre}_${variant}.mp3`,
-      `${genre}_v${variant + 1}.mp3`,
-      `${genre}_v${variant}.mp3`,
+      `${cleanGenre}_v${vNum + 1}.mp3`,
+      `${cleanGenre}_v${vNum}.mp3`,
+      `${cleanGenre}_${vNum}.mp3`,
+      `${cleanGenre}.mp3`,
     ];
     for (const fileName of candidates) {
-      const filePath = path.join(process.cwd(), 'assets', 'audio', 'dj', lang, fileName);
+      const filePath = path.join(process.cwd(), 'assets', 'audio', 'dj', cleanLang, fileName);
       if (fs.existsSync(filePath)) return filePath;
     }
     return null;

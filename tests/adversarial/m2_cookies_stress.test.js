@@ -84,15 +84,20 @@ describe("Milestone M2 Empirical Adversarial Stress Suite: YouTube Cookies & Dow
     it("ADV-COOKIE-03: Fallback to assets/cookies/youtube_cookies.txt when root cookies are missing", () => {
       const cookiesBak = path.resolve(rootDir, "cookies.txt.advbak");
       const messageBak = path.resolve(rootDir, "message.txt.advbak");
+      const assetsBak = path.resolve(rootDir, "assets_cookies.advbak");
+      const hadAssetsCookie = fs.existsSync(assetsCookieFile);
 
+      if (hadAssetsCookie) {
+        fs.renameSync(assetsCookieFile, assetsBak);
+      }
       if (!fs.existsSync(assetsCookieDir)) {
         fs.mkdirSync(assetsCookieDir, { recursive: true });
       }
       fs.writeFileSync(assetsCookieFile, "# Netscape HTTP Cookie File - Dummy", "utf-8");
 
       try {
-        fs.renameSync(cookiesPath, cookiesBak);
-        fs.renameSync(messagePath, messageBak);
+        if (fs.existsSync(cookiesPath)) fs.renameSync(cookiesPath, cookiesBak);
+        if (fs.existsSync(messagePath)) fs.renameSync(messagePath, messageBak);
         env.YOUTUBE_COOKIE_PATH = "";
 
         const resolved = resolveCookiePath();
@@ -103,9 +108,12 @@ describe("Milestone M2 Empirical Adversarial Stress Suite: YouTube Cookies & Dow
           "Must fall back to assets/cookies/youtube_cookies.txt",
         );
       } finally {
+        if (fs.existsSync(assetsCookieFile)) fs.unlinkSync(assetsCookieFile);
+        if (hadAssetsCookie && fs.existsSync(assetsBak)) {
+          fs.renameSync(assetsBak, assetsCookieFile);
+        }
         if (fs.existsSync(cookiesBak)) fs.renameSync(cookiesBak, cookiesPath);
         if (fs.existsSync(messageBak)) fs.renameSync(messageBak, messagePath);
-        if (fs.existsSync(assetsCookieFile)) fs.unlinkSync(assetsCookieFile);
       }
     });
 

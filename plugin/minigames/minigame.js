@@ -86,7 +86,7 @@ async function runMinigameLogic(interaction) {
   const nsfMultiplier = getMinigameMultiplier(premiumTier);
 
   const nsfEmoji = ui.getEmoji("nsf") || ui.getEmoji("star_fragment") || "\u2b50";
-  const coinEmoji = `${nsfEmoji} SC`;
+  const coinEmoji = `${nsfEmoji} NSF`;
   const errorEmoji = ui.emojis.error || "\u274c";
   
   /**

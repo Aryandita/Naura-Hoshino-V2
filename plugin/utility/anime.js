@@ -47,7 +47,14 @@ function normalizeAnimeStatus(raw) {
   if (!raw || raw === "N/A") return "N/A";
   const clean = String(raw).replace(/_/g, " ").trim();
   const upper = clean.toUpperCase();
-  if (upper.includes("NOT YET") || upper.includes("BELUM") || upper.includes("TO BE AIRED")) {
+  if (
+    upper.includes("NOT YET") ||
+    upper.includes("BELUM") ||
+    upper.includes("TO BE AIRED") ||
+    upper.includes("UNRELEASED") ||
+    upper.includes("UPCOMING") ||
+    upper.includes("TBA")
+  ) {
     return "Belum Rilis";
   }
   if (upper.includes("FINISH") || upper.includes("SELESAI") || upper.includes("TAMAT")) {
@@ -56,7 +63,7 @@ function normalizeAnimeStatus(raw) {
   if (upper.includes("RELEAS") || upper.includes("AIRING") || upper.includes("TAYANG")) {
     return "Sedang Tayang";
   }
-  if (upper.includes("CANCEL")) {
+  if (upper.includes("CANCEL") || upper.includes("DIBATALKAN") || upper.includes("BATAL")) {
     return "Dibatalkan";
   }
   if (upper.includes("HIATUS")) {

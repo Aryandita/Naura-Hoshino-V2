@@ -29,17 +29,18 @@ function optimizeJson(rawJson, keepChoicesLimit, maxDescLength, maxChoiceNameLen
       }
 
       if (Array.isArray(opt.choices)) {
-        for (const choice of opt.choices) {
-          if (choice.name && choice.name.length > maxChoiceNameLength) {
-            choice.name = choice.name.slice(0, maxChoiceNameLength - 3) + "...";
-          }
-        }
-
         if (opt.choices.length > keepChoicesLimit) {
+          // Keep full choice names in choicesRegistry for autocomplete filtering
           choicesRegistry.set(currentPath, opt.choices);
           choicesRegistry.set(opt.name, opt.choices);
           delete opt.choices;
           opt.autocomplete = true;
+        } else {
+          for (const choice of opt.choices) {
+            if (choice.name && choice.name.length > maxChoiceNameLength) {
+              choice.name = choice.name.slice(0, maxChoiceNameLength - 3) + "...";
+            }
+          }
         }
       }
 
@@ -78,8 +79,11 @@ function optimizeCommandBuilder(builder, keepChoicesLimit = 0, maxDescLength = 3
 
   const descLadder = [];
   for (const step of [maxDescLength, 80, 60, 50, 40, 30, 24]) {
-    if (step > 0 && !descLadder.includes(step)) descLadder.push(step);
+    if (step > 0 && step <= maxDescLength && !descLadder.includes(step)) {
+      descLadder.push(step);
+    }
   }
+  descLadder.sort((a, b) => b - a);
 
   let chosen = null;
   for (const descLen of descLadder) {

@@ -205,8 +205,8 @@ module.exports = {
       }
     });
 
-    // 0.9 Stamina Full Check - Runs every 5 minutes (routed via Adventure Digest)
-    runGuardedCronJob("Stamina Full Check", "*/5 * * * *", async () => {
+    // 0.9 Stamina Full Check - Runs every 30 minutes (routed via Adventure Digest)
+    runGuardedCronJob("Stamina Full Check", "*/30 * * * *", async () => {
       const UserSurvival = require("../models/UserSurvival");
       const UserProfile = require("../models/UserProfile");
       const notificationCenter = require("../services/notificationCenter");
@@ -228,7 +228,7 @@ module.exports = {
         if (!profile) continue;
 
         const prefs = profile.notification_prefs || {};
-        if (prefs.stamina_full !== false) {
+        if (prefs.stamina_full === true && prefs.adventure_digest !== false) {
           await notificationCenter.checkAndDispatchAdventureDigest(survival.userId, client, {
             trigger: "stamina_full",
           }).catch((err) => {

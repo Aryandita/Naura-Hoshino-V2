@@ -191,16 +191,29 @@ describe("Lavalink & YouTube Cookies E2E Suite - Tier 2: Boundary & Corner Cases
 
   it("TC-LAVA-2.2: Empty or whitespace YOUTUBE_COOKIE_PATH resolves safely", () => {
     const originalEnvVar = process.env.YOUTUBE_COOKIE_PATH;
+    const env = require("../../src/config/env");
+    const originalConfigVal = env.YOUTUBE_COOKIE_PATH;
     try {
+      env.YOUTUBE_COOKIE_PATH = "   ";
       process.env.YOUTUBE_COOKIE_PATH = "   ";
-      // Test cleanEnv behavior indirectly: path resolution still falls back gracefully
+
       const resolved = resolveCookiePath();
-      assert.ok(
-        resolved === null || typeof resolved === "string",
-        "resolveCookiePath must return null or valid file path without throwing",
-      );
+      if (resolved !== null) {
+        assert.ok(typeof resolved === "string", "Must be a string path when resolved");
+        assert.notEqual(resolved.trim(), "", "Resolved path cannot be empty whitespace");
+        const filename = path.basename(resolved);
+        assert.ok(
+          ["cookies.txt", "youtube_cookies.txt", "message.txt"].includes(filename),
+          `Must fallback to default candidate, received: ${filename}`,
+        );
+      }
     } finally {
-      process.env.YOUTUBE_COOKIE_PATH = originalEnvVar;
+      if (originalEnvVar === undefined) {
+        delete process.env.YOUTUBE_COOKIE_PATH;
+      } else {
+        process.env.YOUTUBE_COOKIE_PATH = originalEnvVar;
+      }
+      env.YOUTUBE_COOKIE_PATH = originalConfigVal;
     }
   });
 

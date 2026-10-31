@@ -268,6 +268,9 @@ test("R3: Kata ganti persona pada intro pengguna umum dan pengecualian untuk Own
     }),
   };
 
+  const origGetUserProfile = cacheManager.getUserProfile;
+  const origOwnerIds = env.OWNER_IDS;
+
   try {
     // 1. Kasus Pengguna Umum: tidak menyebut username mentah 'gamer_cool_99', melainkan kata ganti persona 'kamu'
     let scriptSent = "";
@@ -302,7 +305,6 @@ test("R3: Kata ganti persona pada intro pengguna umum dan pengecualian untuk Own
 
     // 2. Kasus Pengguna Premium dengan Custom Name di Dashboard:
     // Pastikan profile di mock mengembalikan isPremium = true dan aiPersona.name = 'Kaisar Musik'
-    const origGetUserProfile = cacheManager.getUserProfile;
     cacheManager.getUserProfile = async (uid) => {
       if (uid === "vip_user_222") {
         return {
@@ -339,7 +341,6 @@ test("R3: Kata ganti persona pada intro pengguna umum dan pengecualian untuk Own
 
     // 3. Kasus Owner: menyebut Display Name
     const ownerId = "owner_333";
-    const origOwnerIds = env.OWNER_IDS;
     env.OWNER_IDS = [ownerId];
 
     cacheManager.getUserProfile = async (uid) => {
@@ -373,11 +374,9 @@ test("R3: Kata ganti persona pada intro pengguna umum dan pengecualian untuk Own
     if (introOwner.localFilePath && fs.existsSync(introOwner.localFilePath)) {
       try { fs.unlinkSync(introOwner.localFilePath); } catch (_) {}
     }
-
-    // Restore
+  } finally {
     cacheManager.getUserProfile = origGetUserProfile;
     env.OWNER_IDS = origOwnerIds;
-  } finally {
     fishAudioService.generateSpeech = origGenSpeech;
     fishAudioService.isConfigured = origIsConfig;
   }

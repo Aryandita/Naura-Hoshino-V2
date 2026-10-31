@@ -122,16 +122,16 @@ module.exports = {
       const files = [];
 
       try {
-        const stockBuf = await canvasWorkerPool
-          .execute({
-            task: "renderStockMarket",
-            payload: stocks,
-            userId,
-          })
-          .catch(() => null);
-        files.push(
-          new AttachmentBuilder(stockBuf, { name: "stock_market.png" }),
-        );
+        const stockBuf = await canvasWorkerPool.execute({
+          task: "renderStockMarket",
+          payload: stocks,
+          userId,
+        });
+        if (stockBuf) {
+          files.push(
+            new AttachmentBuilder(stockBuf, { name: "stock_market.png" }),
+          );
+        }
       } catch (err) {
         logger.warn("[stock:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }

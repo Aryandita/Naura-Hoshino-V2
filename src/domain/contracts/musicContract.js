@@ -62,7 +62,7 @@ const INACTIVE_STATE = Object.freeze({
 /**
  * @type {Readonly<{currentTrack: null, queue: Array}>} Antrean kosong default
  */
-const EMPTY_QUEUE = Object.freeze({ currentTrack: null, queue: [] });
+const EMPTY_QUEUE = Object.freeze({ currentTrack: null, queue: Object.freeze([]) });
 
 // =======================================================================
 // INTERFACE DEFINITION

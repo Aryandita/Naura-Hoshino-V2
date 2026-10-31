@@ -715,7 +715,13 @@ async function runAudit() {
   };
 }
 
-runAudit().catch(err => {
-  console.error("FATAL ERROR IN AUDIT SCRIPT:", err);
-  process.exit(1);
-});
+runAudit()
+  .then(report => {
+    if (report && report.totalErrors > 0) {
+      process.exit(1);
+    }
+  })
+  .catch(err => {
+    console.error("FATAL ERROR IN AUDIT SCRIPT:", err);
+    process.exit(1);
+  });

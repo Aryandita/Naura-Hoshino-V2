@@ -152,6 +152,7 @@ module.exports = {
     .setDescription("🎁 Klaim hadiah harian, pantau misi, dan kelola Daily Login Streak! 🔥"),
 
   async execute(interaction) {
+    await interaction.deferReply();
     const userId = interaction.user.id;
     const displayName =
       interaction.user.displayName || interaction.user.username;
@@ -334,7 +335,7 @@ module.exports = {
         footerText: ui.getFooter("core"),
       });
 
-      const reply = await interaction.reply({
+      const reply = await interaction.editReply({
         ...container,
         fetchReply: true,
       });
@@ -351,7 +352,7 @@ module.exports = {
     if (cardBuf) {
       files.push(new AttachmentBuilder(cardBuf, { name: "daily_card.png" }));
     }
-    const reply = await interaction.reply({
+    const reply = await interaction.editReply({
       ...claimPayload,
       files,
       fetchReply: true,

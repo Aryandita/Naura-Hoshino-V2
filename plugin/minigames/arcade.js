@@ -207,7 +207,7 @@ module.exports = {
 
       await interaction.deferReply();
 
-      const chargeResult = await arcadeContract.chargeGameFee(userId);
+      const chargeResult = await arcadeContract.chargeGameFee(userId, bet);
       if (!chargeResult.ok) {
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -247,7 +247,7 @@ module.exports = {
       await interaction.deferReply();
 
       if (bet > 0) {
-        const chargeResult = await arcadeContract.chargeGameFee(userId);
+        const chargeResult = await arcadeContract.chargeGameFee(userId, bet);
         if (!chargeResult.ok) {
           return interaction.editReply({
             ...buildErrorContainerV2({
@@ -304,7 +304,7 @@ module.exports = {
       await interaction.deferReply();
 
       if (bet > 0) {
-        const chargeResult = await arcadeContract.chargeGameFee(userId);
+        const chargeResult = await arcadeContract.chargeGameFee(userId, bet);
         if (!chargeResult.ok) {
           return interaction.editReply({
             ...buildErrorContainerV2({

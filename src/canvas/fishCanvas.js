@@ -182,7 +182,9 @@ async function renderFishCatch(payload) {
 
     ctx.font = "bold 18px sans-serif";
     ctx.fillStyle = "#F59E0B";
-    ctx.fillText((fish.weight || 1.5).toFixed(2) + " kg", 570, statsY + 35);
+    const weightNum = Number(fish.weight);
+    const safeWeight = Number.isFinite(weightNum) ? weightNum : 1.5;
+    ctx.fillText(safeWeight.toFixed(2) + " kg", 570, statsY + 35);
 
     ctx.font = "bold 18px sans-serif";
     ctx.fillStyle = "#34D399";
@@ -195,7 +197,8 @@ async function renderFishCatch(payload) {
 
     ctx.font = "bold 18px sans-serif";
     ctx.fillStyle = "#FBBF24";
-    ctx.fillText("+" + (fish.value || 50) + " Sukamaju Koin (SC)", 500, 370);
+    const safeValue = (fish.value !== undefined && fish.value !== null && Number.isFinite(Number(fish.value))) ? Number(fish.value) : 50;
+    ctx.fillText("+" + safeValue + " Sukamaju Koin (SC)", 500, 370);
 
     // 7. Footer Stempel Naura Days
     ctx.font = "italic 13px sans-serif";

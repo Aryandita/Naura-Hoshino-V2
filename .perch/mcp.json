@@ -5,9 +5,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@playwright/mcp@0.0.75",
-        "--config",
-        "C:\\Users\\ACER\\.perch\\playwright-mcp-browser.json"
+        "@playwright/mcp@0.0.75"
       ]
     }
   }

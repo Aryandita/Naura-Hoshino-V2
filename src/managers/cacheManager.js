@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @module CacheManager
  * @description Write-Behind Caching Layer untuk Naura Hoshino V2
  * 
@@ -412,14 +412,21 @@ class CacheManager {
     }
     if (Object.keys(cleanDeltas).length === 0) return false;
 
+    const canonicalDeltas = {};
+    for (const [field, delta] of Object.entries(cleanDeltas)) {
+      const canonical = resolveCanonicalColumn(field);
+      canonicalDeltas[canonical] = (canonicalDeltas[canonical] || 0) + delta;
+    }
+
     try {
       const current = await loader();
       if (current) {
-        for (const [field, delta] of Object.entries(cleanDeltas)) {
-          current[field] = (Number(current[field]) || 0) + delta;
-          const canonical = CURRENCY_COLUMN_ALIASES[field];
-          if (canonical) {
-            current[canonical] = (Number(current[canonical]) || 0) + delta;
+        for (const [canonicalField, delta] of Object.entries(canonicalDeltas)) {
+          current[canonicalField] = (Number(current[canonicalField]) || 0) + delta;
+          for (const [alias, target] of Object.entries(CURRENCY_COLUMN_ALIASES)) {
+            if (target === canonicalField) {
+              current[alias] = current[canonicalField];
+            }
           }
         }
         await redisManager.setCache(cacheKey, current, ttl);
@@ -432,7 +439,7 @@ class CacheManager {
     }
 
     // Database tetap menerima delta, bukan hasil hitungan lokal.
-    this._enqueue(queue, userId, { inc: cleanDeltas });
+    this._enqueue(queue, userId, { inc: canonicalDeltas });
     return true;
   }
 
@@ -723,6 +730,17 @@ class CacheManager {
     if (!updateData || typeof updateData !== "object") return false;
     const cacheKey = `user:profile:${userId}`;
 
+    const canonicalSet = {};
+    const resolvedCachePatch = {};
+    for (const [k, v] of Object.entries(updateData)) {
+      const canonical = resolveCanonicalColumn(k);
+      canonicalSet[canonical] = v;
+      resolvedCachePatch[canonical] = v;
+      if (canonical !== k) {
+        resolvedCachePatch[k] = v;
+      }
+    }
+
     try {
       let profile = await this.getUserProfile(userId);
 
@@ -730,7 +748,7 @@ class CacheManager {
         try {
           const [newDbProfile] = await UserProfile.findOrCreate({
             where: { userId },
-            defaults: updateData,
+            defaults: canonicalSet,
             paranoid: false,
           });
           if (newDbProfile && newDbProfile.deletedAt) {
@@ -742,14 +760,14 @@ class CacheManager {
         }
       }
 
-      Object.assign(profile, updateData);
+      Object.assign(profile, resolvedCachePatch);
       await redisManager.setCache(cacheKey, profile, PROFILE_TTL);
-      this._enqueue(this.writeQueue, userId, { set: updateData });
+      this._enqueue(this.writeQueue, userId, { set: canonicalSet });
 
       return true;
     } catch (error) {
       logger.error("[CacheManager] Error updateUserProfile:", error.message);
-      this._enqueue(this.writeQueue, userId, { set: updateData });
+      this._enqueue(this.writeQueue, userId, { set: canonicalSet });
       return false;
     }
   }
@@ -987,18 +1005,29 @@ class CacheManager {
     if (!updateData || typeof updateData !== "object") return false;
     const cacheKey = `user:survival:${userId}`;
 
+    const canonicalSet = {};
+    const resolvedCachePatch = {};
+    for (const [k, v] of Object.entries(updateData)) {
+      const canonical = resolveCanonicalColumn(k);
+      canonicalSet[canonical] = v;
+      resolvedCachePatch[canonical] = v;
+      if (canonical !== k) {
+        resolvedCachePatch[k] = v;
+      }
+    }
+
     try {
       const survival = await this.getUserSurvival(userId);
       if (!survival) return false;
 
-      Object.assign(survival, updateData);
+      Object.assign(survival, resolvedCachePatch);
       await redisManager.setCache(cacheKey, survival, SURVIVAL_TTL);
-      this._enqueue(this.survivalQueue, userId, { set: updateData });
+      this._enqueue(this.survivalQueue, userId, { set: canonicalSet });
 
       return true;
     } catch (error) {
       logger.error("[CacheManager] Error updateUserSurvival:", error.message);
-      this._enqueue(this.survivalQueue, userId, { set: updateData });
+      this._enqueue(this.survivalQueue, userId, { set: canonicalSet });
       return false;
     }
   }

@@ -180,7 +180,7 @@ Balas HANYA dengan JSON murni tanpa markdown backtick.`;
   // ==========================================================================
 
   /**
-   * Menghasilkan vonis prosedural deterministik tanpa AI.
+   * Menghasilkan vonis prosedural acak berbasis template tanpa AI.
    * Digunakan sebagai fallback saat semua provider AI tidak tersedia atau gagal.
    * Memilih secara acak dari template GUILTY atau NOT_GUILTY.
    *

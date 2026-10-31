@@ -43,10 +43,14 @@ test.describe("Command Execution Flow", () => {
 
     await page.goto("/settings");
 
-    const response = await page.request.post("/api/settings/sandbox", {
-      data: { message: "Halo Naura!", customPersona: "Ceria" },
+    const data = await page.evaluate(async () => {
+      const res = await fetch("/api/settings/sandbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "Halo Naura!", customPersona: "Ceria" }),
+      });
+      return res.json();
     });
-    const data = await response.json();
 
     expect(data.reply).toBeDefined();
     expect(data.reply).toContain("Halo Naura!");
@@ -68,13 +72,17 @@ test.describe("Command Execution Flow", () => {
 
     await page.goto("/settings");
 
-    const response = await page.request.post("/api/settings/sandbox", {
-      data: { message: "" },
+    const data = await page.evaluate(async () => {
+      const res = await fetch("/api/settings/sandbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "" }),
+      });
+      return { status: res.status, body: await res.json() };
     });
-    const data = await response.json();
 
-    expect(response.status()).toBe(400);
-    expect(data.error).toMatch(/kosong|empty/i);
+    expect(data.status).toBe(400);
+    expect(data.body.error).toMatch(/kosong|empty/i);
   });
 
   test("should render command response correctly", async ({ page }) => {
@@ -90,47 +98,64 @@ test.describe("Command Execution Flow", () => {
 
     await page.goto("/settings");
 
-    const response = await page.request.post("/api/settings/sandbox", {
-      data: { message: "Test rendering", customPersona: "default" },
+    const data = await page.evaluate(async () => {
+      const res = await fetch("/api/settings/sandbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "Test rendering", customPersona: "default" }),
+      });
+      return res.json();
     });
-    const data = await response.json();
 
     expect(data.reply).toBe(mockResponse);
   });
 
   test("should support different persona modes", async ({ page }) => {
-    const personas = ["tsundere", "formal", "default"];
-    const responses = {};
+    await page.route("**/api/settings/sandbox*", (route) => {
+      let persona = "default";
+      try {
+        const payload = route.request().postDataJSON();
+        if (payload?.customPersona) persona = payload.customPersona;
+      } catch (_) {}
 
-    for (const persona of personas) {
-      await page.route(`**/api/settings/sandbox?persona=${persona}`, (route) => {
-        let reply = `[Mode Demo] Persona ${persona} aktif. `;
-        if (persona === "tsundere") {
-          reply += "H-hmph! Jangan salah paham ya!";
-        } else if (persona === "formal") {
-          reply += "Baik, pesan Anda sudah kami terima.";
-        } else {
-          reply += "Naura siap menemani!";
-        }
-        route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({ reply }),
-        });
+      let reply = `[Mode Demo] Persona ${persona} aktif. `;
+      if (persona === "tsundere") {
+        reply += "H-hmph! Jangan salah paham ya!";
+      } else if (persona === "formal") {
+        reply += "Baik, pesan Anda sudah kami terima.";
+      } else {
+        reply += "Naura siap menemani!";
+      }
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ reply }),
       });
-    }
+    });
 
     await page.goto("/settings");
 
-    const tsundereResponse = await page.request.post("/api/settings/sandbox", {
-      data: { message: "Test", customPersona: "tsundere" },
+    const tsundereResponse = await page.evaluate(async () => {
+      const res = await fetch("/api/settings/sandbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "Test", customPersona: "tsundere" }),
+      });
+      return res.json();
     });
-    expect((await tsundereResponse.json()).reply).toBeDefined();
+    expect(tsundereResponse.reply).toBeDefined();
+    expect(tsundereResponse.reply).toContain("tsundere");
 
-    const formalResponse = await page.request.post("/api/settings/sandbox", {
-      data: { message: "Test", customPersona: "formal" },
+    const formalResponse = await page.evaluate(async () => {
+      const res = await fetch("/api/settings/sandbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "Test", customPersona: "formal" }),
+      });
+      return res.json();
     });
-    expect((await formalResponse.json()).reply).toBeDefined();
+    expect(formalResponse.reply).toBeDefined();
+    expect(formalResponse.reply).toContain("formal");
   });
 
   test("should handle API timeout on command execution", async ({ page }) => {
@@ -146,10 +171,15 @@ test.describe("Command Execution Flow", () => {
 
     await page.goto("/settings");
 
-    const response = await page.request.post("/api/settings/sandbox", {
-      data: { message: "Slow request test" },
+    const resStatus = await page.evaluate(async () => {
+      const res = await fetch("/api/settings/sandbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "Slow request test" }),
+      });
+      return res.status;
     });
 
-    expect([200, 504]).toContain(response.status());
+    expect(resStatus).toBe(504);
   });
 });

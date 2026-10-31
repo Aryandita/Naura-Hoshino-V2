@@ -104,11 +104,15 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
       }
     }
 
+    let localIntroPath = null;
+    let isNewlyGenerated = false;
+
     if (!audioBuffer) {
       try {
         const localPath = aiDjManager.getLocalDjAudioPath(genreKey, lang, 0);
         if (localPath) {
           audioBuffer = fs.readFileSync(localPath);
+          localIntroPath = localPath;
           logger.info(`[DjTrack] Using local audio for genre: ${genreKey}`);
         }
       } catch (localErr) {
@@ -124,22 +128,26 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
         lang,
         variant: 0,
       });
+      isNewlyGenerated = true;
     }
 
     if (!audioBuffer) return null;
 
-    // R2: Simpan file audio intro ke folder lokal sebelum lagu utama diputar
-    let localIntroPath = null;
-    try {
-      if (typeof aiDjManager.saveLocalIntroAudio === "function") {
-        localIntroPath = aiDjManager.saveLocalIntroAudio(
-          audioBuffer,
-          trackInfo.identifier || trackInfo.title,
-        );
+    // R2: Simpan file audio intro ke folder lokal jika baru di-generate
+    if (isNewlyGenerated) {
+      try {
+        if (typeof aiDjManager.saveLocalIntroAudio === "function") {
+          localIntroPath = aiDjManager.saveLocalIntroAudio(
+            audioBuffer,
+            trackInfo.identifier || trackInfo.title,
+          );
+        }
+        if (localIntroPath) {
+          logger.info(`[AiDjTrackService] File audio intro lokal berhasil disimpan di: ${localIntroPath}`);
+        }
+      } catch (saveErr) {
+        logger.warn(`[AiDjTrackService] Gagal menyimpan file audio intro lokal: ${saveErr.message}`);
       }
-      logger.info(`[AiDjTrackService] File audio intro lokal berhasil disimpan di: ${localIntroPath}`);
-    } catch (saveErr) {
-      logger.warn(`[AiDjTrackService] Gagal menyimpan file audio intro lokal: ${saveErr.message}`);
     }
 
     const attachment = new AttachmentBuilder(localIntroPath || audioBuffer, { name: "naura_dj_intro.mp3" });

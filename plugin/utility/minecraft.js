@@ -394,7 +394,7 @@ module.exports = {
         accentColorHex: "#86EFAC",
         authorName: "Naura Minecraft Realm Sync",
         title: `${ui.getEmoji("trade") || "🔄"} Sinkronisasi Berhasil!`,
-        description: `Waktu bermain di Minecraft **${syncRes.mcUsername}** berhasil dikonversi ke ekonomi Discord!\n\n${ui.getEmoji("star") || "🌟"} **Star Fragments:** \`+${syncRes.starFragments} SC\`\n${ui.getEmoji("ticket") || "🎟️"} **Naura Coupon:** \`+${syncRes.coupons} Kupon\`\n\n> ${ui.getEmoji("naura_happy") || "✨"} *Terima kasih sudah bermain! Terus kumpulkan reward dari waktu bermainmu, ya!*`,
+        description: `Waktu bermain di Minecraft **${syncRes.mcUsername}** berhasil dikonversi ke ekonomi Discord!\n\n${ui.getEmoji("star") || "🌟"} **Star Fragments:** \`+${syncRes.starFragments} NSF\`\n${ui.getEmoji("ticket") || "🎟️"} **Naura Coupon:** \`+${syncRes.coupons} Kupon\`\n\n> ${ui.getEmoji("naura_happy") || "✨"} *Terima kasih sudah bermain! Terus kumpulkan reward dari waktu bermainmu, ya!*`,
         footerText: "Naura Minecraft Realm Sync",
       });
 

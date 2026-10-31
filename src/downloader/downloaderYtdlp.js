@@ -71,8 +71,8 @@ const resolveCookiePath = () => {
   try {
     const env = require("../config/env");
     const candidates = [
-      env.YOUTUBE_COOKIE_PATH
-        ? path.resolve(process.cwd(), env.YOUTUBE_COOKIE_PATH)
+      env.YOUTUBE_COOKIE_PATH && String(env.YOUTUBE_COOKIE_PATH).trim()
+        ? path.resolve(process.cwd(), String(env.YOUTUBE_COOKIE_PATH).trim())
         : null,
       path.resolve(process.cwd(), "cookies.txt"),
       path.resolve(process.cwd(), "assets", "cookies", "youtube_cookies.txt"),

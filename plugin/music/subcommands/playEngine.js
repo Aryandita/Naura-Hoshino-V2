@@ -202,6 +202,9 @@ module.exports = {
       r.loadType === "LOAD_FAILED";
 
     if (!isDirectLink && isResEmpty(finalRes)) {
+      const cleanRawQuery = query
+        .replace(/^(?:scsearch|ytsearch|ytmsearch|amsearch|spsearch|dzsearch|sc|yt|ytm|am|sp|dz):/i, "")
+        .trim();
       const fallbackChain = ["scsearch", "ytmsearch", "ytsearch"].filter(
         (s) => s !== searchSource,
       );
@@ -209,7 +212,7 @@ module.exports = {
       for (const fallbackSource of fallbackChain) {
         try {
           const fallbackRes = await poru.resolve({
-            query: fallbackSource + ":" + query,
+            query: fallbackSource + ":" + cleanRawQuery,
             requester: user,
           });
           if (!isResEmpty(fallbackRes)) {

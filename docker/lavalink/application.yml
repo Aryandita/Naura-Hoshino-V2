@@ -22,7 +22,7 @@
 
 lavalink:
   plugins:
-    - dependency: "dev.lavalink.youtube:youtube-v2:1.13.0"
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.13.0"
       snapshot: false
       repository: "https://maven.lavalink.dev/releases"
     - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.8.1"
@@ -49,7 +49,7 @@ lavalink:
 plugins:
   youtube:
     enabled: true
-    allowSearch: true
+    allowSearch: false
     allowDirectVideoIds: true
     allowDirectPlaylistIds: true
     # LAPIS 2 - CLIENT ROTATION.
@@ -57,13 +57,10 @@ plugins:
     # MUSIC       : satu-satunya client pencarian YouTube Music (ytmsearch:).
     # WEBEMBEDDED : pemutar web embedded, paling tahan deteksi bot.
     # ANDROID_VR  : client Android VR, tidak terdeteksi bot sejauh ini.
-    # TVHTML5_SIMPLY: client TV ringan, pengganti TVHTML5EMBEDDED (EOL).
-    # TV_DOWNLOADED bukan client valid di youtube-source; tidak dipakai.
     clients:
       - MUSIC
       - WEBEMBEDDED
       - ANDROID_VR
-      - TVHTML5_SIMPLY
 
     # LAPIS 1 (opsional) - PO token statis untuk client WEB/WEBEMBEDDED.
     # Token statis kedaluwarsa berkala; jalur utama PO token kita adalah

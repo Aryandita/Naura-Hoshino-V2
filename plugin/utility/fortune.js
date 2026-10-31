@@ -156,27 +156,7 @@ module.exports = {
         ].join("\n"),
         footerText: ui.getFooter("utility"),
       });
-      const files = [];
-    try {
-      const cardBuf = await canvasWorkerPool.execute("renderFortuneCard", {
-        username: interaction.user.displayName || interaction.user.username,
-        avatarURL: interaction.user.displayAvatarURL({ extension: "png" }),
-        fortuneLevel: `${picked.kanji} ${picked.title}`,
-        stars: picked.fragments >= 10 ? 5 : picked.fragments >= 5 ? 4 : 3,
-        luckyNumber,
-        luckyColor,
-        luckyItem,
-        prediction: aiWisdom,
-      });
-      if (cardBuf) {
-        files.push(new AttachmentBuilder(cardBuf, { name: "fortune_card.png" }));
-        payload.image = { url: "attachment://fortune_card.png" };
-      }
-    } catch (err) {
-      logger.warn("[fortune:execute] Render visual canvas gagal: " + (err?.message || err));
-    }
-
-    return interaction.editReply({ ...payload, files });
+      return interaction.editReply(payload);
     }
 
     // Roll Fortune
@@ -268,6 +248,26 @@ module.exports = {
       footerText: "Ramalan Omikuji reset setiap hari pukul 00:00 UTC",
     });
 
-    return interaction.editReply(payload);
+    const files = [];
+    try {
+      const cardBuf = await canvasWorkerPool.execute("renderFortuneCard", {
+        username: interaction.user.displayName || interaction.user.username,
+        avatarURL: interaction.user.displayAvatarURL({ extension: "png" }),
+        fortuneLevel: `${picked.kanji} ${picked.title}`,
+        stars: picked.fragments >= 10 ? 5 : picked.fragments >= 5 ? 4 : 3,
+        luckyNumber,
+        luckyColor,
+        luckyItem,
+        prediction: aiWisdom,
+      });
+      if (cardBuf) {
+        files.push(new AttachmentBuilder(cardBuf, { name: "fortune_card.png" }));
+        payload.image = { url: "attachment://fortune_card.png" };
+      }
+    } catch (err) {
+      logger.warn("[fortune:execute] Render visual canvas gagal: " + (err?.message || err));
+    }
+
+    return interaction.editReply({ ...payload, files });
   },
 };

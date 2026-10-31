@@ -193,7 +193,7 @@ function runTier1FeatureCoverage(categoryFilter) {
     results.push({
       id: `TC-E1.${cat.id}`,
       name: `${cat.name} (${cat.count} items) file coverage (PNG, GIF, SVG)`,
-      passed: passed || !assetsExist, // If generation in progress, record state
+      passed,
       actual: {
         total: cat.count,
         static: staticFound,
@@ -564,9 +564,20 @@ function main() {
   let totalPassed = 0;
   let totalFailed = 0;
 
+  for (const section of allSections) {
+    for (const t of section.tests) {
+      totalTests++;
+      if (t.passed) {
+        totalPassed++;
+      } else {
+        totalFailed++;
+      }
+    }
+  }
+
   if (jsonOutput) {
     console.log(JSON.stringify(allSections, null, 2));
-    process.exit(0);
+    process.exit(totalFailed > 0 ? 1 : 0);
   }
 
   for (const section of allSections) {

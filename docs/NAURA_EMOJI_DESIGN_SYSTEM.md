@@ -1,4 +1,4 @@
-﻿# 🎨 NAURA HOSHINO V2 - CUSTOM EMOJI DESIGN SYSTEM
+# 🎨 NAURA HOSHINO V2 - CUSTOM EMOJI DESIGN SYSTEM
 
 > **Versi:** 1.0.0 | **Tanggal:** 28 Oktober 2026  
 > **Tema:** Cyberpunk-Nature Fusion | **Style:** Anime-Inspired Glassmorphism  
@@ -178,12 +178,15 @@ gradient-blush: radial-gradient(circle, #FF69B4 0%, rgba(255, 105, 180, 0.3) 60%
 
 ### 3.5 Accessibility Contrast Ratios
 
-Semua kombinasi warna foreground/background harus memenuhi **WCAG AA** (minimal 4.5:1 untuk teks/simbol penting):
+Semua kombinasi warna foreground/background harus memenuhi **WCAG AA** (minimal 4.5:1 untuk teks normal / simbol penting, atau 3.0:1 untuk elemen grafis dan teks besar):
 
-- ✅ White (#FFFFFF) on Deep Magenta (#FF69B4): 4.8:1
-- ✅ Black (#000000) on Naura Pink (#FFB6C1): 5.2:1
-- ✅ White (#FFFFFF) on Dream Purple (#C084FC): 4.6:1
-- ⚠️ Cyber Cyan (#00FFFF) on White: 1.7:1 (gunakan outline/shadow)
+- ✅ Black (#000000) on Naura Pink (#FFB6C1): 12.7:1 (Memenuhi WCAG AAA)
+- ✅ White (#FFFFFF) on Dark Navy (#1A1B26): 17.1:1 (Memenuhi WCAG AAA)
+- ✅ Dark Navy (#1A1B26) on Deep Magenta (#FF69B4): 6.5:1 (Memenuhi WCAG AA)
+- ✅ Dark Navy (#1A1B26) on Dream Purple (#C084FC): 6.5:1 (Memenuhi WCAG AA)
+- ⚠️ White (#FFFFFF) on Deep Magenta (#FF69B4): 2.7:1 (Di bawah AA; gunakan teks gelap #1A1B26 atau outline kontras)
+- ⚠️ White (#FFFFFF) on Dream Purple (#C084FC): 2.6:1 (Di bawah AA; gunakan teks gelap #1A1B26 atau outline kontras)
+- ⚠️ Cyber Cyan (#00FFFF) on White (#FFFFFF): 1.3:1 (Di bawah AA; gunakan outline gelap atau background gelap)
 
 ---
 

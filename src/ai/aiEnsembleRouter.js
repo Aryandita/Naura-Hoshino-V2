@@ -133,7 +133,7 @@ const PERSONAS = Object.freeze({
  * State machine:
  * - CLOSED: Normal operasi, request diteruskan. Failure dihitung.
  * - OPEN: Provider dianggap down, request ditolak sampai cooldown berakhir.
- * - HALF_OPEN: Cooldown berakhir, satu request percobaan diperbolehkan.
+ * - HALF_OPEN: Cooldown berakhir, request percobaan diperbolehkan untuk menguji pemulihan.
  *
  * Trigger transisi ke OPEN:
  * - HTTP 429 / rate limit / quota exhausted (langsung OPEN)

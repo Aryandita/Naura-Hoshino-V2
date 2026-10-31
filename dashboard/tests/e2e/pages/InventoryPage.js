@@ -75,7 +75,7 @@ class InventoryPage {
         body: JSON.stringify({
           loggedIn: true,
           user: { id: "123456789", username: "TestUser" },
-          db: { economy_wallet: balance || 1000, economy_bank: 5000 },
+          db: { economy_wallet: balance !== undefined ? balance : 1000, economy_bank: 5000 },
           survival: { starFragments: 500, hp: 100, stamina: 100 },
           isOwner: false,
         }),

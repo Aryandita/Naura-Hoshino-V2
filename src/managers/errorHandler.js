@@ -105,13 +105,20 @@ function classifyError(err, type = "") {
   const typeStr = String(type || "");
 
   // 1. AI 429 Quota Exhaustion / Rate Limits
-  const isAiQuota =
+  const isAiSource =
+    /GoogleGenerativeAI|Groq|OpenAI|FishAudio|Gemini/i.test(errName) ||
+    /GoogleGenerativeAI|Groq|OpenAI|FishAudio|Gemini|GenerateContent/i.test(errMsg) ||
+    /AI|Gemini|Groq/i.test(typeStr);
+
+  const isRateLimitOrQuota =
     errStatus === 429 ||
     errCode === "429" ||
+    /quota|rate[_\s-]?limit/i.test(errMsg);
+
+  const isAiQuota =
     errCode === "RESOURCE_EXHAUSTED" ||
-    /429|quota|RESOURCE_EXHAUSTED|rate[_\s-]?limit/i.test(errMsg) ||
-    /GoogleGenerativeAI|Groq|OpenAI|FishAudio/i.test(errName) ||
-    /AI|Quota|429/i.test(typeStr);
+    (isAiSource && isRateLimitOrQuota) ||
+    /AI.*(?:Quota|429|RateLimit)|Quota.*AI/i.test(typeStr);
 
   if (isAiQuota) {
     return {
@@ -248,9 +255,19 @@ function getErrorFingerprint(err, type = "Error") {
   const errName = String(
     err?.name || (err instanceof Error ? err.constructor?.name : "Error"),
   );
-  const normalizedMsg = normalizeErrorString(
-    err?.message || (typeof err === "string" ? err : JSON.stringify(err)),
-  );
+  let rawMsg = err?.message;
+  if (!rawMsg) {
+    if (typeof err === "string") {
+      rawMsg = err;
+    } else {
+      try {
+        rawMsg = JSON.stringify(err);
+      } catch (_) {
+        rawMsg = String(err);
+      }
+    }
+  }
+  const normalizedMsg = normalizeErrorString(rawMsg || "Unknown Error");
   const stableOrigin = extractOriginForFingerprint(err);
   const normalizedOrigin = normalizeErrorString(stableOrigin);
 

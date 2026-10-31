@@ -27,6 +27,7 @@ describe("Developer Error Alerts & Throttling Upgrade Tests", () => {
     // Save original env values
     originalOwnerIds = env.OWNER_IDS;
     originalWebhookUrl = env.ERROR_WEBHOOK_URL;
+    env.ERROR_WEBHOOK_URL = null;
     clearIncidents();
   });
 

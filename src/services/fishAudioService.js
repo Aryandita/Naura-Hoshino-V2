@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 /**
  * 🐟 Fish Audio Service - TTS & Voice Cloning Integration - Naura Hoshino V2
@@ -891,8 +891,13 @@ class FishAudioService {
   async getOrGeneratePremiumAudio(userId, displayName, templateText, options = {}) {
     const premiumDir = path.join(process.cwd(), 'assets', 'audio', 'dj', 'premium');
     
-    const sanitizedName = displayName.replace(/[^a-zA-Z0-9\u00C0-\u024F\s]/g, '').trim().replace(/\s+/g, '_').substring(0, 30);
-    const fileName = userId + '_' + sanitizedName + '.mp3';
+    const templateHash = crypto
+      .createHash('md5')
+      .update(String(templateText || ''))
+      .digest('hex');
+    const textHashShort = templateHash.slice(0, 10);
+    const sanitizedName = displayName.replace(/[^a-zA-Z0-9\u00C0-\u024F\s]/g, '').trim().replace(/\s+/g, '_').substring(0, 20);
+    const fileName = `${userId}_${sanitizedName}_${textHashShort}.mp3`;
     const filePath = path.join(premiumDir, fileName);
     const manifestPath = path.join(premiumDir, 'manifest.json');
     
@@ -912,8 +917,14 @@ class FishAudioService {
       } catch (e) { manifest = {}; }
     }
     
-    const cachedEntry = manifest[userId];
-    if (cachedEntry && cachedEntry.displayName === displayName && fs.existsSync(filePath)) {
+    const cacheKey = `${userId}_${textHashShort}`;
+    const cachedEntry = manifest[cacheKey] || manifest[userId];
+    if (
+      cachedEntry &&
+      cachedEntry.templateHash === templateHash &&
+      cachedEntry.displayName === displayName &&
+      fs.existsSync(filePath)
+    ) {
       logger.info('[FishAudio] Using cached premium audio for ' + displayName + ' (' + userId + ')');
       try {
         return fs.readFileSync(filePath);
@@ -938,11 +949,11 @@ class FishAudioService {
       
       fs.writeFileSync(filePath, audioBuffer);
       
-      manifest[userId] = {
+      manifest[cacheKey] = {
         displayName: displayName,
         fileName: fileName,
         generatedAt: new Date().toISOString(),
-        templateHash: crypto.createHash('md5').update(templateText).digest('hex'),
+        templateHash: templateHash,
       };
       fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
       

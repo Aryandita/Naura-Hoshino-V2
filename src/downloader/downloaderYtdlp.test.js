@@ -24,7 +24,21 @@ test("Environment Configuration - YOUTUBE_COOKIE_PATH is configured", () => {
   );
 });
 
-test("Cookie Resolution - resolveCookiePath resolves existing cookie file", () => {
+test("Cookie Resolution - resolveCookiePath resolves existing cookie file", (t) => {
+  const dummyCookiePath = path.resolve(process.cwd(), "cookies.txt");
+  let created = false;
+  if (!resolveCookiePath()) {
+    fs.writeFileSync(dummyCookiePath, "# Netscape HTTP Cookie File\n");
+    created = true;
+  }
+  if (t && typeof t.after === "function") {
+    t.after(() => {
+      if (created && fs.existsSync(dummyCookiePath)) {
+        try { fs.unlinkSync(dummyCookiePath); } catch (_) {}
+      }
+    });
+  }
+
   const resolved = resolveCookiePath();
   assert.ok(resolved, "resolveCookiePath harus menemukan berkas cookies");
   assert.ok(typeof resolved === "string", "Hasil harus berupa path string");

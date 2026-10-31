@@ -349,6 +349,5 @@ describe("Milestone M1 Empirical Challenge: Lavalink Cluster & Reconnection Spam
         } catch (_) {}
       }
     }
-    process.exit(0);
   });
 });

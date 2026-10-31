@@ -28,7 +28,19 @@ try {
   logger.debug("[LifecycleManager] Worker threads tidak tersedia: " + (err?.message || err));
 }
 
-function sendToParent(msg) {
+function sendToParent(msg, client = null) {
+  if (client?.cluster && typeof client.cluster.send === "function") {
+    try {
+      client.cluster.send(msg);
+      return true;
+    } catch (_) {}
+  }
+  if (client?.shard && typeof client.shard.send === "function") {
+    try {
+      client.shard.send(msg);
+      return true;
+    } catch (_) {}
+  }
   if (typeof process.send === "function") {
     try {
       process.send(msg);
@@ -284,7 +296,7 @@ async function setMaintenanceMode(client, enabled, reason = "Pemeliharaan sistem
     type: "MAINTENANCE_SYNC",
     enabled: isMaintenance,
     reason: maintenanceReason,
-  });
+  }, client);
 
   return isMaintenance;
 }
@@ -483,15 +495,19 @@ function executeRestart(client, { user = "Owner", reason = "Restart manual via D
     await gracefulTeardown(client, { mode: "restart", reason, user });
 
     // Kasus A: Jika dijalankan di bawah ShardingManager / ClusterManager (process atau worker-thread)
-    const sent = sendToParent({ type: "MANAGER_RESTART" });
-    if (sent) {
+    const isManaged = Boolean(client?.cluster || client?.shard || typeof process.send === "function" || !isMainThread);
+    const sent = sendToParent({ type: "MANAGER_RESTART" }, client);
+    if (sent || isManaged) {
+      logger.system("[Lifecycle] Sinyal restart dikirim ke cluster/shard manager.");
       setTimeout(() => {
-        process.exit(0);
+        if (isMainThread) {
+          process.exit(0);
+        }
       }, 500);
       return;
     }
 
-    // Kasus B: Standalone mode (hanya jika main thread tanpa parent IPC)
+    // Kasus B: Standalone mode (hanya jika standalone proses utama tanpa parent IPC)
     if (isMainThread) {
       logger.system("[Lifecycle] Meluncurkan proses Node.js baru secara independen...");
       const child = spawn(process.argv[0], process.argv.slice(1), {
@@ -501,13 +517,12 @@ function executeRestart(client, { user = "Owner", reason = "Restart manual via D
         env: process.env,
       });
       child.unref();
+      setTimeout(() => {
+        process.exit(0);
+      }, 500);
     } else {
       logger.warn("[Lifecycle] Melewati spawn detached process karena berjalan di dalam worker thread.");
     }
-
-    setTimeout(() => {
-      process.exit(0);
-    }, 500);
   })();
 
   return restartPromise;

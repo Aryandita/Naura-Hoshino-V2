@@ -144,6 +144,10 @@ if (useClustering) {
       logger.success(`[CLUSTERING] Cluster #${cluster.id} is fully ready!`);
     });
 
+    cluster.on("spawn", () => {
+      deadChildren.delete(cluster.id);
+    });
+
     cluster.on("message", (msg) => {
       if (msg?.type === "MANAGER_SHUTDOWN") {
         logger.system(`[CLUSTERING] Menerima sinyal MANAGER_SHUTDOWN dari Cluster #${cluster.id}.`);
@@ -217,6 +221,10 @@ if (useClustering) {
     shard.on("ready", () => {
       deadChildren.delete(shard.id);
       logger.success(`[SHARDING] Shard #${shard.id} is fully ready!`);
+    });
+
+    shard.on("spawn", () => {
+      deadChildren.delete(shard.id);
     });
 
     shard.on("message", (msg) => {
