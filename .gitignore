@@ -91,3 +91,14 @@ scratch/
 backups/
 .kilo/
 *.bak
+
+# Generated DJ audio cache
+assets/audio/dj/intro/*.mp3
+assets/audio/dj/premium/*.mp3
+assets/audio/dj/premium/manifest.json
+
+# Kredensial, Cookies & Sesi Autentikasi YouTube
+cookies.txt
+message.txt
+*.cookie
+*.cookies

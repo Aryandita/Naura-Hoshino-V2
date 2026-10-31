@@ -2,7 +2,10 @@ const {
   SlashCommandBuilder,
   ChannelType,
   MessageFlags,
+  AttachmentBuilder,
 } = require("discord.js");
+const { logger } = require("../../src/managers/logger");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const ui = require("../../src/config/ui");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
@@ -103,6 +106,29 @@ module.exports = {
       footerText: ui.getFooter("utility"),
     });
 
-    return interaction.reply(payload);
+    const files = [];
+    try {
+      const cardBuf = await canvasWorkerPool.execute("renderServerInfo", {
+        guildName: guild.name,
+        guildIconURL: guild.iconURL({ extension: "png" }),
+        memberCount: guild.memberCount,
+        onlineCount: guild.members?.cache ? guild.members.cache.filter((m) => m.presence?.status === "online").size : Math.floor(guild.memberCount * 0.4),
+        channelCount: channels.size,
+        roleCount: rolesCount,
+        boostTier: guild.premiumTier,
+        boostCount,
+        createdAt: new Date(guild.createdTimestamp).toLocaleDateString("id-ID"),
+        ownerName: owner?.user?.username || "Server Owner",
+        verificationLevel: verification,
+      });
+      if (cardBuf) {
+        files.push(new AttachmentBuilder(cardBuf, { name: "server_info.png" }));
+        payload.imageURL = "attachment://server_info.png";
+      }
+    } catch (err) {
+      logger.warn("[serverinfo:execute] Render visual canvas gagal: " + (err?.message || err));
+    }
+
+    return interaction.reply({ ...payload, files });
   },
 };

@@ -46,6 +46,10 @@ class MusicManager {
     return this.ensurePoru();
   }
 
+  get youtubeCookieConfig() {
+    return lavalinkClusterManager.getYoutubeCookieConfig();
+  }
+
   buildNodes() {
     const env = require("../config/env");
     const rawNodes = env.LAVA_NODES;
@@ -108,7 +112,12 @@ class MusicManager {
     }
 
     // Bangun daftar node bertingkat (Tier 1: Private, Tier 2: Sekunder, Tier 3: Public Fallback Pool)
-    return lavalinkClusterManager.buildTieredNodeList(configuredNodes);
+    const tieredNodes = lavalinkClusterManager.buildTieredNodeList(configuredNodes);
+    const cookieConfig = this.youtubeCookieConfig;
+    for (const node of tieredNodes) {
+      node.cookieConfig = cookieConfig;
+    }
+    return tieredNodes;
   }
 
   ensurePoru() {

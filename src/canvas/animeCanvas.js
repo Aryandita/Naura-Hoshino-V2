@@ -144,91 +144,202 @@ async function renderAnimeCard(payload) {
     ctx.font = "bold 12px InterBold, sans-serif";
     ctx.fillText(`✦ ${sourceName.toUpperCase()}`, rightX + 16, 60);
 
-    // Judul Anime Utama
+    // Judul Anime Utama (Adaptif Font Size)
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 28px MontserratBold, InterBold, sans-serif";
+    let titleFontSize = 28;
+    ctx.font = `bold ${titleFontSize}px MontserratBold, InterBold, sans-serif`;
+    while (ctx.measureText(title).width > rightW && titleFontSize > 20) {
+      titleFontSize -= 2;
+      ctx.font = `bold ${titleFontSize}px MontserratBold, InterBold, sans-serif`;
+    }
     const titleLines = wrapLines(ctx, title, rightW);
-    const primaryTitle = titleLines[0] || title;
-    ctx.fillText(primaryTitle, rightX, 105);
+    let titleOffset = 0;
+    if (titleLines.length > 1) {
+      ctx.fillText(titleLines[0], rightX, 94);
+      const secondLine = titleLines.length > 2 ? titleLines[1] + "..." : titleLines[1];
+      ctx.fillText(secondLine, rightX, 118);
+      titleOffset = 20;
+    } else {
+      ctx.fillText(titleLines[0] || title, rightX, 105);
+    }
 
-    // Judul Bahasa Jepang / Subtitle
-    if (titleJapanese) {
+    // Judul Bahasa Jepang / Subtitle (Fallback aman terhadap glyph tofu di Linux)
+    const { GlobalFonts } = require("./canvasRuntime");
+    const hasCJKFont =
+      GlobalFonts.has("SystemCJKWindows") ||
+      GlobalFonts.has("SystemCJKWindows2") ||
+      GlobalFonts.has("SystemCJKWindows3") ||
+      GlobalFonts.has("SystemCJKLinux") ||
+      GlobalFonts.has("SystemCJKLinux2");
+    const hasCjkChars = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(String(titleJapanese));
+    const shouldRenderSubtitle = Boolean(titleJapanese && (!hasCjkChars || hasCJKFont));
+
+    if (shouldRenderSubtitle) {
       ctx.fillStyle = "#94a3b8";
       ctx.font = '15px "SystemCJKWindows", "SystemCJKWindows2", "SystemCJKLinux", "Yu Gothic", "MS Gothic", Inter, sans-serif';
-      ctx.fillText(titleJapanese, rightX, 134);
+      ctx.fillText(titleJapanese, rightX, 134 + titleOffset);
     }
 
     // 4. Badges Strip (Score, Format, Status, Episodes)
-    const badgeY = titleJapanese ? 154 : 134;
+    const badgeY = (shouldRenderSubtitle ? 154 : 134) + titleOffset;
 
     // Score Badge (Gold)
-    drawRoundedRect(ctx, rightX, badgeY, 120, 34, 10, "rgba(245, 158, 11, 0.2)", "#f59e0b", 1.2);
-    ctx.fillStyle = "#fbbf24";
-    ctx.font = "bold 14px MontserratBold, InterBold, sans-serif";
-    // Sanitize score: strip Discord custom emojis and markdown first
-    let cleanScore = "8.5";
-    if (payload.rawScore && payload.rawScore !== "N/A") {
-      const match = String(payload.rawScore).match(/(\d+(?:\.\d+)?)/);
-      if (match) cleanScore = match[1];
-    } else if (score && score !== "N/A") {
-      const stripped = String(score)
+    const parseScore = (val) => {
+      if (!val || val === "N/A") return null;
+      const stripped = String(val)
         .replace(/<a?:[a-zA-Z0-9_]+:\d+>/g, "")
         .replace(/\*\*/g, "")
         .trim();
-      const match = stripped.match(/(\d+(?:\.\d+)?)/);
-      if (match) cleanScore = match[1];
-    }
-    ctx.fillText(`★  ${cleanScore} / 10`, rightX + 14, badgeY + 22);
+      const matches = stripped.match(/\b(10(?:\.0)?|[0-9](?:\.[0-9]+)?)\b/);
+      return matches ? matches[1] : null;
+    };
+    const cleanScore = parseScore(payload.rawScore) || parseScore(score) || "8.5";
+    const scoreLabel = `★ ${cleanScore} / 10`;
 
     // Format Pill
-    drawRoundedRect(ctx, rightX + 130, badgeY, 90, 34, 10, "rgba(99, 102, 241, 0.2)", "#6366f1", 1);
-    ctx.fillStyle = "#818cf8";
-    ctx.font = "bold 13px InterBold, sans-serif";
-    ctx.fillText(String(type).toUpperCase(), rightX + 144, badgeY + 22);
+    const formatLabel = String(type || "TV").toUpperCase();
 
-    // Status Pill
-    const isCompleted = String(status).toLowerCase().includes("finish") || String(status).toLowerCase().includes("selesai");
-    const statusColor = isCompleted ? "#22c55e" : "#06b6d4";
-    drawRoundedRect(ctx, rightX + 230, badgeY, 130, 34, 10, "rgba(0, 0, 0, 0.4)", statusColor, 1);
-    ctx.fillStyle = statusColor;
-    ctx.font = "bold 12px InterBold, sans-serif";
-    ctx.fillText(String(status).toUpperCase().substring(0, 16), rightX + 242, badgeY + 22);
+    // Status Pill (Sanitasi underscore & pemetaan label ramah pengguna)
+    const rawStatus = String(status || "N/A").replace(/_/g, " ").trim();
+    const upperStatus = rawStatus.toUpperCase();
+    let statusLabel = rawStatus;
+    let statusColor = "#06b6d4";
+
+    if (
+      upperStatus.includes("NOT YET") ||
+      upperStatus.includes("BELUM") ||
+      upperStatus.includes("TO BE AIRED")
+    ) {
+      statusLabel = "Belum Rilis";
+      statusColor = "#38bdf8";
+    } else if (
+      upperStatus.includes("FINISH") ||
+      upperStatus.includes("SELESAI") ||
+      upperStatus.includes("TAMAT")
+    ) {
+      statusLabel = "Selesai";
+      statusColor = "#22c55e";
+    } else if (
+      upperStatus.includes("RELEAS") ||
+      upperStatus.includes("AIRING") ||
+      upperStatus.includes("TAYANG")
+    ) {
+      statusLabel = "Tayang";
+      statusColor = "#f59e0b";
+    } else if (upperStatus.includes("CANCEL")) {
+      statusLabel = "Dibatalkan";
+      statusColor = "#ef4444";
+    } else if (upperStatus.includes("HIATUS")) {
+      statusLabel = "Hiatus";
+      statusColor = "#a855f7";
+    }
 
     // Episodes Pill
-    drawRoundedRect(ctx, rightX + 370, badgeY, 110, 34, 10, "rgba(255, 255, 255, 0.06)", "rgba(255, 255, 255, 0.15)", 1);
-    ctx.fillStyle = "#e2e8f0";
-    ctx.font = "bold 13px InterBold, sans-serif";
-    ctx.fillText(String(episodes), rightX + 384, badgeY + 22);
+    const epLabel = String(episodes || "1 Ep").replace(/_/g, " ").trim();
 
-    // 5. Studio & Musim Metadata Box
+    // Responsive Badges Strip (Anti-Overlap Engine)
+    const badgeConfigs = [
+      {
+        label: scoreLabel,
+        textColor: "#fbbf24",
+        borderColor: "#f59e0b",
+        bgColor: "rgba(245, 158, 11, 0.2)",
+        font: "bold 13px MontserratBold, InterBold, sans-serif",
+        minWidth: 104,
+      },
+      {
+        label: formatLabel,
+        textColor: "#818cf8",
+        borderColor: "#6366f1",
+        bgColor: "rgba(99, 102, 241, 0.2)",
+        font: "bold 13px InterBold, sans-serif",
+        minWidth: 70,
+      },
+      {
+        label: statusLabel,
+        textColor: statusColor,
+        borderColor: statusColor,
+        bgColor: "rgba(0, 0, 0, 0.4)",
+        font: "bold 12px InterBold, sans-serif",
+        minWidth: 90,
+      },
+      {
+        label: epLabel,
+        textColor: "#e2e8f0",
+        borderColor: "rgba(255, 255, 255, 0.15)",
+        bgColor: "rgba(255, 255, 255, 0.06)",
+        font: "bold 13px InterBold, sans-serif",
+        minWidth: 65,
+      },
+    ];
+
+    const measuredBadges = badgeConfigs.map((b) => {
+      ctx.font = b.font;
+      const textW = Math.ceil(ctx.measureText(b.label).width);
+      const pillW = Math.max(b.minWidth, textW + 24);
+      return { ...b, textW, pillW };
+    });
+
+    const defaultGap = 10;
+    const totalPillW = measuredBadges.reduce((acc, b) => acc + b.pillW, 0);
+    const availableW = rightW;
+    const requiredTotal = totalPillW + (measuredBadges.length - 1) * defaultGap;
+    const badgeGap =
+      requiredTotal > availableW
+        ? Math.max(5, Math.floor((availableW - totalPillW) / (measuredBadges.length - 1)))
+        : defaultGap;
+
+    let curBadgeX = rightX;
+    for (const b of measuredBadges) {
+      drawRoundedRect(ctx, curBadgeX, badgeY, b.pillW, 34, 10, b.bgColor, b.borderColor, 1);
+      ctx.fillStyle = b.textColor;
+      ctx.font = b.font;
+      const textX = curBadgeX + (b.pillW - b.textW) / 2;
+      ctx.fillText(b.label, textX, badgeY + 22);
+      curBadgeX += b.pillW + badgeGap;
+    }
+
+    // 5. Studio & Musim Metadata Box (2-Kolom Terstruktur & Anti-Tumpang-Tindih)
     const metaY = badgeY + 48;
     drawRoundedRect(ctx, rightX, metaY, rightW, 44, 12, "rgba(15, 23, 42, 0.65)", "rgba(255, 255, 255, 0.08)", 1);
 
-    ctx.font = "14px Inter, sans-serif";
-    const studioText = studio && studio !== "N/A" ? studio : "Studio Produksi";
-    const seasonText = seasonYear && seasonYear !== "N/A" ? seasonYear : "Rilis";
+    const colW = (rightW - 32) / 2;
+    const leftColX = rightX + 16;
+    const rightColX = rightX + 16 + colW;
 
+    // Studio (Kolom Kiri)
     const studioLabel = "🎨 Studio: ";
-    const studioLabelW = ctx.measureText(studioLabel).width;
-    ctx.fillStyle = "#e2e8f0";
-    ctx.fillText(studioLabel, rightX + 16, metaY + 27);
-
-    const studioValX = rightX + 16 + studioLabelW + 4;
-    ctx.fillStyle = "#38bdf8";
-    ctx.font = "bold 14px InterBold, sans-serif";
-    ctx.fillText(studioText, studioValX, metaY + 27);
-    const studioValW = ctx.measureText(studioText).width;
-
-    const musimStartX = Math.max(rightX + 240, studioValX + studioValW + 24);
-    ctx.fillStyle = "#94a3b8";
     ctx.font = "14px Inter, sans-serif";
-    const musimLabel = "• Musim: ";
-    const musimLabelW = ctx.measureText(musimLabel).width;
-    ctx.fillText(musimLabel, musimStartX, metaY + 27);
+    const studioLabelW = ctx.measureText(studioLabel).width;
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText(studioLabel, leftColX, metaY + 27);
 
-    ctx.fillStyle = "#f472b6";
+    const studioValX = leftColX + studioLabelW + 2;
+    const maxStudioW = colW - studioLabelW - 8;
+    let studioDisplay = studio && studio !== "N/A" ? String(studio).trim() : "Belum diumumkan";
     ctx.font = "bold 14px InterBold, sans-serif";
-    ctx.fillText(seasonText, musimStartX + musimLabelW + 4, metaY + 27);
+    while (ctx.measureText(studioDisplay).width > maxStudioW && studioDisplay.length > 4) {
+      studioDisplay = studioDisplay.slice(0, -4).trim() + "...";
+    }
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillText(studioDisplay, studioValX, metaY + 27);
+
+    // Musim (Kolom Kanan)
+    const musimLabel = "🗓️ Musim: ";
+    ctx.font = "14px Inter, sans-serif";
+    const musimLabelW = ctx.measureText(musimLabel).width;
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText(musimLabel, rightColX, metaY + 27);
+
+    const musimValX = rightColX + musimLabelW + 2;
+    const maxMusimW = colW - musimLabelW - 8;
+    let seasonDisplay = seasonYear && seasonYear !== "N/A" ? String(seasonYear).trim() : "Akan datang";
+    ctx.font = "bold 14px InterBold, sans-serif";
+    while (ctx.measureText(seasonDisplay).width > maxMusimW && seasonDisplay.length > 4) {
+      seasonDisplay = seasonDisplay.slice(0, -4).trim() + "...";
+    }
+    ctx.fillStyle = "#f472b6";
+    ctx.fillText(seasonDisplay, musimValX, metaY + 27);
 
     // 6. Genre Pills
     const genreY = metaY + 54;

@@ -101,4 +101,53 @@ test("aiDjManager: Signature Audio Greeting toggle dan generation", async () => 
   }
 });
 
+test("aiDjManager: getPersonaPronoun maps personas correctly", () => {
+  assert.equal(aiDjManager.getPersonaPronoun("default", "id"), "kamu");
+  assert.equal(aiDjManager.getPersonaPronoun("tsundere", "id"), "kamu");
+  assert.equal(aiDjManager.getPersonaPronoun("kuudere", "id"), "dia");
+  assert.equal(aiDjManager.getPersonaPronoun("gamer", "id"), "sobat mabar");
+  assert.equal(aiDjManager.getPersonaPronoun("butler", "id"), "Anda");
+
+  assert.equal(aiDjManager.getPersonaPronoun("default", "en"), "you");
+  assert.equal(aiDjManager.getPersonaPronoun("gamer", "en"), "teammate");
+});
+
+test("aiDjManager: generateDjScript formats persona pronouns cleanly without 'Kak'", () => {
+  const result = aiDjManager.generateDjScript(
+    { title: "Diri", author: "Tulus" },
+    "kamu",
+    [],
+    "id",
+  );
+  assert.ok(result.script.includes("kamu"));
+  assert.ok(!result.script.includes("Kak kamu"), "Tidak boleh mengeja 'Kak kamu'");
+
+  const kuudereRes = aiDjManager.generateDjScript(
+    { title: "Teh Hijau", author: "Tulus" },
+    "dia",
+    [],
+    "id",
+  );
+  assert.ok(kuudereRes.script.includes("dia"));
+  assert.ok(!kuudereRes.script.includes("Kak dia"), "Tidak boleh mengeja 'Kak dia'");
+});
+
+test("aiDjManager: saveLocalIntroAudio creates file in intro directory", () => {
+  const fs = require("fs");
+  const testBuffer = Buffer.from("fake_intro_audio_bytes");
+  const filePath = aiDjManager.saveLocalIntroAudio(testBuffer, "test_track_123");
+
+  try {
+    assert.ok(fs.existsSync(filePath), "File intro lokal harus berhasil dibuat");
+    assert.ok(filePath.includes("intro"), "Path harus berada di folder intro");
+    const readBack = fs.readFileSync(filePath);
+    assert.deepEqual(readBack, testBuffer);
+  } finally {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+});
+
+
 

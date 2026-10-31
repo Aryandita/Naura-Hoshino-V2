@@ -178,7 +178,13 @@ module.exports = {
     });
     await sendReply(searchingPayload, false);
 
-    const res = await resolveSpotifyQuery(poru, finalQuery, user);
+    let res = null;
+    try {
+      res = await resolveSpotifyQuery(poru, finalQuery, user);
+    } catch (err) {
+      const { logger } = require("../../../src/managers/logger");
+      logger.warn(`[playEngine] Resolve awal gagal untuk "${finalQuery}": ${err?.message || err}`);
+    }
 
     // FALLBACK CHAIN YouTube bypass (Fix 2026-10-28):
     // Prioritas: ytmsearch (YouTube Music) -> ytsearch (YouTube) -> scsearch (SoundCloud).
@@ -196,12 +202,9 @@ module.exports = {
       r.loadType === "LOAD_FAILED";
 
     if (!isDirectLink && isResEmpty(finalRes)) {
-      const fallbackChain =
-        searchSource === "ytmsearch"
-          ? ["ytsearch", "scsearch"]
-          : searchSource === "ytsearch"
-            ? ["scsearch"]
-            : [];
+      const fallbackChain = ["scsearch", "ytmsearch", "ytsearch"].filter(
+        (s) => s !== searchSource,
+      );
 
       for (const fallbackSource of fallbackChain) {
         try {
@@ -215,6 +218,23 @@ module.exports = {
           }
         } catch (_) {}
       }
+    } else if (
+      isDirectLink &&
+      isResEmpty(finalRes) &&
+      (finalQuery.includes("youtube.com") || finalQuery.includes("youtu.be"))
+    ) {
+      try {
+        const ytIdMatch = finalQuery.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+        if (ytIdMatch) {
+          const fallbackRes = await poru.resolve({
+            query: `scsearch:${ytIdMatch[1]}`,
+            requester: user,
+          });
+          if (!isResEmpty(fallbackRes)) {
+            finalRes = fallbackRes;
+          }
+        }
+      } catch (_) {}
     }
 
 

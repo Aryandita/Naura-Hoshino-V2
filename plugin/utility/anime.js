@@ -41,6 +41,32 @@ const kitsuBreaker = getOrCreateBreaker("anime-kitsu", {
 const animeCache = new ApiResponseCache({ ttl: 300000, maxSize: 200 });
 
 /**
+ * Normalisasi status anime agar ramah pengguna dan bebas underscore
+ */
+function normalizeAnimeStatus(raw) {
+  if (!raw || raw === "N/A") return "N/A";
+  const clean = String(raw).replace(/_/g, " ").trim();
+  const upper = clean.toUpperCase();
+  if (upper.includes("NOT YET") || upper.includes("BELUM") || upper.includes("TO BE AIRED")) {
+    return "Belum Rilis";
+  }
+  if (upper.includes("FINISH") || upper.includes("SELESAI") || upper.includes("TAMAT")) {
+    return "Selesai";
+  }
+  if (upper.includes("RELEAS") || upper.includes("AIRING") || upper.includes("TAYANG")) {
+    return "Sedang Tayang";
+  }
+  if (upper.includes("CANCEL")) {
+    return "Dibatalkan";
+  }
+  if (upper.includes("HIATUS")) {
+    return "Hiatus";
+  }
+  return clean.split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+}
+
+
+/**
  * Fetch anime dari Jikan (MyAnimeList) dengan Circuit Breaker
  */
 async function fetchFromJikan(query) {
@@ -72,7 +98,7 @@ async function fetchFromJikan(query) {
       rawScore: item.score || "8.5",
       type: item.type || "TV",
       episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
-      status: item.status || "N/A",
+      status: normalizeAnimeStatus(item.status),
       ageRating: item.rating || "N/A",
       url: item.url || null,
       posterURL:
@@ -171,7 +197,7 @@ async function fetchFromAniList(query) {
         rawScore: scoreVal || "8.5",
         type: item.format || "TV",
         episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
-        status: item.status ? item.status.replace("_", " ") : "N/A",
+        status: normalizeAnimeStatus(item.status),
         ageRating: "General",
         url: item.siteUrl || `https://anilist.co/anime/${item.id}`,
         posterURL: item.coverImage?.extraLarge || item.coverImage?.large || null,
@@ -217,7 +243,7 @@ async function fetchFromKitsu(query) {
         rawScore: scoreVal || "8.5",
         type: (attr.subtype || "TV").toUpperCase(),
         episodes: attr.episodeCount ? `${attr.episodeCount} Ep` : "Unknown",
-        status: (attr.status || "N/A").toUpperCase(),
+        status: normalizeAnimeStatus(attr.status),
         ageRating: attr.ageRatingGuide || attr.ageRating || "N/A",
         url: `https://kitsu.io/anime/${item.id}`,
         posterURL:

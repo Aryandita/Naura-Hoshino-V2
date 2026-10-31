@@ -17,7 +17,7 @@ const {
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const { getPlatformIcon } = require("../../../src/canvas/CanvasUtils");
-const { drawNowPlayingCard } = require("../../../src/canvas/nowplayingCanvas");
+const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
 const {
   applyAudioFilter,
   FILTER_PRESETS,
@@ -127,7 +127,7 @@ module.exports = {
       }
 
       const playbackInfo = { position: player.position, equippedBanner };
-      const imageBuffer = await drawNowPlayingCard(track, playbackInfo);
+      const imageBuffer = await canvasWorkerPool.execute("renderNowPlaying", { trackInfo: track, playbackInfo });
       const attachment = new AttachmentBuilder(imageBuffer, {
         name: "nowplaying.png",
       });

@@ -23,8 +23,7 @@ const UserCardDeck = require("../../src/models/UserCardDeck");
 const cacheManager = require("../../src/managers/cacheManager");
 const redisManager = require("../../src/managers/redisManager");
 const currency = require("../../src/survival/engines/currency");
-const { drawAnimeCard } = require("../../src/canvas/cardCanvas");
-const { drawCardBattleArena } = require("../../src/canvas/cardBattleCanvas");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -436,7 +435,7 @@ module.exports = {
         });
       }
 
-      const imgBuffer = await drawAnimeCard(card);
+      const imgBuffer = await canvasWorkerPool.execute("renderCard", card);
       const attachment = new AttachmentBuilder(imgBuffer, {
         name: "daily_card.png",
       });
@@ -614,7 +613,7 @@ module.exports = {
         600,
       );
 
-      const arenaBuffer = await drawCardBattleArena({
+      const arenaBuffer = await canvasWorkerPool.execute("renderCardBattle", {
         p1: p1Card,
         p2: monsterCard,
         p1User: sessionData.p1User,
@@ -789,7 +788,7 @@ module.exports = {
         600,
       );
 
-      const arenaBuffer = await drawCardBattleArena({
+      const arenaBuffer = await canvasWorkerPool.execute("renderCardBattle", {
         p1: p1Card,
         p2: p2Card,
         p1User: sessionData.p1User,
@@ -905,7 +904,7 @@ module.exports = {
         });
       }
 
-      const imgBuffer = await drawAnimeCard(card);
+      const imgBuffer = await canvasWorkerPool.execute("renderCard", card);
       const attachment = new AttachmentBuilder(imgBuffer, {
         name: `${card.cardCode}.png`,
       });
@@ -1133,7 +1132,7 @@ module.exports = {
         });
       }
 
-      const imgBuffer = await drawAnimeCard(result.card);
+      const imgBuffer = await canvasWorkerPool.execute("renderCard", result.card);
       const attachment = new AttachmentBuilder(imgBuffer, {
         name: "awakened_card.png",
       });
@@ -1179,7 +1178,7 @@ module.exports = {
         });
       }
 
-      const imgBuffer = await drawAnimeCard(result.card);
+      const imgBuffer = await canvasWorkerPool.execute("renderCard", result.card);
       const attachment = new AttachmentBuilder(imgBuffer, {
         name: "inscribed_card.png",
       });
@@ -1227,7 +1226,7 @@ module.exports = {
         });
       }
 
-      const imgBuffer = await drawAnimeCard(result.card);
+      const imgBuffer = await canvasWorkerPool.execute("renderCard", result.card);
       const attachment = new AttachmentBuilder(imgBuffer, {
         name: "awakened_card.png",
       });
@@ -1273,7 +1272,7 @@ module.exports = {
         });
       }
 
-      const imgBuffer = await drawAnimeCard(result.card);
+      const imgBuffer = await canvasWorkerPool.execute("renderCard", result.card);
       const attachment = new AttachmentBuilder(imgBuffer, {
         name: "framed_card.png",
       });

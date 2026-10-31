@@ -157,20 +157,98 @@ class AiDjManager {
   }
 
   /**
+   * Mengambil kata ganti / sapaan khas yang selaras dinamis dengan persona Naura.
+   * Digunakan untuk pengguna umum agar tidak mengeja username mentah.
+   * @param {string} personaKey - 'default', 'tsundere', 'kuudere', 'gamer', 'butler'
+   * @param {string} [lang='id'] - 'id' atau 'en'
+   * @returns {string}
+   */
+  getPersonaPronoun(personaKey = "default", lang = "id") {
+    const key = String(personaKey || "default").toLowerCase();
+    if (lang === "en") {
+      switch (key) {
+        case "butler":
+          return "you";
+        case "gamer":
+          return "teammate";
+        case "kuudere":
+          return "you";
+        case "tsundere":
+          return "you";
+        default:
+          return "you";
+      }
+    }
+    // Bahasa Indonesia
+    switch (key) {
+      case "tsundere":
+        return "kamu";
+      case "kuudere":
+        return "dia";
+      case "gamer":
+        return "sobat mabar";
+      case "butler":
+        return "Anda";
+      default:
+        return "kamu";
+    }
+  }
+
+  /**
+   * Direktori penyimpanan lokal audio intro DJ.
+   * @returns {string}
+   */
+  getIntroAudioDir() {
+    const path = require("path");
+    return path.join(process.cwd(), "assets", "audio", "dj", "intro");
+  }
+
+  /**
+   * Menyimpan buffer audio intro ke direktori lokal sebelum lagu utama diputar.
+   * @param {Buffer} audioBuffer
+   * @param {string} [identifier='track']
+   * @returns {string} Path absolut file lokal yang disimpan
+   */
+  saveLocalIntroAudio(audioBuffer, identifier = "track") {
+    const fs = require("fs");
+    const path = require("path");
+    const dir = this.getIntroAudioDir();
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const safeId = String(identifier || "track").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const filename = `intro_${Date.now()}_${safeId}.mp3`;
+    const filePath = path.join(dir, filename);
+    fs.writeFileSync(filePath, audioBuffer);
+    return filePath;
+  }
+
+  /**
    * Buat naskah penyiar DJ singkat, ramah, dan bernuansa anime kawaii sesuai genre trek.
    * @param {Object} trackInfo
    * @param {string} requesterName
    * @param {string[]} [listenerNames]
    * @param {string} [lang]
+   * @param {Object} [options={}]
    * @returns {{ script: string, classification: { genre: string, mood: string, emoji: string } }}
    */
-  generateDjScript(trackInfo, requesterName, listenerNames = [], lang = "id") {
+  generateDjScript(trackInfo, requesterName, listenerNames = [], lang = "id", options = {}) {
     const title = trackInfo.title || (lang === "en" ? "your favorite song" : "lagu favorit kalian");
     const author = trackInfo.author || (lang === "en" ? "an awesome musician" : "musisi hebat");
     const rawName = typeof requesterName === "string" ? requesterName.trim() : "";
-    const name = rawName
-      ? (lang === "id" ? (rawName.startsWith("Kak ") ? rawName : `Kak ${rawName}`) : rawName)
-      : (lang === "en" ? "you" : "kamu");
+    const PRONOUNS = new Set(["kamu", "dia", "anda", "you", "sobat mabar", "sobat naura", "teammate"]);
+    const isPronoun = PRONOUNS.has(rawName.toLowerCase()) || Boolean(options.isPronoun);
+
+    let name;
+    if (!rawName) {
+      name = lang === "en" ? "you" : "kamu";
+    } else if (isPronoun) {
+      name = rawName;
+    } else {
+      name = lang === "id"
+        ? (rawName.startsWith("Kak ") ? rawName : `Kak ${rawName}`)
+        : rawName;
+    }
     const classification = classifyTrack(trackInfo);
 
     // Sapa pendengar aktif di voice jika ada selain requester
@@ -318,6 +396,8 @@ class AiDjManager {
     }
 
     let isVipRequester = false;
+    let customName = null;
+    let personaKey = "default";
     const requesterId = requester?.id;
     if (requesterId) {
       try {
@@ -334,15 +414,27 @@ class AiDjManager {
         } else if (env.OWNER_IDS && env.OWNER_IDS.includes(String(requesterId))) {
           isVipRequester = true;
         }
+        if (profile?.aiPersona?.name) {
+          customName = String(profile.aiPersona.name).trim();
+        }
+      } catch (_) {}
+
+      try {
+        const aiMemory = require("../ai/aiMemory");
+        personaKey = await aiMemory.getUserPersona(requesterId);
       } catch (_) {}
     }
+
+    const addressedName = isVipRequester
+      ? (customName || requesterName)
+      : this.getPersonaPronoun(personaKey, lang);
 
     let signatureGreeting = null;
     if (isVipRequester && (await this.isGreetingEnabled(requesterId))) {
       try {
         signatureGreeting = await this.generateSignatureGreeting({
           userId: requesterId,
-          displayName: requesterName,
+          displayName: addressedName,
           trackTitle: track.info.title || "lagu pilihanmu",
           lang,
         });
@@ -353,9 +445,10 @@ class AiDjManager {
 
     const { script: djScript, classification } = this.generateDjScript(
       track.info,
-      requesterName,
+      addressedName,
       listenerNames,
-      lang
+      lang,
+      { isPronoun: !isVipRequester, isVip: isVipRequester, customName, persona: personaKey },
     );
 
     let script = djScript;
@@ -380,6 +473,9 @@ class AiDjManager {
         });
 
         if (audioBuffer) {
+          try {
+            this.saveLocalIntroAudio(audioBuffer, track.info.identifier || track.info.title);
+          } catch (_) {}
           const { AttachmentBuilder } = require("discord.js");
           audioAttachment = new AttachmentBuilder(audioBuffer, {
             name: "naura_dj_intro.mp3",
@@ -467,9 +563,16 @@ class AiDjManager {
   getLocalDjAudioPath(genre, lang, variant = 0) {
     const fs = require('fs');
     const path = require('path');
-    const fileName = `${genre}_${variant}.mp3`;
-    const filePath = path.join(process.cwd(), 'assets', 'audio', 'dj', lang, fileName);
-    return fs.existsSync(filePath) ? filePath : null;
+    const candidates = [
+      `${genre}_${variant}.mp3`,
+      `${genre}_v${variant + 1}.mp3`,
+      `${genre}_v${variant}.mp3`,
+    ];
+    for (const fileName of candidates) {
+      const filePath = path.join(process.cwd(), 'assets', 'audio', 'dj', lang, fileName);
+      if (fs.existsSync(filePath)) return filePath;
+    }
+    return null;
   }
 }
 

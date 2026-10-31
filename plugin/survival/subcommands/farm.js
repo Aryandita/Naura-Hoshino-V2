@@ -34,9 +34,7 @@ const greenhouseEngine = require("../../../src/survival/engines/greenhouseEngine
 const {
   CROP_SEEDS,
 } = require("../../../src/survival/data/cropSeeds");
-const {
-  renderGreenhouseCard,
-} = require("../../../src/canvas/greenhouseCanvas");
+const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
 
 // ============================================================================
 // HANDLER
@@ -86,7 +84,7 @@ module.exports = {
       const files = [];
 
       try {
-        const cardBuffer = await renderGreenhouseCard(gh);
+        const cardBuffer = await canvasWorkerPool.execute("renderGreenhouse", gh);
         files.push(
           new AttachmentBuilder(cardBuffer, { name: "greenhouse_status.png" }),
         );

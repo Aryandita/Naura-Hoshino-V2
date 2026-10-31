@@ -376,13 +376,13 @@ module.exports = {
         return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
 
       const guildHallEngine = require("../../../src/survival/engines/guildHallEngine");
-      const { drawGuildHall } = require("../../../src/canvas/guildHallCanvas");
+      const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
       const { AttachmentBuilder } = require("discord.js");
 
       const hallData = await guildHallEngine.getHall(userClan.id);
       const files = [];
       try {
-        const hallBuf = await drawGuildHall(hallData);
+        const hallBuf = await canvasWorkerPool.execute("renderGuildHall", hallData);
         files.push(new AttachmentBuilder(hallBuf, { name: "guild_hall.png" }));
       } catch (err) {
         logger.warn("[clan:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));

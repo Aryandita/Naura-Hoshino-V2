@@ -197,18 +197,31 @@ module.exports = {
     if (player.isAutoplayMode) {
       try {
         let searchQuery;
-        if (activeTrack.info.originalSource === "spotify") {
-          // Spotify fallback: samakan pola query dengan spotifyResolver.
+        const env = require("../../config/env");
+        if (
+          activeTrack.info.originalSource === "spotify" ||
+          activeTrack.info.originalSource === "soundcloud" ||
+          env.MUSIC_DEFAULT_SEARCH === "scsearch"
+        ) {
           searchQuery = `scsearch:${activeTrack.info.author} - ${activeTrack.info.title}`;
         } else {
-          // Native YouTube Mix URL
           searchQuery = `https://www.youtube.com/watch?v=${activeTrack.info.identifier}&list=RD${activeTrack.info.identifier}`;
         }
 
-        const searchRes = await manager.poru.resolve({
+        let searchRes = await manager.poru.resolve({
           query: searchQuery,
           requester: manager.client.user,
         });
+
+        if (
+          (!searchRes || !searchRes.tracks || searchRes.tracks.length === 0) &&
+          !searchQuery.startsWith("scsearch:")
+        ) {
+          searchRes = await manager.poru.resolve({
+            query: `scsearch:${activeTrack.info.author} - ${activeTrack.info.title}`,
+            requester: manager.client.user,
+          });
+        }
         if (searchRes && searchRes.tracks && searchRes.tracks.length > 0) {
           // Ambil beberapa kandidat terbaik sekaligus: yang teratas dipakai untuk prefetch,
           // sisanya jadi buffer cadangan (player.autoplayQueue) supaya kalau kandidat utama

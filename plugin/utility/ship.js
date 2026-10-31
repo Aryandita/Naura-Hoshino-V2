@@ -1,4 +1,6 @@
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags, AttachmentBuilder } = require("discord.js");
+const { logger } = require("../../src/managers/logger");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const ui = require("../../src/config/ui");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
@@ -66,6 +68,24 @@ module.exports = {
       footerText: ui.getFooter("utility"),
     });
 
-    await interaction.reply(payload);
+    const files = [];
+    try {
+      const cardBuf = await canvasWorkerPool.execute("renderShipCard", {
+        user1Name: user1.username,
+        user1Avatar: user1.displayAvatarURL({ extension: "png" }),
+        user2Name: user2.username,
+        user2Avatar: user2.displayAvatarURL({ extension: "png" }),
+        percentage,
+        comment: desc,
+      });
+      if (cardBuf) {
+        files.push(new AttachmentBuilder(cardBuf, { name: "ship_card.png" }));
+        payload.imageURL = "attachment://ship_card.png";
+      }
+    } catch (err) {
+      logger.warn("[ship:execute] Render visual canvas gagal: " + (err?.message || err));
+    }
+
+    await interaction.reply({ ...payload, files });
   },
 };

@@ -164,7 +164,7 @@ const env = {
   LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
   LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || "youshallnotpass",
   LAVA_SECURE: process.env.LAVALINK_SECURE === "true",
-  MUSIC_DEFAULT_SEARCH: cleanEnv(process.env.MUSIC_DEFAULT_SEARCH) || "ytmsearch",
+  MUSIC_DEFAULT_SEARCH: cleanEnv(process.env.MUSIC_DEFAULT_SEARCH) || "scsearch",
 
   // SPOTIFY (poru-spotify + LavaSrc node + spotifyResolver fallback)
   SPOTIFY_CLIENT_ID: cleanEnv(process.env.SPOTIFY_CLIENT_ID),
@@ -217,6 +217,8 @@ const env = {
   // bawaan npm; isi hanya kalau host menyediakan binary FFmpeg sendiri.
   FFMPEG_PATH: cleanEnv(process.env.FFMPEG_PATH),
   OMDB_API_KEY: cleanEnv(process.env.OMDB_API_KEY),
+  YOUTUBE_COOKIE_PATH:
+    cleanEnv(process.env.YOUTUBE_COOKIE_PATH) || "cookies.txt",
 
   // ERROR REPORTING
   ERROR_WEBHOOK_URL: cleanEnv(process.env.ERROR_WEBHOOK_URL),

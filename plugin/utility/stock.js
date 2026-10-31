@@ -22,7 +22,6 @@ const {
   fuzzyFilter,
 } = require("../../src/utils/autocompleteHelper");
 const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
-const { drawStockMarket } = require("../../src/canvas/stockCanvas");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -129,7 +128,7 @@ module.exports = {
             payload: stocks,
             userId,
           })
-          .catch(() => drawStockMarket(stocks));
+          .catch(() => null);
         files.push(
           new AttachmentBuilder(stockBuf, { name: "stock_market.png" }),
         );

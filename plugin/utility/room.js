@@ -328,20 +328,7 @@ module.exports = {
           },
         });
       } catch (err) {
-        const roomCanvas = require("../../src/canvas/roomCanvas");
-        buffer = await roomCanvas.renderRoomCanvas(
-          room,
-          { displayName: authorDisplayName, id: user.id },
-          null,
-          {
-            previewPlacement: {
-              x: px,
-              y: py,
-              name: itemName,
-              icon: itemIcon,
-            },
-          },
-        );
+        buffer = null;
       }
 
       const attachment = new AttachmentBuilder(buffer, {

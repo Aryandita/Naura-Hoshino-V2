@@ -4,7 +4,7 @@ const { logger } = require("../../../src/managers/logger");
 const { AttachmentBuilder } = require("discord.js");
 const ui = require("../../../src/config/ui");
 const cacheManager = require("../../../src/managers/cacheManager");
-const { generateMusicProfileImage } = require("../../../src/canvas/canvasHelper");
+const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -50,11 +50,11 @@ module.exports = {
         topFriends: calculateTop5(profile.music_topFriend),
         isPremium: Boolean(profile?.isPremium && profile?.premiumUntil && new Date(profile.premiumUntil) > new Date()),
       };
-      const imageBuffer = await generateMusicProfileImage(
-        target,
+      const imageBuffer = await canvasWorkerPool.execute("renderMusicProfile", {
+        user: target,
         stats,
-        client.user.displayAvatarURL({ extension: "png" }),
-      );
+        clientAvatar: client.user.displayAvatarURL({ extension: "png" }),
+      });
       const attachment = new AttachmentBuilder(imageBuffer, {
         name: "naura-audiophile.webp",
       });

@@ -30,36 +30,74 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
   }
 
   try {
-    const requesterName = user.displayName || user.username;
     const voiceChannel = memberVoice || musicManager.poru?.players?.get(guildId)?.voiceChannel;
-    
     if (!voiceChannel) return null;
 
     const lang = await aiDjManager.detectVoiceLanguage(musicManager, guildId, voiceChannel);
-    const { script, classification } = aiDjManager.generateDjScript(trackInfo, requesterName, [], lang);
-    const genreKey = classification.genre;
 
-    let audioBuffer = null;
-    
+    let isOwner = false;
     let isPremium = false;
+    let customName = null;
+    let personaKey = "default";
+
     try {
-      const cacheManager = require("../managers/cacheManager");
-      const profile = await cacheManager.getUserProfile(user.id);
-      if (profile && profile.isPremium && profile.premiumUntil && new Date(profile.premiumUntil) > new Date()) {
-        isPremium = true;
+      const env = require("../config/env");
+      if (env.OWNER_IDS && env.OWNER_IDS.includes(String(user?.id))) {
+        isOwner = true;
       }
     } catch (_) {}
 
-    if (isPremium) {
+    try {
+      const cacheManager = require("../managers/cacheManager");
+      const profile = await cacheManager.getUserProfile(user?.id);
+      if (profile) {
+        if (profile.isPremium && (!profile.premiumUntil || new Date(profile.premiumUntil) > new Date())) {
+          isPremium = true;
+        }
+        if (profile.aiPersona?.name) {
+          customName = String(profile.aiPersona.name).trim();
+        }
+      }
+    } catch (_) {}
+
+    try {
+      const aiMemory = require("../ai/aiMemory");
+      personaKey = await aiMemory.getUserPersona(user?.id);
+    } catch (_) {}
+
+    const isVipOrOwner = isOwner || isPremium;
+    let addressedName;
+    if (isVipOrOwner) {
+      // Owner dan Pengguna Premium: sebutkan display name atau nama kustom dari dashboard
+      addressedName = customName || user?.displayName || user?.globalName || user?.username || "Sobat VIP";
+    } else if (typeof aiDjManager.getPersonaPronoun === "function") {
+      // Pengguna Umum: gunakan kata ganti selaras dinamis dengan persona Naura (tanpa mengeja username mentah)
+      addressedName = aiDjManager.getPersonaPronoun(personaKey, lang);
+    } else {
+      addressedName = lang === "en" ? "you" : "kamu";
+    }
+
+    const { script, classification } = aiDjManager.generateDjScript(
+      trackInfo,
+      addressedName,
+      [],
+      lang,
+      { isPronoun: !isVipOrOwner, isVip: isVipOrOwner, customName, persona: personaKey },
+    );
+    const genreKey = classification.genre;
+
+    let audioBuffer = null;
+
+    if (isVipOrOwner) {
       try {
         audioBuffer = await fishAudioService.getOrGeneratePremiumAudio(
           user.id,
-          requesterName,
+          addressedName,
           script,
-          { format: "mp3", latency: "low" }
+          { format: "mp3", latency: "low" },
         );
         if (audioBuffer) {
-          logger.info(`[DjTrack] Using premium cached audio for ${requesterName}`);
+          logger.info(`[DjTrack] Using premium cached audio for ${addressedName}`);
         }
       } catch (err) {
         logger.debug(`[DjTrack] Premium audio generation failed, falling back: ${err.message}`);
@@ -90,11 +128,25 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
 
     if (!audioBuffer) return null;
 
-    const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_dj_intro.mp3" });
-    
+    // R2: Simpan file audio intro ke folder lokal sebelum lagu utama diputar
+    let localIntroPath = null;
+    try {
+      if (typeof aiDjManager.saveLocalIntroAudio === "function") {
+        localIntroPath = aiDjManager.saveLocalIntroAudio(
+          audioBuffer,
+          trackInfo.identifier || trackInfo.title,
+        );
+      }
+      logger.info(`[AiDjTrackService] File audio intro lokal berhasil disimpan di: ${localIntroPath}`);
+    } catch (saveErr) {
+      logger.warn(`[AiDjTrackService] Gagal menyimpan file audio intro lokal: ${saveErr.message}`);
+    }
+
+    const attachment = new AttachmentBuilder(localIntroPath || audioBuffer, { name: "naura_dj_intro.mp3" });
+
     const ui = require("../config/ui");
     const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
-    
+
     const speakPayload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
       title: "🎙️ Hoshino FM",
@@ -105,12 +157,16 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
     speakPayload.files = [attachment];
 
     const speakMsg = await channel.send(speakPayload);
-    
+
     if (!speakMsg?.attachments?.size) return null;
 
-    const playableUrl = speakMsg.attachments.first().url;
+    const firstAttachment =
+      typeof speakMsg.attachments.first === "function"
+        ? speakMsg.attachments.first()
+        : Array.from(speakMsg.attachments.values())[0];
+    const playableUrl = firstAttachment?.url;
     const ttsRes = await poru.resolve({ query: playableUrl, requester: user });
-    
+
     if (!ttsRes?.tracks?.length) return null;
 
     const ttsTrack = ttsRes.tracks[0];
@@ -118,8 +174,9 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
     ttsTrack.info.author = "Naura Hoshino";
     ttsTrack.info.originalSource = "http";
     ttsTrack.isTTS = true;
+    ttsTrack.localFilePath = localIntroPath;
 
-    return { ttsTrack, messageId: speakMsg.id };
+    return { ttsTrack, messageId: speakMsg.id, localFilePath: localIntroPath };
   } catch (err) {
     logger.warn(`[AiDjTrackService] Gagal generate TTS intro: ${err.message}`);
     return null;

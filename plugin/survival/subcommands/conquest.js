@@ -24,7 +24,7 @@ const {
 
 const ui = require("../../../src/config/ui");
 const territoryWarEngine = require("../../../src/services/territoryWarEngine");
-const { drawTerritoryMap } = require("../../../src/canvas/territoryCanvas");
+const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
 const GuildClan = require("../../../src/models/GuildClan");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 
@@ -64,7 +64,7 @@ module.exports = {
       const files = [];
 
       try {
-        const mapBuffer = await drawTerritoryMap(territories);
+        const mapBuffer = await canvasWorkerPool.execute("renderTerritoryMap", territories);
         files.push(
           new AttachmentBuilder(mapBuffer, { name: "territory_map.png" }),
         );

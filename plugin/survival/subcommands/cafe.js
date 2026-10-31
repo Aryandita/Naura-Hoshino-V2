@@ -44,7 +44,7 @@ const {
   CAFE_RECIPES,
   getRecipeById,
 } = require("../../../src/survival/data/cafeRecipes");
-const { drawCafeCard } = require("../../../src/canvas/cafeCanvas");
+const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
 
 // ============================================================================
 // KONSTANTA
@@ -263,7 +263,7 @@ async function handleStatus(interaction, userId, username) {
 
   // Render cafe card
   try {
-    const cardBuffer = await drawCafeCard(cafe);
+    const cardBuffer = await canvasWorkerPool.execute("renderCafe", cafe);
     files.push(new AttachmentBuilder(cardBuffer, { name: CAFE_IMAGE_NAME }));
   } catch (err) {
     logger.warn("[cafe:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));

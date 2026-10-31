@@ -184,7 +184,7 @@ function adaptSurvivalInteraction(interaction, actionName = null) {
     const finalMsg = wrapMessageWithCollectorRegistry(res);
     const targetMsgId = finalMsg?.id || messageId;
 
-    if (!isEphemeral && !interaction.ephemeral && targetMsgId) {
+    if (interaction.guildId && !isEphemeral && !interaction.ephemeral && targetMsgId) {
       scheduleAutoDelete(targetMsgId, () => {
         if (typeof interaction.deleteReply === "function") {
           return interaction.deleteReply();
@@ -210,7 +210,7 @@ function adaptSurvivalInteraction(interaction, actionName = null) {
     const finalMsg = wrapMessageWithCollectorRegistry(res);
     const targetMsgId = finalMsg?.id || messageId;
 
-    if (!interaction.ephemeral && targetMsgId) {
+    if (interaction.guildId && !interaction.ephemeral && targetMsgId) {
       scheduleAutoDelete(targetMsgId, () => {
         if (typeof interaction.deleteReply === "function") {
           return interaction.deleteReply();

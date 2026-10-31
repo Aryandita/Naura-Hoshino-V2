@@ -141,72 +141,139 @@ async function renderMovieCard(payload) {
     ctx.font = "bold 12px InterBold, sans-serif";
     ctx.fillText(`✦ ${sourceName.toUpperCase()}`, rightX + 16, 60);
 
-    // Judul Film Utama
+    // Judul Film Utama (Adaptif Font Size)
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 28px MontserratBold, InterBold, sans-serif";
+    let titleFontSize = 28;
+    ctx.font = `bold ${titleFontSize}px MontserratBold, InterBold, sans-serif`;
+    while (ctx.measureText(title).width > rightW && titleFontSize > 20) {
+      titleFontSize -= 2;
+      ctx.font = `bold ${titleFontSize}px MontserratBold, InterBold, sans-serif`;
+    }
     const titleLines = wrapLines(ctx, title, rightW);
-    ctx.fillText(titleLines[0] || title, rightX, 106);
+    if (titleLines.length > 1) {
+      ctx.fillText(titleLines[0], rightX, 94);
+      const secondLine = titleLines.length > 2 ? titleLines[1] + "..." : titleLines[1];
+      ctx.fillText(secondLine, rightX, 118);
+    } else {
+      ctx.fillText(titleLines[0] || title, rightX, 106);
+    }
 
     // 4. Badges Strip (Score, Runtime, Genres)
-    const badgeY = 132;
+    const badgeY = titleLines.length > 1 ? 140 : 132;
 
     // Rating Score Badge (Gold)
-    drawRoundedRect(ctx, rightX, badgeY, 130, 34, 10, "rgba(245, 197, 24, 0.2)", "#f5c518", 1.2);
-    ctx.fillStyle = "#fbbf24";
-    ctx.font = "bold 14px MontserratBold, InterBold, sans-serif";
-    // Sanitize rating: strip Discord custom emojis (<:name:id>) and markdown (**) first
-    let cleanRating = "8.2";
-    if (payload.rawRating && payload.rawRating !== "N/A") {
-      const match = String(payload.rawRating).match(/(\d+(?:\.\d+)?)/);
-      if (match) cleanRating = match[1];
-    } else if (rating && rating !== "N/A") {
-      const stripped = String(rating)
+    const parseRating = (val) => {
+      if (!val || val === "N/A") return null;
+      const stripped = String(val)
         .replace(/<a?:[a-zA-Z0-9_]+:\d+>/g, "")
         .replace(/\*\*/g, "")
         .trim();
-      const match = stripped.match(/(\d+(?:\.\d+)?)/);
-      if (match) cleanRating = match[1];
-    }
-    ctx.fillText(`IMDb ★ ${cleanRating} / 10`, rightX + 12, badgeY + 22);
+      const matches = stripped.match(/\b(10(?:\.0)?|[0-9](?:\.[0-9]+)?)\b/);
+      return matches ? matches[1] : null;
+    };
+    const cleanRating = parseRating(payload.rawRating) || parseRating(rating) || "8.2";
+    const ratingSource = sourceName && sourceName.includes("TVMaze") ? "TVMaze" : "IMDb";
+    const ratingLabel = `${ratingSource} ★ ${cleanRating} / 10`;
 
     // Runtime Pill
-    const cleanRuntime = runtime && runtime !== "N/A" ? runtime : "Durasi Standar";
-    drawRoundedRect(ctx, rightX + 140, badgeY, 120, 34, 10, "rgba(56, 189, 248, 0.15)", "#38bdf8", 1);
-    ctx.fillStyle = "#38bdf8";
-    ctx.font = "bold 13px InterBold, sans-serif";
-    ctx.fillText(`⏱️ ${cleanRuntime}`, rightX + 152, badgeY + 22);
+    const cleanRuntime = runtime && runtime !== "N/A" ? String(runtime).replace(/_/g, " ").trim() : "Durasi Standar";
+    const runtimeLabel = `⏱️ ${cleanRuntime}`;
 
-    // Format Pill
-    drawRoundedRect(ctx, rightX + 270, badgeY, 110, 34, 10, "rgba(255, 255, 255, 0.08)", "rgba(255, 255, 255, 0.18)", 1);
-    ctx.fillStyle = "#e2e8f0";
-    ctx.font = "bold 13px InterBold, sans-serif";
-    ctx.fillText("FILM / SERIAL", rightX + 282, badgeY + 22);
+    // Responsive Badges Strip (Anti-Overlap Layout Engine)
+    const badgeConfigs = [
+      {
+        label: ratingLabel,
+        textColor: "#fbbf24",
+        borderColor: "#f5c518",
+        bgColor: "rgba(245, 197, 24, 0.2)",
+        font: "bold 13px MontserratBold, InterBold, sans-serif",
+        minWidth: 120,
+      },
+      {
+        label: runtimeLabel,
+        textColor: "#38bdf8",
+        borderColor: "#38bdf8",
+        bgColor: "rgba(56, 189, 248, 0.15)",
+        font: "bold 13px InterBold, sans-serif",
+        minWidth: 95,
+      },
+      {
+        label: "FILM / SERIAL",
+        textColor: "#e2e8f0",
+        borderColor: "rgba(255, 255, 255, 0.18)",
+        bgColor: "rgba(255, 255, 255, 0.08)",
+        font: "bold 13px InterBold, sans-serif",
+        minWidth: 108,
+      },
+    ];
 
-    // 5. Credits Box (Sutradara & Pemeran)
+    const measuredBadges = badgeConfigs.map((b) => {
+      ctx.font = b.font;
+      const textW = Math.ceil(ctx.measureText(b.label).width);
+      const pillW = Math.max(b.minWidth, textW + 24);
+      return { ...b, textW, pillW };
+    });
+
+    const defaultGap = 10;
+    const totalPillW = measuredBadges.reduce((acc, b) => acc + b.pillW, 0);
+    const availableW = rightW;
+    const requiredTotal = totalPillW + (measuredBadges.length - 1) * defaultGap;
+    const badgeGap =
+      requiredTotal > availableW
+        ? Math.max(5, Math.floor((availableW - totalPillW) / (measuredBadges.length - 1)))
+        : defaultGap;
+
+    let curBadgeX = rightX;
+    for (const b of measuredBadges) {
+      drawRoundedRect(ctx, curBadgeX, badgeY, b.pillW, 34, 10, b.bgColor, b.borderColor, 1);
+      ctx.fillStyle = b.textColor;
+      ctx.font = b.font;
+      const textX = curBadgeX + (b.pillW - b.textW) / 2;
+      ctx.fillText(b.label, textX, badgeY + 22);
+      curBadgeX += b.pillW + badgeGap;
+    }
+
+    // 5. Credits Box (Sutradara & Pemeran / Jaringan & Format Dinamis)
     const credY = badgeY + 48;
     drawRoundedRect(ctx, rightX, credY, rightW, 76, 14, "rgba(15, 23, 42, 0.65)", "rgba(255, 255, 255, 0.08)", 1);
 
+    const isTvShow = Boolean(sourceName && sourceName.includes("TVMaze"));
+    const dirLabel = isTvShow ? "📡 Jaringan: " : "🎬 Sutradara: ";
+    const actLabel = isTvShow ? "📺 Tipe Acara: " : "👥 Pemeran: ";
+
     ctx.font = "14px Inter, sans-serif";
-    const dirLabel = "🎬 Sutradara: ";
-    const actLabel = "👥 Pemeran: ";
     const maxCredLabelW = Math.max(
       ctx.measureText(dirLabel).width,
       ctx.measureText(actLabel).width,
     );
     const credValX = rightX + 16 + maxCredLabelW + 6;
+    const maxCredValW = rightW - (credValX - rightX) - 16;
+
+    let dirVal = String(director || "N/A").trim();
+    ctx.font = "bold 14px InterBold, sans-serif";
+    while (ctx.measureText(dirVal).width > maxCredValW && dirVal.length > 4) {
+      dirVal = dirVal.slice(0, -4).trim() + "...";
+    }
+
+    let actVal = String(actors || "N/A").trim();
+    ctx.font = "14px Inter, sans-serif";
+    while (ctx.measureText(actVal).width > maxCredValW && actVal.length > 4) {
+      actVal = actVal.slice(0, -4).trim() + "...";
+    }
 
     ctx.fillStyle = "#94a3b8";
+    ctx.font = "14px Inter, sans-serif";
     ctx.fillText(dirLabel, rightX + 16, credY + 28);
     ctx.fillStyle = "#38bdf8";
     ctx.font = "bold 14px InterBold, sans-serif";
-    ctx.fillText(String(director).substring(0, 38), credValX, credY + 28);
+    ctx.fillText(dirVal, credValX, credY + 28);
 
     ctx.fillStyle = "#94a3b8";
     ctx.font = "14px Inter, sans-serif";
     ctx.fillText(actLabel, rightX + 16, credY + 56);
     ctx.fillStyle = "#e2e8f0";
     ctx.font = "14px Inter, sans-serif";
-    ctx.fillText(String(actors).substring(0, 42), credValX, credY + 56);
+    ctx.fillText(actVal, credValX, credY + 56);
 
     // 6. Genre Pills
     const genreY = credY + 88;

@@ -34,7 +34,7 @@ const ui = require("../../../src/config/ui");
 const worldBossEngine = require("../../../src/survival/engines/worldBossEngine");
 const petActions = require("../../../src/survival/helpers/petActions");
 const UserPet = require("../../../src/models/UserPet");
-const { drawBossCard } = require("../../../src/canvas/bossCanvas");
+const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
 
 // ============================================================================
 // HANDLER
@@ -137,7 +137,7 @@ module.exports = {
 
       const files = [];
       try {
-        const cardBuffer = await drawBossCard(boss);
+        const cardBuffer = await canvasWorkerPool.execute("renderBoss", boss);
         files.push(
           new AttachmentBuilder(cardBuffer, { name: "world_boss.png" }),
         );

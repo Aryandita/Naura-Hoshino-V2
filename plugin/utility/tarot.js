@@ -5,7 +5,10 @@ const {
   ButtonBuilder,
   ButtonStyle,
   MessageFlags,
+  AttachmentBuilder,
 } = require("discord.js");
+const { logger } = require("../../src/managers/logger");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const tarotEngine = require("../../src/services/tarotEngine");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
@@ -75,8 +78,31 @@ module.exports = {
       footerText: ui.getFooter("utility"),
     });
 
+    const files = [];
+    if (spread.cards && spread.cards.length > 0) {
+      try {
+        const primary = spread.cards[0];
+        const cardBuf = await canvasWorkerPool.execute("renderTarotCard", {
+          cardName: primary?.card?.title || "The Star",
+          cardNumeral: primary?.card?.numeral || "XVII",
+          arcana: primary?.card?.arcana || "Major Arcana",
+          orientation: primary?.orientation || "Upright",
+          keywords: primary?.meaning || "Harapan & Ketenangan",
+          summary: spread.summaryAdvice || "Bintang menuntun jalanmu.",
+          symbol: primary?.card?.emoji || "⭐",
+        });
+        if (cardBuf) {
+          files.push(new AttachmentBuilder(cardBuf, { name: "tarot_card.png" }));
+          payload.image = { url: "attachment://tarot_card.png" };
+        }
+      } catch (err) {
+        logger.warn("[tarot:execute] Render visual canvas gagal: " + (err?.message || err));
+      }
+    }
+
     return interaction.editReply({
       ...payload,
+      files,
       flags: MessageFlags.IsComponentsV2,
     });
   },

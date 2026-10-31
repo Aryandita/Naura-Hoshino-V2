@@ -41,7 +41,7 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const GiveawayManager = require("../../src/managers/giveawayManager");
-const { generateGiveawayBanner } = require("../../src/canvas/dynamicBannerEngine");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 
 // ============================================================================
 // CONSTANTS
@@ -275,7 +275,7 @@ module.exports = {
 
       let bannerBuffer = null;
       try {
-        bannerBuffer = await generateGiveawayBanner({
+        bannerBuffer = await canvasWorkerPool.execute("renderGiveawayBanner", {
           prize: hadiah,
           winnerCount: pemenang,
           sponsorName: interaction.user.username,

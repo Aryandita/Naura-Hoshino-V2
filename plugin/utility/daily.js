@@ -19,7 +19,10 @@ const {
   ButtonBuilder,
   ButtonStyle,
   MessageFlags,
+  AttachmentBuilder,
 } = require("discord.js");
+const { logger } = require("../../src/managers/logger");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 
 const cacheManager = require("../../src/managers/cacheManager");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
@@ -253,7 +256,24 @@ module.exports = {
         `-# Tips: Pasang jimat di toko survival agar streak tetap terlindungi jika berhalangan.`,
       ].filter(Boolean).join("\n");
 
-      return buildContainerV2({
+      let cardBuf = null;
+      try {
+        cardBuf = await canvasWorkerPool.execute("renderDailyCard", {
+          username: displayName,
+          avatarURL: interaction.user.displayAvatarURL({ extension: "png" }),
+          streak: newStreak,
+          rewardCoins: reward.sukamajuCoins,
+          claimed: true,
+          bonusMultiplier: isMilestone ? "1.5x" : "1.0x",
+          activeMission: "Misi Harian Komunitas",
+          missionProgress: questsCompleted,
+          missionTotal: totalQuests,
+        });
+      } catch (err) {
+        logger.warn("[daily:executeClaim] Render visual canvas gagal: " + (err?.message || err));
+      }
+
+      const container = buildContainerV2({
         accentColorHex: accentColor,
         authorName: "Daily Rewards & Streak Hub",
         title: titleText,
@@ -261,7 +281,10 @@ module.exports = {
         buttonsRow: buildDailyHubRow(true, updatedShieldCount),
         expression: isMilestone ? "cheers" : "happy",
         footerText: ui.getFooter("core"),
+        imageURL: cardBuf ? "attachment://daily_card.png" : null,
       });
+
+      return { container, cardBuf, newStreak, updatedShieldCount };
     };
 
     // ─────────────────────────────────────────────────────────────
@@ -323,9 +346,14 @@ module.exports = {
     // ─────────────────────────────────────────────────────────────
     // JIKA BELUM KLAIM: JALANKAN KLAIM & TAMPILKAN HUB
     // ─────────────────────────────────────────────────────────────
-    const claimPayload = await executeClaim();
+    const { container: claimPayload, cardBuf } = await executeClaim();
+    const files = [];
+    if (cardBuf) {
+      files.push(new AttachmentBuilder(cardBuf, { name: "daily_card.png" }));
+    }
     const reply = await interaction.reply({
       ...claimPayload,
+      files,
       fetchReply: true,
     });
 

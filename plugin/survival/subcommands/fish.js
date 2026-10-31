@@ -115,13 +115,13 @@ module.exports = {
     // 1. LIHAT VIVARIUM AQUARIUM
     if (action === "vivarium") {
       const vivariumEngine = require("../../../src/survival/engines/vivariumEngine");
-      const { drawVivarium } = require("../../../src/canvas/vivariumCanvas");
+      const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
       const { AttachmentBuilder } = require("discord.js");
 
       const vivarium = await vivariumEngine.getVivarium(user.id);
       const files = [];
       try {
-        const vivBuf = await drawVivarium(vivarium);
+        const vivBuf = await canvasWorkerPool.execute("renderVivarium", vivarium);
         files.push(new AttachmentBuilder(vivBuf, { name: "vivarium.png" }));
       } catch (err) {
         logger.warn("[fish:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));

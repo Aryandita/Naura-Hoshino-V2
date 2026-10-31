@@ -205,11 +205,11 @@ module.exports = {
       }
     });
 
-    // 0.9 Stamina Full Check - Runs every 5 minutes
+    // 0.9 Stamina Full Check - Runs every 5 minutes (routed via Adventure Digest)
     runGuardedCronJob("Stamina Full Check", "*/5 * * * *", async () => {
       const UserSurvival = require("../models/UserSurvival");
       const UserProfile = require("../models/UserProfile");
-      const { sendNotification } = require("./notificationManager");
+      const notificationCenter = require("../services/notificationCenter");
 
       // Cari user yang staminanya >= 100
       const fullStaminaUsers = await UserSurvival.findAll({
@@ -228,39 +228,20 @@ module.exports = {
         if (!profile) continue;
 
         const prefs = profile.notification_prefs || {};
-
-        // Jika dia mensubscribe stamina_full dan belum ada notifikasi_stamina_sent hari ini
-        if (prefs.stamina_full && !prefs.sent_stamina) {
-          const payload = buildContainerV2({
-            accentColorHex: ui.getColor("success") || "#22C55E",
-            title: `${ui.getEmoji("stamina") || "⚡"} Stamina RPG Penuh!`,
-            description:
-              "Staminamu sudah 100/100! Jangan sampai terbuang sia-sia, yuk lanjut petualangannya di Naura RPG!",
-            expression: "impressed",
-            footerText: ui.getFooter("utility"),
+        if (prefs.stamina_full !== false) {
+          await notificationCenter.checkAndDispatchAdventureDigest(survival.userId, client, {
+            trigger: "stamina_full",
+          }).catch((err) => {
+            logger.debug(`[Cron:Stamina] Gagal dispatch digest: ${err.message}`);
           });
-
-          const sent = await sendNotification(
-            client,
-            survival.userId,
-            "stamina_full",
-            payload,
-          );
-          if (sent) {
-            await cacheManager.mutateUserProfileJson(
-              survival.userId,
-              "notification_prefs",
-              setNotifFlag("sent_stamina"),
-            );
-          }
         }
       }
     });
 
-    // 0.77 Survival Cafe Idle Revenue Notification - Runs every 2 hours
+    // 0.77 Survival Cafe Idle Revenue Notification - Runs every 2 hours (routed via Adventure Digest)
     runGuardedCronJob("Cafe Idle Revenue Notif", "0 */2 * * *", async () => {
       const UserCafe = require("../models/UserCafe");
-      const { sendNotification } = require("./notificationManager");
+      const notificationCenter = require("../services/notificationCenter");
 
       const readyCafes = await UserCafe.findAll({
         where: {
@@ -272,20 +253,12 @@ module.exports = {
         if (!cafe.userId || !SNOWFLAKE_REGEX.test(String(cafe.userId))) continue;
         const profile = await cacheManager.getUserProfile(cafe.userId);
         const prefs = profile?.notification_prefs || {};
-        if (prefs.idle_revenue && !prefs.sent_idle_revenue) {
-          const sent = await sendNotification(
-            client,
-            cafe.userId,
-            "idle_revenue",
-            { amount: cafe.uncollectedRevenue },
-          );
-          if (sent) {
-            await cacheManager.mutateUserProfileJson(
-              cafe.userId,
-              "notification_prefs",
-              setNotifFlag("sent_idle_revenue"),
-            );
-          }
+        if (prefs.idle_revenue !== false) {
+          await notificationCenter.checkAndDispatchAdventureDigest(cafe.userId, client, {
+            trigger: "cafe_revenue",
+          }).catch((err) => {
+            logger.debug(`[Cron:Cafe] Gagal dispatch digest: ${err.message}`);
+          });
         }
       }
     });
@@ -387,10 +360,10 @@ module.exports = {
       }
     });
 
-    // Reset notif status every day at 00:00 (also Quest reset notif)
+    // Reset notif status every day at 00:00 (also Quest & Daily reset via Adventure Digest)
     runGuardedCronJob("Daily Reset Notif Status & Quest Reset", "0 0 * * *", async () => {
       const UserProfile = require("../models/UserProfile");
-      const { sendNotification } = require("./notificationManager");
+      const notificationCenter = require("../services/notificationCenter");
 
       const profiles = await UserProfile.findAll({
         attributes: ["userId", "notification_prefs"],
@@ -401,24 +374,15 @@ module.exports = {
         if (!profile.userId || !SNOWFLAKE_REGEX.test(String(profile.userId))) continue;
         const prefs = profile.notification_prefs || {};
 
-        if (prefs.quest_reset) {
-          const payload = buildContainerV2({
-            accentColorHex: ui.getColor("primary") || "#FFB6C1",
-            title: `${ui.getEmoji("desc") || "📜"} Quest Harian Direset!`,
-            description:
-              "Misi Harian (Daily Quest) RPG kamu sudah diperbarui. Yuk cek `/survival rpg quest` dan kumpulkan hadiahnya hari ini!",
-            expression: "happy",
-            footerText: ui.getFooter("utility"),
-          });
-          await sendNotification(
-            client,
-            profile.userId,
-            "quest_reset",
-            payload,
-          ).catch((err) => {
-            logger.warn(`[Cron] Gagal kirim quest_reset notif ke ${profile.userId}: ${err.message}`);
-          });
-          await new Promise((r) => setTimeout(r, 200));
+        if (prefs.quest_reset !== false || prefs.daily_streak !== false) {
+          await notificationCenter
+            .checkAndDispatchAdventureDigest(profile.userId, client, {
+              trigger: "daily_reset",
+            })
+            .catch((err) => {
+              logger.warn(`[Cron] Gagal dispatch Adventure Digest reset ke ${profile.userId}: ${err.message}`);
+            });
+          await new Promise((r) => setTimeout(r, 100));
         }
 
         if (

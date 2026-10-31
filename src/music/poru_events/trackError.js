@@ -15,12 +15,23 @@ module.exports = {
       error?.error ||
       (typeof error === "string" ? error : "Lavalink gagal memutar stream");
 
-    logger.error(
-      `\x1b[41m\x1b[37m ⚠️ TRACK ERROR \x1b[0m Gagal memutar [${trackTitle}]: ${errorMessage}`,
-    );
+    const isBotDetection =
+      /sign in|confirm you.re not a bot|bot detection|unavailable|requires login|All clients failed to load the item/i.test(
+        errorMessage,
+      );
 
-    // Catat kegagalan ke circuit breaker node Lavalink aktif
-    if (player?.node?.name && lavalinkClusterManager?.recordFailure) {
+    if (isBotDetection) {
+      logger.warn(
+        `[trackError] YouTube bot detection terdeteksi pada [${trackTitle}]: ${errorMessage}. Mengupayakan pemulihan otomatis...`,
+      );
+    } else {
+      logger.error(
+        `\x1b[41m\x1b[37m ⚠️ TRACK ERROR \x1b[0m Gagal memutar [${trackTitle}]: ${errorMessage}`,
+      );
+    }
+
+    // Hanya catat kegagalan ke circuit breaker node Lavalink aktif jika bukan isu bot-detection pihak ketiga
+    if (!isBotDetection && player?.node?.name && lavalinkClusterManager?.recordFailure) {
       lavalinkClusterManager.recordFailure(player.node.name);
     }
 
@@ -106,7 +117,7 @@ module.exports = {
               });
 
               const msg = await channel.send(noticePayload).catch(() => null);
-              if (msg) {
+              if (msg && typeof msg.delete === "function") {
                 setTimeout(() => msg.delete().catch(() => {}), 12000);
               }
             }
@@ -129,9 +140,8 @@ module.exports = {
           authorName: "Naura Music Guard",
           title: `${ui.getEmoji("cross") || "⚠️"} Gagal Memutar Lagu`,
           description: (() => {
-            const isBotDetection = /sign in|confirm you.re not a bot|bot detection|unavailable|requires login/i.test(errorMessage);
             if (isBotDetection) {
-              return `Maaf ya, Naura tidak dapat memutar **${trackTitle}** karena YouTube mendeteksi akses otomatis.\n\n?? **Solusi:** Gunakan prefix \`sc:\` untuk mencari via SoundCloud, atau gunakan link Spotify langsung.`;
+              return `Maaf ya, Naura tidak dapat memutar **${trackTitle}** karena YouTube mendeteksi akses otomatis.\n\n💡 **Solusi:** Gunakan prefix \`sc:\` untuk mencari via SoundCloud, atau gunakan link Spotify langsung.`;
             }
             return `Maaf ya, Naura tidak dapat memutar **${trackTitle}** karena sumber audio tidak merespons atau dibatasi.\n\n> *Detail:* \`${errorMessage}\``;
           })(),
@@ -139,7 +149,7 @@ module.exports = {
         });
 
         const msg = await channel.send(payload).catch(() => null);
-        if (msg) {
+        if (msg && typeof msg.delete === "function") {
           setTimeout(() => msg.delete().catch(() => {}), 15000);
         }
       }

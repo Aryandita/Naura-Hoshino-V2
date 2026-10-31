@@ -64,6 +64,74 @@ const ensureYtDlp = async () => {
 };
 
 /**
+ * Cari dan verifikasi path berkas cookies YouTube yang valid.
+ * @returns {string|null}
+ */
+const resolveCookiePath = () => {
+  try {
+    const env = require("../config/env");
+    const candidates = [
+      env.YOUTUBE_COOKIE_PATH
+        ? path.resolve(process.cwd(), env.YOUTUBE_COOKIE_PATH)
+        : null,
+      path.resolve(process.cwd(), "cookies.txt"),
+      path.resolve(process.cwd(), "assets", "cookies", "youtube_cookies.txt"),
+      path.resolve(process.cwd(), "message.txt"),
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
+    }
+  } catch (err) {
+    logger.debug(
+      `[downloaderYtdlp:resolveCookiePath] Verifikasi path gagal: ${err?.message || err}`,
+    );
+  }
+  return null;
+};
+
+/**
+ * Bangun array argumen yt-dlp CLI dengan injeksi cookies opsional.
+ * @param {string} url
+ * @param {string} tempOutput
+ * @param {string|null} [cookiePath]
+ * @returns {Array<string>}
+ */
+const buildYtdlpArgs = (url, tempOutput, cookiePath = resolveCookiePath()) => {
+  const args = [
+    url,
+    "-f",
+    "b[ext=mp4]/best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
+    "--merge-output-format",
+    "mp4",
+    "-o",
+    tempOutput,
+    "--no-playlist",
+    "--no-warnings",
+    "--max-filesize",
+    "500M",
+    "--socket-timeout",
+    "15",
+  ];
+
+  if (cookiePath) {
+    args.push("--cookies", cookiePath);
+  }
+  return args;
+};
+
+/**
+ * Setter instance yt-dlp untuk keperluan automated unit testing.
+ * @param {object|null} instance
+ */
+const _setYtDlpInstanceForTesting = (instance) => {
+  ytDlpInstance = instance;
+  ytDlpReady = Boolean(instance);
+};
+
+/**
  * Unduh media memakai yt-dlp.
  * @param {string} url
  * @param {object} cleanup - CleanupManager
@@ -82,21 +150,15 @@ const tryYtdlp = async (url, cleanup) => {
     const timestamp = Date.now();
     const tempOutput = path.join(tempDir, `naura_ytdlp_${timestamp}.%(ext)s`);
 
-    const execPromise = ytdlp.execPromise([
-      url,
-      "-f",
-      "b[ext=mp4]/best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
-      "--merge-output-format",
-      "mp4",
-      "-o",
-      tempOutput,
-      "--no-playlist",
-      "--no-warnings",
-      "--max-filesize",
-      "500M",
-      "--socket-timeout",
-      "15",
-    ]);
+    const cookiePath = resolveCookiePath();
+    const args = buildYtdlpArgs(url, tempOutput, cookiePath);
+    if (cookiePath) {
+      logger.info(
+        `[Downloader] yt-dlp menggunakan cookies dari: ${path.basename(cookiePath)}`,
+      );
+    }
+
+    const execPromise = ytdlp.execPromise(args);
 
     const timeoutPromise = new Promise((_, reject) => {
       timeoutHandle = setTimeout(
@@ -128,4 +190,11 @@ const tryYtdlp = async (url, cleanup) => {
   return null;
 };
 
-module.exports = { ensureYtDlp, tryYtdlp, EXEC_TIMEOUT_MS };
+module.exports = {
+  ensureYtDlp,
+  tryYtdlp,
+  resolveCookiePath,
+  buildYtdlpArgs,
+  _setYtDlpInstanceForTesting,
+  EXEC_TIMEOUT_MS,
+};

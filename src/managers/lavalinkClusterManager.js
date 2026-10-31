@@ -20,6 +20,8 @@
  * @module src/managers/lavalinkClusterManager
  */
 
+const fs = require("fs");
+const path = require("path");
 const http = require("http");
 const https = require("https");
 const { logger } = require("./logger");
@@ -102,6 +104,30 @@ class LavalinkClusterManager {
 
   set quarantinedNodes(val) {
     this.circuitBreaker.quarantinedNodes = val;
+  }
+
+  /**
+   * Ambil konfigurasi YouTube cookies aktif untuk pipeline audio/telemetri.
+   * @returns {{ path: string|null, exists: boolean, filename: string|null }}
+   */
+  getYoutubeCookieConfig() {
+    try {
+      const env = require("../config/env");
+      const cookieFile = env.YOUTUBE_COOKIE_PATH || "cookies.txt";
+      const resolved = path.resolve(process.cwd(), cookieFile);
+      const exists = fs.existsSync(resolved) && fs.statSync(resolved).isFile();
+      return {
+        path: exists ? resolved : null,
+        exists,
+        filename: exists ? path.basename(resolved) : null,
+      };
+    } catch {
+      return {
+        path: null,
+        exists: false,
+        filename: null,
+      };
+    }
   }
 
   // ============================================================================

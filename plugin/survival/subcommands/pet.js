@@ -209,14 +209,12 @@ module.exports = {
     // 1. KUNJUNGI PET HABITAT (SANCTUARY)
     if (action === "habitat") {
       const petHabitatEngine = require("../../../src/survival/engines/petHabitatEngine");
-      const {
-        drawPetHabitatCard,
-      } = require("../../../src/canvas/petHabitatCanvas");
+      const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
       const habitatData = await petHabitatEngine.getHabitat(user.id);
       const files = [];
 
       try {
-        const habitatBuffer = await drawPetHabitatCard(habitatData);
+        const habitatBuffer = await canvasWorkerPool.execute("renderPetHabitat", habitatData);
         files.push(
           new AttachmentBuilder(habitatBuffer, { name: "pet_habitat.png" }),
         );

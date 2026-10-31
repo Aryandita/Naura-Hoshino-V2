@@ -1,4 +1,5 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, AttachmentBuilder } = require("discord.js");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
 const {
@@ -66,7 +67,28 @@ module.exports = {
         footerText: ui.getFooter("utility"),
       });
 
-      await interaction.editReply(payload);
+      const files = [];
+      try {
+        const cardBuf = await canvasWorkerPool.execute("renderGithubCard", {
+          login: data.login,
+          name: data.name,
+          bio: data.bio,
+          avatar_url: data.avatar_url,
+          public_repos: data.public_repos,
+          followers: data.followers,
+          following: data.following,
+          location: data.location,
+          company: data.company,
+        });
+        if (cardBuf) {
+          files.push(new AttachmentBuilder(cardBuf, { name: "github_profile.png" }));
+          payload.image = { url: "attachment://github_profile.png" };
+        }
+      } catch (err) {
+        logger.warn("[github:execute] Render visual canvas gagal: " + (err?.message || err));
+      }
+
+      await interaction.editReply({ ...payload, files });
     } catch (error) {
       logger.error("[GitHub Error]", error);
       const errPayload = buildErrorContainerV2({

@@ -673,6 +673,180 @@ if (parentPort) {
           result = rendered.value;
           break;
         }
+        case "renderDailyCard": {
+          const dailyCanvas = require("./dailyCanvas");
+          const rendered = await safeRender(
+            "renderDailyCard",
+            function () {
+              return dailyCanvas.renderDailyCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderLeaderboard": {
+          const leaderboardCanvas = require("./leaderboardCanvas");
+          const rendered = await safeRender(
+            "renderLeaderboard",
+            function () {
+              return leaderboardCanvas.renderLeaderboard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderGithubCard": {
+          const githubCanvas = require("./githubCanvas");
+          const rendered = await safeRender(
+            "renderGithubCard",
+            function () {
+              return githubCanvas.renderGithubCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderServerInfo": {
+          const serverinfoCanvas = require("./serverinfoCanvas");
+          const rendered = await safeRender(
+            "renderServerInfo",
+            function () {
+              return serverinfoCanvas.renderServerInfo(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderShipCard": {
+          const shipCanvas = require("./shipCanvas");
+          const rendered = await safeRender(
+            "renderShipCard",
+            function () {
+              return shipCanvas.renderShipCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderTarotCard": {
+          const tarotCanvas = require("./tarotCanvas");
+          const rendered = await safeRender(
+            "renderTarotCard",
+            function () {
+              return tarotCanvas.renderTarotCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderFortuneCard": {
+          const fortuneCanvas = require("./fortuneCanvas");
+          const rendered = await safeRender(
+            "renderFortuneCard",
+            function () {
+              return fortuneCanvas.renderFortuneCard(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderRankCard": {
+          const { CanvasUtils } = require("./CanvasUtils");
+          const rendered = await safeRender(
+            "renderRankCard",
+            function () {
+              return CanvasUtils.generateRankCard(
+                payload.targetUser || payload.user,
+                payload.level,
+                payload.xp,
+                payload.targetXp,
+                payload.localRank || payload.rankNumber || 1,
+                payload.roleBadge || payload.manners || 100,
+                payload.isPremium || payload.isVip || false,
+                payload.customBg,
+                payload.customBorder,
+              );
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderMusicProfile": {
+          const { generateMusicProfileImage } = require("./canvasHelper");
+          const rendered = await safeRender(
+            "renderMusicProfile",
+            function () {
+              return generateMusicProfileImage(
+                payload.user,
+                payload.stats,
+                payload.clientAvatar,
+              );
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
+        case "renderGiveawayBanner": {
+          const { generateGiveawayBanner } = require("./dynamicBannerEngine");
+          const rendered = await safeRender(
+            "renderGiveawayBanner",
+            function () {
+              return generateGiveawayBanner(payload);
+            },
+          );
+          if (!rendered.ok) {
+            failed = true;
+            errorMessage = rendered.error;
+            break;
+          }
+          result = rendered.value;
+          break;
+        }
         default:
           throw new SystemError("Unknown canvas worker task: " + task);
       }

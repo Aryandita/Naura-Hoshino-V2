@@ -129,6 +129,7 @@ async function fetchFromTVMaze(query) {
         director: show.network?.name || show.webChannel?.name || "TV Network",
         actors: show.type || "Television Show",
         rating: ratingScore,
+        rawRating: show.rating?.average ? String(show.rating.average) : null,
         runtime: show.runtime
           ? `${show.runtime} Menit`
           : show.averageRuntime

@@ -473,6 +473,91 @@ describe("Smart Utilities - Canvas Worker Pool Integration", () => {
     assert.ok(buffer.length > 8000);
     assert.equal(buffer[0], 0x89);
   });
+
+  it("canvasWorkerPool processes 'renderDailyCard' task asynchronously", async () => {
+    const buffer = await canvasWorkerPool.runTask("renderDailyCard", {
+      username: "NauraExplorer",
+      streak: 7,
+      rewardCoins: 500,
+    });
+
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 5000);
+    assert.equal(buffer[0], 0x89);
+  });
+
+  it("canvasWorkerPool processes 'renderLeaderboard' task asynchronously", async () => {
+    const buffer = await canvasWorkerPool.runTask("renderLeaderboard", {
+      title: "Top 10 Global",
+      category: "Ekonomi",
+      entries: [{ username: "Player1", score: 1000 }],
+    });
+
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 5000);
+    assert.equal(buffer[0], 0x89);
+  });
+
+  it("canvasWorkerPool processes 'renderGithubCard' task asynchronously", async () => {
+    const buffer = await canvasWorkerPool.runTask("renderGithubCard", {
+      login: "antigravity",
+      public_repos: 12,
+      followers: 100,
+    });
+
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 5000);
+    assert.equal(buffer[0], 0x89);
+  });
+
+  it("canvasWorkerPool processes 'renderServerInfo' task asynchronously", async () => {
+    const buffer = await canvasWorkerPool.runTask("renderServerInfo", {
+      guildName: "Naura Sanctuary",
+      memberCount: 250,
+      channelCount: 20,
+    });
+
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 5000);
+    assert.equal(buffer[0], 0x89);
+  });
+
+  it("canvasWorkerPool processes 'renderShipCard' task asynchronously", async () => {
+    const buffer = await canvasWorkerPool.runTask("renderShipCard", {
+      user1Name: "PlayerA",
+      user2Name: "PlayerB",
+      percentage: 88,
+      comment: "Serasi sekali!",
+    });
+
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 5000);
+    assert.equal(buffer[0], 0x89);
+  });
+
+  it("canvasWorkerPool processes 'renderTarotCard' task asynchronously", async () => {
+    const buffer = await canvasWorkerPool.runTask("renderTarotCard", {
+      cardName: "The Magician",
+      cardNumeral: "I",
+      arcana: "Major Arcana",
+    });
+
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 5000);
+    assert.equal(buffer[0], 0x89);
+  });
+
+  it("canvasWorkerPool processes 'renderFortuneCard' task asynchronously", async () => {
+    const buffer = await canvasWorkerPool.runTask("renderFortuneCard", {
+      username: "Adventurer",
+      fortuneLevel: "Daikichi",
+      luckyNumber: 7,
+    });
+
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 5000);
+    assert.equal(buffer[0], 0x89);
+  });
 });
 
 

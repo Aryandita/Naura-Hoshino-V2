@@ -1,146 +1,89 @@
-# 🧪 TEST INFRASTRUCTURE SPECIFICATION: NAURA HOSHINO V2 (v2.4.0)
+# Test Infrastructure Architecture: Lavalink Multi-Node Stability & YouTube Cookies Pipeline
 
-> **Document Version:** 2.4.0 | **Date:** 2026-10-30  
-> **Target Deliverable:** Naura Hoshino V2 Full System Audit (Milestones M1–M4)  
-> **Architecture:** Opaque-Box E2E Dual-Track Verification Engine  
-> **Runtime:** Node.js >= 24 | **Framework:** `node:test` + `node:assert/strict`  
-> **Test Suite:** `tests/e2e/project_audit.test.js`
+## 1. Test Philosophy & Core Principles
 
----
-
-## 1. Executive Summary & Design Philosophy
-
-The Naura Hoshino V2 verification test infrastructure provides an independent, opaque-box, deterministic end-to-end verification suite covering the core deliverables of the v2.4.0 ecosystem overhaul:
-1. **Polyglot Database & Environment Sync (M1)**: Supabase connection pooler validation, `.env` contract enforcement, 1-to-1 synchronized `.env.example`, and zero credential leaks.
-2. **SSOT Version Governance (M2)**: Centralized `2.4.0` version in `package.json` enforced across lockfiles, dashboard templates, Android wrappers, documentation, scripts, and runtime tokens.
-3. **Slash Commands Architecture & Prefix Routing (M3)**: Discord API quota management keeping slash commands strictly below the ceiling (98 CHAT_INPUT / 105 total), promotion of `/downloader` and `/calculator`, consolidation of redundant command trees, and multi-option prefix `n!` execution support.
-4. **Booting Engine & QA Gate Certification (M4)**: Clean startup without environment warnings, zero ESLint warnings across the codebase, 0 architectural drift, and 100% green certification across all automated testing stages.
-
-In accordance with the project's Dual-Track architecture, the test suite operates independently from the application code under test:
-- **Zero Mocking of Core Governance Contracts**: Evaluates real environment configurations, parses real package manifests, checks live exports, and executes real math/command routing pipelines.
-- **Fail-Fast Defect Isolation**: Provides detailed diagnostic output with precise error contexts, expected vs. actual values, and pinpointed failure locations.
-- **Strict Compliance Verification**: Asserts zero regressions against the standards documented in `AGENTS.md`, `RULES.md`, `PRD.md`, and `PROJECT.md`.
+- **Opaque-Box & Requirement-Driven**: Verification evaluates external observable behaviors, real network endpoints, environment contracts, and audio/downloader cluster states without relying on brittle internal private hooks.
+- **Genuine Behavioral Integrity (Anti-Facade)**: Zero dummy results, zero fabricated verification logs, and zero hardcoded return strings. Probes to Lavalink endpoints execute live HTTP/HTTPS REST requests to `/v4/info`, yt-dlp arguments are validated for discrete argument isolation, and node selector failover logic evaluates authentic priority tiers.
+- **Zero Em-Dash Strictness**: In accordance with project quality standards (`RULES.md` and `AGENTS.md`), no em-dash characters (`\u2014`) are permitted across documentation, test code, or comments.
+- **Pure Node.js Native Test Runner**: Test execution relies entirely on `node:test` and `node:assert/strict`, guaranteeing zero external test-framework bloat and deterministic execution in Node.js 24 environments.
 
 ---
 
-## 2. Directory Layout & Write Ownership
+## 2. Feature Inventory & 4-Tier Test Architecture
 
-```text
-d:\Naura Hoshino V2\
-├── tests/
-│   └── e2e/
-│       └── project_audit.test.js       # Comprehensive Opaque-Box E2E Verification Suite (Tiers 1–4)
-├── scripts/
-│   ├── qa-gate.js                      # Master QA Gate runner orchestrating all 9 quality checks
-│   ├── check-version-parity.js         # Automated 22-target SSOT version parity validator
-│   ├── check-em-dash.js                # Zero em-dash (\u2014) compliance scanner
-│   ├── validate-locales.js             # Strict i18n locale dictionary parity validator
-│   ├── check-requires.js               # Static require graph & method resolution checker (4656+ calls)
-│   ├── check-inline-scripts.js         # Dashboard HTML inline script syntax validator (38 scripts)
-│   ├── check-secrets.js                # Live credential & private token leak scanner
-│   └── verify-drift.js                 # Architectural convention & phantom code scanner
-├── TEST_INFRA.md                       # This infrastructure specification
-└── TEST_READY.md                       # Project test readiness publication
-```
+The test suite in `tests/e2e/lavalink_cookies.e2e.test.js` is structured into 4 comprehensive tiers covering 19 distinct test cases:
+
+| Tier | Focus Area | Test Count | Scope & Verification Highlights |
+|:---|:---|:---:|:---|
+| **Tier 1** | **Feature Coverage** | 5 | Live REST `/v4/info` probes on all 4 configured `.env` nodes, sequential node numbering in `env.js`, `YOUTUBE_COOKIE_PATH` exposure, `cookies.txt` Netscape format and YouTube domain verification, and downloader `--cookies` injection. |
+| **Tier 2** | **Boundary & Corner Cases** | 5 | Graceful fallback when cookie file is missing, empty or whitespace `YOUTUBE_COOKIE_PATH` sanitization, paths with spaces preservation as discrete CLI arguments without quote corruption, numbering gaps termination in `getLavalinkNumberedNodes`, and REST probe timeout deadline handling. |
+| **Tier 3** | **Cross-Feature Combinations** | 5 | Downloader chain provider ordering (`yt-dlp` primary at index 0, `Cobalt` secondary), tiered node failover (Tier 1 Primary -> Tier 2 Secondary -> Tier 3 Public Fallback), temporary download file cleanup registration in `CleanupManager`, audio pipeline cookie metadata exposure on nodes, and lossless Hi-Fi geo-balancing. |
+| **Tier 4** | **Real-World & QA Certification** | 4 | Verification that `lavalink-fallbacks.json` contains zero dead/unreachable hosts (eliminating reconnect console spam), gitignore protection verification (`cookies.txt` and `message.txt` ignored), secret scanner pass (`check-secrets.js`), and repository-wide em-dash absence certification. |
 
 ---
 
-## 3. Four-Tier Testing Methodology
+## 3. Detailed Test Case Inventory
 
-The E2E verification suite is structured into 4 progressive tiers in `tests/e2e/project_audit.test.js`:
+### Tier 1: Feature Coverage (Core Functional Paths)
+- **TC-LAVA-1.1: Live REST /v4/info Node Probes**: Executes live HTTP/HTTPS requests to all nodes returned by `env.getLavalinkNumberedNodes()` with `Authorization` headers; verifies `res.statusCode === 200` and validates version payload.
+- **TC-LAVA-1.2: Sequential Numbered Node Parsing**: Verifies that `env.getLavalinkNumberedNodes()` discovers exactly 4 contiguous nodes (`GlaceYT`, `GlaceYT-2`, `Millohost Public Node`, `Hyperion`) without missing sequence index gaps.
+- **TC-LAVA-1.3: YOUTUBE_COOKIE_PATH Exposure**: Asserts that `env.YOUTUBE_COOKIE_PATH` is exposed as a non-empty string defaulting to `"cookies.txt"`.
+- **TC-LAVA-1.4: Cookie Source File Presence and Format**: Validates that `cookies.txt` exists at project root, starts with `# Netscape HTTP Cookie File`, targets `.youtube.com`, and includes authentic authentication tokens (`LOGIN_INFO`, `SID`, `HSID`).
+- **TC-LAVA-1.5: Downloader CLI Argument Injection**: Verifies that `buildYtdlpArgs()` correctly appends `["--cookies", resolvedPath]` when cookie file is available.
 
-### Tier 1: Feature Coverage (Core Functional Contracts)
-Exhaustively tests the mandatory deliverables across the 4 major architectural areas:
+### Tier 2: Boundary & Corner Cases (Resilience & Edge Conditions)
+- **TC-LAVA-2.1: Missing Cookie File Fallback**: Asserts that when `cookiePath` is null, `buildYtdlpArgs()` cleanly omits the `--cookies` flag without throwing uncaught errors.
+- **TC-LAVA-2.2: Whitespace Environment Sanitization**: Tests whitespace-padded `YOUTUBE_COOKIE_PATH` values, confirming path resolver handles inputs gracefully.
+- **TC-LAVA-2.3: Path with Spaces Preservation**: Tests cookie paths containing spaces (e.g., `C:\My Documents\custom cookies.txt`), asserting that discrete argument array elements prevent shell quote corruption.
+- **TC-LAVA-2.4: Sequential Numbering Gaps**: Tests `getLavalinkNumberedNodes()` when index 2 is removed while index 3 exists, asserting clean loop termination at index 1 without infinite execution.
+- **TC-LAVA-2.5: Probe Timeout Deadline**: Tests unresponding HTTP servers with short timeout deadlines, confirming clean timeout aborts without hanging the event loop.
 
-#### 1. Environment & Secrets
-- **TC-T1.ENV.1**: Asserts `src/config/env.js` declares all mandatory keys (`TOKEN`, `CLIENT_ID`, `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_PROJECT_ID`) in `REQUIRED_KEYS`.
-- **TC-T1.ENV.2**: Asserts `env.validateEnv({ fatal: false })` returns `true` with zero missing keys in the active environment.
-- **TC-T1.ENV.3**: Asserts `.env.example` defines Supabase transaction pooler port `6543`, `pooler.supabase.com`, and `DB_SSL`.
-- **TC-T1.ENV.4**: Asserts `env.getLavalinkNumberedNodes` parses numbered Lavalink cluster environment variables (`LAVALINK_NODE_1_*`, etc.).
-- **TC-T1.ENV.5**: Asserts `cleanEnv` handles quotes, spaces, and Pterodactyl-style placeholders.
+### Tier 3: Cross-Feature Combinations (Integration & Failover)
+- **TC-LAVA-3.1: YouTube Provider Routing Chain**: Verifies `getProviderChain()` for YouTube URLs returns `yt-dlp` at index 0 and `Cobalt` at index 1.
+- **TC-LAVA-3.2: Tiered Node Selection & Failover**: Verifies `LavalinkClusterManager.getPreferredNode()` priority order: selects Tier 1 when connected, falls back to Tier 2 when Tier 1 is down, and falls back to Tier 3 Public Fallback Pool when all private nodes are offline.
+- **TC-LAVA-3.3: Downloader Cleanup Tracking**: Verifies that files produced during `tryYtdlp` execution are registered with `cleanup.trackAll()`.
+- **TC-LAVA-3.4: Audio Pipeline Cookie Metadata Exposure**: Verifies that `lavalinkClusterManager.getYoutubeCookieConfig()` returns active status and that `musicManager.buildNodes()` attaches `.cookieConfig` to all instantiated nodes.
+- **TC-LAVA-3.5: Lossless Hi-Fi Federation & Region Affinity**: Verifies that `getOptimalHiFiNode()` selects optimal lossless nodes based on geographical affinity (`singapore`, `europe`).
 
-#### 2. SSOT Version Governance
-- **TC-T1.VER.1**: Asserts `package.json` specifies version `2.4.0` as the canonical Single Source of Truth.
-- **TC-T1.VER.2**: Asserts `src/config/version.js` dynamically exports `BOT_VERSION` and `ENGINE_VERSION` matching `package.json`.
-- **TC-T1.VER.3**: Asserts `getFormattedFooter` generates official footers containing `v2.4.0` across all official module categories (`core`, `music`, `economy`, `survival`, `moderation`).
-- **TC-T1.VER.4**: Asserts the version string strictly adheres to the semver schema `X.Y.Z` where `X = 2`.
-- **TC-T1.VER.5**: Asserts version consistency across tracked repository targets (README, PRD, DESIGN, RULES, AGENTS).
-
-#### 3. Slash Command Quotas & Deployment Payload
-- **TC-T1.CMD.1**: Asserts `SLASH_DEPLOY_EXCLUDE` maps excluded commands to valid hub or subcommand routing targets.
-- **TC-T1.CMD.2**: Asserts `/downloader` and `/calculator` are promoted to top-level slash commands and not in `SLASH_DEPLOY_EXCLUDE`.
-- **TC-T1.CMD.3**: Asserts redundant top-level commands (`/user`, `/worldclock`, `/minigame`) are consolidated into subcommand targets.
-- **TC-T1.CMD.4**: Asserts the deployed slash command payload adheres to Discord's CHAT_INPUT ceiling (`<= 100`, currently 98).
-- **TC-T1.CMD.5**: Asserts the total deployed payload (slash commands + context menus) adheres to Discord's bulk overwrite limit (`<= 130`, currently 105).
-
-#### 4. Prefix Routing & `n!` Mock Interaction
-- **TC-T1.PFX.1**: Asserts `plugin/utility/downloader.js` exports `executePrefix` with `dl` and `download` aliases.
-- **TC-T1.PFX.2**: Asserts `plugin/utility/calculator.js` exports `executePrefix` with `calc` alias.
-- **TC-T1.PFX.3**: Asserts calculator evaluates arithmetic expressions accurately via prefix message execution.
-- **TC-T1.PFX.4**: Asserts calculator safely rejects malicious or code injection payloads (`process.exit`, `eval`, `require`).
-- **TC-T1.PFX.5**: Asserts mock interaction contract satisfies Discord `ChatInputCommandInteraction` requirements.
+### Tier 4: Real-World Scenarios & QA Certification (E2E & Security)
+- **TC-LAVA-4.1: Clean Fallbacks Configuration**: Verifies that dead/unreachable hosts (`v4.lavalink.rocks`, `lavalink.jompo.cloud`, `37.27.114.136`) are eliminated from `src/config/lavalink-fallbacks.json`, preventing Poru reconnection log spam.
+- **TC-LAVA-4.2: Cookie Storage Gitignore Protection**: Runs `git status --ignored --short` to verify `cookies.txt` and `message.txt` are marked `!!` (ignored by git).
+- **TC-LAVA-4.3: Secret Scanner Certification**: Runs `node scripts/check-secrets.js` to ensure zero credentials or private tokens are leaked in git-tracked files.
+- **TC-LAVA-4.4: Codebase Zero Em-Dash Certification**: Runs `node scripts/check-em-dash.js` to ensure 100% compliance with repository typography standards.
 
 ---
 
-### Tier 2: Boundary & Corner Cases
+## 4. Test Execution & Automation Commands
 
-- **TC-T2.1 (Environment Boundaries)**: Verifies `cleanEnv` handles boundary cases: whitespace, quotes, empty strings, null, and non-string inputs.
-- **TC-T2.2 (Validation Isolation)**: Verifies `validateEnv` accurately flags missing keys when mandatory configuration is cleared in simulation.
-- **TC-T2.3 (Discord API Constraints)**: Asserts every command in `plugin/` complies with Discord naming and option limits (name `<= 32` characters, description `<= 100` characters, options `<= 25`).
-- **TC-T2.4 (Math Evaluation Boundaries)**: Verifies math evaluation safely handles division by zero, float arithmetic, and deeply nested parentheses.
-- **TC-T2.5 (URL Parsing Boundaries)**: Verifies downloader URL parsing strips Discord angle brackets (`<URL>`), trims whitespace, and rejects non-HTTP URLs.
-- **TC-T2.6 (Mock Option Getters)**: Verifies mock interaction getters (`getString`, `getInteger`, `getBoolean`) properly handle edge types and case-insensitive boolean tokens.
-
----
-
-### Tier 3: Cross-Feature Combinations
-
-- **TC-T3.1 (Deployment Sync Contract)**: Asserts `plugin/owner/deploy.js` respects `SLASH_DEPLOY_EXCLUDE` and includes context menus to prevent `BASE_TYPE_MAX_LENGTH` errors.
-- **TC-T3.2 (Downloader Prefix Quality)**: Verifies prefix downloader correctly extracts explicit quality parameters vs. default automatic resolution.
-- **TC-T3.3 (UI Version Propagation)**: Verifies `NauraContainerBuilder` propagates dynamic `v2.4.0` footers into Components V2 containers.
-- **TC-T3.4 (Apps Anywhere Integration)**: Asserts personal utility commands configure `integration_types` and `contexts` for Discord user-installable apps.
-- **TC-T3.5 (Alias Collision Protection)**: Asserts custom user alias registration prevents alias collisions from shadowing canonical command names.
-
----
-
-### Tier 4: Real-World Workloads & QA Gate Certification
-
-- **TC-T4.1 (Static Require Graph)**: Asserts all core modules, managers, services, and plugins resolve cleanly without missing dependencies.
-- **TC-T4.2 (Zero Em-Dash Policy)**: Asserts zero forbidden em-dash (`\u2014`) characters exist in key documentation, source files, and JSON dictionaries.
-- **TC-T4.3 (Locale Parity)**: Asserts 100% parity between Indonesian (`id.json`) and English (`en.json`) translation dictionaries.
-- **TC-T4.4 (Zero Secret Leaks)**: Asserts zero active bot tokens, database passwords, or private API keys exist in tracked files.
-- **TC-T4.5 (Master QA Gate Definition)**: Asserts `scripts/qa-gate.js` exists and defines the comprehensive 9-stage quality certification pipeline.
-
----
-
-## 4. Test Execution & Verification
-
-### Running the E2E Verification Suite
 ```powershell
-node --test tests/e2e/project_audit.test.js
+# 1. Run the Dual Track Opaque-Box E2E Test Suite
+node --test tests/e2e/lavalink_cookies.e2e.test.js
+
+# 2. Run Downloader Unit Tests
+node --test src/downloader/downloaderYtdlp.test.js
+
+# 3. Run Audio Cluster Manager Unit Tests
+node --test src/music/lavalinkClusterManager.test.js
+
+# 4. Run Music Manager Unit Tests
+node --test src/managers/musicManager.test.js
+
+# 5. Run Repo Verification Gates
+node scripts/check-requires.js
+node scripts/validate-locales.js --strict
+node scripts/check-em-dash.js
+node scripts/check-secrets.js
 ```
 
-### Running the Master QA Gate Pipeline
-```powershell
-node scripts/qa-gate.js
-# or
-npm run qa
-```
+---
 
-### Running Unit Test Suites
-```powershell
-npm test
-```
+## 5. Artifact Directory & File Ownership
 
-### Quality Assurance Gate Checklist
-| Stage | Description | Tool / Script | Status |
-|:-----:|:------------|:--------------|:------:|
-| 1/9 | ESLint Code Standards | `eslint .` | PASS (0 errors, 0 warnings) |
-| 2/9 | Zero Em-Dash Enforcement | `node scripts/check-em-dash.js` | PASS (0 violations) |
-| 3/9 | i18n Locales Parity | `node scripts/validate-locales.js --strict` | PASS (508 keys synced) |
-| 4/9 | SSOT Version Parity | `node scripts/check-version-parity.js` | PASS (22/22 targets) |
-| 5/9 | Static Require Graph | `node scripts/check-requires.js` | PASS (4656+ calls verified) |
-| 6/9 | Dashboard Inline Scripts | `node scripts/check-inline-scripts.js` | PASS (38 scripts valid) |
-| 7/9 | Secret Leak Scanner | `node scripts/check-secrets.js` | PASS (0 leaks) |
-| 8/9 | Architectural Drift Check | `node scripts/verify-drift.js` | PASS (0 drift) |
-| 9/9 | Automated Unit Tests | `node --test` | PASS (782/782 tests pass) |
+| Artifact Path | Ownership | Purpose |
+|:---|:---|:---|
+| `tests/e2e/lavalink_cookies.e2e.test.js` | Worker M3 | Comprehensive 4-Tier Opaque-Box E2E Test Suite |
+| `TEST_INFRA.md` | Worker M3 | Test Infrastructure Architecture Documentation |
+| `TEST_READY.md` | Worker M3 | Test Readiness & QA Certification Matrix |
+| `src/downloader/downloaderYtdlp.test.js` | Worker M2 | Downloader & Cookie Argument Unit Tests |
+| `src/music/lavalinkClusterManager.test.js` | Worker M1 | Cluster Manager & Tier Selection Unit Tests |
+| `src/managers/musicManager.test.js` | Worker M1 | Music Manager Playback & Node Building Unit Tests |

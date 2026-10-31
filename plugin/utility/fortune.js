@@ -8,7 +8,8 @@ const { logger } = require("../../src/managers/logger");
  * @description Daily AI Fortune / Omikuji & RPG Daily Buff
  */
 
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, AttachmentBuilder } = require("discord.js");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const cacheManager = require("../../src/managers/cacheManager");
 const geminiClient = require("../../src/ai/geminiClient");
 const ui = require("../../src/config/ui");
@@ -155,7 +156,27 @@ module.exports = {
         ].join("\n"),
         footerText: ui.getFooter("utility"),
       });
-      return interaction.editReply(payload);
+      const files = [];
+    try {
+      const cardBuf = await canvasWorkerPool.execute("renderFortuneCard", {
+        username: interaction.user.displayName || interaction.user.username,
+        avatarURL: interaction.user.displayAvatarURL({ extension: "png" }),
+        fortuneLevel: `${picked.kanji} ${picked.title}`,
+        stars: picked.fragments >= 10 ? 5 : picked.fragments >= 5 ? 4 : 3,
+        luckyNumber,
+        luckyColor,
+        luckyItem,
+        prediction: aiWisdom,
+      });
+      if (cardBuf) {
+        files.push(new AttachmentBuilder(cardBuf, { name: "fortune_card.png" }));
+        payload.image = { url: "attachment://fortune_card.png" };
+      }
+    } catch (err) {
+      logger.warn("[fortune:execute] Render visual canvas gagal: " + (err?.message || err));
+    }
+
+    return interaction.editReply({ ...payload, files });
     }
 
     // Roll Fortune

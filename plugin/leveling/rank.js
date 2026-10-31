@@ -10,7 +10,7 @@
 const { SlashCommandBuilder, AttachmentBuilder } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 const { Op } = require("sequelize");
-const { CanvasUtils } = require("../../src/canvas/CanvasUtils");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const UserLeveling = require("../../src/models/UserLeveling");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
@@ -147,7 +147,7 @@ module.exports = {
         xp,
         targetXp,
         render: (cosmetics) =>
-          CanvasUtils.generateRankCard(
+          canvasWorkerPool.execute("renderRankCard", {
             targetUser,
             level,
             xp,
@@ -155,9 +155,9 @@ module.exports = {
             localRank,
             roleBadge,
             isPremium,
-            cosmetics.bg,
-            cosmetics.border,
-          ),
+            customBg: cosmetics.bg,
+            customBorder: cosmetics.border,
+          }),
       });
     } catch (error) {
       logger.error("[RANK] Gagal merender kartu:", error);
