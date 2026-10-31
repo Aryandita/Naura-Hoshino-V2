@@ -36,10 +36,14 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
   }
 
   try {
-    const voiceChannel = memberVoice || musicManager.poru?.players?.get(guildId)?.voiceChannel;
-    if (!voiceChannel) return null;
+    // Normalisasi: memberVoice bisa berupa objek channel atau string id.
+    const voiceChannelId =
+      typeof memberVoice === "string"
+        ? memberVoice
+        : memberVoice?.id || musicManager.poru?.players?.get(guildId)?.voiceChannel;
+    if (!voiceChannelId) return null;
 
-    const lang = await aiDjManager.detectVoiceLanguage(musicManager, guildId, voiceChannel);
+    const lang = await aiDjManager.detectVoiceLanguage(musicManager, guildId, voiceChannelId);
 
     let isOwner = false;
     let isPremium = false;

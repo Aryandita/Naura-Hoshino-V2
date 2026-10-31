@@ -134,7 +134,14 @@ module.exports = {
       return player;
     };
 
-    const defaultSearch = env.MUSIC_DEFAULT_SEARCH || "scsearch";
+    // YouTube sedang menolak request node Lavalink publik dengan bot detection.
+    // Jangan biarkan env lama (mis. MUSIC_DEFAULT_SEARCH=ytsearch) membuat
+    // pencarian biasa selalu gagal. Prefix eksplisit yt:/ytsearch: tetap
+    // tersedia untuk pengguna yang memang ingin mencoba YouTube.
+    const configuredSearch = String(env.MUSIC_DEFAULT_SEARCH || "").toLowerCase();
+    const defaultSearch = ["scsearch", "spsearch", "amsearch"].includes(configuredSearch)
+      ? configuredSearch
+      : "scsearch";
     let searchSource = defaultSearch;
     let finalQuery = query;
     const isDirectLink = !!query.match(/^(https?:\/\/)/);
@@ -193,10 +200,8 @@ module.exports = {
     }
 
     // FALLBACK CHAIN YouTube bypass (Fix 2026-10-28):
-    // Prioritas: ytmsearch (YouTube Music) -> ytsearch (YouTube) -> scsearch (SoundCloud).
-    // ytmsearch: metadata musik terbaik & hasil paling relevan untuk lagu.
-    // ytsearch: hasil lebih luas untuk konten non-musik.
-    // scsearch: upaya terakhir karena kualitas audio inferior.
+    // Prioritas fallback: scsearch (SoundCloud) lebih dulu karena tidak terkena
+    // bot detection, lalu ytmsearch, lalu ytsearch sebagai upaya terakhir.
     let finalRes = res;
 
     const isResEmpty = (r) =>
@@ -227,21 +232,24 @@ module.exports = {
           }
         } catch (_) {}
       }
-    } else if (
-      isDirectLink &&
-      isResEmpty(finalRes) &&
-      (finalQuery.includes("youtube.com") || finalQuery.includes("youtu.be"))
-    ) {
+    } else if (isDirectLink && isResEmpty(finalRes)) {
+      // Link langsung bisa gagal karena bot detection YouTube. Cari padanan
+      // judulnya di SoundCloud sebelum menyerah.
       try {
+        const { logger } = require("../../../src/managers/logger");
         const ytIdMatch = finalQuery.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-        if (ytIdMatch) {
-          const fallbackRes = await poru.resolve({
-            query: `scsearch:${ytIdMatch[1]}`,
-            requester: user,
-          });
-          if (!isResEmpty(fallbackRes)) {
-            finalRes = fallbackRes;
-          }
+        const fallbackQuery = ytIdMatch ? ytIdMatch[1] : query;
+
+        logger.info(
+          `[playEngine] Link langsung gagal (${finalRes?.loadType || "unknown"}). Mengalihkan ke SoundCloud: "${fallbackQuery}".`,
+        );
+
+        const scRes = await poru.resolve({
+          query: `scsearch:${fallbackQuery}`,
+          requester: user,
+        });
+        if (!isResEmpty(scRes)) {
+          finalRes = scRes;
         }
       } catch (_) {}
     }
@@ -333,11 +341,17 @@ module.exports = {
       return sendReply(dupPayload, true);
     }
 
+    // Intro native hanya aman untuk lagu pertama. Kalau Lavalink sudah aktif,
+    // player itu pemilik voice channel dan intro tidak boleh merebut koneksi.
+    const canPlayNativeIntro =
+      !player ||
+      (!player.isPlaying && !player.isPaused && !player.isConnected);
+
     // Siapkan intro DJ (TTS) untuk diputar lewat voice native Discord.
     // Intro TIDAK masuk antrean Lavalink: itu jalur lama yang gagal senyap
     // dan membebani node audio.
     let djIntro = null;
-    if (isDjActive) {
+    if (isDjActive && canPlayNativeIntro) {
       djIntro = await aiDjTrackService.prepareDjIntroTrack({
         poru,
         channel,
@@ -352,12 +366,28 @@ module.exports = {
     // Putar intro secara native, lalu serahkan voice channel ke Lavalink.
     if (djIntro && (djIntro.audioBuffer || djIntro.localFilePath)) {
       const VoiceManager = require("../../../src/managers/voiceManager");
-      const voiceChannel =
-        memberVoice && memberVoice.guild
-          ? memberVoice
-          : guild.channels.cache.get(memberVoice?.id || memberVoice);
+      const { logger } = require("../../../src/managers/logger");
 
-      if (voiceChannel) {
+      // memberVoice bisa berupa objek VoiceChannel ATAU string id, tergantung
+      // pemanggil. playIntroClip memerlukan objek channel karena butuh
+      // guild.voiceAdapterCreator, jadi normalisasi dulu di sini.
+      const resolveVoiceChannel = () => {
+        if (memberVoice && typeof memberVoice === "object" && memberVoice.guild) {
+          return memberVoice;
+        }
+        const channelId =
+          typeof memberVoice === "string" ? memberVoice : memberVoice?.id;
+        if (!channelId) return null;
+        return guild.channels.cache.get(channelId) || null;
+      };
+
+      const voiceChannel = resolveVoiceChannel();
+
+      if (!voiceChannel) {
+        logger.warn(
+          `[playEngine] Intro native dilewati: kanal suara tidak dapat di-resolve (memberVoice=${String(memberVoice)}).`,
+        );
+      } else {
         const introResult = await VoiceManager.playIntroClip({
           guildId: guild.id,
           voiceChannel,
@@ -366,9 +396,12 @@ module.exports = {
         });
 
         if (!introResult.success) {
-          const { logger } = require("../../../src/managers/logger");
-          logger.debug(
-            `[playEngine] Intro native dilewati (${introResult.reason || "unknown"}). Lanjut ke lagu utama.`,
+          logger.warn(
+            `[playEngine] Intro native gagal diputar (${introResult.reason || "unknown"}). Lanjut ke lagu utama.`,
+          );
+        } else {
+          logger.info(
+            `[playEngine] Intro native selesai diputar dalam ${introResult.durationMs || 0}ms.`,
           );
         }
       }

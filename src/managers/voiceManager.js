@@ -252,10 +252,15 @@ class VoiceManager {
 
     const gId = String(guildId || voiceChannel.guild.id);
 
-    // Jangan rebutan voice channel dengan Lavalink yang sedang aktif.
-    if (this.isMusicActive(gId, voiceChannel.client)) {
-      return { success: false, reason: "music_active" };
-    }
+    logger.info(
+      `[VoiceManager:playIntroClip] Memulai intro native di guild ${gId} (sumber: ${
+        audioBuffer ? `buffer ${audioBuffer.length}B` : filePath
+      }).`,
+    );
+
+    // Catatan: pemanggil (playEngine) sudah menahan koneksi Poru sampai intro
+    // ini selesai, jadi tidak perlu cek isMusicActive di sini. Cek tambahan
+    // justru berisiko memblokir intro secara keliru.
 
     ensureFfmpegPath();
 
@@ -264,8 +269,24 @@ class VoiceManager {
 
     try {
       session = this.acquireConnection({ voiceChannel, mode: "transient" });
-      if (!session || !session.player) {
+      if (!session || !session.player || !session.connection) {
         return { success: false, reason: "connection_failed" };
+      }
+
+      // joinVoiceChannel() mengembalikan koneksi sebelum UDP/WebSocket voice
+      // benar-benar siap. Memutar resource lebih awal membuat intro berakhir
+      // secara lokal tanpa pernah mengirim frame audio ke Discord.
+      try {
+        await voice.entersState(
+          session.connection,
+          voice.VoiceConnectionStatus.Ready,
+          10_000,
+        );
+      } catch (err) {
+        logger.warn(
+          `[VoiceManager:playIntroClip] Koneksi native tidak Ready di guild ${gId}: ${err?.message || err}`,
+        );
+        return { success: false, reason: "connection_not_ready" };
       }
 
       const source = audioBuffer
@@ -280,12 +301,19 @@ class VoiceManager {
 
       const finished = new Promise((resolve) => {
         let settled = false;
+        let startedPlaying = false;
         const done = (result) => {
           if (settled) return;
           settled = true;
           clearTimeout(timer);
           player.removeListener("error", onError);
+          player.removeListener(voice.AudioPlayerStatus.Playing, onPlaying);
           resolve(result);
+        };
+
+        const onPlaying = () => {
+          startedPlaying = true;
+          logger.info(`[VoiceManager:playIntroClip] Intro native sedang diputar di guild ${gId}.`);
         };
 
         const onError = (err) => {
@@ -300,7 +328,13 @@ class VoiceManager {
         }, timeoutMs);
         if (timer.unref) timer.unref();
 
-        player.once(voice.AudioPlayerStatus.Idle, () => done({ success: true }));
+        player.once(voice.AudioPlayerStatus.Playing, onPlaying);
+        player.once(voice.AudioPlayerStatus.Idle, () => {
+          done({
+            success: startedPlaying,
+            reason: startedPlaying ? undefined : "never_started",
+          });
+        });
         player.once("error", onError);
       });
 
