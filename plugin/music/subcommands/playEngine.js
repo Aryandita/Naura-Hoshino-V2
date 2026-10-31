@@ -117,16 +117,22 @@ module.exports = {
       await VoiceManager.yieldToMusic(guild.id);
     }
 
-    if (!player) {
-      player = poru.createConnection({
-        guildId: guild.id,
-        voiceChannel: memberVoice.id,
-        textChannel: channel.id,
-        deaf: true,
-      });
-      player.is247 = false;
-      ctx.player = player;
-    }
+    // Catatan: koneksi Poru sengaja DITUNDA sampai intro native selesai.
+    // Satu bot hanya boleh punya satu koneksi voice per guild; kalau Poru
+    // sudah join lebih dulu, voice native tidak bisa memutar intro.
+    const ensurePlayer = () => {
+      if (!player) {
+        player = poru.createConnection({
+          guildId: guild.id,
+          voiceChannel: memberVoice.id,
+          textChannel: channel.id,
+          deaf: true,
+        });
+        player.is247 = false;
+        ctx.player = player;
+      }
+      return player;
+    };
 
     const defaultSearch = env.MUSIC_DEFAULT_SEARCH || "scsearch";
     let searchSource = defaultSearch;
@@ -287,6 +293,7 @@ module.exports = {
 
     if (finalRes.loadType === "playlist" || finalRes.loadType === "PLAYLIST_LOADED") {
       const trackToPlay = finalRes.tracks[0];
+      ensurePlayer();
       for (const track of finalRes.tracks) {
         track.info.requester = user;
         player.queue.add(track);
@@ -326,10 +333,12 @@ module.exports = {
       return sendReply(dupPayload, true);
     }
 
-    // Refactored: Use aiDjTrackService for TTS DJ intro preparation
-    let djTrackResult = null;
+    // Siapkan intro DJ (TTS) untuk diputar lewat voice native Discord.
+    // Intro TIDAK masuk antrean Lavalink: itu jalur lama yang gagal senyap
+    // dan membebani node audio.
+    let djIntro = null;
     if (isDjActive) {
-      djTrackResult = await aiDjTrackService.prepareDjIntroTrack({
+      djIntro = await aiDjTrackService.prepareDjIntroTrack({
         poru,
         channel,
         user,
@@ -340,50 +349,63 @@ module.exports = {
       });
     }
 
-    // Guard clause: Early return if DJ track preparation failed
-    if (!djTrackResult) {
-      const isFirstTrack =
-        !player.isPlaying && !player.isPaused && player.queue.length === 0;
+    // Putar intro secara native, lalu serahkan voice channel ke Lavalink.
+    if (djIntro && (djIntro.audioBuffer || djIntro.localFilePath)) {
+      const VoiceManager = require("../../../src/managers/voiceManager");
+      const voiceChannel =
+        memberVoice && memberVoice.guild
+          ? memberVoice
+          : guild.channels.cache.get(memberVoice?.id || memberVoice);
 
-      player.queue.add(track);
-      if (!player.isPlaying && !player.isPaused) player.play();
+      if (voiceChannel) {
+        const introResult = await VoiceManager.playIntroClip({
+          guildId: guild.id,
+          voiceChannel,
+          audioBuffer: djIntro.audioBuffer,
+          filePath: djIntro.localFilePath,
+        });
 
-      if (isFirstTrack) {
-        if (deleteReply) deleteReply();
-        return;
+        if (!introResult.success) {
+          const { logger } = require("../../../src/managers/logger");
+          logger.debug(
+            `[playEngine] Intro native dilewati (${introResult.reason || "unknown"}). Lanjut ke lagu utama.`,
+          );
+        }
       }
-
-      const trackPayload = buildContainerV2({
-        accentColorHex: brandColor,
-        title: brandEmoji + " " + track.info.title,
-        iconURL: track.info.image || client.user.displayAvatarURL(),
-        description:
-          (ui.getEmoji("musicArtist") || "👤") + " **Artis:** `" + track.info.author + "`\n⏳ **Durasi:** `" + formatDuration(track.info.length) + "`",
-        footerText: ui.getFooter("music"),
-      });
-
-      return sendReply(trackPayload, true);
     }
 
-    // DJ track prepared successfully - add to queue first, then main track
-    const { ttsTrack, messageId } = djTrackResult;
+    // Intro selesai (atau dilewati): pastikan koneksi native sudah lepas
+    // sebelum Poru mengambil alih voice channel yang sama.
+    const VoiceManagerCleanup = require("../../../src/managers/voiceManager");
+    if (VoiceManagerCleanup.hasActiveConnection(guild.id)) {
+      VoiceManagerCleanup.disconnect(guild.id);
+    }
+
+    ensurePlayer();
 
     const isFirstTrack =
       !player.isPlaying && !player.isPaused && player.queue.length === 0;
 
-    // Preserve original behavior: mark track to skip DJ in handleTrackStart
+    // Lagu utama tidak perlu memicu pengumuman DJ lagi: intro sudah diputar.
     track.info.skipDj = true;
-    track.ttsMessageId = messageId;
 
-    player.queue.add(ttsTrack);
     player.queue.add(track);
     if (!player.isPlaying && !player.isPaused) player.play();
 
     if (isFirstTrack) {
       if (deleteReply) deleteReply();
+      return;
     }
 
-    // When TTS track is queued, we return early (original behavior)
-    return;
+    const trackPayload = buildContainerV2({
+      accentColorHex: brandColor,
+      title: brandEmoji + " " + track.info.title,
+      iconURL: track.info.image || client.user.displayAvatarURL(),
+      description:
+        (ui.getEmoji("musicArtist") || "👤") + " **Artis:** `" + track.info.author + "`\n⏳ **Durasi:** `" + formatDuration(track.info.length) + "`",
+      footerText: ui.getFooter("music"),
+    });
+
+    return sendReply(trackPayload, true);
   },
 };

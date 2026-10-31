@@ -1,5 +1,6 @@
 "use strict";
 
+const { Readable } = require("node:stream");
 const { logger } = require("./logger");
 const googleTTS = require("google-tts-api");
 
@@ -12,6 +13,24 @@ function getVoiceLib() {
     djsVoice = false;
   }
   return djsVoice;
+}
+
+let ffmpegPathReady = false;
+/**
+ * Pastikan prism-media bisa menemukan binary FFmpeg untuk mendekode mp3.
+ * Tanpa ini, createAudioResource() pada file .mp3 gagal senyap di container.
+ */
+function ensureFfmpegPath() {
+  if (ffmpegPathReady) return;
+  ffmpegPathReady = true;
+  try {
+    if (!process.env.FFMPEG_PATH) {
+      const staticPath = require("ffmpeg-static");
+      if (staticPath) process.env.FFMPEG_PATH = staticPath;
+    }
+  } catch (_) {
+    // ffmpeg-static tidak terpasang: andalkan binary di PATH.
+  }
 }
 
 class VoiceManager {
@@ -203,6 +222,106 @@ class VoiceManager {
     } catch (err) {
       logger.error(`[VoiceManager] Gagal memutar stream audio di guild ${guildId}:`, err);
       return false;
+    }
+  }
+
+  /**
+   * Putar klip intro DJ lewat voice native Discord (bukan Lavalink).
+   *
+   * Dipakai untuk audio sapaan sebelum lagu utama. Koneksi bersifat sementara:
+   * setelah klip selesai, koneksi native dilepas agar Poru/Lavalink bisa
+   * mengambil alih voice channel yang sama tanpa bentrok session (kode 4006).
+   *
+   * @param {Object} params
+   * @param {string} params.guildId
+   * @param {Object} params.voiceChannel - Kanal suara Discord (butuh .guild.voiceAdapterCreator)
+   * @param {Buffer} [params.audioBuffer] - Buffer audio (mp3) hasil TTS
+   * @param {string} [params.filePath] - Alternatif: path file audio lokal
+   * @param {number} [params.timeoutMs=20000] - Batas tunggu agar tidak menggantung
+   * @returns {Promise<{success: boolean, reason?: string, durationMs?: number}>}
+   */
+  static async playIntroClip({ guildId, voiceChannel, audioBuffer, filePath, timeoutMs = 20000 }) {
+    const voice = getVoiceLib();
+    if (!voice) return { success: false, reason: "voice_lib_unavailable" };
+    if (!voiceChannel || !voiceChannel.guild) {
+      return { success: false, reason: "voice_channel_unavailable" };
+    }
+    if (!audioBuffer && !filePath) {
+      return { success: false, reason: "no_audio_source" };
+    }
+
+    const gId = String(guildId || voiceChannel.guild.id);
+
+    // Jangan rebutan voice channel dengan Lavalink yang sedang aktif.
+    if (this.isMusicActive(gId, voiceChannel.client)) {
+      return { success: false, reason: "music_active" };
+    }
+
+    ensureFfmpegPath();
+
+    const startedAt = Date.now();
+    let session = null;
+
+    try {
+      session = this.acquireConnection({ voiceChannel, mode: "transient" });
+      if (!session || !session.player) {
+        return { success: false, reason: "connection_failed" };
+      }
+
+      const source = audioBuffer
+        ? Readable.from(audioBuffer)
+        : filePath;
+
+      const resource = voice.createAudioResource(source, {
+        inlineVolume: false,
+      });
+
+      const player = session.player;
+
+      const finished = new Promise((resolve) => {
+        let settled = false;
+        const done = (result) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          player.removeListener("error", onError);
+          resolve(result);
+        };
+
+        const onError = (err) => {
+          logger.warn(
+            `[VoiceManager:playIntroClip] Player error di guild ${gId}: ${err?.message || err}`,
+          );
+          done({ success: false, reason: "player_error" });
+        };
+
+        const timer = setTimeout(() => {
+          done({ success: false, reason: "timeout" });
+        }, timeoutMs);
+        if (timer.unref) timer.unref();
+
+        player.once(voice.AudioPlayerStatus.Idle, () => done({ success: true }));
+        player.once("error", onError);
+      });
+
+      player.play(resource);
+      const outcome = await finished;
+
+      return {
+        ...outcome,
+        durationMs: Date.now() - startedAt,
+      };
+    } catch (err) {
+      logger.error(
+        `[VoiceManager:playIntroClip] Gagal memutar intro di guild ${gId}: ${err?.message || err}`,
+      );
+      return { success: false, reason: "playback_error" };
+    } finally {
+      // Selalu lepas koneksi native: Lavalink harus jadi pemilik voice channel
+      // tunggal saat lagu utama mulai diputar.
+      try {
+        this.disconnect(gId);
+      } catch (_) {}
     }
   }
 

@@ -80,35 +80,40 @@ function renderEmptyQuest(lang = "id", streakInfo = null, tierInfo = null) {
  * @returns {object}
  */
 function renderQuestCard(state, lang = "id", streakInfo = null, tierInfo = null) {
+  if (!state || !state.quest) {
+    return renderEmptyQuest(lang, streakInfo, tierInfo);
+  }
+
   const isEn = lang === "en";
   const quest = state.quest;
+  const target = Math.max(1, quest.target || 1);
   const progressPercent = Math.min(
     100,
-    Math.round(((state.progress || 0) / (quest.target || 1)) * 100),
+    Math.round(((state.progress || 0) / target) * 100),
   );
   const bar = survivalUI.buildVitalsBar({
     current: state.progress || 0,
-    target: quest.target || 1,
+    target,
     length: 10,
   });
 
-  const isComplete = (state.progress || 0) >= (quest.target || 1);
-  const claimed = state.claimed;
+  const isComplete = (state.progress || 0) >= target;
+  const claimed = Boolean(state.claimed);
 
   const title = isEn ? "Daily Quest Active" : "Quest Harian Aktif";
   const tierBadge = quest.tierBadge || tierInfo?.badge || "🌱";
   const tierName = quest.tier || tierInfo?.name || "Pemula";
   const playerLvl = quest.playerLevel || tierInfo?.tier || 1;
 
-  const rewardParts = [`💎 ${quest.reward.starFragments || 0} NSF`];
-  if (quest.reward.survivalXp) rewardParts.push(`🌟 +${quest.reward.survivalXp} XP`);
-  if (quest.reward.coupons) rewardParts.push(`🎟️ +${quest.reward.coupons} Kupon`);
+  const rewardParts = [`💎 ${quest.reward?.starFragments || 0} NSF`];
+  if (quest.reward?.survivalXp) rewardParts.push(`🌟 +${quest.reward.survivalXp} XP`);
+  if (quest.reward?.coupons) rewardParts.push(`🎟️ +${quest.reward.coupons} Kupon`);
 
   const descLines = [
-    `${quest.emoji} **${quest.title}** \`[${tierBadge} ${tierName} • Lv. ${playerLvl}]\``,
-    quest.description,
+    `${quest.emoji || "📜"} **${quest.title || "Daily Quest"}** \`[${tierBadge} ${tierName} • Lv. ${playerLvl}]\``,
+    quest.description || "",
     "",
-    `${isEn ? "Progress" : "Progres"}: \`${bar.bar}\` **${state.progress || 0}/${quest.target}** (${progressPercent}%)`,
+    `${isEn ? "Progress" : "Progres"}: \`${bar.bar}\` **${state.progress || 0}/${target}** (${progressPercent}%)`,
     `${isEn ? "Rewards" : "Hadiah"}: ${rewardParts.join(" • ")}`,
   ];
 

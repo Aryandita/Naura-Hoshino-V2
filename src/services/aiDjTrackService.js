@@ -2,22 +2,28 @@
 
 const fs = require("node:fs");
 
-const { AttachmentBuilder } = require("discord.js");
 const { logger } = require("../managers/logger");
 const fishAudioService = require("./fishAudioService");
 const aiDjManager = require("../managers/aiDjManager");
 
 /**
- * Menyiapkan track TTS DJ intro untuk diputar sebelum lagu utama.
+ * Menyiapkan audio intro DJ untuk diputar lewat voice native Discord.
+ *
+ * Catatan arsitektur: intro TIDAK lagi diunggah ke Discord lalu di-resolve
+ * sebagai track Lavalink. Jalur lama membebani node Lavalink dengan stream HTTP
+ * tambahan dan sering gagal senyap (URL attachment kedaluwarsa / format tidak
+ * didukung). Sekarang audio dikembalikan sebagai buffer/path lokal dan diputar
+ * langsung oleh VoiceManager sebelum lagu utama.
+ *
  * @param {Object} params
- * @param {Object} params.poru - Poru instance
+ * @param {Object} params.poru - Poru instance (tidak dipakai untuk intro, dipertahankan untuk kompatibilitas)
  * @param {Object} params.channel - Discord text channel
  * @param {Object} params.user - User requester
  * @param {Object} params.trackInfo - Track info object (title, author, etc)
  * @param {string} params.guildId - Guild ID
  * @param {Object} params.musicManager - MusicManager instance
- * @param {Object} [params.memberVoice] - Voice channel member is in
- * @returns {Promise<{ttsTrack: Object, messageId: string}|null>}
+ * @param {string} [params.memberVoice] - Voice channel id member
+ * @returns {Promise<{audioBuffer: Buffer, localFilePath: string|null, script: string, classification: Object, messageId: string|null, genreKey: string}|null>}
  */
 async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, musicManager, memberVoice }) {
   if (!aiDjManager.isDjEnabled(guildId) || !fishAudioService.isConfigured()) {
@@ -150,41 +156,35 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
       }
     }
 
-    const attachment = new AttachmentBuilder(localIntroPath || audioBuffer, { name: "naura_dj_intro.mp3" });
+    // Kirim kartu Now Playing/DJ ke teks channel (tanpa lampiran audio:
+    // audio diputar native, bukan lewat attachment Discord).
+    let messageId = null;
+    try {
+      const ui = require("../config/ui");
+      const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 
-    const ui = require("../config/ui");
-    const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
+      const speakPayload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: "🎙️ Hoshino FM",
+        description: `> _"${script}"_`,
+        expression: "singing",
+        footerText: ui.getFooter("music"),
+      });
 
-    const speakPayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      title: "🎙️ Hoshino FM",
-      description: `> _"${script}"_`,
-      expression: "singing",
-      footerText: ui.getFooter("music"),
-    });
-    speakPayload.files = [attachment];
+      const speakMsg = await channel.send(speakPayload);
+      messageId = speakMsg?.id || null;
+    } catch (sendErr) {
+      logger.debug(`[AiDjTrackService] Gagal mengirim kartu DJ: ${sendErr.message}`);
+    }
 
-    const speakMsg = await channel.send(speakPayload);
-
-    if (!speakMsg?.attachments?.size) return null;
-
-    const firstAttachment =
-      typeof speakMsg.attachments.first === "function"
-        ? speakMsg.attachments.first()
-        : Array.from(speakMsg.attachments.values())[0];
-    const playableUrl = firstAttachment?.url;
-    const ttsRes = await poru.resolve({ query: playableUrl, requester: user });
-
-    if (!ttsRes?.tracks?.length) return null;
-
-    const ttsTrack = ttsRes.tracks[0];
-    ttsTrack.info.title = `🎙️ Naura DJ: ${classification.genre.replace("_", " ")} Session`;
-    ttsTrack.info.author = "Naura Hoshino";
-    ttsTrack.info.originalSource = "http";
-    ttsTrack.isTTS = true;
-    ttsTrack.localFilePath = localIntroPath;
-
-    return { ttsTrack, messageId: speakMsg.id, localFilePath: localIntroPath };
+    return {
+      audioBuffer,
+      localFilePath: localIntroPath,
+      script,
+      classification,
+      messageId,
+      genreKey,
+    };
   } catch (err) {
     logger.warn(`[AiDjTrackService] Gagal generate TTS intro: ${err.message}`);
     return null;

@@ -56,8 +56,7 @@ class MusicUIManager {
       }
 
       logger.debug(
-        "🎨 UI ENGINE Menggambar Canvas & Merakit Panel untuk: %s",
-        track.info.title,
+        `🎨 UI ENGINE Menggambar Canvas & Merakit Panel untuk: ${track.info.title}`,
       );
 
       if (Array.isArray(recommendedTracks) && recommendedTracks.length > 0) {

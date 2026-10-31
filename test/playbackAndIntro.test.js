@@ -218,13 +218,23 @@ test("R2: Pembuatan dan penyimpanan audio intro lokal serta pemutaran mendahului
     assert.ok(fs.existsSync(localSavedPath), "File intro harus benar-benar ada di disk lokal");
     assert.ok(localSavedPath.includes(path.join("assets", "audio", "dj", "intro")), "File harus disimpan di assets/audio/dj/intro");
 
-    // 2. Verifikasi pemutaran mendahului lagu (ttsTrack dimasukkan ke antrean sebelum lagu utama)
-    mockPlayer.queue.add(introResult.ttsTrack);
-    mockPlayer.queue.add(mainTrack);
+    // 2. Verifikasi intro diputar lewat voice native, bukan sebagai track Lavalink.
+    //    Audio harus tersedia sebagai buffer/path agar VoiceManager bisa memutarnya
+    //    langsung tanpa membebani node Lavalink.
+    assert.ok(
+      Buffer.isBuffer(introResult.audioBuffer),
+      "Intro harus menyediakan audioBuffer untuk voice native",
+    );
+    assert.equal(
+      introResult.ttsTrack,
+      undefined,
+      "Intro tidak boleh lagi dibuat sebagai track Lavalink",
+    );
 
-    assert.equal(queueItems.length, 2);
-    assert.equal(queueItems[0].isTTS, true, "Item antrean pertama harus track intro TTS");
-    assert.equal(queueItems[1].info.title, "Diri", "Item antrean kedua adalah lagu utama");
+    // 3. Lagu utama masuk antrean sendirian (intro sudah diputar native sebelumnya)
+    mockPlayer.queue.add(mainTrack);
+    assert.equal(queueItems.length, 1, "Hanya lagu utama yang masuk antrean Lavalink");
+    assert.equal(queueItems[0].info.title, "Diri", "Item antrean adalah lagu utama");
   } finally {
     fishAudioService.generateSpeech = origGenSpeech;
     fishAudioService.isConfigured = origIsConfig;

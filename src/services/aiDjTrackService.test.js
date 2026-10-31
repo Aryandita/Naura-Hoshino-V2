@@ -276,7 +276,7 @@ test("aiDjTrackService - owner and premium user uses display name or custom dash
   Module.prototype.require = originalRequire;
 });
 
-test("aiDjTrackService - saves audio intro locally and returns localFilePath", async () => {
+test("aiDjTrackService - returns audio buffer and local path for native playback", async () => {
   const Module = require("module");
   const originalRequire = Module.prototype.require;
   let saveLocalCalled = false;
@@ -333,10 +333,15 @@ test("aiDjTrackService - saves audio intro locally and returns localFilePath", a
     memberVoice: "vc1",
   });
 
-  assert.ok(result, "Harus mengembalikan result intro track");
+  assert.ok(result, "Harus mengembalikan hasil intro");
   assert.equal(saveLocalCalled, true, "Harus memanggil saveLocalIntroAudio");
   assert.ok(result.localFilePath.includes("intro"), "localFilePath harus diisi");
-  assert.equal(result.ttsTrack.isTTS, true, "Track harus berstatus isTTS = true");
+  assert.ok(Buffer.isBuffer(result.audioBuffer), "audioBuffer harus tersedia untuk voice native");
+  assert.equal(
+    result.ttsTrack,
+    undefined,
+    "Tidak boleh lagi membuat track Lavalink untuk intro",
+  );
 
   Module.prototype.require = originalRequire;
 });

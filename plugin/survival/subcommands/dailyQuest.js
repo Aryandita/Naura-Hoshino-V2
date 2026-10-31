@@ -103,11 +103,22 @@ module.exports = {
         }
 
         const streakInfo = await getStreakInfo(userId);
-        const questState = await getQuestState(userId);
+        let questState = await getQuestState(userId);
+        if (!questState || !questState.quest) {
+          questState = {
+            date: new Date().toISOString().split("T")[0],
+            quest: result.quest,
+            progress: 0,
+            claimed: false,
+            isNew: false,
+          };
+        }
         const survival = await cacheManager.getUserSurvival(userId);
-        const tier = getTierByLevel(survival?.survival_level || 1);
+        const tier = result.tier || getTierByLevel(survival?.survival_level || 1);
 
-        const payload = renderQuestCard(questState, lang, streakInfo, tier);
+        const payload = (questState && questState.quest)
+          ? renderQuestCard(questState, lang, streakInfo, tier)
+          : renderEmptyQuest(lang, streakInfo, tier);
         if (interaction.deferred || interaction.replied) {
           return interaction.editReply(payload);
         }
