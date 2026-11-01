@@ -360,7 +360,11 @@ class AiDjManager {
 
     const targetTemplates = lang === "en" ? templatesByGenreEn : templatesByGenre;
     const genrePool = targetTemplates[classification.genre] || targetTemplates[GENRES.POP_DEFAULT];
-    const script = genrePool[Math.floor(Math.random() * genrePool.length)];
+    const requestedVariant = Number(options.variant);
+    const variant = Number.isInteger(requestedVariant)
+      ? Math.abs(requestedVariant) % genrePool.length
+      : Math.floor(Math.random() * genrePool.length);
+    const script = genrePool[variant];
 
     return { script, classification };
   }
@@ -576,20 +580,39 @@ class AiDjManager {
    * @param {string} genre - Genre key (lofi, anime, rock, edm, kpop, acoustic, gaming, stream, pop_default)
    * @param {string} lang - Language code (id, en)
    * @param {number} [variant=0] - Template variant index (0 or 1)
+   * @param {string} [persona="default"] - Built-in persona key
    * @returns {string|null} Absolute path to .mp3 file or null
    */
-  getLocalDjAudioPath(genre, lang = "id", variant = 0) {
+  getLocalDjAudioPath(genre, lang = "id", variant = 0, persona = "default") {
     const fs = require('fs');
     const path = require('path');
     const cleanGenre = String(genre || "pop_default").toLowerCase().replace(/[^a-z0-9_]/g, "_");
     const cleanLang = String(lang || "id").toLowerCase().startsWith("en") ? "en" : "id";
+    const cleanPersona = String(persona || "default")
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "_");
     const vNum = Number(variant) || 0;
-    const candidates = [
+    // Persona custom (di luar 5 bawaan) tidak punya voice pack statis. Tanpa
+    // fallback ke "default", pencarian berakhir null dan intro ikut hilang
+    // padahal file default untuk genre tersebut tersedia.
+    const personaCandidates =
+      cleanPersona === "default" ? [cleanPersona] : [cleanPersona, "default"];
+    const candidates = [];
+    for (const persona of personaCandidates) {
+      candidates.push(
+        `${cleanGenre}_${persona}_v${vNum + 1}.mp3`,
+        `${cleanGenre}_${persona}_v${vNum}.mp3`,
+        `${cleanGenre}_${persona}_${vNum}.mp3`,
+        `${cleanGenre}_${persona}.mp3`,
+      );
+    }
+    // Nama berkas gaya lama, dipertahankan untuk paket voice yang belum dimigrasi.
+    candidates.push(
       `${cleanGenre}_v${vNum + 1}.mp3`,
       `${cleanGenre}_v${vNum}.mp3`,
       `${cleanGenre}_${vNum}.mp3`,
       `${cleanGenre}.mp3`,
-    ];
+    );
     for (const fileName of candidates) {
       const filePath = path.join(process.cwd(), 'assets', 'audio', 'dj', cleanLang, fileName);
       if (fs.existsSync(filePath)) return filePath;

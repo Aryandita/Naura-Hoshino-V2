@@ -26,7 +26,10 @@ const aiDjManager = require("../managers/aiDjManager");
  * @returns {Promise<{audioBuffer: Buffer, localFilePath: string|null, script: string, classification: Object, messageId: string|null, genreKey: string}|null>}
  */
 async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, musicManager, memberVoice }) {
-  if (!aiDjManager.isDjEnabled(guildId) || !fishAudioService.isConfigured()) {
+  // API key hanya dibutuhkan untuk sintesis runtime. Voice pack lokal tetap
+  // bisa diputar tanpa kredensial, jadi jangan matikan intro sepenuhnya.
+  const ttsAvailable = fishAudioService.isConfigured();
+  if (!aiDjManager.isDjEnabled(guildId)) {
     return null;
   }
 
@@ -98,7 +101,7 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
 
     let audioBuffer = null;
 
-    if (isVipOrOwner) {
+    if (isVipOrOwner && ttsAvailable) {
       try {
         audioBuffer = await fishAudioService.getOrGeneratePremiumAudio(
           user.id,
@@ -117,28 +120,38 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
     let localIntroPath = null;
     let isNewlyGenerated = false;
 
-    if (!audioBuffer) {
+    // Personalisasi selalu mendapat prioritas: judul lagu, nama requester,
+    // dan persona custom tidak boleh digantikan oleh voice line generik.
+    if (!audioBuffer && ttsAvailable) {
       try {
-        const localPath = aiDjManager.getLocalDjAudioPath(genreKey, lang, 0);
-        if (localPath) {
-          audioBuffer = fs.readFileSync(localPath);
-          localIntroPath = localPath;
-          logger.info(`[DjTrack] Using local audio for genre: ${genreKey}`);
-        }
-      } catch (localErr) {
-        logger.debug(`[DjTrack] Local audio not available: ${localErr.message}`);
+        audioBuffer = await fishAudioService.generateSpeech(script, {
+          format: "mp3",
+          latency: "low",
+          useLocal: false,
+          genre: genreKey,
+          lang,
+          persona: personaKey,
+          variant: 0,
+        });
+        isNewlyGenerated = Boolean(audioBuffer);
+      } catch (ttsErr) {
+        logger.debug(`[DjTrack] Runtime TTS gagal, mencoba voice pack lokal: ${ttsErr.message}`);
       }
     }
 
+    // Voice pack statis hanya fallback. Ia sengaja tidak memuat judul lagu atau
+    // nama user, sehingga aman dipakai lintas track dan lintas requester.
     if (!audioBuffer) {
-      audioBuffer = await fishAudioService.generateSpeech(script, {
-        format: "mp3",
-        latency: "low",
-        genre: genreKey,
-        lang,
-        variant: 0,
-      });
-      isNewlyGenerated = true;
+      try {
+        const localPath = aiDjManager.getLocalDjAudioPath(genreKey, lang, 0, personaKey);
+        if (localPath) {
+          audioBuffer = fs.readFileSync(localPath);
+          localIntroPath = localPath;
+          logger.info(`[DjTrack] Using local voice pack for ${genreKey}/${personaKey}`);
+        }
+      } catch (localErr) {
+        logger.debug(`[DjTrack] Local voice pack unavailable: ${localErr.message}`);
+      }
     }
 
     if (!audioBuffer) return null;

@@ -421,8 +421,18 @@ class FishAudioService {
     if (options.useLocal !== false && options.genre && options.lang) {
       try {
         const aiDjManager = require('../managers/aiDjManager');
-        const variant = options.variant || Math.floor(Math.random() * 2);
-        const localPath = aiDjManager.getLocalDjAudioPath(options.genre, options.lang, variant);
+        // `||` membuat variant 0 (indeks sah) ikut diacak. Pakai Number.isInteger
+        // agar pemanggil yang meminta variant tertentu benar-benar mendapatkannya.
+        const requestedVariant = Number(options.variant);
+        const variant = Number.isInteger(requestedVariant)
+          ? Math.abs(requestedVariant) % 2
+          : Math.floor(Math.random() * 2);
+        const localPath = aiDjManager.getLocalDjAudioPath(
+          options.genre,
+          options.lang,
+          variant,
+          options.persona || "default",
+        );
         if (localPath) {
           const fs = require('fs');
           logger.info(`[FishAudio] Using local pre-generated audio: ${require('path').basename(localPath)}`);

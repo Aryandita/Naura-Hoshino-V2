@@ -326,14 +326,15 @@ async function handleAutocomplete(interaction) {
       new Promise((resolve) => setTimeout(() => resolve(null), searchTimeout)),
     ]);
 
-    // Fallback to YouTube Music if Spotify fails
+    // Fallback to YouTube if Spotify fails. ytsearch dipakai (bukan ytmsearch)
+    // karena ytmsearch kosong di node tanpa client MUSIC youtube-plugin.
     if (
       searchEngine === "spsearch" &&
       (!res || !res.tracks || res.tracks.length === 0)
     ) {
       res = await Promise.race([
         poru.resolve({
-          query: `ytmsearch:${cleanQuery}`,
+          query: `ytsearch:${cleanQuery}`,
           requester: interaction.user,
         }),
         new Promise((resolve) => setTimeout(() => resolve(null), Math.floor(searchTimeout / 2))),

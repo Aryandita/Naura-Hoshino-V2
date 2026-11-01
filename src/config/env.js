@@ -164,7 +164,16 @@ const env = {
   LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
   LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || "youshallnotpass",
   LAVA_SECURE: process.env.LAVALINK_SECURE === "true",
-  MUSIC_DEFAULT_SEARCH: cleanEnv(process.env.MUSIC_DEFAULT_SEARCH) || "scsearch",
+  // ytsearch dipakai sebagai default karena bekerja di semua node yang dipakai
+  // bot. ytmsearch bergantung pada client MUSIC youtube-plugin yang tidak aktif
+  // di setiap node (mis. Hyperion mengembalikan loadType "empty"), sehingga
+  // nilai lama dari .env dinormalkan di sini agar deployment tidak perlu diubah.
+  MUSIC_DEFAULT_SEARCH: (() => {
+    const configured = String(
+      cleanEnv(process.env.MUSIC_DEFAULT_SEARCH) || "",
+    ).toLowerCase();
+    return configured === "ytmsearch" ? "ytsearch" : configured || "ytsearch";
+  })(),
 
   // SPOTIFY (poru-spotify + LavaSrc node + spotifyResolver fallback)
   SPOTIFY_CLIENT_ID: cleanEnv(process.env.SPOTIFY_CLIENT_ID),

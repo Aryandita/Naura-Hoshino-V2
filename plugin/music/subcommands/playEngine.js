@@ -137,12 +137,16 @@ module.exports = {
     // YouTube menjadi sumber pencarian utama karena ranking dan metadata musik
     // lebih tepat. SoundCloud tetap dipakai sebagai fallback playback bila node
     // Lavalink gagal mengambil stream YouTube.
+    // Default efektif adalah ytsearch, bukan ytmsearch: ytmsearch bergantung
+    // pada client MUSIC youtube-plugin yang tidak aktif di semua node (Hyperion
+    // mengembalikan loadType "empty"), sedangkan ytsearch terbukti menghasilkan
+    // track di setiap node yang dipakai bot.
     const configuredSearch = String(env.MUSIC_DEFAULT_SEARCH || "").toLowerCase();
-    const defaultSearch = ["ytmsearch", "ytsearch", "spsearch", "amsearch"].includes(
+    const defaultSearch = ["ytsearch", "ytmsearch", "spsearch", "amsearch"].includes(
       configuredSearch,
     )
       ? configuredSearch
-      : "ytmsearch";
+      : "ytsearch";
     let searchSource = defaultSearch;
     let finalQuery = query;
     const isDirectLink = !!query.match(/^(https?:\/\/)/);
@@ -217,7 +221,11 @@ module.exports = {
       const cleanRawQuery = query
         .replace(/^(?:scsearch|ytsearch|ytmsearch|amsearch|spsearch|dzsearch|sc|yt|ytm|am|sp|dz):/i, "")
         .trim();
-      const fallbackChain = ["ytmsearch", "ytsearch", "scsearch"].filter(
+      // Urutan fallback: ytsearch lebih dulu karena terbukti menghasilkan track
+      // di setiap node. ytmsearch dicoba kedua (aktif hanya di node yang punya
+      // client MUSIC). scsearch ditaruh terakhir karena saat ini mengembalikan
+      // loadType "error" ("Did not detect any supported formats") di node publik.
+      const fallbackChain = ["ytsearch", "ytmsearch", "scsearch"].filter(
         (s) => s !== searchSource,
       );
 

@@ -491,11 +491,13 @@ const playlistEngine = {
               : trackItem;
 
           const configuredSearch = String(env.MUSIC_DEFAULT_SEARCH || "").toLowerCase();
-          const defaultSearch = ["ytmsearch", "ytsearch", "spsearch", "amsearch"].includes(
+          // Default ytsearch: ytmsearch kosong di node yang tidak mengaktifkan
+          // client MUSIC youtube-plugin (lihat catatan di playEngine.js).
+          const defaultSearch = ["ytsearch", "ytmsearch", "spsearch", "amsearch"].includes(
             configuredSearch,
           )
             ? configuredSearch
-            : "ytmsearch";
+            : "ytsearch";
           const finalQuery = query.match(
             /^(?:https?:\/\/|spsearch:|ytmsearch:|ytsearch:|scsearch:|amsearch:)/,
           )
