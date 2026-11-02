@@ -34,7 +34,11 @@ async function executeAtomicPayment({
 
   // 1. Lakukan debit awal
   let debitRes;
-  if (currency === "economy_wallet" || currency === "economy_bank") {
+  if (
+    currency === "economy_wallet" ||
+    currency === "economy_bank" ||
+    currency === "pratamaDollars"
+  ) {
     debitRes = await cacheManager.debitUserProfile(userId, currency, safeAmount);
   } else {
     debitRes = await cacheManager.debitUserSurvival(userId, currency, safeAmount);
@@ -58,7 +62,11 @@ async function executeAtomicPayment({
         `[TransactionHelper] Aksi gagal untuk user ${userId} (${reason}), melakukan rollback ${safeAmount} ${currency}: ${actionErr.message}`,
       );
       try {
-        if (currency === "economy_wallet" || currency === "economy_bank") {
+        if (
+          currency === "economy_wallet" ||
+          currency === "economy_bank" ||
+          currency === "pratamaDollars"
+        ) {
           await cacheManager.incrementUserProfile(userId, { [currency]: safeAmount });
         } else {
           await cacheManager.incrementUserSurvival(userId, { [currency]: safeAmount });

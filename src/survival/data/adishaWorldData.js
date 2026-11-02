@@ -1047,7 +1047,7 @@ function getVehicleInfo(vehicleId) {
 function calculateResaleValue(vehicleId) {
   const v = getVehicleInfo(vehicleId);
   if (!v) return null;
-  const resalePrice = Math.max(1, Math.floor(v.price * (v.resalePercent / 100)));
+  const resalePrice = Math.max(1, Math.floor((v.price * v.resalePercent) / 100));
   return {
     vehicleId: v.id,
     vehicleName: v.name,

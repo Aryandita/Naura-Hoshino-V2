@@ -82,6 +82,11 @@ Naura_Hoshino_V2_*.zip
 loader.js
 .loader_backup/
 .perch/index.json
+.perch/PERCH.md
+.perch/audit/
+.perch/plans/
+.opencode/
+anti-slop/
 
 # Artefak tools offline & testing lokal
 tools/*.npz

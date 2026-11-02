@@ -46,6 +46,41 @@ test("transactionHelper - executeAtomicPayment successful execution", async () =
   }
 });
 
+test("transactionHelper - pratamaDollars didebit dari profil", async () => {
+  const origProfileDebit = cacheManager.debitUserProfile;
+  const origSurvivalDebit = cacheManager.debitUserSurvival;
+  let profileDebit = null;
+  let survivalDebitCalled = false;
+
+  cacheManager.debitUserProfile = async (userId, field, amount) => {
+    profileDebit = { userId, field, amount };
+    return { ok: true };
+  };
+  cacheManager.debitUserSurvival = async () => {
+    survivalDebitCalled = true;
+    return { ok: true };
+  };
+
+  try {
+    const res = await executeAtomicPayment({
+      userId: "u-profile",
+      amount: 75,
+      currency: "pratamaDollars",
+    });
+
+    assert.equal(res.ok, true);
+    assert.deepEqual(profileDebit, {
+      userId: "u-profile",
+      field: "pratamaDollars",
+      amount: 75,
+    });
+    assert.equal(survivalDebitCalled, false);
+  } finally {
+    cacheManager.debitUserProfile = origProfileDebit;
+    cacheManager.debitUserSurvival = origSurvivalDebit;
+  }
+});
+
 test("transactionHelper - executeAtomicPayment compensatory rollback on action failure", async () => {
   const origDebit = cacheManager.debitUserSurvival;
   const origInc = cacheManager.incrementUserSurvival;

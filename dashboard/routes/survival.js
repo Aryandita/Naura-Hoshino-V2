@@ -8,7 +8,8 @@
 
 const express = require("express");
 const { logger } = require("../../src/managers/logger");
-const { isOwner } = require("../middleware/auth");
+const { isOwner, requireApiLogin } = require("../middleware/auth");
+const { executeAtomicPayment } = require("../../src/utils/transactionHelper");
 
 let landEngine = null;
 try {
@@ -386,7 +387,7 @@ module.exports = () => {
   // ------------------------------------------------------------------
   // 5. Klaim Kapling Tanah (Interactive Sandbox / Live)
   // ------------------------------------------------------------------
-  router.post("/territory/claim", async (req, res) => {
+  router.post("/territory/claim", requireApiLogin, async (req, res) => {
     try {
       const { x, y, clanName, clanTag } = req.body || {};
       const parsedX = parseInt(x, 10);
@@ -397,63 +398,72 @@ module.exports = () => {
       }
 
       const key = `${parsedX},${parsedY}`;
-      if (DEFAULT_PLOTS[key]) {
-        return res.status(400).json({ success: false, error: `Kapling (${parsedX}, ${parsedY}) sudah dikuasai oleh ${DEFAULT_PLOTS[key].clanName}.` });
-      }
-
-      const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user;
-      let resolvedClanName = "Sensei Brigade";
-      let resolvedClanTag = "VIP";
-      let resolvedClanId = `clan_sandbox_${Date.now()}`;
-
-      if (isAuth) {
-        try {
-          const UserSurvival = require("../../src/models/UserSurvival");
-          const GuildClan = require("../../src/models/GuildClan");
-          const userSurv = await UserSurvival.findOne({ where: { userId: req.user.id } });
-          if (userSurv && userSurv.clanId) {
-            const realClan = await GuildClan.findByPk(userSurv.clanId);
-            if (realClan) {
-              resolvedClanId = String(realClan.id);
-              resolvedClanName = realClan.name;
-              resolvedClanTag = realClan.tag || "CLN";
-            }
-          } else if (clanName && isOwner(req.user.id)) {
-            resolvedClanName = String(clanName).slice(0, 32);
-            resolvedClanTag = String(clanTag || "OWN").slice(0, 5);
+      const claimResult = await cacheManager.withLock(
+        `lock:dashboard:territory:${key}`,
+        5000,
+        async () => {
+          if (DEFAULT_PLOTS[key]) {
+            return {
+              ok: false,
+              error: `Kapling (${parsedX}, ${parsedY}) sudah dikuasai oleh ${DEFAULT_PLOTS[key].clanName}.`,
+            };
           }
-        } catch (_) {}
-      } else {
-        resolvedClanName = clanName ? String(clanName).slice(0, 32) : "Sensei Brigade (Demo)";
-        resolvedClanTag = clanTag ? String(clanTag).slice(0, 5) : "DEMO";
+
+          let resolvedClanName = "Sensei Brigade";
+          let resolvedClanTag = "VIP";
+          let resolvedClanId = `clan_${req.user.id}`;
+
+          try {
+            const UserSurvival = require("../../src/models/UserSurvival");
+            const GuildClan = require("../../src/models/GuildClan");
+            const userSurv = await UserSurvival.findOne({ where: { userId: req.user.id } });
+            if (userSurv?.clanId) {
+              const realClan = await GuildClan.findByPk(userSurv.clanId);
+              if (realClan) {
+                resolvedClanId = String(realClan.id);
+                resolvedClanName = realClan.name;
+                resolvedClanTag = realClan.tag || "CLN";
+              }
+            } else if (clanName && isOwner(req.user.id)) {
+              resolvedClanName = String(clanName).slice(0, 32);
+              resolvedClanTag = String(clanTag || "OWN").slice(0, 5);
+            }
+          } catch (_) {}
+
+          const newPlot = {
+            x: parsedX,
+            y: parsedY,
+            clanId: resolvedClanId,
+            clanName: resolvedClanName,
+            clanTag: resolvedClanTag,
+            color: "#fbbf24",
+            terrain: "Plains",
+            structure: { type: "castle", tier: 1, name: "Frontier Outpost" },
+            defensePower: 500,
+            buffs: ["+10% Sukamaju Koin (SC) Yield", "+5% Fortress Shield"],
+            claimedAt: Date.now(),
+          };
+
+          DEFAULT_PLOTS[key] = newPlot;
+          COMBAT_LOGS.unshift({
+            id: Date.now(),
+            text: `🏰 ${newPlot.clanName} berhasil mengklaim kapling strategis baru di Koordinat (${parsedX}, ${parsedY})!`,
+            time: "Baru saja",
+            type: "claim",
+          });
+
+          return { ok: true, plot: newPlot };
+        },
+      );
+
+      if (!claimResult.ok) {
+        return res.status(400).json({ success: false, error: claimResult.error });
       }
-
-      const newPlot = {
-        x: parsedX,
-        y: parsedY,
-        clanId: resolvedClanId,
-        clanName: resolvedClanName,
-        clanTag: resolvedClanTag,
-        color: "#fbbf24",
-        terrain: "Plains",
-        structure: { type: "castle", tier: 1, name: "Frontier Outpost" },
-        defensePower: 500,
-        buffs: ["+10% Sukamaju Koin (SC) Yield", "+5% Fortress Shield"],
-        claimedAt: Date.now(),
-      };
-
-      DEFAULT_PLOTS[key] = newPlot;
-      COMBAT_LOGS.unshift({
-        id: Date.now(),
-        text: `🏰 ${newPlot.clanName} berhasil mengklaim kapling strategis baru di Koordinat (${parsedX}, ${parsedY})!`,
-        time: "Baru saja",
-        type: "claim",
-      });
 
       return res.json({
         success: true,
-        message: `Berhasil mengklaim kapling (${parsedX}, ${parsedY}) untuk klan ${newPlot.clanName}!`,
-        plot: newPlot,
+        message: `Berhasil mengklaim kapling (${parsedX}, ${parsedY}) untuk klan ${claimResult.plot.clanName}!`,
+        plot: claimResult.plot,
       });
     } catch (err) {
       return res.status(500).json({ success: false, error: err.message });
@@ -475,7 +485,59 @@ module.exports = () => {
   const cacheManager = require("../../src/managers/cacheManager");
   const { getTimeState } = require("../../src/survival/helpers/survivalTime");
 
-  // Helper untuk membaca / menginisialisasi status pemain
+  const CURRENCY_FIELDS = Object.freeze({
+    SC: { owner: "survival", field: "sukamajuCoins" },
+    PD: { owner: "profile", field: "pratamaDollars" },
+    VB: { owner: "survival", field: "scholarshipVouchers" },
+  });
+
+  function currencyFieldOf(currencyType) {
+    return CURRENCY_FIELDS[currencyType] || null;
+  }
+
+  function balanceOf(player, currencyType) {
+    const config = currencyFieldOf(currencyType);
+    return config ? Number(player[config.field] ?? 0) : 0;
+  }
+
+  async function refundCurrency(userId, currencyType, amount) {
+    const config = currencyFieldOf(currencyType);
+    if (!config || amount <= 0) return false;
+    return config.owner === "profile"
+      ? cacheManager.incrementUserProfile(userId, { [config.field]: amount })
+      : cacheManager.incrementUserSurvival(userId, { [config.field]: amount });
+  }
+
+  async function freshBalance(userId, currencyType) {
+    const config = currencyFieldOf(currencyType);
+    if (!config) return 0;
+    const holder = config.owner === "profile"
+      ? await cacheManager.getUserProfile(userId)
+      : await cacheManager.getUserSurvival(userId);
+    return Number(holder?.[config.field] ?? 0);
+  }
+
+  async function runPlayerMutation(req, workFn) {
+    return cacheManager.withLock(
+      `lock:dashboard:survival:${req.user.id}`,
+      10000,
+      async () => workFn(await resolvePlayerSurvivalState(req)),
+    );
+  }
+
+  async function runPaidMutation({ player, currencyType, amount, reason, action }) {
+    const config = currencyFieldOf(currencyType);
+    if (!config) return { ok: false, reason: "INVALID_CURRENCY" };
+    return executeAtomicPayment({
+      userId: player.userId,
+      amount,
+      currency: config.field,
+      reason,
+      action,
+    });
+  }
+
+  // Helper untuk membaca status pemain yang sudah terautentikasi.
   async function resolvePlayerSurvivalState(req) {
     const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user;
     if (isAuth) {
@@ -583,7 +645,7 @@ module.exports = () => {
   });
 
   // 6.3 Berpindah Tempat (Roam)
-  router.post("/world/roam", async (req, res) => {
+  router.post("/world/roam", requireApiLogin, async (req, res) => {
     try {
       const { targetAreaId, targetLocationId } = req.body || {};
       if (!targetAreaId || !targetLocationId) {
@@ -600,41 +662,41 @@ module.exports = () => {
         return res.status(404).json({ success: false, error: `Sub-lokasi ${targetLocationId} tidak ditemukan di wilayah ini.` });
       }
 
-      const player = await resolvePlayerSurvivalState(req);
+      const outcome = await runPlayerMutation(req, async (player) => {
+        // Cek izin akses wilayah (Kawasan Tambang Raksasa wajib kendaraan)
+        const accessCheck = canAccessArea(targetAreaId, player.vehicle);
+        if (!accessCheck.canAccess) {
+          return { status: 403, body: { success: false, error: accessCheck.reason, requiresVehicle: true } };
+        }
 
-      // Cek izin akses wilayah (Kawasan Tambang Raksasa wajib kendaraan)
-      const accessCheck = canAccessArea(targetAreaId, player.vehicle);
-      if (!accessCheck.canAccess) {
-        return res.status(403).json({
-          success: false,
-          error: accessCheck.reason,
-          requiresVehicle: true,
-        });
-      }
+        const roamCost = calculateRoamCost(player.currentAreaId, targetAreaId, targetLocationId, player.vehicle);
 
-      const roamCost = calculateRoamCost(player.currentAreaId, targetAreaId, targetLocationId, player.vehicle);
+        if (player.stamina < roamCost) {
+          return {
+            status: 400,
+            body: {
+              success: false,
+              error: `Stamina tidak mencukupi untuk menjelajah ke ${location.name}. Butuh ${roamCost} Stamina, sisa staminamu ${player.stamina}.`,
+            },
+          };
+        }
 
-      if (player.stamina < roamCost) {
-        return res.status(400).json({
-          success: false,
-          error: `Stamina tidak mencukupi untuk menjelajah ke ${location.name}. Butuh ${roamCost} Stamina, sisa staminamu ${player.stamina}.`,
-        });
-      }
+        const newStamina = Math.max(0, player.stamina - roamCost);
 
-      const newStamina = Math.max(0, player.stamina - roamCost);
-
-      if (player.isLoggedIn) {
         await cacheManager.updateUserSurvival(player.userId, {
           stamina: newStamina,
           currentLocation: targetAreaId,
           currentSubLocation: targetLocationId,
         });
-      } else {
-        req.session.guestSurvival.stamina = newStamina;
-        req.session.guestSurvival.currentAreaId = targetAreaId;
-        req.session.guestSurvival.currentLocationId = targetLocationId;
+
+        return { status: 200, body: { roamCost, newStamina, player } };
+      });
+
+      if (outcome.status !== 200) {
+        return res.status(outcome.status).json(outcome.body);
       }
 
+      const { roamCost, newStamina, player } = outcome.body;
       const isCrossRegion = player.currentAreaId !== targetAreaId;
       const vehicleBonusText = player.activeVehicle
         ? ` Mengendarai ${player.activeVehicle.name} (diskon stamina aktif).`
@@ -659,7 +721,7 @@ module.exports = () => {
   });
 
   // 6.4 Bekerja di Sub-Lokasi
-  router.post("/world/work", async (req, res) => {
+  router.post("/world/work", requireApiLogin, async (req, res) => {
     try {
       const { areaId, locationId } = req.body || {};
       const area = ADISHA_REGIONS[areaId];
@@ -670,63 +732,60 @@ module.exports = () => {
         return res.status(400).json({ success: false, error: "Tidak ada lowongan pekerjaan di tempat ini." });
       }
 
-      const player = await resolvePlayerSurvivalState(req);
-
-      // Cek kelayakan statistik
-      const eligibility = evaluateWorkEligibility(location, player.stats);
-      if (!eligibility.canWork) {
-        return res.status(400).json({
-          success: false,
-          error: `Syarat fisik belum terpenuhi untuk pekerjaan ini: ${eligibility.missing.join(", ")}.`,
-          missing: eligibility.missing,
-        });
-      }
-
-      const workStaminaCost = 10;
-      if (player.stamina < workStaminaCost) {
-        return res.status(400).json({
-          success: false,
-          error: `Stamina kamu terlalu lelah untuk bekerja. Butuh ${workStaminaCost} Stamina, sisa ${player.stamina}.`,
-        });
-      }
-
-      const reward = location.workReward || { currency: "SC", amount: 30, exp: 5 };
-      const newStamina = Math.max(0, player.stamina - workStaminaCost);
-      let newBalance = 0;
-
-      if (player.isLoggedIn) {
-        await cacheManager.updateUserSurvival(player.userId, { stamina: newStamina });
-        if (reward.currency === "SC") {
-          await cacheManager.incrementUserSurvival(player.userId, { sukamajuCoins: reward.amount });
-          const fresh = await cacheManager.getUserSurvival(player.userId);
-          newBalance = fresh.sukamajuCoins || fresh.starFragments || 0;
-        } else if (reward.currency === "PD") {
-          await cacheManager.incrementUserProfile(player.userId, { pratamaDollars: reward.amount });
-          const fresh = await cacheManager.getUserProfile(player.userId);
-          newBalance = fresh.pratamaDollars || fresh.coins || 0;
-        } else if (reward.currency === "VB") {
-          await cacheManager.incrementUserSurvival(player.userId, { scholarshipVouchers: reward.amount });
-          const fresh = await cacheManager.getUserSurvival(player.userId);
-          newBalance = fresh.scholarshipVouchers || fresh.coupons || 0;
+      const outcome = await runPlayerMutation(req, async (player) => {
+        // Cek kelayakan statistik
+        const eligibility = evaluateWorkEligibility(location, player.stats);
+        if (!eligibility.canWork) {
+          return {
+            status: 400,
+            body: {
+              success: false,
+              error: `Syarat fisik belum terpenuhi untuk pekerjaan ini: ${eligibility.missing.join(", ")}.`,
+              missing: eligibility.missing,
+            },
+          };
         }
+
+        const workStaminaCost = 10;
+        if (player.stamina < workStaminaCost) {
+          return {
+            status: 400,
+            body: {
+              success: false,
+              error: `Stamina kamu terlalu lelah untuk bekerja. Butuh ${workStaminaCost} Stamina, sisa ${player.stamina}.`,
+            },
+          };
+        }
+
+        const reward = location.workReward || { currency: "SC", amount: 30, exp: 5 };
+        const newStamina = Math.max(0, player.stamina - workStaminaCost);
+
+        await cacheManager.updateUserSurvival(player.userId, { stamina: newStamina });
+
+        const config = currencyFieldOf(reward.currency);
+        if (config) {
+          const deltas = { [config.field]: reward.amount };
+          if (config.owner === "profile") {
+            await cacheManager.incrementUserProfile(player.userId, deltas);
+          } else {
+            await cacheManager.incrementUserSurvival(player.userId, deltas);
+          }
+        }
+
         try {
           const leveling = require("../../src/survival/engines/survivalLeveling");
           await leveling.addPlayerXP(player.userId, reward.exp || 5);
         } catch (_) {}
-      } else {
-        req.session.guestSurvival.stamina = newStamina;
-        if (reward.currency === "SC") {
-          req.session.guestSurvival.sukamajuCoins += reward.amount;
-          newBalance = req.session.guestSurvival.sukamajuCoins;
-        } else if (reward.currency === "PD") {
-          req.session.guestSurvival.pratamaDollars += reward.amount;
-          newBalance = req.session.guestSurvival.pratamaDollars;
-        } else if (reward.currency === "VB") {
-          req.session.guestSurvival.scholarshipVouchers += reward.amount;
-          newBalance = req.session.guestSurvival.scholarshipVouchers;
-        }
+
+        const newBalance = await freshBalance(player.userId, reward.currency);
+        return { status: 200, body: { reward, newStamina, newBalance } };
+      });
+
+      if (outcome.status !== 200) {
+        return res.status(outcome.status).json(outcome.body);
       }
 
+      const { reward, newStamina, newBalance } = outcome.body;
       return res.json({
         success: true,
         message: `Selesai bekerja sebagai "${location.jobTitle || 'Pekerja'}"! Kamu menerima upah ${reward.amount} ${reward.currency} dan +${reward.exp} EXP.`,
@@ -740,7 +799,7 @@ module.exports = () => {
   });
 
   // 6.5 Belanja di Toko / Warung
-  router.post("/world/shop/buy", async (req, res) => {
+  router.post("/world/shop/buy", requireApiLogin, async (req, res) => {
     try {
       const { areaId, locationId, itemId } = req.body || {};
       const area = ADISHA_REGIONS[areaId];
@@ -756,55 +815,72 @@ module.exports = () => {
         return res.status(404).json({ success: false, error: "Barang tidak tersedia di toko ini." });
       }
 
-      const player = await resolvePlayerSurvivalState(req);
       const currencyType = item.currency || "SC";
-      let currentBal = 0;
+      const outcome = await runPlayerMutation(req, async (player) => {
+        const currentBal = balanceOf(player, currencyType);
+        if (currentBal < item.price) {
+          return {
+            status: 400,
+            body: {
+              success: false,
+              error: `Saldo tidak cukup! Butuh ${item.price} ${currencyType}, saldo kamu saat ini ${currentBal} ${currencyType}.`,
+            },
+          };
+        }
 
-      if (currencyType === "SC") currentBal = player.sukamajuCoins;
-      else if (currencyType === "PD") currentBal = player.pratamaDollars;
-      else if (currencyType === "VB") currentBal = player.scholarshipVouchers;
+        const restores = item.restores || {};
+        const newStamina = Math.min(100, player.stamina + (restores.stamina || 0));
+        const newHunger = Math.min(100, player.hunger + (restores.hunger || 0));
+        const newThirst = Math.min(100, player.thirst + (restores.thirst || 0));
+        const newHp = Math.min(100, player.hp + (restores.hp || 0));
 
-      if (currentBal < item.price) {
-        return res.status(400).json({
-          success: false,
-          error: `Saldo tidak cukup! Butuh ${item.price} ${currencyType}, saldo kamu saat ini ${currentBal} ${currencyType}.`,
+        const payment = await runPaidMutation({
+          player,
+          currencyType,
+          amount: item.price,
+          reason: `dashboard_shop_${item.itemId}`,
+          action: async () => {
+            await cacheManager.updateUserSurvival(player.userId, {
+              stamina: newStamina,
+              hunger: newHunger,
+              thirst: newThirst,
+              hp: newHp,
+            });
+
+            if (item.isTicket) {
+              const { addItemsAtomic } = require("../../src/survival/engines/inventoryHelper");
+              const stored = await addItemsAtomic(player.userId, [
+                { id: item.itemId, amount: 1, name: item.name },
+              ]);
+              if (!stored || stored.ok === false) {
+                throw new Error("Gagal menyimpan tiket ke tas.");
+              }
+            }
+          },
         });
-      }
 
-      const newBal = currentBal - item.price;
-      const restores = item.restores || {};
-      const newStamina = Math.min(100, player.stamina + (restores.stamina || 0));
-      const newHunger = Math.min(100, player.hunger + (restores.hunger || 0));
-      const newThirst = Math.min(100, player.thirst + (restores.thirst || 0));
-      const newHp = Math.min(100, player.hp + (restores.hp || 0));
+        if (!payment.ok) {
+          return {
+            status: 400,
+            body: {
+              success: false,
+              error: `Saldo tidak cukup! Butuh ${item.price} ${currencyType}, saldo kamu saat ini ${currentBal} ${currencyType}.`,
+            },
+          };
+        }
 
-      if (player.isLoggedIn) {
-        const patch = {
-          stamina: newStamina,
-          hunger: newHunger,
-          thirst: newThirst,
-          hp: newHp,
+        const newBal = await freshBalance(player.userId, currencyType);
+        return {
+          status: 200,
+          body: {
+            newBal,
+            vitality: { hp: newHp, stamina: newStamina, hunger: newHunger, thirst: newThirst },
+          },
         };
-        if (currencyType === "SC") patch.sukamajuCoins = newBal;
-        else if (currencyType === "VB") patch.scholarshipVouchers = newBal;
-        await cacheManager.updateUserSurvival(player.userId, patch);
+      });
 
-        if (currencyType === "PD") {
-          await cacheManager.updateUserProfile(player.userId, { pratamaDollars: newBal });
-        }
-
-        if (item.isTicket) {
-          const { addItemsAtomic } = require("../../src/survival/engines/inventoryHelper");
-          await addItemsAtomic(player.userId, [{ id: item.itemId, amount: 1, name: item.name }]);
-        }
-      } else {
-        req.session.guestSurvival.stamina = newStamina;
-        req.session.guestSurvival.hunger = newHunger;
-        req.session.guestSurvival.thirst = newThirst;
-        req.session.guestSurvival.hp = newHp;
-        if (currencyType === "SC") req.session.guestSurvival.sukamajuCoins = newBal;
-        else if (currencyType === "PD") req.session.guestSurvival.pratamaDollars = newBal;
-        else if (currencyType === "VB") req.session.guestSurvival.scholarshipVouchers = newBal;
+      if (outcome.status !== 200) {
+        return res.status(outcome.status).json(outcome.body);
       }
 
       return res.json({
@@ -813,13 +889,8 @@ module.exports = () => {
           ? `Berhasil membeli ${item.name}! Tiket disimpan di tas untuk kencan.`
           : `Berhasil membeli dan mengonsumsi ${item.name}! Vitalitasmu pulih.`,
         item,
-        newBalance: newBal,
-        vitality: {
-          hp: newHp,
-          stamina: newStamina,
-          hunger: newHunger,
-          thirst: newThirst,
-        },
+        newBalance: outcome.body.newBal,
+        vitality: outcome.body.vitality,
       });
     } catch (err) {
       return res.status(500).json({ success: false, error: err.message });
@@ -827,7 +898,7 @@ module.exports = () => {
   });
 
   // 6.6 Pembelian Kendaraan Bermotor di Dealer
-  router.post("/world/vehicle/buy", async (req, res) => {
+  router.post("/world/vehicle/buy", requireApiLogin, async (req, res) => {
     try {
       const { vehicleId } = req.body || {};
       const vehicle = getVehicleInfo(vehicleId);
@@ -835,115 +906,109 @@ module.exports = () => {
         return res.status(404).json({ success: false, error: "Kendaraan tidak terdaftar di dealer Adisha." });
       }
 
-      const player = await resolvePlayerSurvivalState(req);
-
-      // Aturan: Hanya boleh memiliki 1 kendaraan aktif
-      if (player.vehicle) {
-        const currentV = getVehicleInfo(player.vehicle);
-        const resale = calculateResaleValue(player.vehicle);
-        return res.status(400).json({
-          success: false,
-          error: `Kamu sudah memiliki ${currentV?.name || "kendaraan"}! User hanya bisa memiliki 1 kendaraan. Jual kendaraan lamamu terlebih dahulu seharga ${resale?.resalePrice} ${resale?.currency} (70% harga beli) sebelum membeli motor baru.`,
-          hasActiveVehicle: true,
-          currentVehicle: currentV,
-          resaleInfo: resale,
-        });
-      }
-
       const currencyType = vehicle.currency || "SC";
-      let currentBal = 0;
-      if (currencyType === "SC") currentBal = player.sukamajuCoins;
-      else if (currencyType === "PD") currentBal = player.pratamaDollars;
-      else if (currencyType === "VB") currentBal = player.scholarshipVouchers;
-
-      if (currentBal < vehicle.price) {
-        return res.status(400).json({
-          success: false,
-          error: `Saldo tidak mencukupi untuk membeli ${vehicle.name}! Butuh ${vehicle.price} ${currencyType}, saldo kamu ${currentBal} ${currencyType}.`,
-        });
-      }
-
-      const newBal = currentBal - vehicle.price;
-
-      if (player.isLoggedIn) {
-        const patch = { vehicle: vehicle.id };
-        if (currencyType === "SC") patch.sukamajuCoins = newBal;
-        else if (currencyType === "VB") patch.scholarshipVouchers = newBal;
-        await cacheManager.updateUserSurvival(player.userId, patch);
-
-        if (currencyType === "PD") {
-          await cacheManager.updateUserProfile(player.userId, { pratamaDollars: newBal });
+      const outcome = await runPlayerMutation(req, async (player) => {
+        // Aturan: Hanya boleh memiliki 1 kendaraan aktif
+        if (player.vehicle) {
+          const currentV = getVehicleInfo(player.vehicle);
+          const resale = calculateResaleValue(player.vehicle);
+          return {
+            status: 400,
+            body: {
+              success: false,
+              error: `Kamu sudah memiliki ${currentV?.name || "kendaraan"}! User hanya bisa memiliki 1 kendaraan. Jual kendaraan lamamu terlebih dahulu seharga ${resale?.resalePrice} ${resale?.currency} (70% harga beli) sebelum membeli motor baru.`,
+              hasActiveVehicle: true,
+              currentVehicle: currentV,
+              resaleInfo: resale,
+            },
+          };
         }
-      } else {
-        req.session.guestSurvival.vehicle = vehicle.id;
-        if (currencyType === "SC") req.session.guestSurvival.sukamajuCoins = newBal;
-        else if (currencyType === "PD") req.session.guestSurvival.pratamaDollars = newBal;
-        else if (currencyType === "VB") req.session.guestSurvival.scholarshipVouchers = newBal;
-      }
 
-      return res.json({
-        success: true,
-        message: `Selamat! Kamu resmi memiliki ${vehicle.name} (${vehicle.vehicleType})! Diskon stamina roam aktif dan izin akses Kawasan Tambang Raksasa kini terbuka.`,
-        vehicle,
-        newBalance: newBal,
+        const currentBal = balanceOf(player, currencyType);
+        if (currentBal < vehicle.price) {
+          return {
+            status: 400,
+            body: {
+              success: false,
+              error: `Saldo tidak mencukupi untuk membeli ${vehicle.name}! Butuh ${vehicle.price} ${currencyType}, saldo kamu ${currentBal} ${currencyType}.`,
+            },
+          };
+        }
+
+        const payment = await runPaidMutation({
+          player,
+          currencyType,
+          amount: vehicle.price,
+          reason: `dashboard_vehicle_buy_${vehicle.id}`,
+          action: async () => {
+            await cacheManager.updateUserSurvival(player.userId, { vehicle: vehicle.id });
+          },
+        });
+
+        if (!payment.ok) {
+          return {
+            status: 400,
+            body: {
+              success: false,
+              error: `Saldo tidak mencukupi untuk membeli ${vehicle.name}! Butuh ${vehicle.price} ${currencyType}, saldo kamu ${currentBal} ${currencyType}.`,
+            },
+          };
+        }
+
+        const newBal = await freshBalance(player.userId, currencyType);
+        return {
+          status: 200,
+          body: {
+            success: true,
+            message: `Selamat! Kamu resmi memiliki ${vehicle.name} (${vehicle.vehicleType})! Diskon stamina roam aktif dan izin akses Kawasan Tambang Raksasa kini terbuka.`,
+            vehicle,
+            newBalance: newBal,
+          },
+        };
       });
+
+      return res.status(outcome.status).json(outcome.body);
     } catch (err) {
       return res.status(500).json({ success: false, error: err.message });
     }
   });
 
   // 6.7 Penjualan Kendaraan Lama ke Dealer (Refund 70% dengan Currency yang Sama)
-  router.post("/world/vehicle/sell", async (req, res) => {
+  router.post("/world/vehicle/sell", requireApiLogin, async (req, res) => {
     try {
-      const player = await resolvePlayerSurvivalState(req);
+      const outcome = await runPlayerMutation(req, async (player) => {
+        if (!player.vehicle) {
+          return {
+            status: 400,
+            body: { success: false, error: "Kamu tidak memiliki kendaraan untuk dijual." },
+          };
+        }
 
-      if (!player.vehicle) {
-        return res.status(400).json({ success: false, error: "Kamu tidak memiliki kendaraan untuk dijual." });
-      }
+        const resale = calculateResaleValue(player.vehicle);
+        if (!resale) {
+          return {
+            status: 400,
+            body: { success: false, error: "Data kendaraan tidak dapat diverifikasi." },
+          };
+        }
 
-      const resale = calculateResaleValue(player.vehicle);
-      if (!resale) {
-        return res.status(400).json({ success: false, error: "Data kendaraan tidak dapat diverifikasi." });
-      }
-
-      const currencyType = resale.currency;
-      let newBal = 0;
-
-      if (player.isLoggedIn) {
+        const currencyType = resale.currency;
         await cacheManager.updateUserSurvival(player.userId, { vehicle: null });
-        if (currencyType === "SC") {
-          await cacheManager.incrementUserSurvival(player.userId, { sukamajuCoins: resale.resalePrice });
-          const fresh = await cacheManager.getUserSurvival(player.userId);
-          newBal = fresh.sukamajuCoins || 0;
-        } else if (currencyType === "PD") {
-          await cacheManager.incrementUserProfile(player.userId, { pratamaDollars: resale.resalePrice });
-          const fresh = await cacheManager.getUserProfile(player.userId);
-          newBal = fresh.pratamaDollars || 0;
-        } else if (currencyType === "VB") {
-          await cacheManager.incrementUserSurvival(player.userId, { scholarshipVouchers: resale.resalePrice });
-          const fresh = await cacheManager.getUserSurvival(player.userId);
-          newBal = fresh.scholarshipVouchers || 0;
-        }
-      } else {
-        req.session.guestSurvival.vehicle = null;
-        if (currencyType === "SC") {
-          req.session.guestSurvival.sukamajuCoins += resale.resalePrice;
-          newBal = req.session.guestSurvival.sukamajuCoins;
-        } else if (currencyType === "PD") {
-          req.session.guestSurvival.pratamaDollars += resale.resalePrice;
-          newBal = req.session.guestSurvival.pratamaDollars;
-        } else if (currencyType === "VB") {
-          req.session.guestSurvival.scholarshipVouchers += resale.resalePrice;
-          newBal = req.session.guestSurvival.scholarshipVouchers;
-        }
-      }
+        await refundCurrency(player.userId, currencyType, resale.resalePrice);
 
-      return res.json({
-        success: true,
-        message: `Berhasil menjual ${resale.vehicleName} ke dealer! Kamu menerima refund sebesar ${resale.resalePrice} ${resale.currency} (70% dari harga asli). Sekarang kamu dapat membeli kendaraan baru.`,
-        resale,
-        newBalance: newBal,
+        const newBal = await freshBalance(player.userId, currencyType);
+        return {
+          status: 200,
+          body: {
+            success: true,
+            message: `Berhasil menjual ${resale.vehicleName} ke dealer! Kamu menerima refund sebesar ${resale.resalePrice} ${resale.currency} (70% dari harga asli). Sekarang kamu dapat membeli kendaraan baru.`,
+            resale,
+            newBalance: newBal,
+          },
+        };
       });
+
+      return res.status(outcome.status).json(outcome.body);
     } catch (err) {
       return res.status(500).json({ success: false, error: err.message });
     }
