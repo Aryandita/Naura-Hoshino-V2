@@ -1,4 +1,113 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "snapshot": false
+  "snapshot": false,
+  "skills": ["./.agents/skills"],
+  "mcp": {
+    "servers": {
+      "postgres": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-postgres",
+          "{env:SUPABASE_DATABASE_URL}"
+        ]
+      },
+      "mongodb": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "mongodb-mcp-server",
+          "{env:MONGODB_URI}"
+        ]
+      },
+      "redis": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-redis",
+          "{env:REDIS_URL}"
+        ]
+      },
+      "mysql": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@benborla29/mcp-server-mysql",
+          "--host",
+          "{env:MYSQL_HOST}",
+          "--port",
+          "{env:MYSQL_PORT}",
+          "--user",
+          "{env:MYSQL_USER}",
+          "--password",
+          "{env:MYSQL_PASSWORD}",
+          "--database",
+          "{env:MYSQL_DATABASE}"
+        ]
+      },
+      "github": {
+        "type": "local",
+        "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+        "environment": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+        }
+      },
+      "stitch": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "mcp-remote",
+          "https://stitch.googleapis.com/mcp",
+          "--header",
+          "X-Goog-Api-Key: {env:GOOGLE_API_KEY}"
+        ]
+      },
+      "testsprite": {
+        "type": "local",
+        "command": ["npx", "-y", "@testsprite/testsprite-mcp@latest"],
+        "environment": {
+          "API_KEY": "{env:TESTSPRITE_API_KEY}"
+        }
+      },
+      "agent-reach": {
+        "type": "local",
+        "command": ["python", "-m", "agent_reach.cli", "mcp", "serve"]
+      },
+      "sequential-thinking": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-sequential-thinking"
+        ]
+      },
+      "memory": {
+        "type": "local",
+        "command": ["npx", "-y", "@modelcontextprotocol/server-memory"]
+      },
+      "chrome-devtools": {
+        "type": "local",
+        "command": ["npx", "-y", "chrome-devtools-mcp@latest", "--headless"]
+      },
+      "codebase-memory": {
+        "type": "local",
+        "command": ["C:/Users/ACER/.local/bin/codebase-memory-mcp.exe"]
+      },
+      "playwright": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@playwright/mcp@0.0.75",
+          "--config",
+          "C:/Users/ACER/.perch/playwright-mcp-browser.json"
+        ]
+      }
+    }
+  }
 }

@@ -10,7 +10,7 @@ let packageJson = {};
 try {
   packageJson = require("../../package.json");
 } catch {
-  packageJson = { version: "2.4.0" };
+  packageJson = { version: "2.5.0" };
 }
 
 const BOT_VERSION = packageJson.version;

@@ -17,8 +17,9 @@ const MANAGE_GUILD = 1n << 5n;
 const SNOWFLAKE_REGEX = /^\d{17,20}$/;
 
 /**
- * Kumpulkan daftar owner dari env.OWNER_IDS (array) maupun process.env.OWNER_ID
- * (string tunggal / dipisah koma). Hasilnya selalu array string unik.
+ * Kumpulkan daftar owner dari env.OWNER_IDS (array, hasil parse
+ * OWNER_IDS / OWNER_ID di src/config/env.js). Hasilnya selalu array
+ * string unik.
  */
 function getOwnerIds() {
   return Array.isArray(env.OWNER_IDS) ? env.OWNER_IDS.map(String) : [];
@@ -148,8 +149,10 @@ function requireGuildManager(req, res, next) {
   }
 
   if (guildId === "current") {
-    req.guildId = "current";
-    return next();
+    return res.status(400).json({
+      success: false,
+      error: "Pilih server yang dikelola sebelum menjalankan aksi dashboard.",
+    });
   }
 
   if (!SNOWFLAKE_REGEX.test(String(guildId))) {

@@ -45,17 +45,16 @@ class NauraCard extends HTMLElement {
         }
 
         .card {
-          background: var(--bg-surface, rgba(255, 255, 255, 0.04));
+          background: var(--bg-layer, #12151f);
           border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
           border-radius: var(--r-xl, 18px);
-          backdrop-filter: var(--blur-md, blur(16px));
-          -webkit-backdrop-filter: var(--blur-md, blur(16px));
           position: relative;
           overflow: hidden;
           box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 8px 24px rgba(6, 8, 16, 0.35);
           transition: transform var(--t-base, 200ms) var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)), 
                       border-color var(--t-base, 200ms ease), 
-                      box-shadow var(--t-base, 200ms ease);
+                      box-shadow var(--t-base, 200ms ease),
+                      background-color var(--t-base, 200ms ease);
         }
 
         /* Variants */
@@ -64,7 +63,7 @@ class NauraCard extends HTMLElement {
         }
 
         .card--glass {
-          background: var(--surface-glass, rgba(255, 255, 255, 0.03));
+          background: var(--bg-layer, #12151f);
         }
 
         .card--elevated {

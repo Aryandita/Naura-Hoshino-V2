@@ -911,6 +911,75 @@ function register(router, client) {
       return res.status(500).json({ success: false, error: err.message });
     }
   });
+
+  // --- 14. Marketplace Buyout / Direct Purchase (Atomic) ---
+  router.post("/marketplace/buy", requireApiLogin, async (req, res) => {
+    try {
+      const { auctionId } = req.body || {};
+      if (!auctionId) {
+        return res.status(400).json({ success: false, error: "ID lelang wajib disertakan." });
+      }
+
+      const buyerId = req.user.id;
+      const MarketAuction = require("../../../src/models/MarketAuction");
+      const cacheManager = require("../../../src/managers/cacheManager");
+      const { addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
+      const { executeAtomicPayment } = require("../../../src/utils/transactionHelper");
+
+      const auction = await MarketAuction.findOne({
+        where: { id: auctionId, status: "active" },
+      });
+
+      if (!auction) {
+        return res.status(404).json({ success: false, error: "Barang lelang tidak ditemukan atau sudah terjual." });
+      }
+
+      if (String(auction.sellerId) === String(buyerId)) {
+        return res.status(400).json({ success: false, error: "Kamu tidak bisa membeli barang daganganmu sendiri." });
+      }
+
+      const price = Number(auction.buyoutPrice || auction.currentBid || auction.startingPrice || 0);
+      const currency = (auction.currency || "nsf").toLowerCase();
+      const currencyField = currency === "sc" || currency === "nsf" ? "sukamajuCoins" : "starFragments";
+
+      const paymentResult = await executeAtomicPayment({
+        userId: buyerId,
+        cost: price,
+        currencyField,
+        domain: "survival",
+        actionFn: async () => {
+          auction.status = "sold";
+          auction.buyerId = buyerId;
+          await auction.save();
+
+          if (currencyField === "sukamajuCoins") {
+            await cacheManager.incrementUserSurvival(auction.sellerId, { sukamajuCoins: price });
+          } else {
+            await cacheManager.incrementUserSurvival(auction.sellerId, { starFragments: price });
+          }
+
+          const itemPayload = [{ id: auction.itemId, amount: auction.amount || 1 }];
+          await addItemsAtomic(buyerId, itemPayload);
+          return { auctionId, price, itemId: auction.itemId, amount: auction.amount || 1 };
+        },
+      });
+
+      if (!paymentResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: paymentResult.error || "Saldo tidak mencukupi untuk membeli barang ini.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Transaksi berhasil! Barang telah ditambahkan ke dalam ransel petualangmu.",
+        data: paymentResult.result,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
 }
 
 module.exports = {

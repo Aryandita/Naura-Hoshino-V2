@@ -8,19 +8,18 @@
 .card-stellar {
   container-type: inline-size;
   container-name: card;
-  background: var(--bg-surface, rgba(255, 255, 255, 0.04));
+  background: var(--bg-layer, #12151f);
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
   border-radius: var(--r-xl, 18px);
   padding: var(--sp-card-padding, var(--sp-5, 20px));
-  backdrop-filter: var(--blur-md, blur(16px));
-  -webkit-backdrop-filter: var(--blur-md, blur(16px));
   position: relative;
   overflow: hidden;
   box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 8px 24px rgba(6, 8, 16, 0.35);
-  transition: transform var(--t-base, 200ms) var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
+  transition: transform var(--t-base, 200ms) var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease), background-color var(--t-base, 200ms ease);
 }
 
 .card-stellar:hover {
+  background: var(--bg-layer-elevated, #171b26);
   border-color: var(--border-medium, rgba(255, 255, 255, 0.14));
   transform: translateY(-2px);
   box-shadow: var(--glass-specular-strong, inset 0 1px 0 0 rgba(255, 255, 255, 0.14)), 0 14px 36px rgba(6, 8, 16, 0.45);
@@ -79,18 +78,16 @@
 .stat-card-stellar {
   container-type: inline-size;
   container-name: stat-card;
-  background: var(--bg-surface, rgba(255, 255, 255, 0.04));
+  background: var(--bg-layer, #12151f);
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
   border-radius: var(--r-xl, 18px);
   padding: var(--sp-card-padding, var(--sp-5, 20px));
-  backdrop-filter: var(--blur-md, blur(16px));
-  -webkit-backdrop-filter: var(--blur-md, blur(16px));
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--sp-card-gap, var(--sp-2, 8px));
   box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 6px 20px rgba(6, 8, 16, 0.25);
-  transition: transform var(--t-base, 200ms) var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
+  transition: transform var(--t-base, 200ms) var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease), background-color var(--t-base, 200ms ease);
 }
 
 @container stat-card (max-width: 220px) {
@@ -100,6 +97,7 @@
 }
 
 .stat-card-stellar:hover {
+  background: var(--bg-layer-elevated, #171b26);
   border-color: var(--border-primary, rgba(244, 114, 182, 0.35));
   transform: translateY(-2px);
   box-shadow: var(--glass-specular-primary, inset 0 1px 0 0 rgba(255, 192, 203, 0.2)), 0 10px 28px var(--primary-deep, rgba(244, 114, 182, 0.12));
@@ -502,15 +500,13 @@
 
 /* ─── 8. Feed Item Komponen ─── */
 .feed-item {
-  background: linear-gradient(180deg, rgba(16, 22, 38, 0.7) 0%, rgba(10, 14, 26, 0.85) 100%);
+  background: linear-gradient(180deg, var(--bg-layer-elevated, #171b26) 0%, var(--bg-layer, #12151f) 100%);
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
   border-radius: var(--r-lg, 14px);
   padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 14px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.06)), 0 4px 16px rgba(4, 7, 18, 0.3);
   transition: transform var(--t-fast, 150ms ease), border-color var(--t-fast, 150ms ease), box-shadow var(--t-fast, 150ms ease);
 }
@@ -961,24 +957,23 @@
 .bento-col-3  { grid-column: span 3; }
 
 .bento-card {
-  background: rgba(10, 13, 24, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-layer, #12151f);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
   border-radius: 18px;
   padding: 1.25rem;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 8px 30px rgba(0, 0, 0, 0.4);
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease, box-shadow 200ms ease;
+  box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 8px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
   display: flex;
   flex-direction: column;
 }
 
 .bento-card:hover {
+  background: var(--bg-layer-elevated, #171b26);
   border-color: rgba(244, 114, 182, 0.35);
   transform: translateY(-2px);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.16), 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 114, 182, 0.08);
+  box-shadow: var(--glass-specular-strong, inset 0 1px 0 0 rgba(255, 255, 255, 0.16)), 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 114, 182, 0.08);
 }
 
 .bento-card-header {
@@ -1051,4 +1046,69 @@
   }
 }
 
+/* ─── 13. Micro-Tilt & Specular Light Mask (Anti-Slop Tactile UX) ─── */
+.card-interactive,
+.stat-card-stellar,
+.card-stellar[data-interactive="true"],
+.card-stellar.is-interactive,
+.metric-card,
+.rpg-item-card {
+  position: relative;
+  transform-style: preserve-3d;
+}
 
+.card-interactive::before,
+.stat-card-stellar::before,
+.card-stellar[data-interactive="true"]::before,
+.card-stellar.is-interactive::before,
+.metric-card::before,
+.rpg-item-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    220px circle at var(--specular-x, -999px) var(--specular-y, -999px),
+    rgba(255, 255, 255, 0.20),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 2;
+  opacity: var(--specular-opacity, 0);
+  transition: opacity 200ms ease;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1px;
+}
+
+/* Reduced motion bypass */
+@media (prefers-reduced-motion: reduce) {
+  .card-interactive,
+  .stat-card-stellar,
+  .card-stellar[data-interactive="true"],
+  .card-stellar.is-interactive,
+  .metric-card,
+  .rpg-item-card {
+    transform: none !important;
+    transition: none !important;
+  }
+  .card-interactive::before,
+  .stat-card-stellar::before,
+  .card-stellar[data-interactive="true"]::before,
+  .card-stellar.is-interactive::before,
+  .metric-card::before,
+  .rpg-item-card::before {
+    display: none !important;
+  }
+}
+
+/* Coarse pointer active scale fallback */
+@media (pointer: coarse), (hover: none) {
+  .card-interactive:active,
+  .stat-card-stellar:active,
+  .metric-card:active {
+    transform: scale(0.98);
+    transition: transform 120ms ease;
+  }
+}

@@ -24,7 +24,8 @@ const GuildSettings = require("../../src/models/GuildSettings");
 const { requireOwner } = require("../middleware/auth");
 const { formatMemory } = require("../utils/format");
 
-const EVAL_ENABLED = Boolean(env.OWNER_EVAL_ENABLED);
+const EVAL_ENABLED =
+  env.NODE_ENV !== "production" && Boolean(env.OWNER_EVAL_ENABLED);
 
 function broadcast(client, message) {
   const eventBus = require("../../src/core/eventBus");

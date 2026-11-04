@@ -55,230 +55,370 @@ const WEAPONS = [
   makeItem({
     id: "wooden_sword",
     name: "Pedang Kayu Jati Latih",
-    description: "Pedang latihan dari kayu jati Sukamaju yang dipahat kokoh oleh pandai besi Bagas. Cukup mantap untuk memukul mundur hama sawah dan binatang pengerat di pinggiran desa.",
+    description:
+      "Pedang latihan dari kayu jati Adisha yang dipahat kokoh oleh pandai besi Bagas. Cukup mantap untuk memukul mundur hama sawah dan binatang pengerat di pinggiran desa.",
     price: 350,
     category: "weapon",
     tierKey: "COMMON",
     emoji: "🗡️",
     iconType: "sword",
-    attributes: { atk: 12, critRate: 0.05, speed: 1.0, durability: 60, maxDurability: 60 },
+    attributes: {
+      atk: 12,
+      critRate: 0.05,
+      speed: 1.0,
+      durability: 60,
+      maxDurability: 60,
+    },
   }),
   makeItem({
     id: "rusty_machete",
     name: "Golok Karat Perambah Rimba",
-    description: "Bilah baja perambah belukar peninggalan peladang lama. Masih memiliki ketajaman memadai untuk merintis rintangan semak berduri di gerbang Hutan Dha Mhal.",
+    description:
+      "Bilah baja perambah belukar peninggalan peladang lama. Masih memiliki ketajaman memadai untuk merintis rintangan semak berduri di gerbang Hutan Dha Mhal.",
     price: 420,
     category: "weapon",
     tierKey: "COMMON",
     emoji: "🔪",
     iconType: "dagger",
-    attributes: { atk: 15, critRate: 0.06, speed: 0.9, durability: 55, maxDurability: 55 },
+    attributes: {
+      atk: 15,
+      critRate: 0.06,
+      speed: 0.9,
+      durability: 55,
+      maxDurability: 55,
+    },
   }),
   makeItem({
     id: "slingshot",
-    name: "Ketapel Getah Karet Sukamaju",
-    description: "Ketapel kayu asem bercabang simetris dengan pentil getah karet lentur. Melontarkan batu kali bulat ke arah sasaran hama dari jarak aman.",
+    name: "Ketapel Getah Karet Adisha",
+    description:
+      "Ketapel kayu asem bercabang simetris dengan pentil getah karet lentur. Melontarkan batu kali bulat ke arah sasaran hama dari jarak aman.",
     price: 300,
     category: "weapon",
     tierKey: "COMMON",
     emoji: "🎯",
     iconType: "bow",
-    attributes: { atk: 10, critRate: 0.08, speed: 1.2, durability: 70, maxDurability: 70 },
+    attributes: {
+      atk: 10,
+      critRate: 0.08,
+      speed: 1.2,
+      durability: 70,
+      maxDurability: 70,
+    },
   }),
   makeItem({
     id: "scrap_dagger",
     name: "Belati Plat Perahu Nelayan",
-    description: "Pisau saku tajam bergagang lilitan tali sabut kelapa yang diasah dari lempeng tembaga bekas perahu nelayan Desa Lauh Than. Gerakannya lincah dan mudah diselipkan di pinggang.",
+    description:
+      "Pisau saku tajam bergagang lilitan tali sabut kelapa yang diasah dari lempeng tembaga bekas perahu nelayan Desa Lauh Than. Gerakannya lincah dan mudah diselipkan di pinggang.",
     price: 380,
     category: "weapon",
     tierKey: "COMMON",
     emoji: "🗡️",
     iconType: "dagger",
-    attributes: { atk: 14, critRate: 0.12, speed: 1.3, durability: 50, maxDurability: 50 },
+    attributes: {
+      atk: 14,
+      critRate: 0.12,
+      speed: 1.3,
+      durability: 50,
+      maxDurability: 50,
+    },
   }),
 
   // --- Tier 2: Uncommon ---
   makeItem({
     id: "iron_broadsword",
     name: "Pedang Besi Tempa Bagas",
-    description: "Bilah pedang bermata ganda hasil tempaan arang jati Bagas di bengkel Sukamaju. Keseimbangan bobotnya mantap untuk tebasan langsung saat berhadapan dengan monster gua.",
+    description:
+      "Bilah pedang bermata ganda hasil tempaan arang jati Bagas di bengkel Adisha. Keseimbangan bobotnya mantap untuk tebasan langsung saat berhadapan dengan monster gua.",
     price: 1500,
     category: "weapon",
     tierKey: "UNCOMMON",
     emoji: "⚔️",
     iconType: "sword",
-    attributes: { atk: 28, critRate: 0.08, speed: 1.0, durability: 120, maxDurability: 120 },
+    attributes: {
+      atk: 28,
+      critRate: 0.08,
+      speed: 1.0,
+      durability: 120,
+      maxDurability: 120,
+    },
   }),
   makeItem({
     id: "hunting_bow",
     name: "Busur Akar Rotan Dha Mhal",
-    description: "Busur lengkung dari belahan rotan manau tua berbalut getah damar Hutan Dha Mhal. Tali anyaman serat ulin melepaskan anak panah dengan lesatan senyap.",
+    description:
+      "Busur lengkung dari belahan rotan manau tua berbalut getah damar Hutan Dha Mhal. Tali anyaman serat ulin melepaskan anak panah dengan lesatan senyap.",
     price: 1650,
     category: "weapon",
     tierKey: "UNCOMMON",
     emoji: "🏹",
     iconType: "bow",
-    attributes: { atk: 26, critRate: 0.14, speed: 1.1, durability: 110, maxDurability: 110 },
+    attributes: {
+      atk: 26,
+      critRate: 0.14,
+      speed: 1.1,
+      durability: 110,
+      maxDurability: 110,
+    },
   }),
   makeItem({
     id: "bronze_spear",
     name: "Tombak Harpun Ikan Todak",
-    description: "Mata tombak tembaga berkait ganda yang tertancap di ujung galah kayu bakau Desa Lauh Than. Sangat efektif menjaga jarak sekaligus menembus sisik tebal pemangsa laut.",
+    description:
+      "Mata tombak tembaga berkait ganda yang tertancap di ujung galah kayu bakau Desa Lauh Than. Sangat efektif menjaga jarak sekaligus menembus sisik tebal pemangsa laut.",
     price: 1400,
     category: "weapon",
     tierKey: "UNCOMMON",
     emoji: "🔱",
     iconType: "spear",
-    attributes: { atk: 30, critRate: 0.07, speed: 0.95, durability: 115, maxDurability: 115 },
+    attributes: {
+      atk: 30,
+      critRate: 0.07,
+      speed: 0.95,
+      durability: 115,
+      maxDurability: 115,
+    },
   }),
   makeItem({
     id: "reinforced_club",
     name: "Gada Kayu Ulin Berpasak Besi",
-    description: "Batang kayu ulin hitam seberat batu cadas dari pedalaman Hutan Dha Mhal, dipasangi paku-paku baja tempa keliling. Memberikan impak hantaman keras peremuk cangkang pelindung.",
+    description:
+      "Batang kayu ulin hitam seberat batu cadas dari pedalaman Hutan Dha Mhal, dipasangi paku-paku baja tempa keliling. Memberikan impak hantaman keras peremuk cangkang pelindung.",
     price: 1350,
     category: "weapon",
     tierKey: "UNCOMMON",
     emoji: "🏏",
     iconType: "hammer",
-    attributes: { atk: 32, critRate: 0.05, speed: 0.85, durability: 130, maxDurability: 130 },
+    attributes: {
+      atk: 32,
+      critRate: 0.05,
+      speed: 0.85,
+      durability: 130,
+      maxDurability: 130,
+    },
   }),
 
   // --- Tier 3: Rare ---
   makeItem({
     id: "plasma_katana",
     name: "Katana Plasma Biru Pratama",
-    description: "Bilah pedang baja berongga mikro buatan bengkel Kota Pratama yang dialiri lucutan plasma dingin bertegangan tinggi. Setiap kibasan meninggalkan jejak listrik beraroma ozon.",
+    description:
+      "Bilah pedang baja berongga mikro buatan bengkel Kota Pratama yang dialiri lucutan plasma dingin bertegangan tinggi. Setiap kibasan meninggalkan jejak listrik beraroma ozon.",
     price: 6800,
     category: "weapon",
     tierKey: "RARE",
     emoji: "⚡",
     iconType: "sword",
-    attributes: { atk: 58, critRate: 0.18, speed: 1.25, durability: 220, maxDurability: 220 },
+    attributes: {
+      atk: 58,
+      critRate: 0.18,
+      speed: 1.25,
+      durability: 220,
+      maxDurability: 220,
+    },
   }),
   makeItem({
     id: "composite_recurve",
     name: "Busur Komposit Serat Aren Siber",
-    description: "Busur tempur modern perpaduan serat ijuk aren padat dan polimer siber rancangan Kota Pratama. Katrol mikro melipatgandakan kecepatan luncur anak panah tanpa sentakan tangan.",
+    description:
+      "Busur tempur modern perpaduan serat ijuk aren padat dan polimer siber rancangan Kota Pratama. Katrol mikro melipatgandakan kecepatan luncur anak panah tanpa sentakan tangan.",
     price: 7200,
     category: "weapon",
     tierKey: "RARE",
     emoji: "🏹",
     iconType: "bow",
-    attributes: { atk: 54, critRate: 0.22, speed: 1.2, durability: 200, maxDurability: 200 },
+    attributes: {
+      atk: 54,
+      critRate: 0.22,
+      speed: 1.2,
+      durability: 200,
+      maxDurability: 200,
+    },
   }),
   makeItem({
     id: "tactical_halberd",
     name: "Beliung Tombak Es Khul'Khas",
-    description: "Senjata galah bergagang baja dingin dengan mata kapak pemecah gletser Khul'Khas. Ujung runcingnya dirancang khusus untuk merobek lapisan es dan pelindung tebal lawan.",
+    description:
+      "Senjata galah bergagang baja dingin dengan mata kapak pemecah gletser Khul'Khas. Ujung runcingnya dirancang khusus untuk merobek lapisan es dan pelindung tebal lawan.",
     price: 6500,
     category: "weapon",
     tierKey: "RARE",
     emoji: "🪓",
     iconType: "spear",
-    attributes: { atk: 62, critRate: 0.12, speed: 0.9, durability: 240, maxDurability: 240 },
+    attributes: {
+      atk: 62,
+      critRate: 0.12,
+      speed: 0.9,
+      durability: 240,
+      maxDurability: 240,
+    },
   }),
   makeItem({
     id: "shock_baton",
     name: "Tongkat Kejut Taktis Polsek Pratama",
-    description: "Tongkat penertiban berinti kapasitor kejut milik regu keamanan Kota Pratama. Melumpuhkan sendi gerak penyusup seketika lewat sengatan listrik terukur.",
+    description:
+      "Tongkat penertiban berinti kapasitor kejut milik regu keamanan Kota Pratama. Melumpuhkan sendi gerak penyusup seketika lewat sengatan listrik terukur.",
     price: 6200,
     category: "weapon",
     tierKey: "RARE",
     emoji: "🪄",
     iconType: "wand",
-    attributes: { atk: 52, critRate: 0.15, speed: 1.15, durability: 210, maxDurability: 210 },
+    attributes: {
+      atk: 52,
+      critRate: 0.15,
+      speed: 1.15,
+      durability: 210,
+      maxDurability: 210,
+    },
   }),
 
   // --- Tier 4: Epic ---
   makeItem({
     id: "aether_blade",
     name: "Keris Lahar Berluk Lima",
-    description: "Pusaka berluk lekuk lima yang ditempa dari lelehan batu lahar kawah Istana Draken. Bilahnya terus berpendar jingga hangat dan membelah materi keras tanpa hambatan gesekan fisik.",
+    description:
+      "Pusaka berluk lekuk lima yang ditempa dari lelehan batu lahar kawah Istana Draken. Bilahnya terus berpendar jingga hangat dan membelah materi keras tanpa hambatan gesekan fisik.",
     price: 24000,
     category: "weapon",
     tierKey: "EPIC",
     emoji: "🗡️",
     iconType: "sword",
-    attributes: { atk: 115, critRate: 0.25, speed: 1.3, durability: 400, maxDurability: 400 },
+    attributes: {
+      atk: 115,
+      critRate: 0.25,
+      speed: 1.3,
+      durability: 400,
+      maxDurability: 400,
+    },
   }),
   makeItem({
     id: "quantum_sniper_bow",
     name: "Busur Pemandu Sinar Aether",
-    description: "Busur laras rel berpelacak prisma optik aether dari laboratorium Kota Pratama. Anak panah yang dilepaskan berakselerasi konstan menembus pusaran angin badai.",
+    description:
+      "Busur laras rel berpelacak prisma optik aether dari laboratorium Kota Pratama. Anak panah yang dilepaskan berakselerasi konstan menembus pusaran angin badai.",
     price: 26000,
     category: "weapon",
     tierKey: "EPIC",
     emoji: "🎯",
     iconType: "bow",
-    attributes: { atk: 110, critRate: 0.32, speed: 1.15, durability: 380, maxDurability: 380 },
+    attributes: {
+      atk: 110,
+      critRate: 0.32,
+      speed: 1.15,
+      durability: 380,
+      maxDurability: 380,
+    },
   }),
   makeItem({
     id: "dragon_bone_lance",
     name: "Tombak Tulang Naga Laut Lauh Than",
-    description: "Tombak kavaleri bahari yang diasah dari tulang rahang predator purba palung samudra Lauh Than. Ujung runcingnya menyalurkan bisa garam yang menyengat luka lawan.",
+    description:
+      "Tombak kavaleri bahari yang diasah dari tulang rahang predator purba palung samudra Lauh Than. Ujung runcingnya menyalurkan bisa garam yang menyengat luka lawan.",
     price: 23500,
     category: "weapon",
     tierKey: "EPIC",
     emoji: "🐉",
     iconType: "spear",
-    attributes: { atk: 125, critRate: 0.18, speed: 0.95, durability: 450, maxDurability: 450 },
+    attributes: {
+      atk: 125,
+      critRate: 0.18,
+      speed: 0.95,
+      durability: 450,
+      maxDurability: 450,
+    },
   }),
   makeItem({
     id: "nanotech_scythe",
     name: "Sabit Mandau Purba Dha Mhal",
-    description: "Bilah lengkung bermotif ukiran sulur taring purba Dha Mhal yang dilapisi anyaman serat karbon. Ayunannya sangat ringan namun menorehkan luka robek mematikan.",
+    description:
+      "Bilah lengkung bermotif ukiran sulur taring purba Dha Mhal yang dilapisi anyaman serat karbon. Ayunannya sangat ringan namun menorehkan luka robek mematikan.",
     price: 25500,
     category: "weapon",
     tierKey: "EPIC",
     emoji: "🌙",
     iconType: "scythe",
-    attributes: { atk: 118, critRate: 0.28, speed: 1.2, durability: 420, maxDurability: 420 },
+    attributes: {
+      atk: 118,
+      critRate: 0.28,
+      speed: 1.2,
+      durability: 420,
+      maxDurability: 420,
+    },
   }),
 
   // --- Tier 5: Legendary ---
   makeItem({
     id: "excalibur_prime",
     name: "Pedang Kencana Surya Pratama",
-    description: "Pusaka legendaris bertatahkan intan aether dari puncak menara Kota Pratama. Mengalirkan kobaran cahaya fajar yang membakar kegelapan mutlak di medan tempur.",
+    description:
+      "Pusaka legendaris bertatahkan intan aether dari puncak menara Kota Pratama. Mengalirkan kobaran cahaya fajar yang membakar kegelapan mutlak di medan tempur.",
     price: 85000,
     category: "weapon",
     tierKey: "LEGENDARY",
     emoji: "✨",
     iconType: "excalibur",
-    attributes: { atk: 240, critRate: 0.35, speed: 1.35, durability: 800, maxDurability: 800 },
+    attributes: {
+      atk: 240,
+      critRate: 0.35,
+      speed: 1.35,
+      durability: 800,
+      maxDurability: 800,
+    },
   }),
   makeItem({
     id: "void_rend_glaive",
     name: "Tombak Trisula Segara Kidul Lauh Than",
-    description: "Trisula bermata tiga yang ditempa dari batu basalt tubir palung laut Lauh Than. Membelah arus air dan kerapatan udara tanpa desau suara.",
+    description:
+      "Trisula bermata tiga yang ditempa dari batu basalt tubir palung laut Lauh Than. Membelah arus air dan kerapatan udara tanpa desau suara.",
     price: 88000,
     category: "weapon",
     tierKey: "LEGENDARY",
     emoji: "🔱",
     iconType: "spear",
-    attributes: { atk: 255, critRate: 0.30, speed: 1.1, durability: 850, maxDurability: 850 },
+    attributes: {
+      atk: 255,
+      critRate: 0.3,
+      speed: 1.1,
+      durability: 850,
+      maxDurability: 850,
+    },
   }),
   makeItem({
     id: "phoenix_wrath_bow",
     name: "Busur Agni Cincin Api Draken",
-    description: "Busur agung berukir sayap garuda berapi dari bibir kaldera kawah Istana Draken. Menarik tali busur ini memicu letupan bunga api lahar di ujung anak panah.",
+    description:
+      "Busur agung berukir sayap garuda berapi dari bibir kaldera kawah Istana Draken. Menarik tali busur ini memicu letupan bunga api lahar di ujung anak panah.",
     price: 92000,
     category: "weapon",
     tierKey: "LEGENDARY",
     emoji: "🔥",
     iconType: "bow",
-    attributes: { atk: 235, critRate: 0.40, speed: 1.25, durability: 780, maxDurability: 780 },
+    attributes: {
+      atk: 235,
+      critRate: 0.4,
+      speed: 1.25,
+      durability: 780,
+      maxDurability: 780,
+    },
   }),
   makeItem({
     id: "celestial_destroyer",
     name: "Palu Godam Obsidian Krakatau",
-    description: "Palu godam raksasa dari bongkahan batu obsidian hitam berkristal belerang kawah Istana Draken. Hantamannya ke tanah memicu getaran seismik yang meretakkan lantai batu.",
+    description:
+      "Palu godam raksasa dari bongkahan batu obsidian hitam berkristal belerang kawah Istana Draken. Hantamannya ke tanah memicu getaran seismik yang meretakkan lantai batu.",
     price: 90000,
     category: "weapon",
     tierKey: "LEGENDARY",
     emoji: "🌋",
     iconType: "hammer",
-    attributes: { atk: 275, critRate: 0.22, speed: 0.85, durability: 950, maxDurability: 950 },
+    attributes: {
+      atk: 275,
+      critRate: 0.22,
+      speed: 0.85,
+      durability: 950,
+      maxDurability: 950,
+    },
   }),
 ];
 
@@ -289,231 +429,371 @@ const ARMORS = [
   // --- Tier 1: Common ---
   makeItem({
     id: "leather_tunic",
-    name: "Rompi Kulit Kijang Sukamaju",
-    description: "Baju pelindung dari lembaran kulit kijang samakan tangan warga Sukamaju. Cukup ulet menahan gesekan semak belukar dan sengatan serangga sawah.",
+    name: "Rompi Kulit Kijang Adisha",
+    description:
+      "Baju pelindung dari lembaran kulit kijang samakan tangan warga Adisha. Cukup ulet menahan gesekan semak belukar dan sengatan serangga sawah.",
     price: 320,
     category: "armor",
     tierKey: "COMMON",
     emoji: "🥋",
     iconType: "chest",
-    attributes: { def: 10, hpBonus: 25, speed: 1.0, durability: 70, maxDurability: 70 },
+    attributes: {
+      def: 10,
+      hpBonus: 25,
+      speed: 1.0,
+      durability: 70,
+      maxDurability: 70,
+    },
   }),
   makeItem({
     id: "cloth_hood",
     name: "Tudung Serat Daun Nanas",
-    description: "Tudung kepala dari rajutan serat daun nanas perkebunan Sukamaju. Menghalau terik matahari ladang dan menyerap keringat dengan sejuk.",
+    description:
+      "Tudung kepala dari rajutan serat daun nanas perkebunan Adisha. Menghalau terik matahari ladang dan menyerap keringat dengan sejuk.",
     price: 240,
     category: "armor",
     tierKey: "COMMON",
     emoji: "🧢",
     iconType: "helm",
-    attributes: { def: 6, hpBonus: 15, speed: 1.0, durability: 60, maxDurability: 60 },
+    attributes: {
+      def: 6,
+      hpBonus: 15,
+      speed: 1.0,
+      durability: 60,
+      maxDurability: 60,
+    },
   }),
   makeItem({
     id: "wooden_buckler",
     name: "Perisai Bulat Jati Bagas",
-    description: "Perisai bundar dari bilah kayu jati pilihan berklem pelat tembaga tempaan Bagas. Ringan di lengan untuk menepis hantaman binatang buas.",
+    description:
+      "Perisai bundar dari bilah kayu jati pilihan berklem pelat tembaga tempaan Bagas. Ringan di lengan untuk menepis hantaman binatang buas.",
     price: 280,
     category: "armor",
     tierKey: "COMMON",
     emoji: "🛡️",
     iconType: "shield",
-    attributes: { def: 12, hpBonus: 20, speed: 0.98, durability: 80, maxDurability: 80 },
+    attributes: {
+      def: 12,
+      hpBonus: 20,
+      speed: 0.98,
+      durability: 80,
+      maxDurability: 80,
+    },
   }),
   makeItem({
     id: "fiber_boots",
     name: "Terompah Serat Sabut Kelapa",
-    description: "Alas kaki bertali rajutan sabut kelapa tua dari pesisir Desa Lauh Than. Cengkeramannya kokoh di atas batu karang licin berlumut basah.",
+    description:
+      "Alas kaki bertali rajutan sabut kelapa tua dari pesisir Desa Lauh Than. Cengkeramannya kokoh di atas batu karang licin berlumut basah.",
     price: 210,
     category: "armor",
     tierKey: "COMMON",
     emoji: "🥾",
     iconType: "boots",
-    attributes: { def: 5, hpBonus: 10, speed: 1.02, durability: 65, maxDurability: 65 },
+    attributes: {
+      def: 5,
+      hpBonus: 10,
+      speed: 1.02,
+      durability: 65,
+      maxDurability: 65,
+    },
   }),
 
   // --- Tier 2: Uncommon ---
   makeItem({
     id: "iron_chestplate",
     name: "Zirah Dada Besi Tempa Bagas",
-    description: "Pelindung dada dari dua lempeng besi kokoh hasil ketukan paron Bagas di Sukamaju. Meredam tusukan tombak liar dan sabetan senjata tumpul.",
+    description:
+      "Pelindung dada dari dua lempeng besi kokoh hasil ketukan paron Bagas di Adisha. Meredam tusukan tombak liar dan sabetan senjata tumpul.",
     price: 1450,
     category: "armor",
     tierKey: "UNCOMMON",
     emoji: "🦺",
     iconType: "chest",
-    attributes: { def: 28, hpBonus: 70, speed: 0.96, durability: 140, maxDurability: 140 },
+    attributes: {
+      def: 28,
+      hpBonus: 70,
+      speed: 0.96,
+      durability: 140,
+      maxDurability: 140,
+    },
   }),
   makeItem({
     id: "steel_helmet",
-    name: "Ketopong Baja Tambang Sukamaju",
-    description: "Pelindung kepala berbentuk kubah baja tempa bercelah pandang sempit. Melindungi batok kepala pengembara dari serpihan batu runtuh di gua tambang.",
+    name: "Ketopong Baja Tambang Adisha",
+    description:
+      "Pelindung kepala berbentuk kubah baja tempa bercelah pandang sempit. Melindungi batok kepala pengembara dari serpihan batu runtuh di gua tambang.",
     price: 1200,
     category: "armor",
     tierKey: "UNCOMMON",
     emoji: "🪖",
     iconType: "helm",
-    attributes: { def: 20, hpBonus: 45, speed: 0.98, durability: 130, maxDurability: 130 },
+    attributes: {
+      def: 20,
+      hpBonus: 45,
+      speed: 0.98,
+      durability: 130,
+      maxDurability: 130,
+    },
   }),
   makeItem({
     id: "reinforced_shield",
     name: "Perisai Dinding Kayu Ulin Dha Mhal",
-    description: "Perisai badan dari belahan batang kayu ulin Hutan Dha Mhal yang dipasangi sabuk lempeng besi. Mampu menahan gempuran beruntun tanpa retak.",
+    description:
+      "Perisai badan dari belahan batang kayu ulin Hutan Dha Mhal yang dipasangi sabuk lempeng besi. Mampu menahan gempuran beruntun tanpa retak.",
     price: 1350,
     category: "armor",
     tierKey: "UNCOMMON",
     emoji: "🛡️",
     iconType: "shield",
-    attributes: { def: 32, hpBonus: 60, speed: 0.92, durability: 160, maxDurability: 160 },
+    attributes: {
+      def: 32,
+      hpBonus: 60,
+      speed: 0.92,
+      durability: 160,
+      maxDurability: 160,
+    },
   }),
   makeItem({
     id: "scout_treads",
     name: "Sepatu Bot Kulit Rimbawan",
-    description: "Sepatu bot kulit tebal bersol getah damar kenyal dari tepi Hutan Dha Mhal. Memungkinkan pergerakan senyap melintasi timbunan daun kering.",
+    description:
+      "Sepatu bot kulit tebal bersol getah damar kenyal dari tepi Hutan Dha Mhal. Memungkinkan pergerakan senyap melintasi timbunan daun kering.",
     price: 1100,
     category: "armor",
     tierKey: "UNCOMMON",
     emoji: "👞",
     iconType: "boots",
-    attributes: { def: 16, hpBonus: 35, speed: 1.05, durability: 125, maxDurability: 125 },
+    attributes: {
+      def: 16,
+      hpBonus: 35,
+      speed: 1.05,
+      durability: 125,
+      maxDurability: 125,
+    },
   }),
 
   // --- Tier 3: Rare ---
   makeItem({
     id: "carbon_exosuit",
     name: "Eksoskeleton Serat Aren Siber",
-    description: "Rangka pelindung tubuh dari komposit serat ijuk aren padat dan rel karbon rancangan Kota Pratama. Meringankan beban punggung sekaligus menyerap getaran benturan keras.",
+    description:
+      "Rangka pelindung tubuh dari komposit serat ijuk aren padat dan rel karbon rancangan Kota Pratama. Meringankan beban punggung sekaligus menyerap getaran benturan keras.",
     price: 6600,
     category: "armor",
     tierKey: "RARE",
     emoji: "🥋",
     iconType: "chest",
-    attributes: { def: 65, hpBonus: 160, speed: 1.02, durability: 260, maxDurability: 260 },
+    attributes: {
+      def: 65,
+      hpBonus: 160,
+      speed: 1.02,
+      durability: 260,
+      maxDurability: 260,
+    },
   }),
   makeItem({
     id: "tactical_visor",
     name: "Kacamata Pelindung Kabut Khul'Khas",
-    description: "Kacamata bertali kulit dengan lensa kristal es Khul'Khas anti-silau. Membantu pandangan mata menembus badai kabut salju tebal di lereng pegunungan.",
+    description:
+      "Kacamata bertali kulit dengan lensa kristal es Khul'Khas anti-silau. Membantu pandangan mata menembus badai kabut salju tebal di lereng pegunungan.",
     price: 5800,
     category: "armor",
     tierKey: "RARE",
     emoji: "🥽",
     iconType: "helm",
-    attributes: { def: 45, hpBonus: 110, speed: 1.0, durability: 220, maxDurability: 220 },
+    attributes: {
+      def: 45,
+      hpBonus: 110,
+      speed: 1.0,
+      durability: 220,
+      maxDurability: 220,
+    },
   }),
   makeItem({
     id: "plasma_aegis",
     name: "Perisai Gelombang Plasma Pratama",
-    description: "Perisai oktagonal buatan biro riset Kota Pratama yang menyemburkan tirai medan plasma bertegangan saat menerima hantaman senjata logam berat.",
+    description:
+      "Perisai oktagonal buatan biro riset Kota Pratama yang menyemburkan tirai medan plasma bertegangan saat menerima hantaman senjata logam berat.",
     price: 6400,
     category: "armor",
     tierKey: "RARE",
     emoji: "🛡️",
     iconType: "shield",
-    attributes: { def: 75, hpBonus: 140, speed: 0.95, durability: 280, maxDurability: 280 },
+    attributes: {
+      def: 75,
+      hpBonus: 140,
+      speed: 0.95,
+      durability: 280,
+      maxDurability: 280,
+    },
   }),
   makeItem({
     id: "maglev_boots",
     name: "Sepatu Peluncur Magnetik Pratama",
-    description: "Sepatu bot bersol lempeng magnet mikro yang berinteraksi dengan jalur konduksi Kota Pratama. Mengurangi hambatan gesek tanah dan mempercepat laju lari di medan datar.",
+    description:
+      "Sepatu bot bersol lempeng magnet mikro yang berinteraksi dengan jalur konduksi Kota Pratama. Mengurangi hambatan gesek tanah dan mempercepat laju lari di medan datar.",
     price: 5500,
     category: "armor",
     tierKey: "RARE",
     emoji: "👟",
     iconType: "boots",
-    attributes: { def: 38, hpBonus: 90, speed: 1.12, durability: 210, maxDurability: 210 },
+    attributes: {
+      def: 38,
+      hpBonus: 90,
+      speed: 1.12,
+      durability: 210,
+      maxDurability: 210,
+    },
   }),
 
   // --- Tier 4: Epic ---
   makeItem({
     id: "nano_weave_vest",
     name: "Baju Zirah Sisik Naga Lauh Than",
-    description: "Zirah rompi fleksibel berlapis lempeng sisik predator palung laut Lauh Than. Menolak torehan senjata tajam dan kedap terhadap sengatan asam garam lautan.",
+    description:
+      "Zirah rompi fleksibel berlapis lempeng sisik predator palung laut Lauh Than. Menolak torehan senjata tajam dan kedap terhadap sengatan asam garam lautan.",
     price: 23000,
     category: "armor",
     tierKey: "EPIC",
     emoji: "🦺",
     iconType: "chest",
-    attributes: { def: 135, hpBonus: 350, speed: 1.05, durability: 460, maxDurability: 460 },
+    attributes: {
+      def: 135,
+      hpBonus: 350,
+      speed: 1.05,
+      durability: 460,
+      maxDurability: 460,
+    },
   }),
   makeItem({
     id: "cyber_helm_mk4",
     name: "Helm Tempur Cerdas Pratama",
-    description: "Helm paduan titanium ringan bertatap muka digital hologram dari Kota Pratama. Menganalisis lintasan proyektil musuh dan menjaga suplai udara bersih di area beracun.",
+    description:
+      "Helm paduan titanium ringan bertatap muka digital hologram dari Kota Pratama. Menganalisis lintasan proyektil musuh dan menjaga suplai udara bersih di area beracun.",
     price: 21000,
     category: "armor",
     tierKey: "EPIC",
     emoji: "🪖",
     iconType: "helm",
-    attributes: { def: 105, hpBonus: 260, speed: 1.02, durability: 420, maxDurability: 420 },
+    attributes: {
+      def: 105,
+      hpBonus: 260,
+      speed: 1.02,
+      durability: 420,
+      maxDurability: 420,
+    },
   }),
   makeItem({
     id: "forcefield_generator",
     name: "Generator Kubah Aether Pratama",
-    description: "Perangkat silinder di sabuk yang memancarkan lapisan energi aether melengkung untuk membelokkan proyektil panah dan lontaran batu bara panas.",
+    description:
+      "Perangkat silinder di sabuk yang memancarkan lapisan energi aether melengkung untuk membelokkan proyektil panah dan lontaran batu bara panas.",
     price: 24500,
     category: "armor",
     tierKey: "EPIC",
     emoji: "🔮",
     iconType: "shield",
-    attributes: { def: 150, hpBonus: 300, speed: 0.98, durability: 500, maxDurability: 500 },
+    attributes: {
+      def: 150,
+      hpBonus: 300,
+      speed: 0.98,
+      durability: 500,
+      maxDurability: 500,
+    },
   }),
   makeItem({
     id: "strider_greaves",
     name: "Pelindung Kaki Penjelajah Salju Khul'Khas",
-    description: "Pelindung tulang kering dari logam campuran tahan dingin berbulu serigala es Khul'Khas. Memudahkan langkah panjang melintasi gundukan salju beku tanpa terperosok.",
+    description:
+      "Pelindung tulang kering dari logam campuran tahan dingin berbulu serigala es Khul'Khas. Memudahkan langkah panjang melintasi gundukan salju beku tanpa terperosok.",
     price: 19500,
     category: "armor",
     tierKey: "EPIC",
     emoji: "🥾",
     iconType: "boots",
-    attributes: { def: 90, hpBonus: 220, speed: 1.18, durability: 400, maxDurability: 400 },
+    attributes: {
+      def: 90,
+      hpBonus: 220,
+      speed: 1.18,
+      durability: 400,
+      maxDurability: 400,
+    },
   }),
 
   // --- Tier 5: Legendary ---
   makeItem({
     id: "aegis_of_immortality",
     name: "Zirah Kencana Pusaka Nusantara",
-    description: "Baju zirah lempeng emas paduan aether bertatahkan ukiran sulur mandala kuno. Meredam impak serangan fatal dan memancarkan wibawa ksatria pelindung bumi.",
+    description:
+      "Baju zirah lempeng emas paduan aether bertatahkan ukiran sulur mandala kuno. Meredam impak serangan fatal dan memancarkan wibawa ksatria pelindung bumi.",
     price: 86000,
     category: "armor",
     tierKey: "LEGENDARY",
     emoji: "👑",
     iconType: "chest",
-    attributes: { def: 280, hpBonus: 750, speed: 1.1, durability: 900, maxDurability: 900 },
+    attributes: {
+      def: 280,
+      hpBonus: 750,
+      speed: 1.1,
+      durability: 900,
+      maxDurability: 900,
+    },
   }),
   makeItem({
     id: "crown_of_the_stars",
     name: "Mahkota Kristal Es Abadi Khul'Khas",
-    description: "Mahkota tiara yang dipahat dari sebongkah kristal es inti gletser purba Khul'Khas. Memancarkan hawa dingin suci yang menenangkan denyut nadi pemakainya.",
+    description:
+      "Mahkota tiara yang dipahat dari sebongkah kristal es inti gletser purba Khul'Khas. Memancarkan hawa dingin suci yang menenangkan denyut nadi pemakainya.",
     price: 82000,
     category: "armor",
     tierKey: "LEGENDARY",
     emoji: "❄️",
     iconType: "helm",
-    attributes: { def: 220, hpBonus: 600, speed: 1.08, durability: 850, maxDurability: 850 },
+    attributes: {
+      def: 220,
+      hpBonus: 600,
+      speed: 1.08,
+      durability: 850,
+      maxDurability: 850,
+    },
   }),
   makeItem({
     id: "celestial_barrier",
     name: "Perisai Andesit Kawah Merapi",
-    description: "Perisai agung dari lempengan batu andesit padat bibir kawah Istana Draken, diperkuat lelehan logam lahar. Memantulkan kembali serangan lawan dalam bentuk letupan hawa panas membakar.",
+    description:
+      "Perisai agung dari lempengan batu andesit padat bibir kawah Istana Draken, diperkuat lelehan logam lahar. Memantulkan kembali serangan lawan dalam bentuk letupan hawa panas membakar.",
     price: 89000,
     category: "armor",
     tierKey: "LEGENDARY",
     emoji: "🛡️",
     iconType: "shield",
-    attributes: { def: 310, hpBonus: 700, speed: 1.0, durability: 1000, maxDurability: 1000 },
+    attributes: {
+      def: 310,
+      hpBonus: 700,
+      speed: 1.0,
+      durability: 1000,
+      maxDurability: 1000,
+    },
   }),
   makeItem({
     id: "void_walker_greaves",
     name: "Sepatu Siluman Kabut Dha Mhal",
-    description: "Alas kaki pusaka berbalut kulit macan loreng purba dan getah damar mata kucing Dha Mhal. Pemakainya melangkah seringan embun pagi tanpa meninggalkan jejak kaki di tanah.",
+    description:
+      "Alas kaki pusaka berbalut kulit macan loreng purba dan getah damar mata kucing Dha Mhal. Pemakainya melangkah seringan embun pagi tanpa meninggalkan jejak kaki di tanah.",
     price: 79000,
     category: "armor",
     tierKey: "LEGENDARY",
     emoji: "🍃",
     iconType: "boots",
-    attributes: { def: 190, hpBonus: 500, speed: 1.25, durability: 800, maxDurability: 800 },
+    attributes: {
+      def: 190,
+      hpBonus: 500,
+      speed: 1.25,
+      durability: 800,
+      maxDurability: 800,
+    },
   }),
 ];
 
@@ -524,231 +804,371 @@ const TOOLS = [
   // --- Tier 1: Common ---
   makeItem({
     id: "wooden_pickaxe",
-    name: "Beliung Kayu Jati Sukamaju",
-    description: "Beliung dari kayu jati padat bergigi batu sungai terikat serat rami. Cukup kuat untuk mencungkil bongkahan tanah liat dan batu kapur pinggir kali Sukamaju.",
+    name: "Beliung Kayu Jati Adisha",
+    description:
+      "Beliung dari kayu jati padat bergigi batu sungai terikat serat rami. Cukup kuat untuk mencungkil bongkahan tanah liat dan batu kapur pinggir kali Adisha.",
     price: 250,
     category: "tool",
     tierKey: "COMMON",
     emoji: "⛏️",
     iconType: "pickaxe",
-    attributes: { toolType: "pickaxe", efficiency: 1.0, yieldBonus: 0.0, durability: 60, maxDurability: 60 },
+    attributes: {
+      toolType: "pickaxe",
+      efficiency: 1.0,
+      yieldBonus: 0.0,
+      durability: 60,
+      maxDurability: 60,
+    },
   }),
   makeItem({
     id: "wooden_axe",
-    name: "Kapak Kayu Perambah Sukamaju",
-    description: "Kapak bergagang kayu asem Sukamaju dengan mata bilah batu kali pipih. Dipakai memotong ranting kering dan bambu pagar pembatas kebun.",
+    name: "Kapak Kayu Perambah Adisha",
+    description:
+      "Kapak bergagang kayu asem Adisha dengan mata bilah batu kali pipih. Dipakai memotong ranting kering dan bambu pagar pembatas kebun.",
     price: 250,
     category: "tool",
     tierKey: "COMMON",
     emoji: "🪓",
     iconType: "axe",
-    attributes: { toolType: "axe", efficiency: 1.0, yieldBonus: 0.0, durability: 60, maxDurability: 60 },
+    attributes: {
+      toolType: "axe",
+      efficiency: 1.0,
+      yieldBonus: 0.0,
+      durability: 60,
+      maxDurability: 60,
+    },
   }),
   makeItem({
     id: "bamboo_fishing_rod",
     name: "Pancing Bambu Kali Ujang",
-    description: "Joran bambu tali kuning lentur rakitan Mang Ujang. Cocok untuk menjerat udang kali dan ikan mas telaga di perairan tenang Desa Sukamaju.",
+    description:
+      "Joran bambu tali kuning lentur rakitan Mang Ujang. Cocok untuk menjerat udang kali dan ikan mas telaga di perairan tenang Desa Adisha.",
     price: 300,
     category: "tool",
     tierKey: "COMMON",
     emoji: "🎣",
     iconType: "rod",
-    attributes: { toolType: "rod", efficiency: 1.0, yieldBonus: 0.0, durability: 65, maxDurability: 65 },
+    attributes: {
+      toolType: "rod",
+      efficiency: 1.0,
+      yieldBonus: 0.0,
+      durability: 65,
+      maxDurability: 65,
+    },
   }),
   makeItem({
     id: "stone_hoe",
     name: "Cangkul Batu Bedengan Kebun",
-    description: "Cangkul berlempeng batu andesit halus yang diikat kuat pada tangkai kayu jati. Berguna menggemburkan bedengan sayur di kebun botani Ningsih.",
+    description:
+      "Cangkul berlempeng batu andesit halus yang diikat kuat pada tangkai kayu jati. Berguna menggemburkan bedengan sayur di kebun botani Ningsih.",
     price: 220,
     category: "tool",
     tierKey: "COMMON",
     emoji: "🌾",
     iconType: "hoe",
-    attributes: { toolType: "hoe", efficiency: 1.0, yieldBonus: 0.0, durability: 55, maxDurability: 55 },
+    attributes: {
+      toolType: "hoe",
+      efficiency: 1.0,
+      yieldBonus: 0.0,
+      durability: 55,
+      maxDurability: 55,
+    },
   }),
 
   // --- Tier 2: Uncommon ---
   makeItem({
     id: "iron_pickaxe",
     name: "Beliung Besi Gua Tambang",
-    description: "Beliung kokoh bermata besi tempaan paron Sukamaju. Menembus dinding gua tambang bijih tembaga dan urat batu cadas dengan mantap.",
+    description:
+      "Beliung kokoh bermata besi tempaan paron Adisha. Menembus dinding gua tambang bijih tembaga dan urat batu cadas dengan mantap.",
     price: 1100,
     category: "tool",
     tierKey: "UNCOMMON",
     emoji: "⛏️",
     iconType: "pickaxe",
-    attributes: { toolType: "pickaxe", efficiency: 1.4, yieldBonus: 0.1, durability: 130, maxDurability: 130 },
+    attributes: {
+      toolType: "pickaxe",
+      efficiency: 1.4,
+      yieldBonus: 0.1,
+      durability: 130,
+      maxDurability: 130,
+    },
   }),
   makeItem({
     id: "iron_hatchet",
     name: "Kapak Penebang Pohon Pinus",
-    description: "Kapak bertaji besi tebal yang mampu merobohkan gelondongan pohon pinus Hutan Dha Mhal hanya dalam beberapa tebasan bertenaga.",
+    description:
+      "Kapak bertaji besi tebal yang mampu merobohkan gelondongan pohon pinus Hutan Dha Mhal hanya dalam beberapa tebasan bertenaga.",
     price: 1100,
     category: "tool",
     tierKey: "UNCOMMON",
     emoji: "🪓",
     iconType: "axe",
-    attributes: { toolType: "axe", efficiency: 1.4, yieldBonus: 0.1, durability: 130, maxDurability: 130 },
+    attributes: {
+      toolType: "axe",
+      efficiency: 1.4,
+      yieldBonus: 0.1,
+      durability: 130,
+      maxDurability: 130,
+    },
   }),
   makeItem({
     id: "fiberglass_rod",
     name: "Pancing Serat Rotan Danau",
-    description: "Joran lentur dari pilinan rotan hutan berlapis getah damar Hutan Dha Mhal. Mampu menahan tarikan ikan toman air tawar berukuran sedang tanpa patah.",
+    description:
+      "Joran lentur dari pilinan rotan hutan berlapis getah damar Hutan Dha Mhal. Mampu menahan tarikan ikan toman air tawar berukuran sedang tanpa patah.",
     price: 1300,
     category: "tool",
     tierKey: "UNCOMMON",
     emoji: "🎣",
     iconType: "rod",
-    attributes: { toolType: "rod", efficiency: 1.35, yieldBonus: 0.12, durability: 140, maxDurability: 140 },
+    attributes: {
+      toolType: "rod",
+      efficiency: 1.35,
+      yieldBonus: 0.12,
+      durability: 140,
+      maxDurability: 140,
+    },
   }),
   makeItem({
     id: "iron_watering_can",
     name: "Gembor Seng Kebun Ningsih",
-    description: "Wadah penyiram air dari pelat seng tebal bertangkai melengkung. Memancarkan butiran air merata di atas hamparan petak bibit kebun Sukamaju.",
+    description:
+      "Wadah penyiram air dari pelat seng tebal bertangkai melengkung. Memancarkan butiran air merata di atas hamparan petak bibit kebun Adisha.",
     price: 950,
     category: "tool",
     tierKey: "UNCOMMON",
     emoji: "🚿",
     iconType: "can",
-    attributes: { toolType: "can", efficiency: 1.3, yieldBonus: 0.08, durability: 120, maxDurability: 120 },
+    attributes: {
+      toolType: "can",
+      efficiency: 1.3,
+      yieldBonus: 0.08,
+      durability: 120,
+      maxDurability: 120,
+    },
   }),
 
   // --- Tier 3: Rare ---
   makeItem({
     id: "steel_drill_pick",
     name: "Beliung Baja Pemecah Es Khul'Khas",
-    description: "Beliung bergigi baja tempaan Tarek yang dikeraskan di dalam air es Khul'Khas. Mampu meretakkan bongkahan gletser beku dan kristal kuarsa tanpa gompal.",
+    description:
+      "Beliung bergigi baja tempaan Tarek yang dikeraskan di dalam air es Khul'Khas. Mampu meretakkan bongkahan gletser beku dan kristal kuarsa tanpa gompal.",
     price: 4900,
     category: "tool",
     tierKey: "RARE",
     emoji: "⚙️",
     iconType: "pickaxe",
-    attributes: { toolType: "pickaxe", efficiency: 2.0, yieldBonus: 0.22, durability: 250, maxDurability: 250 },
+    attributes: {
+      toolType: "pickaxe",
+      efficiency: 2.0,
+      yieldBonus: 0.22,
+      durability: 250,
+      maxDurability: 250,
+    },
   }),
   makeItem({
     id: "alloy_chainsaw",
     name: "Gergaji Mesin Pemotong Ulin Pratama",
-    description: "Gergaji mesin bertenaga sel baterai litium dengan rantai bergigi baja paduan. Menumbangkan batang pohon ulin purba dalam hitungan menit.",
+    description:
+      "Gergaji mesin bertenaga sel baterai litium dengan rantai bergigi baja paduan. Menumbangkan batang pohon ulin purba dalam hitungan menit.",
     price: 5200,
     category: "tool",
     tierKey: "RARE",
     emoji: "🪚",
     iconType: "axe",
-    attributes: { toolType: "axe", efficiency: 2.1, yieldBonus: 0.2, durability: 240, maxDurability: 240 },
+    attributes: {
+      toolType: "axe",
+      efficiency: 2.1,
+      yieldBonus: 0.2,
+      durability: 240,
+      maxDurability: 240,
+    },
   }),
   makeItem({
     id: "carbon_reel_rod",
     name: "Pancing Serat Kelapa Karang Lauh Than",
-    description: "Joran lentur dari pilinan serat sabut kelapa laut dan karbon dengan rel putar kuningan. Menarik ikan karang pemangsa dari celah tubir laut Lauh Than.",
+    description:
+      "Joran lentur dari pilinan serat sabut kelapa laut dan karbon dengan rel putar kuningan. Menarik ikan karang pemangsa dari celah tubir laut Lauh Than.",
     price: 5600,
     category: "tool",
     tierKey: "RARE",
     emoji: "🎣",
     iconType: "rod",
-    attributes: { toolType: "rod", efficiency: 1.9, yieldBonus: 0.25, durability: 260, maxDurability: 260 },
+    attributes: {
+      toolType: "rod",
+      efficiency: 1.9,
+      yieldBonus: 0.25,
+      durability: 260,
+      maxDurability: 260,
+    },
   }),
   makeItem({
     id: "sprinkler_drone",
     name: "Drone Penyiram Sawah Pratama",
-    description: "Pesawat nirawak empat baling-baling buatan Kota Pratama yang melayang rendah menyemprotkan kabut air bernutrisi di atas petak sawah terasering.",
+    description:
+      "Pesawat nirawak empat baling-baling buatan Kota Pratama yang melayang rendah menyemprotkan kabut air bernutrisi di atas petak sawah terasering.",
     price: 4500,
     category: "tool",
     tierKey: "RARE",
     emoji: "🛸",
     iconType: "can",
-    attributes: { toolType: "can", efficiency: 2.0, yieldBonus: 0.18, durability: 220, maxDurability: 220 },
+    attributes: {
+      toolType: "can",
+      efficiency: 2.0,
+      yieldBonus: 0.18,
+      durability: 220,
+      maxDurability: 220,
+    },
   }),
 
   // --- Tier 4: Epic ---
   makeItem({
     id: "plasma_mining_laser",
     name: "Laser Tambang Kaldera Draken",
-    description: "Perangkat genggam berpenghasil sinar panas terkonsentrasi yang menguapkan batuan basalt Istana Draken, memisahkan bijih logam langka tanpa retakan.",
+    description:
+      "Perangkat genggam berpenghasil sinar panas terkonsentrasi yang menguapkan batuan basalt Istana Draken, memisahkan bijih logam langka tanpa retakan.",
     price: 18500,
     category: "tool",
     tierKey: "EPIC",
     emoji: "🔦",
     iconType: "pickaxe",
-    attributes: { toolType: "pickaxe", efficiency: 3.0, yieldBonus: 0.4, durability: 450, maxDurability: 450 },
+    attributes: {
+      toolType: "pickaxe",
+      efficiency: 3.0,
+      yieldBonus: 0.4,
+      durability: 450,
+      maxDurability: 450,
+    },
   }),
   makeItem({
     id: "laser_timber_axe",
     name: "Kapak Getaran Sonik Pratama",
-    description: "Kapak perambah modern dengan getaran ultrasonik pada mata pisaunya. Memotong kayu ulin sehalus menyayat mentega tanpa membuang serbuk kayu.",
+    description:
+      "Kapak perambah modern dengan getaran ultrasonik pada mata pisaunya. Memotong kayu ulin sehalus menyayat mentega tanpa membuang serbuk kayu.",
     price: 19000,
     category: "tool",
     tierKey: "EPIC",
     emoji: "🪓",
     iconType: "axe",
-    attributes: { toolType: "axe", efficiency: 3.1, yieldBonus: 0.38, durability: 440, maxDurability: 440 },
+    attributes: {
+      toolType: "axe",
+      efficiency: 3.1,
+      yieldBonus: 0.38,
+      durability: 440,
+      maxDurability: 440,
+    },
   }),
   makeItem({
     id: "titanium_deep_rod",
     name: "Joran Baja Harpun Palung Lauh Than",
-    description: "Alat pancing laut dalam berkerangka logam tahan karat laut dengan tali senar kawat baja. Menaklukkan perlawanan monster ikan palung Lauh Than.",
+    description:
+      "Alat pancing laut dalam berkerangka logam tahan karat laut dengan tali senar kawat baja. Menaklukkan perlawanan monster ikan palung Lauh Than.",
     price: 21000,
     category: "tool",
     tierKey: "EPIC",
     emoji: "🎣",
     iconType: "rod",
-    attributes: { toolType: "rod", efficiency: 2.8, yieldBonus: 0.45, durability: 480, maxDurability: 480 },
+    attributes: {
+      toolType: "rod",
+      efficiency: 2.8,
+      yieldBonus: 0.45,
+      durability: 480,
+      maxDurability: 480,
+    },
   }),
   makeItem({
     id: "hydronic_tiller",
     name: "Mesin Penggembur Tanah Hidrolik Pratama",
-    description: "Alat bajak mekanik bertekanan fluida aether yang mencacah tanah tandus menjadi lahan gembur siap tanam dalam sekejap.",
+    description:
+      "Alat bajak mekanik bertekanan fluida aether yang mencacah tanah tandus menjadi lahan gembur siap tanam dalam sekejap.",
     price: 17500,
     category: "tool",
     tierKey: "EPIC",
     emoji: "🚜",
     iconType: "hoe",
-    attributes: { toolType: "hoe", efficiency: 2.9, yieldBonus: 0.35, durability: 420, maxDurability: 420 },
+    attributes: {
+      toolType: "hoe",
+      efficiency: 2.9,
+      yieldBonus: 0.35,
+      durability: 420,
+      maxDurability: 420,
+    },
   }),
 
   // --- Tier 5: Legendary ---
   makeItem({
     id: "quantum_matter_excavator",
     name: "Beliung Pusaka Penggali Inti Bumi",
-    description: "Alat penambang berhulu batu meteorit vulkanik Istana Draken yang meremukkan batu cadas purba menjadi serpihan bijih murni tanpa sisa.",
+    description:
+      "Alat penambang berhulu batu meteorit vulkanik Istana Draken yang meremukkan batu cadas purba menjadi serpihan bijih murni tanpa sisa.",
     price: 72000,
     category: "tool",
     tierKey: "LEGENDARY",
     emoji: "⛏️",
     iconType: "pickaxe",
-    attributes: { toolType: "pickaxe", efficiency: 4.8, yieldBonus: 0.75, durability: 900, maxDurability: 900 },
+    attributes: {
+      toolType: "pickaxe",
+      efficiency: 4.8,
+      yieldBonus: 0.75,
+      durability: 900,
+      maxDurability: 900,
+    },
   }),
   makeItem({
     id: "antimatter_defoliator",
     name: "Pusaka Penebang Rimba Batara Guru",
-    description: "Sabit agung bergetar hawa rimba purba Dha Mhal yang mampu memanen seluruh rumpun kayu tua menjadi balok bangunan berkualitas sempurna seketika.",
+    description:
+      "Sabit agung bergetar hawa rimba purba Dha Mhal yang mampu memanen seluruh rumpun kayu tua menjadi balok bangunan berkualitas sempurna seketika.",
     price: 74000,
     category: "tool",
     tierKey: "LEGENDARY",
     emoji: "🪓",
     iconType: "axe",
-    attributes: { toolType: "axe", efficiency: 5.0, yieldBonus: 0.7, durability: 900, maxDurability: 900 },
+    attributes: {
+      toolType: "axe",
+      efficiency: 5.0,
+      yieldBonus: 0.7,
+      durability: 900,
+      maxDurability: 900,
+    },
   }),
   makeItem({
     id: "leviathan_lure_rod",
     name: "Joran Gading Naga Segara Lauh Than",
-    description: "Joran pusaka berukir naga baruna yang terbuat dari tulang paus purba Lauh Than. Memikat ikan raksasa penguasa palung laut terdalam.",
+    description:
+      "Joran pusaka berukir naga baruna yang terbuat dari tulang paus purba Lauh Than. Memikat ikan raksasa penguasa palung laut terdalam.",
     price: 78000,
     category: "tool",
     tierKey: "LEGENDARY",
     emoji: "🐉",
     iconType: "rod",
-    attributes: { toolType: "rod", efficiency: 4.5, yieldBonus: 0.85, durability: 950, maxDurability: 950 },
+    attributes: {
+      toolType: "rod",
+      efficiency: 4.5,
+      yieldBonus: 0.85,
+      durability: 950,
+      maxDurability: 950,
+    },
   }),
   makeItem({
     id: "gaia_terraformer",
-    name: "Cangkul Kesuburan Dewi Sri Sukamaju",
-    description: "Pusaka agung berukir daun padi emas lambang Dewi Pertiwi. Sekali menyentuh tanah Sukamaju, seluruh benih di petak sawah tumbuh subur berlipat ganda.",
+    name: "Cangkul Kesuburan Dewi Sri Adisha",
+    description:
+      "Pusaka agung berukir daun padi emas lambang Dewi Pertiwi. Sekali menyentuh tanah Adisha, seluruh benih di petak sawah tumbuh subur berlipat ganda.",
     price: 68000,
     category: "tool",
     tierKey: "LEGENDARY",
     emoji: "🌾",
     iconType: "hoe",
-    attributes: { toolType: "hoe", efficiency: 4.6, yieldBonus: 0.65, durability: 850, maxDurability: 850 },
+    attributes: {
+      toolType: "hoe",
+      efficiency: 4.6,
+      yieldBonus: 0.65,
+      durability: 850,
+      maxDurability: 850,
+    },
   }),
 ];
 
@@ -760,7 +1180,8 @@ const CONSUMABLES = [
   makeItem({
     id: "wild_berry",
     name: "Buah Jamblang Hutan Segar",
-    description: "Buah lonjong keunguan yang dipetik di tepian sawah Desa Sukamaju. Rasanya manis sepat dan menyegarkan tenggorokan yang haus.",
+    description:
+      "Buah lonjong keunguan yang dipetik di tepian sawah Desa Adisha. Rasanya manis sepat dan menyegarkan tenggorokan yang haus.",
     price: 35,
     category: "consumable",
     tierKey: "COMMON",
@@ -771,7 +1192,8 @@ const CONSUMABLES = [
   makeItem({
     id: "roasted_meat",
     name: "Sate Daging Rempah Asap",
-    description: "Tusukan daging buruan yang dibakar di atas bara batok kelapa dengan olesan ketumbar dan kecap Sukamaju. Mengenyangkan perut lapar pengembara.",
+    description:
+      "Tusukan daging buruan yang dibakar di atas bara batok kelapa dengan olesan ketumbar dan kecap Adisha. Mengenyangkan perut lapar pengembara.",
     price: 80,
     category: "consumable",
     tierKey: "COMMON",
@@ -781,8 +1203,9 @@ const CONSUMABLES = [
   }),
   makeItem({
     id: "purified_water",
-    name: "Bumbung Air Mata Air Sukamaju",
-    description: "Air pegunungan jernih yang dimasak dalam ruas bambu Sukamaju hingga mendidih. Menyejukkan kerongkongan di bawah terik mentari ladang.",
+    name: "Bumbung Air Mata Air Adisha",
+    description:
+      "Air pegunungan jernih yang dimasak dalam ruas bambu Adisha hingga mendidih. Menyejukkan kerongkongan di bawah terik mentari ladang.",
     price: 25,
     category: "consumable",
     tierKey: "COMMON",
@@ -793,7 +1216,8 @@ const CONSUMABLES = [
   makeItem({
     id: "herbal_salve",
     name: "Salep Daun Binahong Bidan Sari",
-    description: "Pasta daun binahong tumbuk ramuan Bidan Sari di Sukamaju. Dibalurkan pada goresan luka luar agar pendarahan lekas reda dan tidak meradang.",
+    description:
+      "Pasta daun binahong tumbuk ramuan Bidan Sari di Adisha. Dibalurkan pada goresan luka luar agar pendarahan lekas reda dan tidak meradang.",
     price: 60,
     category: "consumable",
     tierKey: "COMMON",
@@ -804,7 +1228,8 @@ const CONSUMABLES = [
   makeItem({
     id: "dried_mushroom",
     name: "Keripik Jamur Kuping Kering",
-    description: "Jamur kuping hitam dari dahan lapuk Hutan Dha Mhal yang dijemur kering di atas tampah. Awet disimpan di kantung ransel dan berasa gurih saat dikunyah.",
+    description:
+      "Jamur kuping hitam dari dahan lapuk Hutan Dha Mhal yang dijemur kering di atas tampah. Awet disimpan di kantung ransel dan berasa gurih saat dikunyah.",
     price: 40,
     category: "consumable",
     tierKey: "COMMON",
@@ -817,7 +1242,8 @@ const CONSUMABLES = [
   makeItem({
     id: "hearty_stew",
     name: "Sup Daging Rawon Rempah Keluak",
-    description: "Rebusan daging empuk berkuah hitam bumbu rempah keluak Sukamaju dengan aroma serai wangi yang lezat, memulihkan stamina sehabis bekerja seharian.",
+    description:
+      "Rebusan daging empuk berkuah hitam bumbu rempah keluak Adisha dengan aroma serai wangi yang lezat, memulihkan stamina sehabis bekerja seharian.",
     price: 220,
     category: "consumable",
     tierKey: "UNCOMMON",
@@ -828,7 +1254,8 @@ const CONSUMABLES = [
   makeItem({
     id: "energy_drink",
     name: "Jamu Beras Kencur Mbak Siti",
-    description: "Seduhan perasan beras tumbuk, kencur segar, dan gula aren Sukamaju dari bakul Mbak Siti. Menghangatkan badan dan melenyapkan pegal linu seketika.",
+    description:
+      "Seduhan perasan beras tumbuk, kencur segar, dan gula aren Adisha dari bakul Mbak Siti. Menghangatkan badan dan melenyapkan pegal linu seketika.",
     price: 180,
     category: "consumable",
     tierKey: "UNCOMMON",
@@ -839,18 +1266,26 @@ const CONSUMABLES = [
   makeItem({
     id: "antidote_vial",
     name: "Penawar Bisa Getah Upas Dha Mhal",
-    description: "Cairan herbal perasan temu lawak dan daun pelawan Hutan Dha Mhal dalam botol kaca mungil. Menetralkan bisa sengatan kalajengking dan getah beracun rimba.",
+    description:
+      "Cairan herbal perasan temu lawak dan daun pelawan Hutan Dha Mhal dalam botol kaca mungil. Menetralkan bisa sengatan kalajengking dan getah beracun rimba.",
     price: 250,
     category: "consumable",
     tierKey: "UNCOMMON",
     emoji: "🧪",
     iconType: "potion",
-    attributes: { hp: 50, hunger: 0, thirst: 10, stamina: 25, buffType: "cure_poison" },
+    attributes: {
+      hp: 50,
+      hunger: 0,
+      thirst: 10,
+      stamina: 25,
+      buffType: "cure_poison",
+    },
   }),
   makeItem({
     id: "smoked_fish",
     name: "Ikan Asap Cakalang Lauh Than",
-    description: "Daging ikan cakalang segar Desa Lauh Than yang diasapi sabut kelapa berjam-jam. Dagingnya merah padat, gurih, dan tahan disimpan dalam perjalanan laut jauh.",
+    description:
+      "Daging ikan cakalang segar Desa Lauh Than yang diasapi sabut kelapa berjam-jam. Dagingnya merah padat, gurih, dan tahan disimpan dalam perjalanan laut jauh.",
     price: 190,
     category: "consumable",
     tierKey: "UNCOMMON",
@@ -861,7 +1296,8 @@ const CONSUMABLES = [
   makeItem({
     id: "honeycomb_snack",
     name: "Madu Murni Ratu Lebah Dha Mhal",
-    description: "Potongan sarang lebah hutan berlelehan madu kental keemasan dari dahan pohon tertua Dha Mhal. Memberikan suntikan tenaga manis yang menyegarkan badan.",
+    description:
+      "Potongan sarang lebah hutan berlelehan madu kental keemasan dari dahan pohon tertua Dha Mhal. Memberikan suntikan tenaga manis yang menyegarkan badan.",
     price: 210,
     category: "consumable",
     tierKey: "UNCOMMON",
@@ -874,7 +1310,8 @@ const CONSUMABLES = [
   makeItem({
     id: "cyber_ration_pack",
     name: "Nasi Bakar Rempah Lauh Than",
-    description: "Bungkusan nasi gurih bumbu rempah kemangi dan suwiran tongkol yang dibakar di atas daun pisang pesisir Lauh Than. Padat nutrisi bagi penjelajah pantai.",
+    description:
+      "Bungkusan nasi gurih bumbu rempah kemangi dan suwiran tongkol yang dibakar di atas daun pisang pesisir Lauh Than. Padat nutrisi bagi penjelajah pantai.",
     price: 850,
     category: "consumable",
     tierKey: "RARE",
@@ -885,7 +1322,8 @@ const CONSUMABLES = [
   makeItem({
     id: "nano_healing_stim",
     name: "Ekstrak Kunyit Asam Dokter Wira",
-    description: "Konsentrat rimpang kunyit dan asam jawa yang diekstraksi secara higienis di laboratorium Kota Pratama. Merangsang pemulihan sel tubuh dalam hitungan detik.",
+    description:
+      "Konsentrat rimpang kunyit dan asam jawa yang diekstraksi secara higienis di laboratorium Kota Pratama. Merangsang pemulihan sel tubuh dalam hitungan detik.",
     price: 1100,
     category: "consumable",
     tierKey: "RARE",
@@ -896,7 +1334,8 @@ const CONSUMABLES = [
   makeItem({
     id: "oxygenated_spring_water",
     name: "Air Embun Gletser Khul'Khas",
-    description: "Tetesan embun pagi dari tebing es abadi Khul'Khas yang ditampung dalam labu kendi tanah liat. Memulihkan kesegaran napas dan stamina di udara tipis pegunungan.",
+    description:
+      "Tetesan embun pagi dari tebing es abadi Khul'Khas yang ditampung dalam labu kendi tanah liat. Memulihkan kesegaran napas dan stamina di udara tipis pegunungan.",
     price: 750,
     category: "consumable",
     tierKey: "RARE",
@@ -907,7 +1346,8 @@ const CONSUMABLES = [
   makeItem({
     id: "spicy_ramen_bowl",
     name: "Semangkuk Mie Pedas Kafe Laras",
-    description: "Mie kuah pedas gurih racikan Kafe Laras di Kota Pratama dengan taburan cabai rawit merah, telur pindang, dan irisan daging asap sedap.",
+    description:
+      "Mie kuah pedas gurih racikan Kafe Laras di Kota Pratama dengan taburan cabai rawit merah, telur pindang, dan irisan daging asap sedap.",
     price: 950,
     category: "consumable",
     tierKey: "RARE",
@@ -918,20 +1358,29 @@ const CONSUMABLES = [
   makeItem({
     id: "focus_capsule",
     name: "Kopi Cold Brew Arabika Pratama",
-    description: "Seduhan dingin biji kopi arabika pilihan dari pegunungan pulau yang diracik di bar kopi Kota Pratama. Mempertajam daya tanggap dan fokus pikiran penggunanya.",
+    description:
+      "Seduhan dingin biji kopi arabika pilihan dari pegunungan pulau yang diracik di bar kopi Kota Pratama. Mempertajam daya tanggap dan fokus pikiran penggunanya.",
     price: 900,
     category: "consumable",
     tierKey: "RARE",
     emoji: "☕",
     iconType: "potion",
-    attributes: { hp: 50, hunger: 0, thirst: 0, stamina: 80, buffType: "focus", buffDuration: 300 },
+    attributes: {
+      hp: 50,
+      hunger: 0,
+      thirst: 0,
+      stamina: 80,
+      buffType: "focus",
+      buffDuration: 300,
+    },
   }),
 
   // --- Tier 4: Epic ---
   makeItem({
     id: "golden_elixir",
     name: "Madu Hitam Pahit Pucuk Sialang",
-    description: "Madu hitam pekat berkhasiat tinggi dari sarang lebah pohon sialang di pedalaman Hutan Dha Mhal. Mengembalikan kesehatan tubuh dari ambang kritis seketika.",
+    description:
+      "Madu hitam pekat berkhasiat tinggi dari sarang lebah pohon sialang di pedalaman Hutan Dha Mhal. Mengembalikan kesehatan tubuh dari ambang kritis seketika.",
     price: 3600,
     category: "consumable",
     tierKey: "EPIC",
@@ -942,7 +1391,8 @@ const CONSUMABLES = [
   makeItem({
     id: "feast_of_champions",
     name: "Perjamuan Tumpeng Agung Karuhun",
-    description: "Sajian lengkap tumpeng nasi kuning wangi dengan tujuh lauk rempah olahan daging pilihan dari Kota Pratama. Memulihkan seluruh vitalitas raga secara penuh.",
+    description:
+      "Sajian lengkap tumpeng nasi kuning wangi dengan tujuh lauk rempah olahan daging pilihan dari Kota Pratama. Memulihkan seluruh vitalitas raga secara penuh.",
     price: 4200,
     category: "consumable",
     tierKey: "EPIC",
@@ -953,29 +1403,46 @@ const CONSUMABLES = [
   makeItem({
     id: "nano_repair_serum",
     name: "Minyak Urut Cendana Pusaka",
-    description: "Minyak saripati kayu cendana wangi dan akar purba Dha Mhal yang meresap ke persendian tulang, menyembuhkan keletihan otot dan efek status buruk.",
+    description:
+      "Minyak saripati kayu cendana wangi dan akar purba Dha Mhal yang meresap ke persendian tulang, menyembuhkan keletihan otot dan efek status buruk.",
     price: 3900,
     category: "consumable",
     tierKey: "EPIC",
     emoji: "🧴",
     iconType: "potion",
-    attributes: { hp: 500, hunger: 0, thirst: 0, stamina: 150, buffType: "regen", buffDuration: 180 },
+    attributes: {
+      hp: 500,
+      hunger: 0,
+      thirst: 0,
+      stamina: 150,
+      buffType: "regen",
+      buffDuration: 180,
+    },
   }),
   makeItem({
     id: "overdrive_potion",
     name: "Tonik Lahar Belerang Kawah Ijen",
-    description: "Minuman sari belerang murni dan rempah bara kaldera Istana Draken. Memacu denyut nadi dan melipatgandakan daya hantam tempur pemakainya secara sementara.",
+    description:
+      "Minuman sari belerang murni dan rempah bara kaldera Istana Draken. Memacu denyut nadi dan melipatgandakan daya hantam tempur pemakainya secara sementara.",
     price: 3800,
     category: "consumable",
     tierKey: "EPIC",
     emoji: "⚡",
     iconType: "potion",
-    attributes: { hp: 100, hunger: 0, thirst: 40, stamina: 220, buffType: "overdrive", buffDuration: 240 },
+    attributes: {
+      hp: 100,
+      hunger: 0,
+      thirst: 40,
+      stamina: 220,
+      buffType: "overdrive",
+      buffDuration: 240,
+    },
   }),
   makeItem({
     id: "dragon_fruit_nectar",
     name: "Sari Buah Lereng Lahar Draken",
-    description: "Perasan buah berdaging merah membara yang tumbuh di celah bebatuan lahar Istana Draken. Manis pekat dan menyulut hawa tenaga batin pengembara.",
+    description:
+      "Perasan buah berdaging merah membara yang tumbuh di celah bebatuan lahar Istana Draken. Manis pekat dan menyulut hawa tenaga batin pengembara.",
     price: 3500,
     category: "consumable",
     tierKey: "EPIC",
@@ -988,7 +1455,8 @@ const CONSUMABLES = [
   makeItem({
     id: "ambrosia_of_the_gods",
     name: "Tirta Amerta Pusaka Kayangan",
-    description: "Air suci kehidupan abadi titisan dewa pelindung semesta Nusantara. Memulihkan segenap kesehatan, rasa lapar, dahaga, dan stamina pemain hingga batas maksimal.",
+    description:
+      "Air suci kehidupan abadi titisan dewa pelindung semesta Nusantara. Memulihkan segenap kesehatan, rasa lapar, dahaga, dan stamina pemain hingga batas maksimal.",
     price: 15000,
     category: "consumable",
     tierKey: "LEGENDARY",
@@ -999,7 +1467,8 @@ const CONSUMABLES = [
   makeItem({
     id: "starlight_brew",
     name: "Seduhan Jahe Merah Salju Khul'Khas",
-    description: "Seduhan jahe merah pedas bercampur kristal embun beku gletser Khul'Khas yang diendapkan bertahun-tahun. Mengusir rasa lelah tubuh untuk selamanya.",
+    description:
+      "Seduhan jahe merah pedas bercampur kristal embun beku gletser Khul'Khas yang diendapkan bertahun-tahun. Mengusir rasa lelah tubuh untuk selamanya.",
     price: 14000,
     category: "consumable",
     tierKey: "LEGENDARY",
@@ -1010,18 +1479,26 @@ const CONSUMABLES = [
   makeItem({
     id: "miracle_resurrection_draft",
     name: "Jamu Sakti Tolak Bala Betari Sri",
-    description: "Seduhan pusaka sembilan rimpang suci yang menjaga detak jantung tetap berdenyut, menyelamatkan nyawa pengembara dari satu kali cedera fatal di petualangan.",
+    description:
+      "Seduhan pusaka sembilan rimpang suci yang menjaga detak jantung tetap berdenyut, menyelamatkan nyawa pengembara dari satu kali cedera fatal di petualangan.",
     price: 22000,
     category: "consumable",
     tierKey: "LEGENDARY",
     emoji: "💖",
     iconType: "potion",
-    attributes: { hp: 1500, hunger: 100, thirst: 100, stamina: 500, buffType: "death_ward" },
+    attributes: {
+      hp: 1500,
+      hunger: 100,
+      thirst: 100,
+      stamina: 500,
+      buffType: "death_ward",
+    },
   }),
   makeItem({
     id: "cosmic_bento_box",
     name: "Kenduri Daun Jati Tujuh Wilayah",
-    description: "Sajian kenduri beralas daun jati bertabur hasil bumi terbaik dari Sukamaju, Dha Mhal, Lauh Than, Khul'Khas, Draken, dan Pratama. Mengenyangkan jiwa raga seutuhnya.",
+    description:
+      "Sajian kenduri beralas daun jati bertabur hasil bumi terbaik dari Adisha, Dha Mhal, Lauh Than, Khul'Khas, Draken, dan Pratama. Mengenyangkan jiwa raga seutuhnya.",
     price: 16500,
     category: "consumable",
     tierKey: "LEGENDARY",
@@ -1032,13 +1509,20 @@ const CONSUMABLES = [
   makeItem({
     id: "phoenix_tear_essence",
     name: "Tetesan Mustika Air Mata Segara Kidul",
-    description: "Butiran embun samudra berdaya suci dari dasar palung laut Lauh Than yang melenyapkan seluruh racun, kutukan, dan keletihan jiwa seketika.",
+    description:
+      "Butiran embun samudra berdaya suci dari dasar palung laut Lauh Than yang melenyapkan seluruh racun, kutukan, dan keletihan jiwa seketika.",
     price: 18000,
     category: "consumable",
     tierKey: "LEGENDARY",
     emoji: "💧",
     iconType: "potion",
-    attributes: { hp: 1400, hunger: 0, thirst: 200, stamina: 650, buffType: "cleanse_all" },
+    attributes: {
+      hp: 1400,
+      hunger: 0,
+      thirst: 200,
+      stamina: 650,
+      buffType: "cleanse_all",
+    },
   }),
 ];
 
@@ -1049,8 +1533,9 @@ const MATERIALS = [
   // --- Tier 1: Common ---
   makeItem({
     id: "oak_wood",
-    name: "Gelondongan Kayu Jati Sukamaju",
-    description: "Batang kayu jati tebang pilih dari perbukitan Desa Sukamaju. Berserat lurus, padat, dan menjadi bahan baku utama tiang pondok serta gagang perkakas desa.",
+    name: "Gelondongan Kayu Jati Adisha",
+    description:
+      "Batang kayu jati tebang pilih dari perbukitan Desa Adisha. Berserat lurus, padat, dan menjadi bahan baku utama tiang pondok serta gagang perkakas desa.",
     price: 20,
     category: "material",
     tierKey: "COMMON",
@@ -1061,7 +1546,8 @@ const MATERIALS = [
   makeItem({
     id: "copper_ore",
     name: "Bongkahan Bijih Tembaga Mentah",
-    description: "Batuan cokelat kemerahan dari galian terowongan tambang Sukamaju yang dapat dilebur menjadi pelat perunggu dan kawat penghantar.",
+    description:
+      "Batuan cokelat kemerahan dari galian terowongan tambang Adisha yang dapat dilebur menjadi pelat perunggu dan kawat penghantar.",
     price: 30,
     category: "material",
     tierKey: "COMMON",
@@ -1071,8 +1557,9 @@ const MATERIALS = [
   }),
   makeItem({
     id: "stone_pebble",
-    name: "Batu Kali Pipih Sukamaju",
-    description: "Batu sungai berwarna kelabu padat yang terkikis aliran air jernih Sukamaju. Bahan pembangun tungku perapian dan peluru ketapel pemburu.",
+    name: "Batu Kali Pipih Adisha",
+    description:
+      "Batu sungai berwarna kelabu padat yang terkikis aliran air jernih Adisha. Bahan pembangun tungku perapian dan peluru ketapel pemburu.",
     price: 15,
     category: "material",
     tierKey: "COMMON",
@@ -1083,7 +1570,8 @@ const MATERIALS = [
   makeItem({
     id: "wild_herbs",
     name: "Daun Sirih & Rimpang Liar",
-    description: "Daun sirih merambat dan rimpang temu-temuan beraroma pedas segar dari tegalan Sukamaju. Bahan baku ramuan salep luka dan seduhan jamu.",
+    description:
+      "Daun sirih merambat dan rimpang temu-temuan beraroma pedas segar dari tegalan Adisha. Bahan baku ramuan salep luka dan seduhan jamu.",
     price: 25,
     category: "material",
     tierKey: "COMMON",
@@ -1094,7 +1582,8 @@ const MATERIALS = [
   makeItem({
     id: "beast_fur",
     name: "Lembaran Kulit Rusa Rimba",
-    description: "Kulit berbulu cokelat tebal hasil buruan satwa Hutan Dha Mhal. Dipakai melapisi pakaian hangat dan pelindung pergelangan tangan pengembara.",
+    description:
+      "Kulit berbulu cokelat tebal hasil buruan satwa Hutan Dha Mhal. Dipakai melapisi pakaian hangat dan pelindung pergelangan tangan pengembara.",
     price: 35,
     category: "material",
     tierKey: "COMMON",
@@ -1107,7 +1596,8 @@ const MATERIALS = [
   makeItem({
     id: "pine_timber",
     name: "Kayu Pinus Pegunungan Dha Mhal",
-    description: "Batang kayu pinus lurus beraroma getah damar dari tebing Hutan Dha Mhal. Berbobot ringan dan ulet untuk pembuatan joran serta panah.",
+    description:
+      "Batang kayu pinus lurus beraroma getah damar dari tebing Hutan Dha Mhal. Berbobot ringan dan ulet untuk pembuatan joran serta panah.",
     price: 90,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1118,7 +1608,8 @@ const MATERIALS = [
   makeItem({
     id: "iron_ore",
     name: "Bongkahan Bijih Besi Hitam",
-    description: "Batuan tambang berat dengan kadar besi murni tinggi dari ceruk bumi Desa Sukamaju. Bahan mentah penempaan paron Bagas.",
+    description:
+      "Batuan tambang berat dengan kadar besi murni tinggi dari ceruk bumi Desa Adisha. Bahan mentah penempaan paron Bagas.",
     price: 120,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1129,7 +1620,8 @@ const MATERIALS = [
   makeItem({
     id: "coal_lump",
     name: "Bongkahan Arang Batok Kelapa",
-    description: "Bahan bakar arang padat pembakaran batok kelapa pesisir Lauh Than. Membara panas membakar tungku peleburan logam dalam waktu lama.",
+    description:
+      "Bahan bakar arang padat pembakaran batok kelapa pesisir Lauh Than. Membara panas membakar tungku peleburan logam dalam waktu lama.",
     price: 70,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1140,7 +1632,8 @@ const MATERIALS = [
   makeItem({
     id: "chitin_shell",
     name: "Cangkang Kumbang Badak Rimba",
-    description: "Kulit luar keras mengilap dari kumbang tanduk raksasa Hutan Dha Mhal. Sangat ringan namun liat menahan impak pukulan tumpul.",
+    description:
+      "Kulit luar keras mengilap dari kumbang tanduk raksasa Hutan Dha Mhal. Sangat ringan namun liat menahan impak pukulan tumpul.",
     price: 140,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1151,7 +1644,8 @@ const MATERIALS = [
   makeItem({
     id: "copper_ingot",
     name: "Batangan Tembaga Cor Tempa",
-    description: "Balok tembaga murni kemerahan hasil cetakan tungku pembakaran Sukamaju. Siap dirakit menjadi komponen mekanik dan perkakas rumah.",
+    description:
+      "Balok tembaga murni kemerahan hasil cetakan tungku pembakaran Adisha. Siap dirakit menjadi komponen mekanik dan perkakas rumah.",
     price: 150,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1164,7 +1658,8 @@ const MATERIALS = [
   makeItem({
     id: "ironwood_plank",
     name: "Papan Kayu Ulin Purba",
-    description: "Papan kayu ulin hitam pekat dari jantung Hutan Dha Mhal. Sangat padat menyerupai besi, tidak mempan rayap, dan semakin kokoh bila terendam air.",
+    description:
+      "Papan kayu ulin hitam pekat dari jantung Hutan Dha Mhal. Sangat padat menyerupai besi, tidak mempan rayap, dan semakin kokoh bila terendam air.",
     price: 450,
     category: "material",
     tierKey: "RARE",
@@ -1175,7 +1670,8 @@ const MATERIALS = [
   makeItem({
     id: "steel_ingot",
     name: "Batangan Baja Pamor Tempa",
-    description: "Balok baja berkualitas tinggi hasil lipatan tempaan berulang di bengkel Sukamaju. Keras dan memiliki kelenturan seimbang.",
+    description:
+      "Balok baja berkualitas tinggi hasil lipatan tempaan berulang di bengkel Adisha. Keras dan memiliki kelenturan seimbang.",
     price: 550,
     category: "material",
     tierKey: "RARE",
@@ -1186,7 +1682,8 @@ const MATERIALS = [
   makeItem({
     id: "quartz_crystal",
     name: "Kristal Es Abadi Khul'Khas",
-    description: "Bongkahan kristal es heksagonal yang tidak pernah mencair dari puncak pegunungan Khul'Khas. Memancarkan hawa dingin penstabil suhu senjata.",
+    description:
+      "Bongkahan kristal es heksagonal yang tidak pernah mencair dari puncak pegunungan Khul'Khas. Memancarkan hawa dingin penstabil suhu senjata.",
     price: 600,
     category: "material",
     tierKey: "RARE",
@@ -1197,7 +1694,8 @@ const MATERIALS = [
   makeItem({
     id: "bioluminescent_spore",
     name: "Spora Jamur Pelawan Violet",
-    description: "Serbuk spora jamur pelawan berpendar ungu lembut dari celah kanopi lembap Hutan Dha Mhal. Komponen utama pembuatan larutan pendar optik.",
+    description:
+      "Serbuk spora jamur pelawan berpendar ungu lembut dari celah kanopi lembap Hutan Dha Mhal. Komponen utama pembuatan larutan pendar optik.",
     price: 480,
     category: "material",
     tierKey: "RARE",
@@ -1208,7 +1706,8 @@ const MATERIALS = [
   makeItem({
     id: "monster_scale",
     name: "Lempeng Sisik Ikan Pari Duri",
-    description: "Sisik bertulang keras dari ikan pari raksasa perairan dangkal Desa Lauh Than. Tahan terhadap goresan pisau dan rembesan air asin lautan.",
+    description:
+      "Sisik bertulang keras dari ikan pari raksasa perairan dangkal Desa Lauh Than. Tahan terhadap goresan pisau dan rembesan air asin lautan.",
     price: 650,
     category: "material",
     tierKey: "RARE",
@@ -1221,7 +1720,8 @@ const MATERIALS = [
   makeItem({
     id: "titanium_alloy",
     name: "Batangan Logam Paduan Pratama",
-    description: "Logam paduan titanium kedirgantaraan hasil cetakan pabrik Kota Pratama. Kokoh luar biasa dengan bobot yang sangat ringan.",
+    description:
+      "Logam paduan titanium kedirgantaraan hasil cetakan pabrik Kota Pratama. Kokoh luar biasa dengan bobot yang sangat ringan.",
     price: 2200,
     category: "material",
     tierKey: "EPIC",
@@ -1232,7 +1732,8 @@ const MATERIALS = [
   makeItem({
     id: "carbon_fiber_sheet",
     name: "Anyaman Serat Ijuk Aren Karbon",
-    description: "Lembaran serat ijuk aren hitam pekat yang dipadukan dengan resin karbon di bengkel Kota Pratama. Lentur dan berdaya lenting tinggi.",
+    description:
+      "Lembaran serat ijuk aren hitam pekat yang dipadukan dengan resin karbon di bengkel Kota Pratama. Lentur dan berdaya lenting tinggi.",
     price: 1900,
     category: "material",
     tierKey: "EPIC",
@@ -1243,7 +1744,8 @@ const MATERIALS = [
   makeItem({
     id: "refined_aetherium",
     name: "Kristal Aetherium Biru Murni",
-    description: "Kristal bening berpendar biru lembut hasil pemurnian reaktor aether Kota Pratama. Menyalurkan energi tanpa hambatan konduksi.",
+    description:
+      "Kristal bening berpendar biru lembut hasil pemurnian reaktor aether Kota Pratama. Menyalurkan energi tanpa hambatan konduksi.",
     price: 2800,
     category: "material",
     tierKey: "EPIC",
@@ -1254,7 +1756,8 @@ const MATERIALS = [
   makeItem({
     id: "ancient_core_fragment",
     name: "Roda Gigi Candi Purba Draken",
-    description: "Komponen mekanik kuno beraksara relief dari reruntuhan peradaban candi purba di bawah tanah Istana Draken. Masih berputar pelan saat disentuh.",
+    description:
+      "Komponen mekanik kuno beraksara relief dari reruntuhan peradaban candi purba di bawah tanah Istana Draken. Masih berputar pelan saat disentuh.",
     price: 2600,
     category: "material",
     tierKey: "EPIC",
@@ -1265,7 +1768,8 @@ const MATERIALS = [
   makeItem({
     id: "dragon_sinew",
     name: "Serat Urat Ular Sanca Purba",
-    description: "Urat liat dari ular sanca raksasa penghuni rawa pedalaman Hutan Dha Mhal. Bahan terbaik pengikat bilah pusaka dan tali busur sakti.",
+    description:
+      "Urat liat dari ular sanca raksasa penghuni rawa pedalaman Hutan Dha Mhal. Bahan terbaik pengikat bilah pusaka dan tali busur sakti.",
     price: 3100,
     category: "material",
     tierKey: "EPIC",
@@ -1278,7 +1782,8 @@ const MATERIALS = [
   makeItem({
     id: "celestial_ingot",
     name: "Batangan Emas Pamor Meteorit",
-    description: "Logam campuran emas murni dan lelehan batu meteorit jatuh yang disimpan di perbendaharaan Kota Pratama. Memancarkan cahaya hangat mentari.",
+    description:
+      "Logam campuran emas murni dan lelehan batu meteorit jatuh yang disimpan di perbendaharaan Kota Pratama. Memancarkan cahaya hangat mentari.",
     price: 12000,
     category: "material",
     tierKey: "LEGENDARY",
@@ -1289,7 +1794,8 @@ const MATERIALS = [
   makeItem({
     id: "void_matter_crystal",
     name: "Batu Obsidian Hitam Kaldera Draken",
-    description: "Batuan kaca vulkanik hitam pekat dari bibir kawah terdalam Istana Draken. Menyerap pantulan cahaya dan bersuhu hangat konstan.",
+    description:
+      "Batuan kaca vulkanik hitam pekat dari bibir kawah terdalam Istana Draken. Menyerap pantulan cahaya dan bersuhu hangat konstan.",
     price: 13500,
     category: "material",
     tierKey: "LEGENDARY",
@@ -1300,7 +1806,8 @@ const MATERIALS = [
   makeItem({
     id: "phoenix_feather",
     name: "Sehelai Bulu Burung Garuda Api",
-    description: "Sehelai bulu unggas mistis berwarna jingga membara dari puncak kawah berapi Istana Draken. Nyala panasnya tidak pernah meredup.",
+    description:
+      "Sehelai bulu unggas mistis berwarna jingga membara dari puncak kawah berapi Istana Draken. Nyala panasnya tidak pernah meredup.",
     price: 11500,
     category: "material",
     tierKey: "LEGENDARY",
@@ -1311,7 +1818,8 @@ const MATERIALS = [
   makeItem({
     id: "primordial_essence",
     name: "Saripati Tanah Air Nusantara",
-    description: "Cairan kemilau pelangi yang merangkum berkah bumi Sukamaju, laut Lauh Than, es Khul'Khas, rimba Dha Mhal, lahar Draken, dan cahaya Pratama.",
+    description:
+      "Cairan kemilau pelangi yang merangkum berkah bumi Adisha, laut Lauh Than, es Khul'Khas, rimba Dha Mhal, lahar Draken, dan cahaya Pratama.",
     price: 15000,
     category: "material",
     tierKey: "LEGENDARY",
@@ -1322,7 +1830,8 @@ const MATERIALS = [
   makeItem({
     id: "leviathan_heart",
     name: "Mutiara Hitam Inti Palung Laut",
-    description: "Mutiara sebesar kepalan tangan dari kerang purba dasar palung laut Desa Lauh Than yang berdenyut selaras dengan pasang surut samudra.",
+    description:
+      "Mutiara sebesar kepalan tangan dari kerang purba dasar palung laut Desa Lauh Than yang berdenyut selaras dengan pasang surut samudra.",
     price: 16000,
     category: "material",
     tierKey: "LEGENDARY",
@@ -1340,7 +1849,8 @@ const SPECIALS = [
   makeItem({
     id: "lucky_wooden_charm",
     name: "Jimat Kayu Jati Dewi Sri",
-    description: "Pahatan kayu jati mungil berukir motif bulir padi dan senyuman Naura. Mengundang keberkahan rezeki panen dan rasa tenteram saat berkelana di alam liar.",
+    description:
+      "Pahatan kayu jati mungil berukir motif bulir padi dan senyuman Naura. Mengundang keberkahan rezeki panen dan rasa tenteram saat berkelana di alam liar.",
     price: 500,
     category: "special",
     tierKey: "COMMON",
@@ -1350,8 +1860,9 @@ const SPECIALS = [
   }),
   makeItem({
     id: "copper_guild_coin",
-    name: "Koin Gobog Perunggu Sukamaju",
-    description: "Koin perunggu berlubang segi empat di tengah bertuliskan aksara kawi Desa Sukamaju. Menandai keanggotaan paguyuban pengembara untuk mengambil sayembara desa.",
+    name: "Koin Gobog Perunggu Adisha",
+    description:
+      "Koin perunggu berlubang segi empat di tengah bertuliskan aksara kawi Desa Adisha. Menandai keanggotaan paguyuban pengembara untuk mengambil sayembara desa.",
     price: 400,
     category: "special",
     tierKey: "COMMON",
@@ -1364,7 +1875,8 @@ const SPECIALS = [
   makeItem({
     id: "bronze_dungeon_key",
     name: "Kunci Perunggu Candi Bawah Tanah",
-    description: "Kunci kuno bergigi relief sulur tanaman untuk membuka jeruji batu lantai bawah tanah pertama terowongan tambang Desa Sukamaju.",
+    description:
+      "Kunci kuno bergigi relief sulur tanaman untuk membuka jeruji batu lantai bawah tanah pertama terowongan tambang Desa Adisha.",
     price: 2500,
     category: "special",
     tierKey: "UNCOMMON",
@@ -1374,8 +1886,9 @@ const SPECIALS = [
   }),
   makeItem({
     id: "market_discount_voucher",
-    name: "Kupon Potongan Belanja Pasar Sukamaju",
-    description: "Selembar kupon berstempel cap balai desa yang memberikan potongan harga belanja sepuluh persen di pasar umum Desa Sukamaju.",
+    name: "Kupon Potongan Belanja Pasar Adisha",
+    description:
+      "Selembar kupon berstempel cap balai desa yang memberikan potongan harga belanja sepuluh persen di pasar umum Desa Adisha.",
     price: 1800,
     category: "special",
     tierKey: "UNCOMMON",
@@ -1388,7 +1901,8 @@ const SPECIALS = [
   makeItem({
     id: "silver_dungeon_key",
     name: "Kunci Perak Ruang Rahasia Candi",
-    description: "Kunci perak berhulu ukiran kepala garuda untuk membuka pintu ruang pusaka kuno di kedalaman rimba Hutan Dha Mhal.",
+    description:
+      "Kunci perak berhulu ukiran kepala garuda untuk membuka pintu ruang pusaka kuno di kedalaman rimba Hutan Dha Mhal.",
     price: 8500,
     category: "special",
     tierKey: "RARE",
@@ -1398,8 +1912,9 @@ const SPECIALS = [
   }),
   makeItem({
     id: "standard_gacha_coupon",
-    name: "Kupon Undian Butik Luna Sukamaju",
-    description: "Tiket resmi mesin undian kosmetik dan aksesoris di Butik Luna Desa Sukamaju untuk memutar satu kali banner perlengkapan pengembara.",
+    name: "Kupon Undian Butik Luna Adisha",
+    description:
+      "Tiket resmi mesin undian kosmetik dan aksesoris di Butik Luna Desa Adisha untuk memutar satu kali banner perlengkapan pengembara.",
     price: 10000,
     category: "special",
     tierKey: "RARE",
@@ -1409,8 +1924,9 @@ const SPECIALS = [
   }),
   makeItem({
     id: "festival_lottery_ticket",
-    name: "Tiket Pesta Sedekah Bumi Sukamaju",
-    description: "Kupon bernomor cantik untuk diundi di panggung pesta rakyat sedekah bumi Sukamaju saat malam bulan purnama.",
+    name: "Tiket Pesta Sedekah Bumi Adisha",
+    description:
+      "Kupon bernomor cantik untuk diundi di panggung pesta rakyat sedekah bumi Adisha saat malam bulan purnama.",
     price: 6500,
     category: "special",
     tierKey: "RARE",
@@ -1423,7 +1939,8 @@ const SPECIALS = [
   makeItem({
     id: "golden_dungeon_key",
     name: "Kunci Kencana Gerbang Kawah Draken",
-    description: "Kunci emas padat berukir naga api yang ditempa dari bara kaldera Istana Draken. Membuka gerbang utama sarang bos kegelapan di lantai terdalam.",
+    description:
+      "Kunci emas padat berukir naga api yang ditempa dari bara kaldera Istana Draken. Membuka gerbang utama sarang bos kegelapan di lantai terdalam.",
     price: 32000,
     category: "special",
     tierKey: "EPIC",
@@ -1434,7 +1951,8 @@ const SPECIALS = [
   makeItem({
     id: "premium_gacha_coupon",
     name: "Kupon Kencana Butik Shino Pratama",
-    description: "Tiket hologram eksklusif dari Cyber Lounge Shino di Kota Pratama untuk satu kali putaran undian kostum langka dan avatar edisi terbatas.",
+    description:
+      "Tiket hologram eksklusif dari Cyber Lounge Shino di Kota Pratama untuk satu kali putaran undian kostum langka dan avatar edisi terbatas.",
     price: 45000,
     category: "special",
     tierKey: "EPIC",
@@ -1445,7 +1963,8 @@ const SPECIALS = [
   makeItem({
     id: "boss_bounty_token",
     name: "Lencana Jasa Balai Kota Pratama",
-    description: "Lencana logam perak berlogo menara Kota Pratama atas jasa menumpas monster ancaman pulau. Dapat ditukarkan dengan artefak khusus di balai kota.",
+    description:
+      "Lencana logam perak berlogo menara Kota Pratama atas jasa menumpas monster ancaman pulau. Dapat ditukarkan dengan artefak khusus di balai kota.",
     price: 35000,
     category: "special",
     tierKey: "EPIC",
@@ -1458,7 +1977,8 @@ const SPECIALS = [
   makeItem({
     id: "celestial_gate_pass",
     name: "Prasasti Mandat Para Karuhun",
-    description: "Lempengan tembaga suci berukir aksara peninggalan leluhur pulau yang membuka pintu portal rahasia menuju altar dimensi puncak langit.",
+    description:
+      "Lempengan tembaga suci berukir aksara peninggalan leluhur pulau yang membuka pintu portal rahasia menuju altar dimensi puncak langit.",
     price: 150000,
     category: "special",
     tierKey: "LEGENDARY",
@@ -1469,7 +1989,8 @@ const SPECIALS = [
   makeItem({
     id: "master_transmutation_stone",
     name: "Mustika Watu Aji Kaldera Draken",
-    description: "Batu aji berurat merah delima dari kedalaman kaldera Istana Draken yang mampu mentransmutasikan tumpukan bijih tembaga biasa menjadi batangan emas berkilau.",
+    description:
+      "Batu aji berurat merah delima dari kedalaman kaldera Istana Draken yang mampu mentransmutasikan tumpukan bijih tembaga biasa menjadi batangan emas berkilau.",
     price: 180000,
     category: "special",
     tierKey: "LEGENDARY",
@@ -1480,18 +2001,23 @@ const SPECIALS = [
   makeItem({
     id: "hoshino_founder_crest",
     name: "Keris Pusaka Surya Hoshino",
-    description: "Keris pusaka bertatahkan intan aether bintang, lambang penghormatan tertinggi bagi pengembara pelopor yang mendedikasikan hidupnya membangun kejayaan Naura Hoshino.",
+    description:
+      "Keris pusaka bertatahkan intan aether bintang, lambang penghormatan tertinggi bagi pengembara pelopor yang mendedikasikan hidupnya membangun kejayaan Naura Hoshino.",
     price: 250000,
     category: "special",
     tierKey: "LEGENDARY",
     emoji: "👑",
     iconType: "crest",
-    attributes: { usableType: "founder_prestige", titleGranted: "Pelopor Legendaris" },
+    attributes: {
+      usableType: "founder_prestige",
+      titleGranted: "Pelopor Legendaris",
+    },
   }),
   makeItem({
     id: "streak_shield",
     name: "Jimat Pelindung Streak",
-    description: "Jimat pelindung dari kayu cendana wangi berikat tali rami merah. Melindungi rantai streak login harian agar tidak terputus saat kamu berhalangan hadir satu hari.",
+    description:
+      "Jimat pelindung dari kayu cendana wangi berikat tali rami merah. Melindungi rantai streak login harian agar tidak terputus saat kamu berhalangan hadir satu hari.",
     price: 3500,
     category: "special",
     tierKey: "RARE",
@@ -1509,7 +2035,8 @@ const PET_ITEMS = [
   makeItem({
     id: "obsidian_stone",
     name: "Batu Obsidian Halus",
-    description: "Serpihan kaca vulkanik hitam pekat bertekstur licin hasil pendinginan lahar pegunungan. Tepiannya terasah alami oleh gesekan pasir sungai hutan.",
+    description:
+      "Serpihan kaca vulkanik hitam pekat bertekstur licin hasil pendinginan lahar pegunungan. Tepiannya terasah alami oleh gesekan pasir sungai hutan.",
     price: 320,
     category: "material",
     tierKey: "COMMON",
@@ -1520,7 +2047,8 @@ const PET_ITEMS = [
   makeItem({
     id: "damar_resin",
     name: "Getah Damar Hutan",
-    description: "Gumpalan getah mengkristal dari kulit pohon damar tua di pedalaman rimba tropis. Mengeluarkan aroma wangi pinus saat dihangatkan di dekat tungku.",
+    description:
+      "Gumpalan getah mengkristal dari kulit pohon damar tua di pedalaman rimba tropis. Mengeluarkan aroma wangi pinus saat dihangatkan di dekat tungku.",
     price: 360,
     category: "material",
     tierKey: "COMMON",
@@ -1533,7 +2061,8 @@ const PET_ITEMS = [
   makeItem({
     id: "wild_honeycomb",
     name: "Madu Hutan Liar",
-    description: "Patahan sarang lebah pohon sialang berlumur madu kental keemasan. Pet membawanya turun dengan hati-hati tanpa merusak sarang lebah utama.",
+    description:
+      "Patahan sarang lebah pohon sialang berlumur madu kental keemasan. Pet membawanya turun dengan hati-hati tanpa merusak sarang lebah utama.",
     price: 850,
     category: "consumable",
     tierKey: "UNCOMMON",
@@ -1544,7 +2073,8 @@ const PET_ITEMS = [
   makeItem({
     id: "petrified_wood",
     name: "Fosil Kayu Jati",
-    description: "Potongan teras kayu jati purba yang tertimbun endapan sedimen lumpur selama ratusan tahun hingga berubah padat menyerupai batu marmer dingin.",
+    description:
+      "Potongan teras kayu jati purba yang tertimbun endapan sedimen lumpur selama ratusan tahun hingga berubah padat menyerupai batu marmer dingin.",
     price: 1100,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1557,7 +2087,8 @@ const PET_ITEMS = [
   makeItem({
     id: "peacock_feather",
     name: "Bulu Merak Hijau Alami",
-    description: "Sehelai bulu ekor merak hijau berhiaskan pendaran warna zamrud dan tembaga. Gugur secara alami di dasar lembah hutan basah saat pergantian musim.",
+    description:
+      "Sehelai bulu ekor merak hijau berhiaskan pendaran warna zamrud dan tembaga. Gugur secara alami di dasar lembah hutan basah saat pergantian musim.",
     price: 2400,
     category: "material",
     tierKey: "RARE",
@@ -1568,7 +2099,8 @@ const PET_ITEMS = [
   makeItem({
     id: "freshwater_pearl",
     name: "Mutiara Air Tawar",
-    description: "Mutiara alami berbentuk asimetris berkilau keperakan yang ditemukan pet di sela cangkang kerang kijing dasar danau hutan lindung.",
+    description:
+      "Mutiara alami berbentuk asimetris berkilau keperakan yang ditemukan pet di sela cangkang kerang kijing dasar danau hutan lindung.",
     price: 3200,
     category: "material",
     tierKey: "RARE",
@@ -1581,7 +2113,8 @@ const PET_ITEMS = [
   makeItem({
     id: "cat_eye_resin",
     name: "Damar Mata Kucing",
-    description: "Kristal resin getah bening bermutu tinggi dari rekahan pohon meranti raksasa. Menghasilkan bias pantulan cahaya mirip manik mata kucing saat terpapar sinar fajar.",
+    description:
+      "Kristal resin getah bening bermutu tinggi dari rekahan pohon meranti raksasa. Menghasilkan bias pantulan cahaya mirip manik mata kucing saat terpapar sinar fajar.",
     price: 7500,
     category: "material",
     tierKey: "EPIC",
@@ -1594,7 +2127,8 @@ const PET_ITEMS = [
   makeItem({
     id: "swallow_nest",
     name: "Sarang Burung Walet Gua",
-    description: "Rajutan serat liur alami burung walet dari langit-langit gua kapur pesisir selatan. Bersih, padat, dan sangat bernilai tinggi di pasar rempah kota.",
+    description:
+      "Rajutan serat liur alami burung walet dari langit-langit gua kapur pesisir selatan. Bersih, padat, dan sangat bernilai tinggi di pasar rempah kota.",
     price: 22000,
     category: "consumable",
     tierKey: "LEGENDARY",
@@ -1607,13 +2141,18 @@ const PET_ITEMS = [
   makeItem({
     id: "amber_fossil",
     name: "Fosil Getah Ambar Purba",
-    description: "Batu ambar jingga madu tembus pandang yang memerangkap jejak dedaunan purba di dalamnya. Ditemukan pet terkubur di lapisan tanah liat lereng tebing tua.",
+    description:
+      "Batu ambar jingga madu tembus pandang yang memerangkap jejak dedaunan purba di dalamnya. Ditemukan pet terkubur di lapisan tanah liat lereng tebing tua.",
     price: 65000,
     category: "special",
     tierKey: "LEGENDARY",
     emoji: "🔶",
     iconType: "stone",
-    attributes: { petExclusive: true, materialType: "amber", prestigeValue: 100 },
+    attributes: {
+      petExclusive: true,
+      materialType: "amber",
+      prestigeValue: 100,
+    },
   }),
 ];
 

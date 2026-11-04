@@ -132,8 +132,10 @@
         }
 
         loginAs(profileIdentifier) {
-            const profiles = presenter.PROFILES;
+            const presenter = getPresenter();
+            const profiles = presenter?.PROFILES || {};
             const targetProfile = profiles[profileIdentifier] || profiles.owner;
+            if (!targetProfile) return;
             this.saveSession({ ...targetProfile, loggedInAt: Date.now() });
             this.closeModal();
             if (typeof window.showToast === 'function') window.showToast(`Selamat datang kembali, ${targetProfile.username}! (${targetProfile.role})`, 'success');

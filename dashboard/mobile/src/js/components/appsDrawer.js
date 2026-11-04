@@ -13,6 +13,7 @@ const ALL_APPS = [
     desc: "Ringkasan sistem & telemetri bot",
     icon: "fa-house",
     color: "#f9a8d4",
+    pillar: "kontrol",
     href: "/mobile/",
   },
   {
@@ -21,6 +22,7 @@ const ALL_APPS = [
     desc: "Status vital, stamina & radar survival",
     icon: "fa-shield-halved",
     color: "#86efac",
+    pillar: "adisha",
     href: "/mobile/survival",
   },
   {
@@ -29,6 +31,7 @@ const ALL_APPS = [
     desc: "Kelola item, material & fusi alat",
     icon: "fa-box-open",
     color: "#fbbf24",
+    pillar: "adisha",
     href: "/mobile/inventory",
   },
   {
@@ -37,6 +40,7 @@ const ALL_APPS = [
     desc: "Aliansi teritori & perang distrik",
     icon: "fa-chess-rook",
     color: "#c084fc",
+    pillar: "adisha",
     href: "/mobile/clan",
   },
   {
@@ -45,6 +49,7 @@ const ALL_APPS = [
     desc: "Bursa lelang & transaksi komoditas",
     icon: "fa-shop",
     color: "#38bdf8",
+    pillar: "adisha",
     href: "/mobile/marketplace",
   },
   {
@@ -53,6 +58,7 @@ const ALL_APPS = [
     desc: "Mini-game santai berhadiah NSF",
     icon: "fa-gamepad",
     color: "#f43f5e",
+    pillar: "ekskul",
     href: "/mobile/arcade",
   },
   {
@@ -61,6 +67,7 @@ const ALL_APPS = [
     desc: "Player musik, antrean & live voice",
     icon: "fa-music",
     color: "#93c5fd",
+    pillar: "kontrol",
     href: "/mobile/music",
   },
   {
@@ -69,6 +76,7 @@ const ALL_APPS = [
     desc: "Dompet, bank & peredaran koin",
     icon: "fa-coins",
     color: "#ffd700",
+    pillar: "kontrol",
     href: "/mobile/economy",
   },
   {
@@ -77,6 +85,7 @@ const ALL_APPS = [
     desc: "Ranking petualang teratas",
     icon: "fa-ranking-star",
     color: "#a78bfa",
+    pillar: "ekskul",
     href: "/mobile/leaderboard",
   },
   {
@@ -85,6 +94,7 @@ const ALL_APPS = [
     desc: "Kartu identitas & koleksi kartu",
     icon: "fa-user",
     color: "#f472b6",
+    pillar: "ekskul",
     href: "/mobile/profile",
   },
   {
@@ -93,6 +103,7 @@ const ALL_APPS = [
     desc: "Konfigurasi bot, prefix & automod",
     icon: "fa-sliders",
     color: "#6ee7b7",
+    pillar: "kontrol",
     href: "/mobile/config",
   },
   {
@@ -101,6 +112,7 @@ const ALL_APPS = [
     desc: "Papan efek suara audio interaktif",
     icon: "fa-bullhorn",
     color: "#e879f9",
+    pillar: "kontrol",
     href: "/soundboard",
   },
   {
@@ -109,6 +121,7 @@ const ALL_APPS = [
     desc: "Pusat bantuan & pengaduan",
     icon: "fa-ticket",
     color: "#facc15",
+    pillar: "kontrol",
     href: "/tickets",
   },
   {
@@ -117,6 +130,7 @@ const ALL_APPS = [
     desc: "Halaman pameran karya member",
     icon: "fa-id-badge",
     color: "#60a5fa",
+    pillar: "ekskul",
     href: "/portfolio",
   },
   {
@@ -125,6 +139,7 @@ const ALL_APPS = [
     desc: "Desain kartu sambutan member baru",
     icon: "fa-wand-magic-sparkles",
     color: "#fb7185",
+    pillar: "ekskul",
     href: "/welcomer",
   },
   {
@@ -133,6 +148,7 @@ const ALL_APPS = [
     desc: "Pemicu dan aksi terjadwal",
     icon: "fa-bolt",
     color: "#34d399",
+    pillar: "kontrol",
     href: "/automations",
   },
 ];
@@ -160,11 +176,18 @@ export function initAppsDrawer() {
           </button>
         </div>
 
+        <div class="nm-drawer-tabs" role="tablist" style="display:flex;gap:6px;padding:8px 16px;overflow-x:auto;">
+          <button type="button" class="nm-tab-btn active" data-filter="all" style="padding:4px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#fff;font-size:11px;cursor:pointer;">Semua (16)</button>
+          <button type="button" class="nm-tab-btn" data-filter="ekskul" style="padding:4px 10px;border-radius:12px;border:1px solid rgba(244,114,182,0.3);background:transparent;color:#f472b6;font-size:11px;cursor:pointer;">🌸 Ekskul (5)</button>
+          <button type="button" class="nm-tab-btn" data-filter="adisha" style="padding:4px 10px;border-radius:12px;border:1px solid rgba(52,211,153,0.3);background:transparent;color:#34d399;font-size:11px;cursor:pointer;">🏕️ Adisha (4)</button>
+          <button type="button" class="nm-tab-btn" data-filter="kontrol" style="padding:4px 10px;border-radius:12px;border:1px solid rgba(34,211,238,0.3);background:transparent;color:#22d3ee;font-size:11px;cursor:pointer;">🎛️ Kontrol (7)</button>
+        </div>
+
         <div class="nm-drawer-grid">
           ${ALL_APPS.map((app) => {
             const isActive = currentPath === app.href.replace(/\/$/, "");
             return `
-              <a href="${app.href}" class="nm-drawer-card ${isActive ? "is-active" : ""}">
+              <a href="${app.href}" class="nm-drawer-card ${isActive ? "is-active" : ""}" data-pillar="${app.pillar}">
                 <div class="nm-drawer-card__icon" style="background:${app.color}22; color:${app.color}; border-color:${app.color}44;">
                   <i class="fa-solid ${app.icon}"></i>
                 </div>
@@ -201,6 +224,27 @@ export function initAppsDrawer() {
   if (closeBtn) closeBtn.addEventListener("click", closeDrawer);
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeDrawer();
+  });
+
+  // Filter tab buttons
+  overlay.querySelectorAll(".nm-tab-btn").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      overlay.querySelectorAll(".nm-tab-btn").forEach((t) => {
+        t.classList.remove("active");
+        t.style.background = "transparent";
+      });
+      tab.classList.add("active");
+      tab.style.background = "rgba(255, 255, 255, 0.12)";
+      const filter = tab.getAttribute("data-filter");
+      overlay.querySelectorAll(".nm-drawer-card").forEach((card) => {
+        const pillar = card.getAttribute("data-pillar");
+        if (filter === "all" || pillar === filter) {
+          card.style.display = "";
+        } else {
+          card.style.display = "none";
+        }
+      });
+    });
   });
 
   // Hubungkan ke semua tombol pemicu apps drawer di halaman

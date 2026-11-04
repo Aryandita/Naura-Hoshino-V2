@@ -150,89 +150,335 @@
         }
     });
 
-    // ── 2. Definisi 5 Grup Navigasi Kanonikal & Active Group State ────
-    const ROUTE_GROUPS = {
-        dashboard: {
-            id: 'dashboard',
-            label: 'Dashboard',
-            icon: 'fa-solid fa-gauge-high',
-            primaryRoute: '/',
+    // ── 2. Definisi 3 Pilar Ekosistem Kanonikal & Active Pillar State ────
+    const PILLARS = {
+        ekskul: {
+            id: 'ekskul',
+            name: 'Senja Ruang Ekskul',
+            shortLabel: 'Ekskul',
+            icon: '🌸',
+            primaryRoute: '/profile',
+            color: '#f472b6',
             pages: [
-                { path: '/', label: 'Overview Dashboard', icon: 'fa-solid fa-gauge-high', desc: 'Metrik server, CPU/RAM, dan status bot' },
                 { path: '/profile', label: 'Profil Petualang', icon: 'fa-solid fa-id-card', desc: 'Identitas Discord, statistik RPG & 34 trofi' },
-                { path: '/inventory', label: 'Tas & Ransel', icon: 'fa-solid fa-backpack', desc: 'Isi ransel petualang, material crafting & loadout' },
                 { path: '/achievements', label: 'Ruang Trofi', icon: 'fa-solid fa-trophy', desc: '34 pencapaian eksklusif & gelar petualang' },
-                { path: '/status', label: 'Live Telemetri', icon: 'fa-solid fa-signal', desc: 'Kesehatan shard & status gateway Discord' },
-                { path: '/feed', label: 'Activity Feed', icon: 'fa-solid fa-rss', desc: 'Log aktivitas realtime & interaksi pengguna' },
-                { path: '/leaderboard', label: 'Leaderboard Global', icon: 'fa-solid fa-trophy', desc: 'Peringkat level EXP dan kekayaan server' },
-                { path: '/activity', label: 'Activity Hub', icon: 'fa-solid fa-gamepad', desc: 'Quest, mini-games & tantangan berkala' },
-                { path: '/arcade', label: 'Retro Arcade', icon: 'fa-solid fa-gamepad', desc: 'Mini-games retro ritme & serpihan bintang' }
+                { path: '/feed', label: 'Mading Komunitas', icon: 'fa-solid fa-rss', desc: 'Log aktivitas realtime & interaksi pengguna' },
+                { path: '/leaderboard', label: 'Peringkat Bintang Global', icon: 'fa-solid fa-ranking-star', desc: 'Peringkat level EXP dan kekayaan server' },
+                { path: '/arcade', label: 'Retro Arcade', icon: 'fa-solid fa-gamepad', desc: 'Mini-games retro ritme & serpihan bintang' },
+                { path: '/lounge', label: 'Cyber Lounge Naura', icon: 'fa-solid fa-wand-magic-sparkles', desc: 'Ruang interaksi komunitas 3D & AI companion' },
+                { path: '/portfolio', label: 'Portofolio Kreator', icon: 'fa-solid fa-id-badge', desc: 'Showcase fitur & profil kreator bot' },
+                { path: '/welcomer', label: 'Sambutan Anggota Baru', icon: 'fa-solid fa-palette', desc: 'Desain canvas kartu sambutan member baru' }
             ]
         },
-        map: {
-            id: 'map',
-            label: 'Map',
-            icon: 'fa-solid fa-earth-asia',
+        adisha: {
+            id: 'adisha',
+            name: 'Jurnal Ekspedisi Dunia Adisha',
+            shortLabel: 'Adisha',
+            icon: '🏕️',
             primaryRoute: '/world',
+            color: '#34d399',
             pages: [
-                { path: '/world', label: 'World Map Aetheria', icon: 'fa-solid fa-earth-asia', desc: 'Peta benua, 6 wilayah, POI & komoditas' },
-                { path: '/survival-map', label: 'Radar Survival', icon: 'fa-solid fa-map', desc: 'Radar real-time fasilitas & blip sumber daya' },
-                { path: '/war-room', label: 'War Room & Siege', icon: 'fa-solid fa-shield-halved', desc: 'Operasi klan, wilayah perang & strategi' },
-                { path: '/clan', label: 'Sindikat & Klan', icon: 'fa-solid fa-users-rays', desc: 'Markas aliansi klan, fasilitas pertahanan & diplomasi' }
+                { path: '/world', label: 'World Map Aetheria', icon: 'fa-solid fa-earth-asia', desc: 'Peta benua Adisha, 6 wilayah, POI & komoditas' },
+                { path: '/adisha-map', label: 'Radar Interaktif Adisha', icon: 'fa-solid fa-compass', desc: 'Radar real-time fasilitas & blip sumber daya' },
+                { path: '/survival-map', label: 'Radar Fasilitas Survival', icon: 'fa-solid fa-map-location-dot', desc: 'Radar real-time fasilitas & blip sumber daya' },
+                { path: '/activity', label: 'Ekspedisi & Quest Harian', icon: 'fa-solid fa-person-hiking', desc: 'Quest harian, gathering & boss fight' },
+                { path: '/inventory', label: 'Tas & Ransel Petualang', icon: 'fa-solid fa-backpack', desc: 'Isi ransel petualang, material crafting & loadout' },
+                { path: '/clan', label: 'Sindikat & Markas Klan', icon: 'fa-solid fa-users-rays', desc: 'Markas aliansi klan, fasilitas pertahanan & diplomasi' },
+                { path: '/war-room', label: 'War Room & Siege Wilayah', icon: 'fa-solid fa-shield-halved', desc: 'Operasi klan, wilayah perang & strategi' },
+                { path: '/marketplace', label: 'Balai Lelang & Pasar Adisha', icon: 'fa-solid fa-shop', desc: 'Bursa lelang P2P, perdagangan komoditas & penawaran' }
             ]
         },
-        config: {
-            id: 'config',
-            label: 'Config',
-            icon: 'fa-solid fa-sliders',
-            primaryRoute: '/automations',
+        kontrol: {
+            id: 'kontrol',
+            name: 'Studio Kontrol OSIS',
+            shortLabel: 'Kontrol',
+            icon: '🎛️',
+            primaryRoute: '/',
+            color: '#22d3ee',
             pages: [
-                { path: '/automations', label: 'Automations Engine', icon: 'fa-solid fa-robot', desc: 'Trigger otomatis, auto-response & scheduler' },
-                { path: '/welcomer', label: 'Welcomer Card', icon: 'fa-solid fa-palette', desc: 'Desain canvas kartu sambutan member baru' },
-                { path: '/builder', label: 'Embed Builder', icon: 'fa-solid fa-wand-magic-sparkles', desc: 'Generator pesan interaktif Discord V2' },
-                { path: '/tickets', label: 'Ticket System', icon: 'fa-solid fa-ticket', desc: 'Manajemen tiket bantuan & antrean support' }
-            ]
-        },
-        system: {
-            id: 'system',
-            label: 'System',
-            icon: 'fa-solid fa-microchip',
-            primaryRoute: '/music',
-            pages: [
+                { path: '/', label: 'Overview Studio Kontrol', icon: 'fa-solid fa-gauge-high', desc: 'Metrik server, CPU/RAM, dan status bot' },
+                { path: '/status', label: 'Live Telemetri Shard', icon: 'fa-solid fa-signal', desc: 'Kesehatan shard & status gateway Discord' },
+                { path: '/topology', label: 'Topologi Node Jaringan', icon: 'fa-solid fa-network-wired', desc: 'Diagram cluster server & visualisasi node' },
                 { path: '/music', label: 'Music Hub Player', icon: 'fa-solid fa-music', desc: 'Pemutar audio Poru v5 & cluster Lavalink' },
+                { path: '/soundboard', label: 'Soundboard Studio', icon: 'fa-solid fa-sliders', desc: 'Papan efek suara instant dengan SFX audio' },
                 { path: '/jam', label: 'DJ Jam Session', icon: 'fa-solid fa-guitar', desc: 'Studio turntable interaktif & dual crossfader' },
                 { path: '/karaoke', label: 'Studio Karaoke', icon: 'fa-solid fa-microphone', desc: 'Sinkronisasi lirik real-time & vokal' },
-                { path: '/soundboard', label: 'Soundboard Studio', icon: 'fa-solid fa-sliders', desc: 'Papan efek suara instant dengan SFX audio' },
-                { path: '/lounge', label: 'Cyber Lounge', icon: 'fa-solid fa-couch', desc: 'Ruang interaksi komunitas & live companion' },
-                { path: '/topology', label: 'Guild Topology', icon: 'fa-solid fa-network-wired', desc: 'Diagram cluster server & visualisasi node' },
-                { path: '/portfolio', label: 'Creator Portfolio', icon: 'fa-solid fa-id-badge', desc: 'Showcase fitur & profil kreator bot' }
-            ]
-        },
-        settings: {
-            id: 'settings',
-            label: 'Settings',
-            icon: 'fa-solid fa-gears',
-            primaryRoute: '/settings',
-            pages: [
-                { path: '/settings', label: 'Server Settings', icon: 'fa-solid fa-gears', desc: 'Konfigurasi bot, prefix, role & perizinan' },
-                { path: '/economy', label: 'Bank & Pasar NC', icon: 'fa-solid fa-coins', desc: 'Dompet kas server, bursa valuta & pasar saham' },
-                { path: '/marketplace', label: 'Balai Lelang Galaksi', icon: 'fa-solid fa-shop', desc: 'Bursa lelang P2P, perdagangan komoditas & penawaran' },
+                { path: '/player', label: 'Web Audio Player', icon: 'fa-solid fa-circle-play', desc: 'Mini pemutar audio web interaktif' },
+                { path: '/settings', label: 'Konfigurasi Server OSIS', icon: 'fa-solid fa-gears', desc: 'Konfigurasi bot, prefix, role & perizinan' },
+                { path: '/automations', label: 'Engine Automasi OSIS', icon: 'fa-solid fa-robot', desc: 'Trigger otomatis, auto-response & scheduler' },
+                { path: '/automod', label: 'Visual Automod Studio', icon: 'fa-solid fa-shield-cat', desc: 'Filter konten otomatis & moderasi visual' },
+                { path: '/builder', label: 'Embed Builder V2', icon: 'fa-solid fa-wand-magic-sparkles', desc: 'Generator pesan interaktif Discord V2' },
+                { path: '/tickets', label: 'Meja Tiket & Bantuan', icon: 'fa-solid fa-ticket', desc: 'Manajemen tiket bantuan & antrean support' },
+                { path: '/economy', label: 'Bank & Kas Server', icon: 'fa-solid fa-coins', desc: 'Dompet kas server, bursa valuta & pasar saham' },
+                { path: '/treasury', label: 'Kas Server Treasury', icon: 'fa-solid fa-vault', desc: 'Treasury 4-pool & alokasi finansial server' },
                 { path: '/admin', label: 'God Mode Admin', icon: 'fa-solid fa-screwdriver-wrench', desc: 'Pusat kendali arsitektur, bypass mutex & flush cache' }
             ]
         }
     };
 
+    // Backward-compatibility alias map for legacy scripts
+    const ROUTE_GROUPS = PILLARS;
+
     const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
 
-    // Cari grup navigasi yang memuat halaman saat ini
-    let activeGroupId = null;
-    for (const [groupId, group] of Object.entries(ROUTE_GROUPS)) {
-        if (group.pages.some(p => p.path === currentPath || (p.path !== '/' && currentPath.startsWith(p.path)))) {
-            activeGroupId = groupId;
-            break;
+    function normalizePillarKey(rawKey) {
+        if (!rawKey) return null;
+        const k = String(rawKey).toLowerCase().trim();
+        if (['ekskul', 'naura', 'theme_naura'].includes(k)) return 'ekskul';
+        if (['adisha', 'survival', 'theme_survival', 'wilds'].includes(k)) return 'adisha';
+        if (['kontrol', 'dashboard', 'theme_dashboard', 'osis'].includes(k)) return 'kontrol';
+        return null;
+    }
+
+    function detectPillarFromPath(pathname) {
+        if (!pathname) return 'kontrol';
+        const normalized = pathname.toLowerCase().replace(/\/index\.html$/, '').replace(/\.html$/, '') || '/';
+
+        for (const page of PILLARS.ekskul.pages) {
+            const p = page.path.toLowerCase();
+            if (normalized === p || normalized.startsWith(p + '/')) {
+                return 'ekskul';
+            }
+        }
+        for (const page of PILLARS.adisha.pages) {
+            const p = page.path.toLowerCase();
+            if (normalized === p || normalized.startsWith(p + '/')) {
+                return 'adisha';
+            }
+        }
+        for (const page of PILLARS.kontrol.pages) {
+            const p = page.path.toLowerCase();
+            if (normalized === p || normalized.startsWith(p + '/')) {
+                return 'kontrol';
+            }
+        }
+        return 'kontrol';
+    }
+
+    function resolveActivePillar() {
+        // 1. URL Query Parameter Override (?pillar=)
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const urlPillar = normalizePillarKey(params.get('pillar'));
+            if (urlPillar) return urlPillar;
+        } catch (_) {}
+
+        // 2. Route Auto-Detection
+        const detected = detectPillarFromPath(currentPath);
+        if (currentPath && currentPath !== '/' && currentPath !== '/index.html') {
+            return detected;
+        }
+
+        // 3. LocalStorage (applies when on root '/' or fallback)
+        try {
+            const saved = normalizePillarKey(localStorage.getItem('naura_active_pillar'));
+            if (saved) return saved;
+        } catch (_) {}
+
+        // 4. Default Fallback
+        return detected || 'kontrol';
+    }
+
+    let activePillar = resolveActivePillar();
+    let activeGroupId = activePillar;
+
+    // Apply immediate data-pillar to root element
+    document.documentElement.setAttribute('data-pillar', activePillar);
+
+    function updateDockIndicator(pillarId) {
+        const dock = document.getElementById('pillarDock');
+        const indicator = document.getElementById('pillarDockIndicator');
+        if (!dock || !indicator) return;
+
+        const activeTab = dock.querySelector(`.pillar-tab[data-pillar="${pillarId}"]`);
+        if (!activeTab) return;
+
+        dock.querySelectorAll('.pillar-tab').forEach(t => {
+            const isCurrent = (t === activeTab);
+            t.classList.toggle('active', isCurrent);
+            t.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+        });
+
+        const isCollapsed = document.querySelector('.sidebar')?.classList.contains('collapsed');
+        if (isCollapsed) {
+            indicator.style.transform = `translateY(${activeTab.offsetTop}px)`;
+            indicator.style.height = `${activeTab.offsetHeight}px`;
+            indicator.style.width = 'calc(100% - 6px)';
+        } else {
+            indicator.style.transform = `translateX(${activeTab.offsetLeft}px)`;
+            indicator.style.width = `${activeTab.offsetWidth}px`;
+            indicator.style.height = 'calc(100% - 6px)';
         }
     }
-    if (!activeGroupId) activeGroupId = 'dashboard';
+
+    function setActivePillar(newPillar) {
+        const normalized = normalizePillarKey(newPillar) || 'kontrol';
+        const prevPillar = activePillar;
+        activePillar = normalized;
+        activeGroupId = activePillar;
+
+        document.documentElement.setAttribute('data-pillar', activePillar);
+        try {
+            localStorage.setItem('naura_active_pillar', activePillar);
+        } catch (_) {}
+
+        updateDockIndicator(activePillar);
+        filterSidebarNavigation(activePillar);
+
+        // Update mobile bottom nav items if present
+        document.querySelectorAll('.mobile-nav-item[data-pillar]').forEach(item => {
+            const p = item.getAttribute('data-pillar');
+            const isAct = (p === activePillar);
+            item.classList.toggle('active', isAct);
+            if (isAct) item.setAttribute('aria-current', 'page');
+            else item.removeAttribute('aria-current');
+        });
+
+        const event = new CustomEvent('pillarchange', {
+            detail: {
+                pillar: activePillar,
+                previousPillar: prevPillar,
+                timestamp: Date.now()
+            },
+            bubbles: true,
+            cancelable: true
+        });
+        document.dispatchEvent(event);
+        window.dispatchEvent(event);
+    }
+
+    function mountPillarDock() {
+        const sidebar = document.querySelector('.sidebar');
+        if (!sidebar) return;
+        if (sidebar.querySelector('#pillarDockContainer')) {
+            updateDockIndicator(activePillar);
+            return;
+        }
+
+        const dockContainer = document.createElement('div');
+        dockContainer.className = 'pillar-dock-container';
+        dockContainer.id = 'pillarDockContainer';
+        dockContainer.setAttribute('role', 'region');
+        dockContainer.setAttribute('aria-label', '3-Pillar Ecosystem Switcher');
+
+        dockContainer.innerHTML = `
+            <div class="pillar-dock" id="pillarDock" role="tablist" aria-label="Pilih Pilar Ekosistem">
+                <div class="pillar-dock-indicator" id="pillarDockIndicator" aria-hidden="true"></div>
+                <button type="button" class="pillar-tab ${activePillar === 'ekskul' ? 'active' : ''}" data-pillar="ekskul" role="tab" id="tabPillarEkskul" aria-selected="${activePillar === 'ekskul' ? 'true' : 'false'}" aria-controls="sidebarNav" title="Pilar 1: Senja Ruang Ekskul">
+                    <span class="pillar-tab-icon">🌸</span>
+                    <span class="pillar-tab-label">Ekskul</span>
+                </button>
+                <button type="button" class="pillar-tab ${activePillar === 'adisha' ? 'active' : ''}" data-pillar="adisha" role="tab" id="tabPillarAdisha" aria-selected="${activePillar === 'adisha' ? 'true' : 'false'}" aria-controls="sidebarNav" title="Pilar 2: Jurnal Ekspedisi Dunia Adisha">
+                    <span class="pillar-tab-icon">🏕️</span>
+                    <span class="pillar-tab-label">Adisha</span>
+                </button>
+                <button type="button" class="pillar-tab ${activePillar === 'kontrol' ? 'active' : ''}" data-pillar="kontrol" role="tab" id="tabPillarKontrol" aria-selected="${activePillar === 'kontrol' ? 'true' : 'false'}" aria-controls="sidebarNav" title="Pilar 3: Studio Kontrol OSIS">
+                    <span class="pillar-tab-icon">🎛️</span>
+                    <span class="pillar-tab-label">Kontrol</span>
+                </button>
+            </div>
+        `;
+
+        const brand = sidebar.querySelector('.sidebar-brand');
+        if (brand && brand.nextSibling) {
+            sidebar.insertBefore(dockContainer, brand.nextSibling);
+        } else if (brand) {
+            sidebar.appendChild(dockContainer);
+        } else {
+            sidebar.prepend(dockContainer);
+        }
+
+        dockContainer.querySelectorAll('.pillar-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                const chosenPillar = tab.getAttribute('data-pillar');
+                if (chosenPillar) {
+                    setActivePillar(chosenPillar);
+                }
+            });
+        });
+
+        requestAnimationFrame(() => {
+            updateDockIndicator(activePillar);
+        });
+
+        window.addEventListener('resize', () => updateDockIndicator(activePillar), { passive: true });
+    }
+
+    function tagSidebarLinks() {
+        const sidebarNav = document.querySelector('.sidebar-nav');
+        if (!sidebarNav) return;
+
+        sidebarNav.querySelectorAll('a.nav-item[href]').forEach(item => {
+            const href = item.getAttribute('href') || '';
+            const normalized = href.toLowerCase().replace(/\/index\.html$/, '').replace(/\.html$/, '') || '/';
+            const pillar = detectPillarFromPath(normalized);
+            item.setAttribute('data-pillar', pillar);
+        });
+    }
+
+    function filterSidebarNavigation(pillar) {
+        const sidebarNav = document.querySelector('.sidebar-nav');
+        if (!sidebarNav) return;
+
+        tagSidebarLinks();
+
+        let visibleIndex = 0;
+        const groups = sidebarNav.querySelectorAll('.nav-group');
+
+        groups.forEach(group => {
+            const items = group.querySelectorAll('.nav-item');
+            let visibleInGroup = 0;
+
+            items.forEach(item => {
+                const itemPillar = item.getAttribute('data-pillar');
+                const isMatch = itemPillar === pillar || itemPillar === 'all';
+
+                if (isMatch) {
+                    item.setAttribute('data-pillar-visible', 'true');
+                    item.style.setProperty('--item-idx', visibleIndex);
+                    visibleIndex++;
+                    visibleInGroup++;
+                } else {
+                    item.setAttribute('data-pillar-visible', 'false');
+                }
+            });
+
+            if (visibleInGroup > 0) {
+                group.setAttribute('data-group-visible', 'true');
+            } else {
+                group.setAttribute('data-group-visible', 'false');
+            }
+        });
+    }
+
+    function reconcileSidebarLinks() {
+        const sidebarNav = document.querySelector('.sidebar-nav');
+        if (!sidebarNav) return;
+
+        // Ensure canonical links exist for all 3 pillars
+        for (const [pillarKey, def] of Object.entries(PILLARS)) {
+            for (const page of def.pages) {
+                const existing = sidebarNav.querySelector(`a[href="${page.path}"], a[href="${page.path}.html"]`);
+                if (!existing) {
+                    let group = sidebarNav.querySelector(`.nav-group[data-pillar="${pillarKey}"]`);
+                    if (!group) {
+                        group = document.createElement('div');
+                        group.className = 'nav-group';
+                        group.setAttribute('data-pillar', pillarKey);
+                        group.innerHTML = `<div class="nav-group-label">${def.name}</div>`;
+                        sidebarNav.appendChild(group);
+                    }
+                    const a = document.createElement('a');
+                    a.href = page.path;
+                    a.className = 'nav-item';
+                    a.setAttribute('data-pillar', pillarKey);
+                    a.innerHTML = `<span class="nav-icon"><i class="${page.icon}"></i></span><span>${page.label}</span>`;
+                    group.appendChild(a);
+                }
+            }
+        }
+    }
 
     // ── Inisialisasi Header Bersama & Reconciler Sidebar ──
     function mountSharedNav() {
@@ -245,13 +491,13 @@
                             <img src="/assets/core/avatar.png" alt="Naura" class="shared-nav-logo" onerror="this.src='/assets/core/avatar.png'">
                             <div class="shared-nav-brand-text">
                                 <div class="shared-brand-name">Naura Hoshino</div>
-                                <div class="shared-brand-tag">v2.4.0 · Hub</div>
+                                <div class="shared-brand-tag">v2.5.0 · Hub</div>
                             </div>
                         </a>
                         <nav class="shared-nav-links" aria-label="Navigasi Cepat">
                             <a href="/" class="shared-nav-link ${currentPath === '/' ? 'active' : ''}"><i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span></a>
                             <a href="/profile" class="shared-nav-link ${currentPath === '/profile' ? 'active' : ''}"><i class="fa-solid fa-id-card"></i> <span>Profil</span></a>
-                            <a href="/world" class="shared-nav-link ${currentPath === '/world' ? 'active' : ''}"><i class="fa-solid fa-earth-asia"></i> <span>Dunia</span></a>
+                            <a href="/world" class="shared-nav-link ${currentPath === '/world' ? 'active' : ''}"><i class="fa-solid fa-earth-asia"></i> <span>Adisha</span></a>
                             <a href="/clan" class="shared-nav-link ${currentPath === '/clan' ? 'active' : ''}"><i class="fa-solid fa-users-rays"></i> <span>Klan</span></a>
                             <a href="/economy" class="shared-nav-link ${currentPath === '/economy' ? 'active' : ''}"><i class="fa-solid fa-coins"></i> <span>Ekonomi</span></a>
                             <a href="/leaderboard" class="shared-nav-link ${currentPath === '/leaderboard' ? 'active' : ''}"><i class="fa-solid fa-trophy"></i> <span>Peringkat</span></a>
@@ -265,115 +511,56 @@
         }
 
         // Pastikan container navigasi mobile ada di halaman
-        if (!document.querySelector('.mobile-nav')) {
-            const mobileNav = document.createElement('nav');
+        let mobileNav = document.querySelector('.mobile-nav');
+        if (!mobileNav) {
+            mobileNav = document.createElement('nav');
             mobileNav.className = 'mobile-nav';
             mobileNav.setAttribute('aria-label', 'Navigasi Utama Mobile');
-            mobileNav.innerHTML = `
-                <div class="mobile-nav-inner">
-                    <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-                    <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-                    <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-                    <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-                    <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
-                </div>
-            `;
             document.body.appendChild(mobileNav);
         }
+        mobileNav.innerHTML = `
+            <div class="mobile-nav-inner">
+                <button type="button" class="mobile-nav-item ${activePillar === 'kontrol' ? 'active' : ''}" data-pillar="kontrol" data-primary-route="/">
+                    <span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                    <span class="mn-label">Kontrol</span>
+                </button>
+                <button type="button" class="mobile-nav-item ${activePillar === 'adisha' ? 'active' : ''}" data-pillar="adisha" data-primary-route="/world">
+                    <span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span>
+                    <span class="mn-label">Adisha</span>
+                </button>
+                <button type="button" class="mobile-nav-item ${activePillar === 'ekskul' ? 'active' : ''}" data-pillar="ekskul" data-primary-route="/profile">
+                    <span class="mn-icon"><i class="fa-solid fa-id-card"></i></span>
+                    <span class="mn-label">Ekskul</span>
+                </button>
+                <a href="/music" class="mobile-nav-item ${currentPath === '/music' ? 'active' : ''}" data-pillar="kontrol">
+                    <span class="mn-icon"><i class="fa-solid fa-music"></i></span>
+                    <span class="mn-label">Musik</span>
+                </a>
+                <button type="button" class="mobile-nav-item" id="btnMobileSidebar">
+                    <span class="mn-icon"><i class="fa-solid fa-bars"></i></span>
+                    <span class="mn-label">Menu</span>
+                </button>
+            </div>
+        `;
 
+        mountPillarDock();
         reconcileSidebarLinks();
+        tagSidebarLinks();
+        filterSidebarNavigation(activePillar);
         initSidebarEnhancements();
-    }
 
-    function reconcileSidebarLinks() {
-        const sidebarNav = document.querySelector('.sidebar-nav');
-        if (!sidebarNav) return;
-
-        const navGroups = sidebarNav.querySelectorAll('.nav-group');
-        let communityGroup = null;
-        let rpgGroup = null;
-        let configGroup = null;
-        let moreGroup = null;
-
-        navGroups.forEach(g => {
-            const label = g.querySelector('.nav-group-label')?.textContent?.trim()?.toLowerCase() || '';
-            if (label.includes('community') || label.includes('komunitas')) communityGroup = g;
-            else if (label.includes('rpg') || label.includes('survival') || label.includes('wilds')) rpgGroup = g;
-            else if (label.includes('config') || label.includes('konfigurasi') || label.includes('pengaturan')) configGroup = g;
-            else if (label.includes('more') || label.includes('lainnya') || label.includes('profil')) moreGroup = g;
-        });
-
-        if (communityGroup) {
-            if (!sidebarNav.querySelector('a[href="/clan"]')) {
-                const a = document.createElement('a');
-                a.href = '/clan';
-                a.className = 'nav-item';
-                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-users-rays"></i></span><span>Sindikat & Klan</span>`;
-                communityGroup.appendChild(a);
-            }
-            if (!sidebarNav.querySelector('a[href="/marketplace"]')) {
-                const a = document.createElement('a');
-                a.href = '/marketplace';
-                a.className = 'nav-item';
-                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-shop"></i></span><span>Pasar Galaksi</span>`;
-                communityGroup.appendChild(a);
-            }
-        }
-
-        if (rpgGroup) {
-            if (!sidebarNav.querySelector('a[href="/inventory"]')) {
-                const a = document.createElement('a');
-                a.href = '/inventory';
-                a.className = 'nav-item';
-                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-backpack"></i></span><span>Tas & Ransel</span>`;
-                rpgGroup.appendChild(a);
-            }
-            if (!sidebarNav.querySelector('a[href="/arcade"]')) {
-                const a = document.createElement('a');
-                a.href = '/arcade';
-                a.className = 'nav-item';
-                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span><span>Retro Arcade</span>`;
-                rpgGroup.appendChild(a);
-            }
-        }
-
-        if (configGroup) {
-            if (!sidebarNav.querySelector('a[href="/admin"]')) {
-                const a = document.createElement('a');
-                a.href = '/admin';
-                a.className = 'nav-item';
-                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span><span>Admin God Mode</span>`;
-                configGroup.appendChild(a);
-            }
-        }
-
-        // Sinkronisasi otomatis Profil Petualang & Ruang Trofi di seluruh halaman
-        if (!sidebarNav.querySelector('a[href="/profile"]')) {
-            if (!moreGroup) {
-                moreGroup = document.createElement('div');
-                moreGroup.className = 'nav-group';
-                moreGroup.innerHTML = `<div class="nav-group-label">More</div>`;
-                sidebarNav.appendChild(moreGroup);
-            }
-            const aProf = document.createElement('a');
-            aProf.href = '/profile';
-            aProf.className = 'nav-item';
-            aProf.innerHTML = `<span class="nav-icon" style="color:var(--primary)"><i class="fa-solid fa-id-card"></i></span><span style="color:var(--primary)">Profil Petualang</span>`;
-            moreGroup.appendChild(aProf);
-        }
-
-        if (!sidebarNav.querySelector('a[href="/achievements"]')) {
-            if (!moreGroup) {
-                moreGroup = document.createElement('div');
-                moreGroup.className = 'nav-group';
-                moreGroup.innerHTML = `<div class="nav-group-label">More</div>`;
-                sidebarNav.appendChild(moreGroup);
-            }
-            const aAch = document.createElement('a');
-            aAch.href = '/achievements';
-            aAch.className = 'nav-item';
-            aAch.innerHTML = `<span class="nav-icon" style="color:var(--accent-amber)"><i class="fa-solid fa-trophy"></i></span><span style="color:var(--accent-amber)">Ruang Trofi</span>`;
-            moreGroup.appendChild(aAch);
+        // Initialize TactileTilt micro-tilt 3D perspective
+        if (typeof window.TactileTilt !== 'undefined' && typeof window.TactileTilt.init === 'function') {
+            window.TactileTilt.init();
+        } else if (typeof document !== 'undefined' && !document.querySelector('script[src*="tactileTilt.js"]')) {
+            const tiltScript = document.createElement('script');
+            tiltScript.src = '/src/js/tactileTilt.js';
+            tiltScript.onload = () => {
+                if (typeof window.TactileTilt !== 'undefined' && typeof window.TactileTilt.init === 'function') {
+                    window.TactileTilt.init();
+                }
+            };
+            document.head.appendChild(tiltScript);
         }
     }
 
@@ -381,10 +568,13 @@
         const sidebar = document.querySelector('.sidebar');
         if (!sidebar) return;
 
+        mountPillarDock();
+
         // Buat tombol collapse jika belum ada di template HTML halaman
         const sidebarBrand = sidebar.querySelector('.sidebar-brand');
-        if (sidebarBrand && !sidebar.querySelector('.sidebar-collapse-btn')) {
-            const collapseBtn = document.createElement('button');
+        let collapseBtn = sidebar.querySelector('.sidebar-collapse-btn');
+        if (sidebarBrand && !collapseBtn) {
+            collapseBtn = document.createElement('button');
             collapseBtn.type = 'button';
             collapseBtn.className = 'sidebar-collapse-btn';
             collapseBtn.id = 'sidebarCollapseBtn';
@@ -392,6 +582,13 @@
             collapseBtn.setAttribute('aria-label', 'Toggle Compact Sidebar');
             collapseBtn.innerHTML = '<i class="fa-solid fa-angles-left"></i>';
             sidebarBrand.appendChild(collapseBtn);
+        }
+
+        if (collapseBtn && !collapseBtn.dataset.boundPillarListener) {
+            collapseBtn.dataset.boundPillarListener = 'true';
+            collapseBtn.addEventListener('click', () => {
+                setTimeout(() => updateDockIndicator(activePillar), 280);
+            });
         }
 
         // Pasang trigger pencarian cepat di sidebar (.sidebar-cmd-trigger)
@@ -441,9 +638,9 @@
     // Tandai tautan mobile bottom navigation & pasang handler
     function initMobileNav() {
         markActiveNavLinks();
-        document.querySelectorAll('.mobile-nav-item').forEach((linkElement) => {
-            const group = linkElement.getAttribute('data-group');
-            const isActive = group === activeGroupId;
+        document.querySelectorAll('.mobile-nav-item[data-pillar]').forEach((linkElement) => {
+            const pillar = linkElement.getAttribute('data-pillar');
+            const isActive = pillar === activePillar;
             linkElement.classList.toggle('active', isActive);
             if (isActive) {
                 linkElement.setAttribute('aria-current', 'page');
@@ -452,21 +649,37 @@
             }
         });
 
-        document.querySelectorAll('.mobile-nav-item').forEach((item) => {
+        document.querySelectorAll('.mobile-nav-item[data-pillar]').forEach((item) => {
             item.addEventListener('click', (e) => {
-                const group = item.getAttribute('data-group');
-                if (group === activeGroupId) {
-                    // Jika sudah berada di grup aktif, ketukan membuka Quick Switcher Sheet
+                const pillar = item.getAttribute('data-pillar');
+                if (pillar === activePillar) {
+                    // Ketukan pada pilar aktif membuka Quick Switcher Sheet
                     e.preventDefault();
                     e.stopPropagation();
                     if (groupSheet && groupSheet.classList.contains('active')) {
                         closeGroupSheet();
                     } else {
-                        openGroupSheet(group);
+                        openGroupSheet(pillar);
                     }
+                } else if (pillar) {
+                    e.preventDefault();
+                    setActivePillar(pillar);
                 }
             });
         });
+
+        const btnMobileSidebar = document.getElementById('btnMobileSidebar');
+        if (btnMobileSidebar) {
+            btnMobileSidebar.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    sidebar.classList.toggle('open');
+                    const overlay = document.querySelector('.sidebar-overlay');
+                    if (overlay) overlay.classList.toggle('active', sidebar.classList.contains('open'));
+                }
+            });
+        }
     }
 
     if (document.readyState === 'loading') {
@@ -498,29 +711,29 @@
         if (groupSheet) groupSheet.classList.remove('active');
     }
 
-    function openGroupSheet(groupId) {
-        const group = ROUTE_GROUPS[groupId];
-        if (!group) return;
+    function openGroupSheet(pillarId) {
+        const pillarDef = PILLARS[pillarId];
+        if (!pillarDef) return;
 
         groupSheet.innerHTML = `
             <div class="group-sheet-header">
                 <div class="group-sheet-title">
-                    <i class="${group.icon}"></i>
-                    <span>Menu ${group.label} (${group.pages.length} Halaman)</span>
+                    <span style="font-size:16px;">${pillarDef.icon}</span>
+                    <span>Menu ${pillarDef.shortLabel} (${pillarDef.pages.length} Halaman)</span>
                 </div>
                 <button class="group-sheet-close" id="btnCloseGroupSheet" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="group-sheet-list">
-                ${group.pages.map(page => {
+                ${pillarDef.pages.map(page => {
                     const isPageActive = (page.path === '/' && currentPath === '/') || (page.path !== '/' && (currentPath === page.path || currentPath.startsWith(page.path)));
                     return `
                         <a href="${page.path}" class="group-sheet-item ${isPageActive ? 'active' : ''}">
-                            <div class="group-sheet-item-icon"><i class="${page.icon}"></i></div>
+                            <div class="group-sheet-item-icon" style="color:${pillarDef.color};"><i class="${page.icon}"></i></div>
                             <div class="group-sheet-item-info">
                                 <div class="group-sheet-item-name">${page.label}</div>
                                 <div class="group-sheet-item-desc">${page.desc}</div>
                             </div>
-                            ${isPageActive ? '<span style="font-size:11px;color:var(--primary);font-weight:700;"><i class="fa-solid fa-check"></i></span>' : '<i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--text-muted);"></i>'}
+                            ${isPageActive ? `<span style="font-size:11px;color:${pillarDef.color};font-weight:700;"><i class="fa-solid fa-check"></i></span>` : '<i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--text-muted);"></i>'}
                         </a>
                     `;
                 }).join('')}
@@ -549,6 +762,15 @@
     }
 
     if (groupOverlay) groupOverlay.addEventListener('click', closeGroupSheet);
+
+    // Export global helpers for integration
+    window.NauraPillars = {
+        PILLARS,
+        getActivePillar: () => activePillar,
+        setActivePillar,
+        resolveActivePillar,
+        detectPillarFromPath
+    };
 
     // ── 3. Transisi Halaman Mulus (Fade-In & Fade-Out) ─────────────────
     document.body.style.transition = 'opacity 0.25s ease';

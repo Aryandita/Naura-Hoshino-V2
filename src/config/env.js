@@ -249,6 +249,21 @@ const env = {
   USE_CLUSTERING: cleanEnv(process.env.USE_CLUSTERING) === "true",
 };
 
+// ffmpeg-static harus dikonfigurasi sebelum modul voice membuat resource audio.
+// Akses process.env dipusatkan di file konfigurasi ini agar modul lain tetap
+// memakai objek env dan lolos pemeriksaan drift arsitektur.
+if (!env.FFMPEG_PATH) {
+  try {
+    const staticFfmpegPath = require("ffmpeg-static");
+    if (staticFfmpegPath) {
+      env.FFMPEG_PATH = staticFfmpegPath;
+      process.env.FFMPEG_PATH = staticFfmpegPath;
+    }
+  } catch (_) {
+    // Host dapat menyediakan ffmpeg melalui PATH.
+  }
+}
+
 // Variabel yang wajib ada sebelum bot boleh menyala
 const REQUIRED_KEYS = [
   "TOKEN",
@@ -390,4 +405,3 @@ Object.defineProperty(env, "getLavalinkNumberedNodes", {
 env.env = env;
 
 module.exports = env;
-

@@ -34,6 +34,15 @@ function register(router, client) {
       }
 
       const userId = req.user?.id || null;
+      const RateLimiter = require("../../../src/utils/rateLimiter");
+      const clientIp = req.ip || req.headers["x-forwarded-for"] || "anon";
+      const identifier = userId || clientIp;
+      const rateCheck = await RateLimiter.consume(identifier, "api_activity_chat", 25, 60);
+      if (rateCheck.limited) {
+        return res.status(429).json({
+          error: `Terlalu banyak permintaan percakapan. Silakan tunggu ${rateCheck.retryAfter} detik.`,
+        });
+      }
       const username = req.user?.username || reqUsername || "Teman Baik";
       const { isOwner: checkIsOwner } = require("../../middleware/auth");
       const userIsOwner = userId ? checkIsOwner(userId) : false;
@@ -259,36 +268,67 @@ function register(router, client) {
     }
   });
 
-  // In-memory guest sessions cache for visitors playing without Discord login
+  // In-memory guest sessions cache for visitors playing without Discord login (Capped at 500, 30m TTL)
+  const MAX_GUEST_SESSIONS = 500;
+  const GUEST_SESSION_TTL_MS = 30 * 60 * 1000;
   const guestSessions = new Map();
 
+  function cleanGuestSessions() {
+    const now = Date.now();
+    for (const [id, entry] of guestSessions.entries()) {
+      if (now - (entry.lastAccessedAt || 0) > GUEST_SESSION_TTL_MS) {
+        guestSessions.delete(id);
+      }
+    }
+    if (guestSessions.size > MAX_GUEST_SESSIONS) {
+      const sorted = Array.from(guestSessions.entries()).sort(
+        (a, b) => (a[1].lastAccessedAt || 0) - (b[1].lastAccessedAt || 0),
+      );
+      const toRemove = guestSessions.size - MAX_GUEST_SESSIONS;
+      for (let i = 0; i < toRemove; i++) {
+        guestSessions.delete(sorted[i][0]);
+      }
+    }
+  }
+
   function getOrCreateGuest(guestId, username) {
+    cleanGuestSessions();
     const id = guestId || `guest_${Math.random().toString(36).substring(2, 9)}`;
+    const now = Date.now();
     if (!guestSessions.has(id)) {
       guestSessions.set(id, {
-        userId: id,
-        username: username || "Petualang Sukamaju",
-        avatar: null,
-        hp: 100,
-        maxHp: 120,
-        stamina: 100,
-        maxStamina: 100,
-        hunger: 100,
-        thirst: 100,
-        starFragments: 150,
-        coins: 1000,
-        survival_level: 1,
-        survival_xp: 0,
-        inventory: [
-          { id: "wooden_axe", name: "Kapak Kayu", amount: 1, type: "tool" },
-          { id: "wooden_pickaxe", name: "Beliung Kayu", amount: 1, type: "tool" },
-          { id: "wood", name: "Kayu", amount: 5, type: "material" },
-          { id: "stone", name: "Batu", amount: 3, type: "material" },
-        ],
-        lastBlessing: 0,
+        lastAccessedAt: now,
+        data: {
+          userId: id,
+          username: username || "Petualang Adisha",
+          avatar: null,
+          hp: 100,
+          maxHp: 120,
+          stamina: 100,
+          maxStamina: 100,
+          hunger: 100,
+          thirst: 100,
+          starFragments: 150,
+          coins: 1000,
+          survival_level: 1,
+          survival_xp: 0,
+          inventory: [
+            { id: "wooden_axe", name: "Kapak Kayu", amount: 1, type: "tool" },
+            { id: "wooden_pickaxe", name: "Beliung Kayu", amount: 1, type: "tool" },
+            { id: "wood", name: "Kayu", amount: 5, type: "material" },
+            { id: "stone", name: "Batu", amount: 3, type: "material" },
+          ],
+          lastBlessing: 0,
+          claimedStarterKit: false,
+          claimedFishingKit: false,
+        },
       });
+    } else {
+      const entry = guestSessions.get(id);
+      entry.lastAccessedAt = now;
+      if (username) entry.data.username = username;
     }
-    return guestSessions.get(id);
+    return guestSessions.get(id).data;
   }
 
   // --- 3B. Hybrid Discord Embedded App Auth & Session Handshake ---
@@ -404,7 +444,15 @@ function register(router, client) {
   // --- Real-time Activity State (Survival Stats, Inventory, Weather) ---
   router.get("/activity/state", async (req, res) => {
     try {
-      const targetUserId = req.query.userId || req.user?.id || null;
+      const requestedUserId = req.query.userId || null;
+      const requestedIsGuest = requestedUserId && String(requestedUserId).startsWith("guest_");
+      if (requestedUserId && !requestedIsGuest && !req.user?.id) {
+        return res.status(401).json({ success: false, error: "Masuk terlebih dahulu untuk melihat data akun." });
+      }
+      if (requestedUserId && !requestedIsGuest && req.user?.id && String(requestedUserId) !== String(req.user.id) && !isOwner(req.user.id)) {
+        return res.status(403).json({ success: false, error: "Akses data pemain lain ditolak." });
+      }
+      const targetUserId = requestedIsGuest ? String(requestedUserId) : req.user?.id || null;
       const guestId = req.query.guestId || null;
 
       if (!targetUserId && !guestId) {
@@ -497,7 +545,14 @@ function register(router, client) {
         });
       }
 
-      const activeUserId = req.user?.id || (req.body?.userId && !req.body.userId.startsWith("guest_") ? req.body.userId : null);
+      const requestedUserId = req.body?.userId;
+      if (requestedUserId && !String(requestedUserId).startsWith("guest_") && !req.user?.id) {
+        return res.status(401).json({ success: false, error: "Masuk terlebih dahulu untuk melakukan aktivitas akun." });
+      }
+      if (requestedUserId && req.user?.id && String(requestedUserId) !== String(req.user.id) && !isOwner(req.user.id)) {
+        return res.status(403).json({ success: false, error: "Akses aktivitas pemain lain ditolak." });
+      }
+      const activeUserId = req.user?.id || null;
 
       const STAMINA_COSTS = { chop: 12, mine: 15, fish: 10 };
       const cost = STAMINA_COSTS[action];
@@ -568,6 +623,10 @@ function register(router, client) {
         await addItemsAtomic(activeUserId, itemsGained);
         await cacheManager.incrementUserSurvival(activeUserId, "starFragments", nsfGained);
         await survivalLeveling.addPlayerXP(activeUserId, xpGained);
+        try {
+          const dailyQuestEngine = require("../../../src/survival/engines/dailyQuestEngine");
+          await dailyQuestEngine.recordQuestProgress(activeUserId, action, 1);
+        } catch (_) {}
 
         const [updatedSurvival, updatedProfile] = await Promise.all([
           cacheManager.getUserSurvival(activeUserId),
@@ -645,15 +704,22 @@ function register(router, client) {
   router.post("/activity/npc-interact", async (req, res) => {
     try {
       const { npcId, choice, guestId } = req.body || {};
-      const activeUserId = req.user?.id || (req.body?.userId && !req.body.userId.startsWith("guest_") ? req.body.userId : null);
+      const requestedUserId = req.body?.userId;
+      if (requestedUserId && !String(requestedUserId).startsWith("guest_") && !req.user?.id) {
+        return res.status(401).json({ success: false, error: "Masuk terlebih dahulu untuk berinteraksi dengan NPC." });
+      }
+      if (requestedUserId && req.user?.id && String(requestedUserId) !== String(req.user.id) && !isOwner(req.user.id)) {
+        return res.status(403).json({ success: false, error: "Akses interaksi pemain lain ditolak." });
+      }
+      const activeUserId = req.user?.id || null;
 
       const NPC_DATABASE = {
         kades_tirto: {
           id: "kades_tirto",
           name: "Pak Kades Tirto",
-          title: "Kepala Desa Sukamaju",
+          title: "Kepala Desa Adisha",
           image: "/assets/survival/characters/kades_tirto.jpeg",
-          defaultDialogue: "Selamat datang di Desa Sukamaju, Petualang! Desa kami subur dan aman. Di utara ada Hutan Pinus untuk kayu, di timur ada Bukit Tambang kaya mineral, dan di selatan ada Kolam Bintang tempat memancing yang menenangkan.",
+          defaultDialogue: "Selamat datang di Desa Adisha, Petualang! Desa kami subur dan aman. Di utara ada Hutan Pinus untuk kayu, di timur ada Bukit Tambang kaya mineral, dan di selatan ada Kolam Bintang tempat memancing yang menenangkan.",
           options: [
             { id: "blessing", label: "Minta Berkah Desa (+40 Stamina, +50 NSF)" },
             { id: "guide", label: "Panduan Wilayah & Sumber Daya" },
@@ -663,7 +729,7 @@ function register(router, client) {
         bagas: {
           id: "bagas",
           name: "Bagas",
-          title: "Pandai Besi Sukamaju",
+          title: "Pandai Besi Adisha",
           image: "/assets/survival/characters/bagas.jpeg",
           defaultDialogue: "Klang! Klang! Halo kawan! Aku Bagas, pandai besi desa. Butuh perkakas tangguh atau ingin mengasah kapak dan beliungmu? Api bengkelku selalu berkobar!",
           options: [
@@ -692,61 +758,147 @@ function register(router, client) {
 
       if (npcId === "kades_tirto") {
         if (choice === "blessing") {
-          dialogue = "Pak Kades Tirto tersenyum hangat dan menepuk bahumu: 'Semoga leluhur Sukamaju memberkatimu dengan kesegaran tubuh dan kelimpahan bintang hari ini!' (+40 Stamina & +50 Star Fragments)";
-          reward = { stamina: 40, starFragments: 50 };
+          const BLESSING_COOLDOWN_MS = 3600000; // 1 Jam
           if (activeUserId) {
             const cacheManager = require("../../../src/managers/cacheManager");
+            let blessingAllowed = true;
+            let remainingMinutes = 0;
+            await cacheManager.mutateUserSurvivalJson(activeUserId, "rpg_state", (state) => {
+              const last = state.lastKadesBlessingAt || 0;
+              const elapsed = Date.now() - last;
+              if (elapsed < BLESSING_COOLDOWN_MS) {
+                blessingAllowed = false;
+                remainingMinutes = Math.ceil((BLESSING_COOLDOWN_MS - elapsed) / 60000);
+                return state;
+              }
+              state.lastKadesBlessingAt = Date.now();
+              return state;
+            });
+
+            if (!blessingAllowed) {
+              return res.status(400).json({
+                success: false,
+                error: `Pak Kades Tirto: 'Kamu baru saja menerima berkah! Beristirahatlah sejenak dan kembalilah dalam ${remainingMinutes} menit.'`,
+              });
+            }
+
             const userSurv = await cacheManager.getUserSurvival(activeUserId);
             const currentStam = Number(userSurv?.stamina ?? 100);
             const stamDelta = Math.max(0, Math.min(40, 100 - currentStam));
-            const deltas = { starFragments: 50 };
+            const deltas = { sukamajuCoins: 50 };
             if (stamDelta > 0) deltas.stamina = stamDelta;
             await cacheManager.incrementUserSurvival(activeUserId, deltas);
           } else {
             const guest = getOrCreateGuest(guestId || req.body?.userId);
+            const now = Date.now();
+            if (guest.lastBlessing && now - guest.lastBlessing < BLESSING_COOLDOWN_MS) {
+              const remMin = Math.ceil((BLESSING_COOLDOWN_MS - (now - guest.lastBlessing)) / 60000);
+              return res.status(400).json({
+                success: false,
+                error: `Pak Kades Tirto: 'Kamu baru saja menerima berkah! Beristirahatlah sejenak dan kembalilah dalam ${remMin} menit.'`,
+              });
+            }
+            guest.lastBlessing = now;
             guest.stamina = Math.min(100, guest.stamina + 40);
             guest.starFragments += 50;
           }
+
+          dialogue = "Pak Kades Tirto tersenyum hangat dan menepuk bahumu: 'Semoga leluhur Adisha memberkatimu dengan kesegaran tubuh dan kelimpahan bintang hari ini!' (+40 Stamina & +50 Koin Adisha)";
+          reward = { stamina: 40, starFragments: 50 };
         } else if (choice === "guide") {
-          dialogue = "Pak Kades Tirto: 'Peta Sukamaju terhubung tanpa sekat. Berjalanlah ke utara melewati pohon pinus, tambang batu di timur laut, dan segarkan diri di kolam dermaga selatan. Jangan ragu menyapa warga lain di voice channel!'";
+          dialogue = "Pak Kades Tirto: 'Peta Adisha terhubung tanpa sekat. Berjalanlah ke utara melewati pohon pinus, tambang batu di timur laut, dan segarkan diri di kolam dermaga selatan. Jangan ragu menyapa warga lain di voice channel!'";
         }
       } else if (npcId === "bagas") {
         if (choice === "starter_kit") {
-          dialogue = "Bagas menyerahkan Kapak dan Beliung: 'Ini dia modal pertamamu! Pakai dengan bijak untuk memajukan perekonomian desa!'";
           const starterTools = [
             { id: "wooden_axe", name: "Kapak Kayu", amount: 1, type: "tool" },
             { id: "wooden_pickaxe", name: "Beliung Kayu", amount: 1, type: "tool" },
           ];
-          reward = { items: starterTools };
+
           if (activeUserId) {
+            const cacheManager = require("../../../src/managers/cacheManager");
+            let claimAllowed = true;
+            await cacheManager.mutateUserSurvivalJson(activeUserId, "rpg_state", (state) => {
+              if (state.claimedStarterKit) {
+                claimAllowed = false;
+                return state;
+              }
+              state.claimedStarterKit = true;
+              return state;
+            });
+
+            if (!claimAllowed) {
+              return res.status(400).json({
+                success: false,
+                error: "Bagas: 'Hei, kamu sudah pernah mengambil paket peralatan pemula! Gunakan yang ada atau tempa yang baru di bengkel.'",
+              });
+            }
+
             const { addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
             await addItemsAtomic(activeUserId, starterTools);
           } else {
             const guest = getOrCreateGuest(guestId || req.body?.userId);
+            if (guest.claimedStarterKit) {
+              return res.status(400).json({
+                success: false,
+                error: "Bagas: 'Hei, kamu sudah pernah mengambil paket peralatan pemula! Gunakan yang ada atau tempa yang baru di bengkel.'",
+              });
+            }
+            guest.claimedStarterKit = true;
             for (const t of starterTools) {
               if (!guest.inventory.some((i) => i.id === t.id)) {
                 guest.inventory.push({ ...t });
               }
             }
           }
+
+          dialogue = "Bagas menyerahkan Kapak dan Beliung: 'Ini dia modal pertamamu! Pakai dengan bijak untuk memajukan perekonomian Adisha!'";
+          reward = { items: starterTools };
         } else if (choice === "repair") {
           dialogue = "Bagas mengayunkan palunya: 'Klang! Selesai! Seluruh perkakasmu kini tajam kembali dan siap bekerja keras!'";
           reward = { repaired: true };
         }
       } else if (npcId === "mang_ujang") {
         if (choice === "fishing_kit") {
-          dialogue = "Mang Ujang memberikan joran bambu: 'Ini pancingan bambu buat kamu. Pegang erat-erat saat joran melengkung ya!'";
           const rodItem = [{ id: "bamboo_fishing_rod", name: "Pancingan Bambu", amount: 1, type: "tool" }];
-          reward = { items: rodItem };
+
           if (activeUserId) {
+            const cacheManager = require("../../../src/managers/cacheManager");
+            let claimAllowed = true;
+            await cacheManager.mutateUserSurvivalJson(activeUserId, "rpg_state", (state) => {
+              if (state.claimedFishingKit) {
+                claimAllowed = false;
+                return state;
+              }
+              state.claimedFishingKit = true;
+              return state;
+            });
+
+            if (!claimAllowed) {
+              return res.status(400).json({
+                success: false,
+                error: "Mang Ujang: 'Kamu sudah punya pancingan bambu dari paman! Rawat baik-baik ya.'",
+              });
+            }
+
             const { addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
             await addItemsAtomic(activeUserId, rodItem);
           } else {
             const guest = getOrCreateGuest(guestId || req.body?.userId);
+            if (guest.claimedFishingKit) {
+              return res.status(400).json({
+                success: false,
+                error: "Mang Ujang: 'Kamu sudah punya pancingan bambu dari paman! Rawat baik-baik ya.'",
+              });
+            }
+            guest.claimedFishingKit = true;
             if (!guest.inventory.some((i) => i.id === "bamboo_fishing_rod")) {
               guest.inventory.push(rodItem[0]);
             }
           }
+
+          dialogue = "Mang Ujang memberikan joran bambu: 'Ini pancingan bambu buat kamu. Pegang erat-erat saat joran melengkung ya!'";
+          reward = { items: rodItem };
         } else if (choice === "tips") {
           dialogue = "Mang Ujang: 'Ikan Mas Koki Bintang suka berenang di dekat dermaga saat riak air tenang. Perhatikan lingkaran cahaya air dan lempar kailmu ke sana!'";
         }
@@ -765,11 +917,15 @@ function register(router, client) {
   });
 
   // --- 4. Spatial Audio & Positioning ---
-  router.get("/activity/spatial-proximity", async (req, res) => {
+  router.get("/activity/spatial-proximity", requireApiLogin, async (req, res) => {
     try {
       const landEngine = require("../../../src/survival/engines/landEngine");
       const guildId = req.query.guildId || "default_guild";
-      const userId = req.query.userId || "current_user";
+      const requestedUserId = req.query.userId;
+      if (requestedUserId && String(requestedUserId) !== String(req.user.id) && !isOwner(req.user.id)) {
+        return res.status(403).json({ success: false, error: "Akses posisi pemain lain ditolak." });
+      }
+      const userId = isOwner(req.user.id) && requestedUserId ? String(requestedUserId) : req.user.id;
 
       const simulatedPlayers = [
         { userId: "player_01", username: "AstralWalker", x: 3, y: 3 },
@@ -805,10 +961,16 @@ function register(router, client) {
       const { guildId = "default_guild", x = 1, y = 1, username } =
         req.body || {};
 
-      const userId =
-        req.user?.id ||
-        (req.body?.userId
-          ? `guest_${String(req.body.userId).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32)}`
+      const requestedUserId = req.body?.userId;
+      if (requestedUserId && !String(requestedUserId).startsWith("guest_") && !req.user?.id) {
+        return res.status(401).json({ success: false, error: "Masuk terlebih dahulu untuk memperbarui posisi akun." });
+      }
+      if (requestedUserId && req.user?.id && String(requestedUserId) !== String(req.user.id) && !isOwner(req.user.id)) {
+        return res.status(403).json({ success: false, error: "Akses posisi pemain lain ditolak." });
+      }
+      const userId = req.user?.id ||
+        (requestedUserId
+          ? `guest_${String(requestedUserId).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32)}`
           : `guest_${String(req.ip || "anon").replace(/[^a-zA-Z0-9_-]/g, "")}`);
       const safeUsername = req.user?.username || username || "Guest";
 
@@ -946,14 +1108,18 @@ function register(router, client) {
   });
 
   // --- 6. Realtime Survival Status ---
-  router.get("/realtime/survival", async (req, res) => {
+  router.get("/realtime/survival", requireApiLogin, async (req, res) => {
     try {
       const UserSurvival = require("../../../src/models/UserSurvival");
       const userIsOwner = req.user?.id ? isOwner(req.user.id) : false;
+      const requestedUserId = req.query.userId;
+      if (requestedUserId && !isOwner(req.user.id) && String(requestedUserId) !== String(req.user.id)) {
+        return res.status(403).json({ success: false, error: "Akses data survival pemain lain ditolak." });
+      }
       const currentUserId =
         userIsOwner && req.query.userId
           ? String(req.query.userId)
-          : req.user?.id || null;
+          : req.user.id;
       let currentUserData = null;
 
       if (currentUserId) {
@@ -993,10 +1159,11 @@ function register(router, client) {
         }
       }
 
-      const survivors = await UserSurvival.findAll({
-        limit: 10,
-        order: [["updatedAt", "DESC"]],
-      });
+      const survivors = await UserSurvival.findAll(
+        userIsOwner
+          ? { limit: 10, order: [["updatedAt", "DESC"]] }
+          : { where: { userId: req.user.id }, limit: 1 },
+      );
       const data = survivors.map((s) => ({
         id: s.userId,
         name:
@@ -1042,7 +1209,7 @@ function register(router, client) {
   });
 
   // --- 7. Activity SSE Stream ---
-  router.get("/activity/stream", (req, res) => {
+  router.get("/activity/stream", requireApiLogin, (req, res) => {
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",

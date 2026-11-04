@@ -3,10 +3,10 @@
 /**
  * Roam Locations Data
  * Sub-lokasi yang bisa dikunjungi dalam satu kawasan via /survival roam
- * 
+ *
  * Currency tiers:
  * - fragment (SC): Desa, Tier 1
- * - coin (PD): Kota, Tier 2  
+ * - coin (PD): Kota, Tier 2
  * - coupon (VB): Prestige, Tier 3
  * - diamond (BA): Endgame, Tier 4
  */
@@ -14,7 +14,7 @@
 const ROAM_LOCATIONS = {
   desa_sukamaju: {
     id: "desa_sukamaju",
-    name: "Desa Sukamaju",
+    name: "Desa Adisha",
     currency: "fragment",
     description: "Desa tenang dengan suasana pedesaan yang asri.",
     locations: {
@@ -24,12 +24,40 @@ const ROAM_LOCATIONS = {
         type: "shop",
         workAvailable: false,
         shopItems: [
-          { itemId: "nasi_goreng", price: 15, restores: { stamina: 20, hunger: 30, thirst: 5 } },
-          { itemId: "teh_manis", price: 8, restores: { stamina: 5, hunger: 5, thirst: 25 } },
-          { itemId: "kopi_desa", price: 10, restores: { stamina: 15, hunger: 5, thirst: 20 } },
-          { itemId: "soto_ayam", price: 20, restores: { stamina: 25, hunger: 35, thirst: 10 } },
-          { itemId: "ticket_picnic", price: 200, restores: {}, isTicket: true, ticketFor: "ningsih" },
-          { itemId: "ticket_beach", price: 300, restores: {}, isTicket: true, ticketFor: "tari" },
+          {
+            itemId: "nasi_goreng",
+            price: 15,
+            restores: { stamina: 20, hunger: 30, thirst: 5 },
+          },
+          {
+            itemId: "teh_manis",
+            price: 8,
+            restores: { stamina: 5, hunger: 5, thirst: 25 },
+          },
+          {
+            itemId: "kopi_desa",
+            price: 10,
+            restores: { stamina: 15, hunger: 5, thirst: 20 },
+          },
+          {
+            itemId: "soto_ayam",
+            price: 20,
+            restores: { stamina: 25, hunger: 35, thirst: 10 },
+          },
+          {
+            itemId: "ticket_picnic",
+            price: 200,
+            restores: {},
+            isTicket: true,
+            ticketFor: "ningsih",
+          },
+          {
+            itemId: "ticket_beach",
+            price: 300,
+            restores: {},
+            isTicket: true,
+            ticketFor: "tari",
+          },
         ],
         npcSpawn: ["ningsih", "mang_ujang", "bu_ratna"],
         eventChance: 0.15,
@@ -37,13 +65,13 @@ const ROAM_LOCATIONS = {
       },
       sekolah: {
         id: "sekolah",
-        name: "SD Desa Sukamaju",
+        name: "SD Desa Adisha",
         type: "work",
         workAvailable: true,
         workRequirements: { intelligence: 5 },
         workReward: { currency: "fragment", amount: 50, exp: 10 },
         npcSpawn: ["bu_ratna", "budi", "siti"],
-        eventChance: 0.10,
+        eventChance: 0.1,
         description: "Suara anak-anak belajar terdengar dari dalam kelas.",
       },
       kebun: {
@@ -90,12 +118,40 @@ const ROAM_LOCATIONS = {
         type: "shop",
         workAvailable: false,
         shopItems: [
-          { itemId: "latte", price: 25, restores: { stamina: 20, hunger: 10, thirst: 30 } },
-          { itemId: "croissant", price: 30, restores: { stamina: 10, hunger: 25, thirst: 5 } },
-          { itemId: "cake_slice", price: 45, restores: { stamina: 15, hunger: 30, thirst: 10 } },
-          { itemId: "smoothie", price: 35, restores: { stamina: 25, hunger: 15, thirst: 35 } },
-          { itemId: "ticket_cafe", price: 500, restores: {}, isTicket: true, ticketFor: "bidan_sari" },
-          { itemId: "ticket_library", price: 400, restores: {}, isTicket: true, ticketFor: "bu_ratna" },
+          {
+            itemId: "latte",
+            price: 25,
+            restores: { stamina: 20, hunger: 10, thirst: 30 },
+          },
+          {
+            itemId: "croissant",
+            price: 30,
+            restores: { stamina: 10, hunger: 25, thirst: 5 },
+          },
+          {
+            itemId: "cake_slice",
+            price: 45,
+            restores: { stamina: 15, hunger: 30, thirst: 10 },
+          },
+          {
+            itemId: "smoothie",
+            price: 35,
+            restores: { stamina: 25, hunger: 15, thirst: 35 },
+          },
+          {
+            itemId: "ticket_cafe",
+            price: 500,
+            restores: {},
+            isTicket: true,
+            ticketFor: "bidan_sari",
+          },
+          {
+            itemId: "ticket_library",
+            price: 400,
+            restores: {},
+            isTicket: true,
+            ticketFor: "bu_ratna",
+          },
         ],
         npcSpawn: ["bidan_sari", "bu_ratna", "luna_gacha"],
         eventChance: 0.15,
@@ -109,7 +165,7 @@ const ROAM_LOCATIONS = {
         workRequirements: { intelligence: 15, specialSkill: "medical" },
         workReward: { currency: "coin", amount: 80, exp: 20 },
         npcSpawn: ["bidan_sari"],
-        eventChance: 0.10,
+        eventChance: 0.1,
         description: "Tempat pengobatan dan pemulihan kesehatan.",
       },
       pasar_kota: {
@@ -120,9 +176,21 @@ const ROAM_LOCATIONS = {
         workRequirements: { charisma: 8 },
         workReward: { currency: "coin", amount: 60, exp: 15 },
         shopItems: [
-          { itemId: "buah_segar", price: 20, restores: { stamina: 10, hunger: 20, thirst: 15 } },
-          { itemId: "roti_premium", price: 35, restores: { stamina: 15, hunger: 30, thirst: 5 } },
-          { itemId: "jus_alami", price: 25, restores: { stamina: 10, hunger: 10, thirst: 30 } },
+          {
+            itemId: "buah_segar",
+            price: 20,
+            restores: { stamina: 10, hunger: 20, thirst: 15 },
+          },
+          {
+            itemId: "roti_premium",
+            price: 35,
+            restores: { stamina: 15, hunger: 30, thirst: 5 },
+          },
+          {
+            itemId: "jus_alami",
+            price: 25,
+            restores: { stamina: 10, hunger: 10, thirst: 30 },
+          },
         ],
         npcSpawn: ["ningsih", "pak_damar"],
         eventChance: 0.12,
@@ -145,7 +213,7 @@ const ROAM_LOCATIONS = {
         type: "explore",
         workAvailable: false,
         npcSpawn: ["tari", "luna_gacha", "kades_tirto"],
-        eventChance: 0.20,
+        eventChance: 0.2,
         description: "Taman hijau dengan air mancur dan bangku santai.",
       },
     },
@@ -163,9 +231,21 @@ const ROAM_LOCATIONS = {
         type: "shop",
         workAvailable: false,
         shopItems: [
-          { itemId: "ramuan_stamina", price: 40, restores: { stamina: 40, hunger: 10, thirst: 10 } },
-          { itemId: "jamu_tradisional", price: 30, restores: { stamina: 20, hunger: 15, thirst: 20 } },
-          { itemId: "teh_herbal", price: 20, restores: { stamina: 15, hunger: 5, thirst: 25 } },
+          {
+            itemId: "ramuan_stamina",
+            price: 40,
+            restores: { stamina: 40, hunger: 10, thirst: 10 },
+          },
+          {
+            itemId: "jamu_tradisional",
+            price: 30,
+            restores: { stamina: 20, hunger: 15, thirst: 20 },
+          },
+          {
+            itemId: "teh_herbal",
+            price: 20,
+            restores: { stamina: 15, hunger: 5, thirst: 25 },
+          },
         ],
         npcSpawn: ["ki_prawiro"],
         eventChance: 0.15,
@@ -188,7 +268,7 @@ const ROAM_LOCATIONS = {
         type: "explore",
         workAvailable: false,
         npcSpawn: ["gatot"],
-        eventChance: 0.30,
+        eventChance: 0.3,
         description: "Gua gelap dengan kristal berkilau di dinding.",
       },
     },
@@ -206,7 +286,7 @@ const ROAM_LOCATIONS = {
         type: "social",
         workAvailable: false,
         npcSpawn: [],
-        eventChance: 0.10,
+        eventChance: 0.1,
         description: "Ruangan luas dengan pilar-pilar emas.",
       },
       ruang_takhta: {
@@ -276,14 +356,28 @@ const DATE_TICKETS = {
 // Work requirements helper
 function canWorkAt(location, userStats) {
   if (!location.workAvailable || !location.workRequirements) return true;
-  
+
   const reqs = location.workRequirements;
-  if (reqs.strength && (!userStats.strength || userStats.strength < reqs.strength)) return false;
-  if (reqs.intelligence && (!userStats.intelligence || userStats.intelligence < reqs.intelligence)) return false;
-  if (reqs.agility && (!userStats.agility || userStats.agility < reqs.agility)) return false;
-  if (reqs.charisma && (!userStats.charisma || userStats.charisma < reqs.charisma)) return false;
-  if (reqs.specialSkill && !userStats.skills?.includes(reqs.specialSkill)) return false;
-  
+  if (
+    reqs.strength &&
+    (!userStats.strength || userStats.strength < reqs.strength)
+  )
+    return false;
+  if (
+    reqs.intelligence &&
+    (!userStats.intelligence || userStats.intelligence < reqs.intelligence)
+  )
+    return false;
+  if (reqs.agility && (!userStats.agility || userStats.agility < reqs.agility))
+    return false;
+  if (
+    reqs.charisma &&
+    (!userStats.charisma || userStats.charisma < reqs.charisma)
+  )
+    return false;
+  if (reqs.specialSkill && !userStats.skills?.includes(reqs.specialSkill))
+    return false;
+
   return true;
 }
 

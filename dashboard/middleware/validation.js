@@ -1,6 +1,7 @@
 "use strict";
 
 const { z } = require("zod");
+const env = require("../../src/config/env");
 
 const snowflakePattern = /^\d{17,20}$/;
 const SnowflakeSchema = z.string().regex(snowflakePattern, "Invalid Discord ID format");
@@ -105,7 +106,7 @@ function errorHandler(err, req, res, _next) {
   }
 
   const statusCode = err.statusCode || err.status || 500;
-  const isDev = process.env.NODE_ENV !== "production";
+  const isDev = env.NODE_ENV !== "production";
 
   res.status(statusCode).json({
     type: `https://api.naurahoshino.com/errors/${statusCode}`,

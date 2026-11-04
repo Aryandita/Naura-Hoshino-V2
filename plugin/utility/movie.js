@@ -49,7 +49,7 @@ async function fetchFromOMDB(query, year) {
   if (!apiKey || apiKey === "YOUR_OMDB_API_KEY_HERE") return null;
 
   return omdbBreaker.execute(async () => {
-    let searchUrl = `http://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`;
+    let searchUrl = `https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`;
     if (year) searchUrl += `&y=${year}`;
 
     const searchRes = await axios.get(searchUrl, { timeout: 5000 });
@@ -65,7 +65,7 @@ async function fetchFromOMDB(query, year) {
     const detailPromises = items.map(async (item) => {
       try {
         const detailRes = await axios.get(
-          `http://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID}&plot=full`,
+          `https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID}&plot=full`,
           { timeout: 5000 },
         );
         const m = detailRes.data;

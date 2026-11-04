@@ -3,6 +3,7 @@
 const { Readable } = require("node:stream");
 const { logger } = require("./logger");
 const googleTTS = require("google-tts-api");
+const env = require("../config/env");
 
 let djsVoice = null;
 function getVoiceLib() {
@@ -24,9 +25,11 @@ function ensureFfmpegPath() {
   if (ffmpegPathReady) return;
   ffmpegPathReady = true;
   try {
-    if (!process.env.FFMPEG_PATH) {
+    if (!env.FFMPEG_PATH) {
       const staticPath = require("ffmpeg-static");
-      if (staticPath) process.env.FFMPEG_PATH = staticPath;
+      if (staticPath) {
+        env.FFMPEG_PATH = staticPath;
+      }
     }
   } catch (_) {
     // ffmpeg-static tidak terpasang: andalkan binary di PATH.

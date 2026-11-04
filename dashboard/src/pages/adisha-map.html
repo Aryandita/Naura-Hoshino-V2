@@ -917,7 +917,7 @@
                   </div>
                   <div style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;margin-top:2px;">
                     <i class="fa-solid fa-location-dot" style="color:#38bdf8;"></i>
-                    <span id="hudCurrentLoc">Desa Sukamaju · Balai Desa</span>
+                    <span id="hudCurrentLoc">Desa Adisha · Balai Desa</span>
                   </div>
                 </div>
               </div>
@@ -968,7 +968,7 @@
               <!-- Saldo Mata Uang V2 & Kendaraan Aktif -->
               <div class="hud-right-cluster">
                 <div class="wallets-cluster">
-                  <div class="wallet-chip sc" title="Sukamaju Koin (Mata Uang Desa & Pesisir)">
+                  <div class="wallet-chip sc" title="Adisha Koin (Mata Uang Desa & Pesisir)">
                     <i class="fa-solid fa-coins"></i>
                     <span id="valCoinsSc">0 SC</span>
                   </div>
@@ -1004,7 +1004,7 @@
                     <i class="fa-solid fa-globe"></i> Semua Kawasan
                   </button>
                   <button class="region-pill-btn" data-filter="desa_sukamaju">
-                    <i class="fa-solid fa-seedling" style="color:#10b981;"></i> Desa Sukamaju
+                    <i class="fa-solid fa-seedling" style="color:#10b981;"></i> Desa Adisha
                   </button>
                   <button class="region-pill-btn" data-filter="kota_pratama">
                     <i class="fa-solid fa-city" style="color:#38bdf8;"></i> Kota Pratama
@@ -1107,7 +1107,7 @@
                     />
                     <text x="500" y="270" fill="#7dd3fc" font-size="13" font-weight="700" letter-spacing="2">KOTA PRATAMA</text>
 
-                    <!-- Desa Sukamaju (Barat Daya) -->
+                    <!-- Desa Adisha (Barat Daya) -->
                     <path
                       d="M 150 400 Q 340 380 370 490 T 280 610 Q 130 620 120 490 Z"
                       fill="url(#gradSukamaju)"
@@ -1116,7 +1116,7 @@
                       stroke-dasharray="4 4"
                       opacity="0.75"
                     />
-                    <text x="210" y="440" fill="#6ee7b7" font-size="12" font-weight="700" letter-spacing="2">DESA SUKAMAJU</text>
+                    <text x="210" y="440" fill="#6ee7b7" font-size="12" font-weight="700" letter-spacing="2">DESA ADISHA</text>
 
                     <!-- Desa Lauh Than (Pesisir Selatan) -->
                     <path
@@ -1154,7 +1154,7 @@
 
                   <!-- 2. Lapisan Jalur Penghubung (Connecting Trails) -->
                   <g id="trailsLayer">
-                    <!-- Sukamaju ke Pratama -->
+                    <!-- Adisha ke Pratama -->
                     <line x1="260" y1="520" x2="520" y2="340" class="adisha-trail" stroke-width="2" />
                     <!-- Pratama ke Lauh Than -->
                     <line x1="530" y1="360" x2="510" y2="520" class="adisha-trail" stroke-width="2" />
@@ -1164,7 +1164,7 @@
                     <line x1="580" y1="270" x2="770" y2="180" class="adisha-trail" stroke-width="2" />
                     <!-- Dha Mhai ke Pratama -->
                     <line x1="240" y1="230" x2="500" y2="280" class="adisha-trail" stroke-width="2" />
-                    <!-- Sukamaju ke Dha Mhai -->
+                    <!-- Adisha ke Dha Mhai -->
                     <line x1="240" y1="480" x2="220" y2="260" class="adisha-trail" stroke-width="2" />
                     <!-- Lauh Than ke Kampus Draken -->
                     <line x1="560" y1="540" x2="700" y2="500" class="adisha-trail" stroke-width="2" />
@@ -1447,7 +1447,7 @@
 
           const curArea = adishaData?.regions?.[playerData.currentAreaId];
           const curLoc = curArea?.locations?.[playerData.currentLocationId];
-          hudCurrentLoc.textContent = `${curArea?.name || "Desa Sukamaju"} · ${curLoc?.name || "Balai Desa"}`;
+          hudCurrentLoc.textContent = `${curArea?.name || "Desa Adisha"} · ${curLoc?.name || "Balai Desa"}`;
 
           // Vitalitas
           const hp = playerData.hp || 100;

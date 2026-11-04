@@ -68,11 +68,26 @@ module.exports = (client) => {
     }
   });
 
+  const feedLikes = new Map();
+
   router.post("/api/feed/:id/like", async (req, res) => {
     try {
-      res.json({ success: true, newLikes: 1 });
+      const postId = String(req.params.id);
+      const userId = req.user?.id || req.ip || "guest_feed";
+      if (!feedLikes.has(postId)) {
+        feedLikes.set(postId, new Set());
+      }
+      const userSet = feedLikes.get(postId);
+      let liked = false;
+      if (userSet.has(userId)) {
+        userSet.delete(userId);
+      } else {
+        userSet.add(userId);
+        liked = true;
+      }
+      return res.json({ success: true, liked, newLikes: userSet.size });
     } catch (e) {
-      res.status(500).json({ error: e.message });
+      return res.status(500).json({ error: e.message });
     }
   });
 

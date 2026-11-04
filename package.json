@@ -1,6 +1,6 @@
 {
   "name": "naura-hoshino",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Naura Hoshino, Bot Discord multifungsi dengan UI Canvas Modern",
   "main": "index.js",
   "scripts": {
@@ -110,7 +110,7 @@
     "msedge-tts": "^1.1.0",
     "node_extra_ca_certs_mozilla_bundle": "^1.0.6",
     "node-cron": "^4.6.0",
-    "officeparser": "^7.8.0",
+    "officeparser": "8.4.1",
     "ollama": "^0.5.15",
     "opusscript": "^0.1.1",
     "parse-duration": "^2.1.6",
@@ -124,7 +124,6 @@
     "sequelize": "^6.37.8",
     "socket.io": "^4.8.3",
     "spotify-url-info": "^3.3.0",
-    "sqlite3": "^5.1.7",
     "tailwindcss": "^4.3.3",
     "three": "^0.177.0",
     "zod": "^4.6.7"
@@ -133,7 +132,7 @@
     "@vitejs/plugin-legacy": "^6.1.1",
     "eslint": "^10.4.1",
     "prettier": "^3.8.3",
-    "vite": "^6.3.5"
+    "vite": "^6.4.5"
   },
   "allowScripts": {
     "@google/genai@1.52.0": true,
@@ -143,13 +142,27 @@
     "esbuild@0.25.12": true,
     "ffmpeg-static@5.3.0": true,
     "node_extra_ca_certs_mozilla_bundle@1.0.7": true,
-    "protobufjs@7.6.6": true,
-    "sqlite3@5.1.7": true
+    "protobufjs@7.6.6": true
   },
   "overrides": {
     "axios": "^1.8.2",
+    "body-parser": "^2.4.0",
+    "follow-redirects": "^1.16.2",
+    "proxy-addr": "^2.0.8",
+    "source-map-js": "^1.2.2",
+    "ip-address": "^10.7.4",
+    "moment": "^2.31.0",
+    "minimatch@10.2.5": {
+      "brace-expansion": "^5.0.12"
+    },
+    "minimatch@3.1.5": {
+      "brace-expansion": "^1.1.21"
+    },
     "@iamtraction/google-translate": {
-      "undici": "^6.27.1"
+      "undici": "^6.29.1"
+    },
+    "discord-html-transcripts": {
+      "undici": "^6.29.1"
     },
     "tar": "^7.5.22",
     "@tootallnate/once": "^2.0.1",

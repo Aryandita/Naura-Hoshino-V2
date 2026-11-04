@@ -516,22 +516,36 @@ module.exports = (client) => {
         ? discordUser.displayAvatarURL({ extension: "png", size: 512 })
         : "/assets/dashboard/naura.png";
 
+      function escapeHtmlAttr(str) {
+        if (str === null || str === undefined) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
       const ogTitle = `${username} | Cyber Portfolio & Rank Level ${level}`;
       const ogDesc = `Jelajahi profil interaktif 3D & riwayat petualangan ${username} (Level ${level} • ${exp.toLocaleString()} EXP) di ekosistem Naura Hoshino OS.`;
+      const safeTitle = escapeHtmlAttr(ogTitle);
+      const safeDesc = escapeHtmlAttr(ogDesc);
+      const safeAvatar = escapeHtmlAttr(avatarUrl);
+      const safeUrl = escapeHtmlAttr(`/u/${userId}`);
 
       // Injeksi OG Meta Tags ke dalam HTML
       const ogTags = `
     <!-- Dynamic Open Graph / Discord Embed Preview (Sprint 21 / Proposal F9) -->
     <meta property="og:type" content="profile" />
-    <meta property="og:title" content="${ogTitle}" />
-    <meta property="og:description" content="${ogDesc}" />
-    <meta property="og:image" content="${avatarUrl}" />
-    <meta property="og:url" content="/u/${userId}" />
+    <meta property="og:title" content="${safeTitle}" />
+    <meta property="og:description" content="${safeDesc}" />
+    <meta property="og:image" content="${safeAvatar}" />
+    <meta property="og:url" content="${safeUrl}" />
     <meta name="theme-color" content="#FFB6C1" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${ogTitle}" />
-    <meta name="twitter:description" content="${ogDesc}" />
-    <meta name="twitter:image" content="${avatarUrl}" />
+    <meta name="twitter:title" content="${safeTitle}" />
+    <meta name="twitter:description" content="${safeDesc}" />
+    <meta name="twitter:image" content="${safeAvatar}" />
       `;
 
       html = html.replace("</head>", `${ogTags}\n  </head>`);

@@ -499,7 +499,7 @@
           <div class="region-tabs-bar animate-in delay-1">
             <button class="region-tab active" data-region="desa_sukamaju" id="tabSukamaju">
               <i class="fa-solid fa-tree" style="color:#10b981;"></i>
-              <span>Desa Sukamaju</span>
+              <span>Desa Adisha</span>
               <span class="badge" style="background:rgba(16, 185, 129, 0.2);color:#10b981;font-size:10px;padding:2px 6px;">Mata Uang: NSF</span>
             </button>
             <button class="region-tab" data-region="kota_pratama" id="tabPratama">
@@ -601,13 +601,13 @@
                   <span class="badge" id="campaignObjectiveBadge" style="background:rgba(34, 211, 238, 0.15);color:#22d3ee;border:1px solid rgba(34, 211, 238, 0.3);font-size:10px;">AKTIF</span>
                 </div>
                 <div style="font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;" id="campaignObjectiveTitle">
-                  Bab 1: Awal Kedatangan di Sukamaju
+                  Bab 1: Awal Kedatangan di Adisha
                 </div>
                 <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:12px;" id="campaignObjectiveDesc">
                   Kunjungi Balai Desa dan temui Kepala Desa Tirto untuk mendapatkan bimbingan awal bertahan hidup di alam liar.
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-subtle);padding-top:8px;">
-                  <span id="campaignObjectiveLoc"><i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Desa Sukamaju</span>
+                  <span id="campaignObjectiveLoc"><i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Desa Adisha</span>
                   <span style="font-family:var(--font-mono);color:var(--accent-cyan);" id="campaignObjectiveReward">Reward: 500 NSF + EXP</span>
                 </div>
               </div>
@@ -844,6 +844,8 @@
 
       const CANONICAL_REGIONS = {
         'desa_sukamaju': 'desa_sukamaju',
+        'adisha': 'desa_sukamaju',
+        'desa_adisha': 'desa_sukamaju',
         'desa': 'desa_sukamaju',
         'village': 'desa_sukamaju',
         'sukamaju': 'desa_sukamaju',
@@ -873,9 +875,9 @@
 
         const campaigns = {
           desa_sukamaju: {
-            title: 'Bab 1: Awal Kedatangan di Sukamaju',
+            title: 'Bab 1: Awal Kedatangan di Adisha',
             desc: 'Kunjungi Balai Desa dan temui Kepala Desa Tirto untuk mendapatkan bimbingan awal bertahan hidup di alam liar serta mengumpulkan Naura Star Fragments (NSF).',
-            loc: '<i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Desa Sukamaju',
+            loc: '<i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Desa Adisha',
             reward: 'Reward: 500 NSF + 150 EXP'
           },
           kota_pratama: {
@@ -1036,7 +1038,7 @@
         const outpostCardHeader = document.querySelector('.card-p [class*="fa-campground"]')?.parentElement;
         if (outpostCardHeader) {
           const outpostNames = {
-            desa_sukamaju: 'Pos Aju Lembah Sukamaju (Sektor 01)',
+            desa_sukamaju: 'Pos Aju Lembah Adisha (Sektor 01)',
             kota_pratama: 'Markas Komando Distrik Pratama (Sektor 02)',
             desa_khulkhas: 'Pos Kemah Badai Salju Khul\'Khas (Sektor 03)',
             istana_draken: 'Pos Pengintaian Gerbang Draken (Sektor 04)'

@@ -85,20 +85,16 @@ module.exports = (client) => {
       }
 
       const UserSurvival = require("../../src/models/UserSurvival");
-      const users = await UserSurvival.findAll({
-        attributes: ["starFragments", "coupons"],
-      });
-      let totalStarFragments = 0;
-      let totalCoupons = 0;
-      users.forEach((u) => {
-        totalStarFragments += u.starFragments || 0;
-        totalCoupons += u.coupons || 0;
-      });
+      const [totalCoins, totalVouchers, totalUsers] = await Promise.all([
+        UserSurvival.sum("sukamajuCoins").catch(() => UserSurvival.sum("starFragments")).catch(() => 0),
+        UserSurvival.sum("scholarshipVouchers").catch(() => UserSurvival.sum("coupons")).catch(() => 0),
+        UserSurvival.count().catch(() => 0),
+      ]);
 
       const stats = {
-        total_star_fragments: totalStarFragments,
-        total_coupons: totalCoupons,
-        total_users: users.length,
+        total_star_fragments: totalCoins || 0,
+        total_coupons: totalVouchers || 0,
+        total_users: totalUsers || 0,
       };
 
       if (redis) await redis.setCache("economy_stats_global", stats, 300);

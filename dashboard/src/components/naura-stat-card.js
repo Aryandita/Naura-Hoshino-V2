@@ -65,12 +65,10 @@ class NauraStatCard extends HTMLElement {
         }
 
         .stat-card {
-          background: var(--bg-surface, rgba(255, 255, 255, 0.04));
+          background: var(--bg-layer, #12151f);
           border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
           border-radius: var(--r-xl, 18px);
           padding: var(--sp-card-padding, 20px);
-          backdrop-filter: var(--blur-md, blur(16px));
-          -webkit-backdrop-filter: var(--blur-md, blur(16px));
           position: relative;
           display: flex;
           flex-direction: column;
@@ -78,10 +76,12 @@ class NauraStatCard extends HTMLElement {
           box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 6px 20px rgba(6, 8, 16, 0.25);
           transition: transform var(--t-base, 200ms) var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)), 
                       border-color var(--t-base, 200ms ease), 
-                      box-shadow var(--t-base, 200ms ease);
+                      box-shadow var(--t-base, 200ms ease),
+                      background-color var(--t-base, 200ms ease);
         }
 
         .stat-card:hover {
+          background: var(--bg-layer-elevated, #171b26);
           border-color: var(--border-primary, rgba(244, 114, 182, 0.35));
           transform: translateY(-2px);
           box-shadow: var(--glass-specular-primary, inset 0 1px 0 0 rgba(255, 192, 203, 0.2)), 0 10px 28px var(--primary-deep, rgba(244, 114, 182, 0.12));

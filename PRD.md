@@ -1,6 +1,6 @@
 # 📦 PRODUCT REQUIREMENTS DOCUMENT (PRD), NAURA HOSHINO V2
 
-> **Versi Dokumen:** 2.4.0  
+> **Versi Dokumen:** 2.5.0  
 > **Status:** Active / Production-Ready  
 > **Target Rilis:** Ekosistem Naura Hoshino 2026-2027  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
@@ -179,7 +179,7 @@ Untuk memastikan setiap fitur dibangun dengan fokus yang tajam, produk ini diran
 - **FR-4.2 (Redis Fast Cache & Write-Behind):** Cache in-memory berkecepatan tinggi untuk membaca data profil secara instan dengan flush otomatis ke database setiap 5 detik.
 - **FR-4.3 (MongoDB Atlas Vault):** Penyimpanan dokumen tidak terstruktur untuk transkrip tiket HTML, audit log moderasi, dan riwayat obrolan AI.
 - **FR-4.4 (Transaksi Atomik & Locking):** Setiap mutasi saldo numerik wajib menggunakan method atomik (`incrementUserProfile` / `debitUserProfile`), dan mutasi inventaris JSON wajib melalui transaksi database dengan klausa penguncian baris (`SELECT FOR UPDATE`). *(Ketentuan hukum transaksi diatur di [`RULES.md`](RULES.md#16-aturan-transaksi-saldo--penulisan-data-user))*
-- **FR-4.5 (Ledger 45 Migrasi Skema Terstandarisasi):** Penegakan ledger `schema_migrations` pada 45 migrasi PostgreSQL (`v1` hingga `v45`) yang terisolasi dari proses booting bot.
+- **FR-4.5 (Ledger 50 Migrasi Skema Terstandarisasi):** Penegakan ledger `schema_migrations` pada 50 migrasi PostgreSQL (`v1` hingga `v50`) yang terisolasi dari proses booting bot.
 
 ### Pilar 5: Survival RPG (Naura Wilds)
 - **FR-5.1 (Sistem Tri-Vital):** Karakter memiliki tiga bar status utama:
@@ -230,7 +230,7 @@ Untuk menjamin kualitas dan stabilitas rilis, fitur diklasifikasikan ke dalam 4 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           PRIORITAS FITUR (MoSCoW)                          │
 ├──────────────────────────────────────┬──────────────────────────────────────┤
-│ 🔴 MUST-HAVE (Wajib Ada di v2.4)     │ 🟡 SHOULD-HAVE (Sangat Dianjurkan)   │
+│ 🔴 MUST-HAVE (Wajib Ada di v2.5)     │ 🟡 SHOULD-HAVE (Sangat Dianjurkan)   │
 │ • Engine Discord Components V2       │ • Web Soundboard Studio              │
 │ • Transaksi atomik saldo & item      │ • Town Square Living City NPC        │
 │ • Currency V2 Closed-Loop Pool       │ • Co-Op The Neo-Abyss Celestial Raid │
@@ -239,7 +239,7 @@ Untuk menjamin kualitas dan stabilitas rilis, fitur diklasifikasikan ke dalam 4 
 │ • 3D Mascot PBR & VRM Three.js       │ • Global Guild Federation Hub        │
 │ • Total Canvas Worker Offloading     │ • Cross-Server Caravan Cartel PvP    │
 ├──────────────────────────────────────┼──────────────────────────────────────┤
-│ 🟢 COULD-HAVE (Penyempurnaan Nanti)  │ ⚪ WON'T-HAVE (Di Luar Cakupan v2.4) │
+│ 🟢 COULD-HAVE (Penyempurnaan Nanti)  │ ⚪ WON'T-HAVE (Di Luar Cakupan v2.5) │
 │ • Chibi 2.5D Room Decorator Live Grid│ • Integrasi Blockchain / Web3 / NFT  │
 │ • Galactic Caravan Live Radar Web    │ • Transaksi uang nyata antar pemain  │
 │ • Voice Intermezzo Federation Raid   │ • Self-hosted LLM on-premise lokal   │

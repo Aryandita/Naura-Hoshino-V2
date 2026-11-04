@@ -267,7 +267,7 @@ function synthesizeChronicle(data = {}) {
  */
 async function publishMorningChronicle(client) {
   if (!client || !client.guilds?.cache) return;
-  const { drawChronicleNewspaper } = require("../canvas/chronicleCanvas");
+  const canvasWorkerPool = require("../canvas/canvasWorkerPool");
   const { AttachmentBuilder } = require("discord.js");
   const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
   const ui = require("../config/ui");
@@ -286,7 +286,10 @@ async function publishMorningChronicle(client) {
       if (!channel || !channel.isTextBased()) continue;
 
       const chronicleData = await generateChronicleData(guild);
-      const imgBuffer = await drawChronicleNewspaper(chronicleData);
+      const imgBuffer = await canvasWorkerPool.runTask(
+        "renderChronicle",
+        chronicleData,
+      );
       const attachment = new AttachmentBuilder(imgBuffer, {
         name: "hoshino-times.png",
       });

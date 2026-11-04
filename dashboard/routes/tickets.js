@@ -27,7 +27,7 @@ module.exports = (client) => {
   // Mengambil semua tiket terintegrasi MongoDB TicketTranscript & Sequelize
   // Mendukung pencarian teks (?q=...), status (?status=...), dan limit
   // ------------------------------------------------------------------
-  router.get("/api/tickets", async (req, res) => {
+  router.get("/api/tickets", requireApiLogin, async (req, res) => {
     try {
       const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
       const statusFilter = req.query.status || "all";
@@ -172,13 +172,9 @@ module.exports = (client) => {
 
       // Filter tiket berdasarkan hak akses pengguna resmi
       const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user;
-      const isDemo = req.query?.preview === "1" || req.query?.demo === "1";
-
       let filteredTickets = [];
       if (isAuth) {
         filteredTickets = allTickets.filter((t) => canAccessTicket(req.user, t));
-      } else if (isDemo) {
-        filteredTickets = [];
       } else {
         return res.status(401).json({
           success: false,
@@ -202,8 +198,8 @@ module.exports = (client) => {
           total: totalCount,
           open: openCount,
           closed: closedCount,
-          avgResponseMinutes: "2.4",
-          satisfactionRate: "98.6%",
+          avgResponseMinutes: null,
+          satisfactionRate: null,
           tribunalCases: tribunalCount,
         },
         count: filteredTickets.length,
@@ -218,7 +214,7 @@ module.exports = (client) => {
   // ------------------------------------------------------------------
   // Mengambil detail 1 tiket secara spesifik beserta riwayat transkripnya
   // ------------------------------------------------------------------
-  router.get("/api/tickets/:ticketId", async (req, res) => {
+  router.get("/api/tickets/:ticketId", requireApiLogin, async (req, res) => {
     try {
       const { ticketId } = req.params;
       let ticketData = null;

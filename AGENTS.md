@@ -1,401 +1,102 @@
-# 🤖 PANDUAN KERJA & ORIENTASI AGENT AI, NAURA HOSHINO V2
+# Panduan Agen OpenCode - Naura Hoshino V2
 
-> **Target:** AI Coding Assistants (Antigravity, Roo Code, Claude, Copilot, & Developer Manusia)  
-> **Versi Ekosistem:** 2.4.0 · **Engine:** 2.4.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
-> **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
+Panduan ini berisi jebakan dan sumber kebenaran yang mudah terlewat. Untuk kebutuhan produk baca `PRD.md`, aturan teknis baca `RULES.md`, desain UI baca `DESIGN.md`, dan backlog baca `TODO.md`.
 
-> [!IMPORTANT]
-> **Aturan Wajib & Tata Kelola:** Seluruh aturan hukum kode, konvensi penamaan, standar keamanan, layout Components V2, dan ketentuan atomisitas database berada di [`RULES.md`](RULES.md). Spesifikasi fungsional dan kebutuhan pengguna berada di [`PRD.md`](PRD.md), dan standar visual berada di [`DESIGN.md`](DESIGN.md). Dokumen ini berfokus pada **cara agen memahami arsitektur proyek, peta navigasi cepat, kompetensi/skill yang diperlukan, dan prosedur eksekusi tugas**.
+## Runtime dan entrypoint
 
----
+- Gunakan Node.js `>=24` dan CommonJS untuk bot/server Node (`require`, `module.exports`). Frontend Vite di `dashboard/src` dan `dashboard/mobile/src` adalah ESM.
+- Entry point produksi adalah `shard.js`; `index.js` membuat client per shard, memuat command/event, mendaftarkan service container, dan menjalankan dashboard hanya pada shard utama.
+- Konfigurasi environment hanya dibaca melalui `src/config/env.js`. Jangan menambah `process.env.*` di modul lain.
+- Jangan mengubah versi di tempat lain secara manual. `package.json` adalah SSOT versi; jalankan pemeriksaan paritas setelah perubahan versi.
+- Jangan menjalankan `npm start` atau `npm run dev` di working tree deployment dengan `AUTO_UPDATE=1`: `scripts/ensure-build.js` dapat melakukan fetch dan `git checkout -f -B`.
 
-## 🧭 1. Mental Model Ekosistem Naura Hoshino V2 (v2.4.0)
+## Perintah kerja
 
-Sebagai agen AI, bayangkan Naura Hoshino V2 sebagai platform terintegrasi dengan **6 Pilar Utama**:
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         NAURA HOSHINO V2 ECOSYSTEM                          │
-├──────────────────────────────┬──────────────────────────────┬───────────────┤
-│ 1. BOT ENGINE (discord.js)   │ 2. WEB DASHBOARD V2 (Vite)   │ 3. AUDIO & DJ │
-│ • Sharding & Event Router    │ • Self-contained MPA         │ • Lavalink Cluster Manager    │
-│ • Components V2 (5 Lapisan)  │ • 3D Mascot (Three.js/VRM)   │ • Poru v5 & Failover Nodes    │
-│ • 55+ Slash Command Plugins  │ • Web Soundboard Studio      │ • Fish Audio AI DJ Companion  │
-├──────────────────────────────┼──────────────────────────────┼───────────────┤
-│ 4. POLYGLOT DATABASE         │ 5. SURVIVAL RPG (Naura Wilds)│ 6. LIVING AI  │
-│ • Supabase PG (46 Migrasi)   │ • Currency V2 Closed-Loop    │ • AI Ensemble (Gemini/Groq)   │
-│ • MongoDB (Dokumen & Log)    │ • ServerTreasury & Vitals    │ • Semantic Vector Memory      │
-│ • Redis (Cache, Mutex Lock)  │ • Durability & Town Square   │ • Server RAG & Voice Agent    │
-└──────────────────────────────┴──────────────────────────────┴───────────────┘
+```bash
+npm ci                         # instalasi reproducible
+npm run dev                    # ensure-build lalu bot dengan node --watch
+npm start                      # ensure-build, migrasi, warmup cache, lalu shard bot
+npm run start:no-migrate       # hanya bila melewati migrasi memang disengaja
+npm run db:migrate             # migrasi satu proses sebelum menjalankan shard
+npm run build                  # generate token CSS, build dashboard dan mobile
+npm run dashboard:dev          # build CSS lalu Vite dashboard
+npm run dashboard:build        # build dashboard production
+npm run mobile:build           # build mobile dashboard
 ```
 
-Setiap pilar memiliki batas tanggung jawab (_boundary_) yang jelas. Modul UI tidak boleh mengeksekusi query database mentah, command handler hanya merutekan perintah, dan mutasi saldo selalu melalui manajer atomik.
+- `npm start` menjalankan `prestart`: `ensure-build.js`, `scripts/migrate.js`, lalu `scripts/warmup-cache.js`.
+- Migrasi skema bernomor berada di `src/managers/dbMigrator.js`, saat ini sampai v50. Tambahkan migrasi di bagian bawah daftar dan lengkapi `sql` serta `pgSql` untuk setiap migrasi baru. Jangan memakai `ALTER TABLE` di model.
+- `SKIP_DB_MIGRATE=1` adalah pintu darurat untuk boot di atas skema lama, bukan konfigurasi normal.
 
----
+## Verifikasi
 
-## 🗺️ 2. Peta Navigasi Cepat Direktori
-
-Gunakan tabel ini untuk menemukan lokasi kode dan memahami batasan modifikasi:
-
-| Direktori                                                                | Tanggung Jawab & Isi                                                                                                    | Batasan Agen (_Do's & Don'ts_)                                                            |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [`src/core/`](file:///d:/Naura%20Hoshino%20V2/src/core/)                 | Service Container (`container.js`), EventBus mediator (`eventBus.js`).                                                 | IoC dan decoupling event. Dilarang mengimpor modul plugin/domain di sini.                |
-| [`src/domain/contracts/`](file:///d:/Naura%20Hoshino%20V2/src/domain/contracts/) | Kontrak publik domain (`economyContract.js`, `survivalContract.js`, `musicContract.js`).                              | Akses lintas domain wajib lewat kontrak ini. Seluruh return value wajib di-freeze.        |
-| [`src/config/tokens/`](file:///d:/Naura%20Hoshino%20V2/src/config/tokens/) | Single Source of Truth Design Tokens (`designTokens.js`).                                                              | Sumber tunggal nilai warna (Hex, Int, RGB, CSS Var). Jangan hardcode warna manual.       |
-| [`src/config/`](file:///d:/Naura%20Hoshino%20V2/src/config/)             | Konfigurasi stateless (`env.js`, `ui.js`, `database.js`, `lavalink-fallbacks.json`).                                    | **HANYA** baca via modul ini. Jangan memanggil `process.env` langsung di tempat lain.     |
-| [`src/managers/`](file:///d:/Naura%20Hoshino%20V2/src/managers/)         | Pengendali inti & stateful (`cacheManager.js`, `dbManager.js`, `lavalinkClusterManager.js`, `musicManager.js`).       | Modifikasi di sini jika berhubungan dengan state, caching, atau integrasi service luar.   |
-| [`src/models/`](file:///d:/Naura%20Hoshino%20V2/src/models/)             | Skema Sequelize (`ServerTreasury.js`, `UserProfile.js`) dan Mongoose (`models/mongo/`).                                 | Tambah model di sini. DILARANG `ALTER TABLE` di sini (wajib di `dbMigrator.js`).          |
-| [`src/services/`](file:///d:/Naura%20Hoshino%20V2/src/services/)         | Engine komputasi latar (`soundboardService.js`, `fishAudioService.js`, `entitlementService.js`, `voteService.js`, `premiumReminderService.js`). | Tempatkan integrasi API pihak ketiga (TTS, webhook, automation) di folder ini. |
-| [`src/ai/`](file:///d:/Naura%20Hoshino%20V2/src/ai/)                     | Engine kecerdasan AI (`aiEnsembleRouter.js`, `semanticMemoryService.js`, `aiMemory.js`, `tribunalEngine.js`).          | Wajib menyertakan penanganan failover dan circuit breaker rate limit (HTTP 429).          |
-| [`src/survival/`](file:///d:/Naura%20Hoshino%20V2/src/survival/)         | Core logika Naura Wilds (`currency.js`, `recyclingPoolEngine.js`, `durabilityEngine.js`, `townEngine.js`).             | Wajib deterministik dan transaksi saldo terhubung ke `cacheManager` atau `ServerTreasury`.|
-| [`src/canvas/`](file:///d:/Naura%20Hoshino%20V2/src/canvas/)             | Generator gambar kartu profil (`profileWorker.js`), item, & leveling berbasis worker threads.                          | Wajib melalui `canvasWorkerPool.js` agar tidak memblokir event loop Discord.              |
-| [`src/utils/`](file:///d:/Naura%20Hoshino%20V2/src/utils/)               | Helper murni stateless (`NauraContainerBuilder.js`, `survivalUIHelper.js`, `uxHelper.js`).                              | Dilarang menyimpan state di sini. Helper harus deterministik dan reusable.                |
-| [`src/interactions/`](file:///d:/Naura%20Hoshino%20V2/src/interactions/) | Handler tombol, select menu, modal, autocomplete, dan context menu.                                                     | Wrap selalu dengan `safeExecute` dan tangani interaksi secara defensif.                   |
-| [`plugin/`](file:///d:/Naura%20Hoshino%20V2/plugin/)                     | Subcommand dan router slash command (`core`, `music`, `admin`, `survival`, `naura`).                                    | **HANYA** untuk validasi input dan pemanggilan service/manager. Dilarang query DB mentah. |
-| [`dashboard/`](file:///d:/Naura%20Hoshino%20V2/dashboard/)               | Web Dashboard & Ingestion (`donationWebhooks.js`, Express backend & Vite MPA frontend).                                 | Komponen 3D Three.js di `src/components/NauraHeroViewer/` dan `NauraViewer/`.             |
-| [`scripts/`](file:///d:/Naura%20Hoshino%20V2/scripts/)                   | Script CLI pemeliharaan (`migrate.js`, `validate-locales.js`, `verify_dashboard_3d.js`, `check-em-dash.js`).           | Script uji mandiri & runner migrasi prestart.                                             |
-
----
-
-## 🛠️ 3. Skill & Kompetensi yang Dibutuhkan Agen AI
-
-Saat menangani kode Naura Hoshino V2, agen AI diharapkan menguasai kemampuan teknis berikut:
-
-### 3.1 Node.js 24 & Arsitektur CommonJS
-
-- Kode bot ditulis dalam CommonJS (`require` dan `module.exports`).
-- Untuk library yang hanya mendistribusikan format ESM (seperti Three.js addons), gunakan dynamic import asynchronous:
-  ```javascript
-  const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
-  ```
-- Di skrip Node.js baru, akses API global browser seperti `WebSocket`, `FormData`, atau `Blob` wajib diawali dengan `globalThis.` agar tidak memicu error linter `no-undef`.
-
-### 3.2 Discord Components V2 Layout Engineering
-
-- Mampu menyusun respons interaktif menggunakan `buildContainerV2()` dari [`NauraContainerBuilder.js`](file:///d:/Naura%20Hoshino%20V2/src/utils/NauraContainerBuilder.js).
-- Memahami struktur 5-lapisan Discord: Header -> Separator Garis -> Konten/Fields -> Separator Titik/Tombol -> Footer.
-- Menggunakan `MessageFlags.IsComponentsV2` (nilai `32768`) dan `MessageFlags.Ephemeral`.
-- Mengetahui bahwa custom emoji Discord dilarang di `authorName` dan `footerText` (wajib sanitasi via `ui.stripCustomEmojis()`).
-
-### 3.3 Polyglot Database & Atomic Concurrency
-
-- Menguasai Sequelize v6 untuk PostgreSQL/Supabase dan Mongoose v9 untuk MongoDB.
-- Mampu membedakan kapan menggunakan relasional vs dokumen log vs in-memory cache Redis.
-- **Wajib paham transaksi atomik**:
-  - Saldo numerik: Gunakan `incrementUserProfile` / `debitUserProfile`.
-  - JSON inventory: Gunakan `cacheManager.mutateUserProfileJson` atau `addItemsAtomic` / `takeItemsAtomic`.
-  - Jangan pernah memanggil `row.save()` tanpa filter `fields: ['col']`.
-
-### 3.4 Audio Engine & Fish Audio TTS Streaming
-
-- Memahami alur Poru v5 pada node Lavalink v4.
-- Menguasai pemanggilan Fish Audio API endpoint `/v1/tts` dengan model `s1` atau `tts-1`.
-- Mampu mengalirkan audio radio/voice snippet intro sebelum musik dimainkan (`aiDjManager.js`).
-
-### 3.5 WebGL, Three.js & Model 3D Avatar (GLTF/VRM)
-
-- Memahami struktur file `.glb` dan `.vrm` (chunk biner glTF 2.0).
-- Memahami konfigurasi Three.js PBR: `roughness`, `metalness`, `ACESFilmicToneMapping`, dan pengaturan `side: THREE.DoubleSide`.
-- Mampu menjalankan verifikasi visual tanpa antarmuka grafis menggunakan Headless Chrome CDP (`scripts/verify_dashboard_3d.js`).
-
-### 3.6 Lokalisasi & Standardisasi Gaya Teks
-
-- Menjaga paritas 100% antara [`assets/language/id.json`](file:///d:/Naura%20Hoshino%20V2/assets/language/id.json) dan [`assets/language/en.json`](file:///d:/Naura%20Hoshino%20V2/assets/language/en.json).
-- Menghindari penggunaan em dash (`\u2014`) pada semua teks dan string kamus.
-
-### 3.7 Tata Kelola Penomoran Versi (X.Y.Z) & SSOT package.json
-
-Seluruh perubahan versi ekosistem wajib mematuhi skema semantik tiga tingkat:
-- **`X` (Versi Keseluruhan / Generasi Era):** Ditentukan oleh owner proyek (saat ini bernilai `2` untuk era Naura Hoshino V2). Agen AI dilarang mengubah angka X tanpa instruksi eksplisit pengguna.
-- **`Y` (Major Update):** Dinaikkan saat terjadi rilis arsitektur besar, penambahan pilar baru, pembaruan moneter besar (seperti Currency V2 Closed-Loop), integrasi AI Ensemble, atau kluster audio Lavalink.
-- **`Z` (Minor Update):** Dinaikkan saat merilis perbaikan bug (bugfix), optimasi performa, balancing RPG/ekonomi, atau penyesuaian stabilitas berkala.
-- **Pemusatan Versi di `package.json`**: Versi ekosistem dan bot engine (`BOT_VERSION`, `ENGINE_VERSION`, `BASE_VERSION`) dipusatkan di `package.json` sebagai Single Source of Truth (SSOT). Modul internal membaca versi dinamis sehingga pembaruan versi di masa depan cukup dilakukan dengan menaikkan atribut `version` di `package.json`.
-
-### 3.8 AI Ensemble Router & Circuit Breaker Logic
-
-- Memahami arsitektur pemetaan tugas cerdas pada `src/ai/aiEnsembleRouter.js`:
-  - `GENERAL_CONVERSATION`, `FAST_RESPONSE`, `VISION_MULTIMODAL` dipetakan ke Gemini 2.5 Flash.
-  - `TACTICAL_REASONING`, `TRIBUNAL_VERDICT` dipetakan ke Groq LLaMA 3.3.
-  - `OFFLINE_FALLBACK` dipetakan ke Ollama lokal.
-- Menguasai penanganan status Circuit Breaker (`CLOSED` -> `OPEN` -> `HALF-OPEN`) saat API pihak ketiga mengalami error kuota 429 atau downtime.
-
-### 3.9 Service Container & Event-Driven Decoupling
-
-- Memahami cara menggunakan Service Registry di [`src/core/container.js`](file:///d:/Naura%20Hoshino%20V2/src/core/container.js):
-  - `container.resolve('client')`, `container.resolve('economyContract')`, dll.
-  - Mematuhi larangan keras monkey-patching `global.client` dan `client.dashboardIo`.
-- Memahami cara memancarkan dan mendengarkan event via [`src/core/eventBus.js`](file:///d:/Naura%20Hoshino%20V2/src/core/eventBus.js):
-  - Event lokal: `eventBus.emit('system:log', payload)`.
-  - Event lintas proses/shard: `eventBus.broadcast('event:name', payload)`.
-
-### 3.10 Interaction Pipeline & Declarative Transactions (/ponytail)
-
-- Memahami cara menyusun alur tombol dan pagination menggunakan [`src/utils/interactionPipeline.js`](file:///d:/Naura%20Hoshino%20V2/src/utils/interactionPipeline.js):
-  - `createManagedCollector(message, user, options)` untuk button collector terkelola.
-  - `createPaginationCollector(message, user, options)` untuk multi-halaman.
-  - Memanggil `stopCollector(message.id, 'navigated')` saat berpindah layar UI.
-- Menguasai pemotongan saldo berisiko via [`src/utils/transactionHelper.js`](file:///d:/Naura%20Hoshino%20V2/src/utils/transactionHelper.js):
-  - `executeAtomicPayment({ userId, amount, currency, action })` dengan proteksi rollback otomatis.
-
-### 3.11 Ekosistem Fitur Premium & Ingestion Dual-Rail (Non-P2W)
-
-- **Dual-Rail Ingestion**:
-  - `dashboard/routes/donationWebhooks.js`: Menerima webhook Saweria & Trakteer QRIS dengan verifikasi HMAC SHA-256 constant-time (`crypto.timingSafeEqual`) dan ekstraksi Snowflake regex (`\b\d{17,20}\b`).
-  - `src/services/entitlementService.js`: Sinkronisasi Discord Native App Subscriptions SKU dengan proteksi non-downgrade melalui bobot tier (`TIER_WEIGHTS`).
-- **Taste of Premium & Habituation Loop**:
-  - `src/services/voteService.js`: Memberikan VIP Starter 12 jam otomatis pada Top.gg vote dan Weekend Astral Surge (2x kupon + voucher trial).
-  - `src/services/premiumReminderService.js`: Mengirim pengingat cerdas 24 jam sebelum masa VIP berakhir via DM Components V2 dengan tombol perpanjang 1-klik dan deduplikasi anti-spam.
-- **Living AI Persona & Voice DJ Exclusives**:
-  - Persona suite (`default`, `tsundere`, `kuudere`, `gamer`, `butler`) dengan kuota turn unlimited bagi VIP Tier 2+ dan Owner.
-  - Fish Audio Signature Greeting berdurasi 3-5 detik saat memulai pemutaran lagu via `aiDjManager.js` dengan toggle preferensi pengguna.
-- **Canvas Social Flex & 24/7 Standby**:
-  - Rendering bingkai neon hologram, kilau bintang 4-sudut, dan stempel VIP emas via `src/canvas/workers/profileWorker.js`.
-  - Mode `stay24_7` pada `musicManager.js` dan `lavalinkClusterManager.js` untuk Guild Patron (Tier 3) dan ekspansi slot Soundboard hingga 50 slot.
-
-### 3.12 Standar Koneksi Database Produksi (Zero-Mock Assurance)
-
-- **Koneksi Live ke Database Produksi**:
-  - Seluruh endpoint telemetri (`/api/realtime/*`, `/api/health`, `/api/economy/*`, `/api/stats/live`, dll.) wajib menyajikan data riil hasil query PostgreSQL (Supabase / Sequelize), MongoDB, dan Redis saat berjalan di lingkungan produksi (GitHub CI/CD, hosting, atau VPS).
-  - Dilarang menimpa hasil query database yang sah dengan data statis/tiruan (`1420`, `48`, `500000`, `25000`, dll.).
-  - Nilai mock fallback hanya diizinkan bekerja secara kondisional ketika database fisik benar-benar terputus (`!dbConnected`).
-
----
-
-## 📋 4. Standar Prosedur Operasional (SOP) Agen AI
-
-### 4.1 Menambah Fitur atau Command Baru
-
-1. Buat router slash command di [`plugin/<kategori>/<nama-command>.js`](file:///d:/Naura%20Hoshino%20V2/plugin/).
-2. Daftarkan kunci terjemahan di `assets/language/id.json` dan `en.json` (pastikan sinkron).
-3. Bungkus seluruh logika interaksi dalam `try/catch` defensif.
-4. Bangun UI respons menggunakan `buildContainerV2()`.
-5. Perbarui daftar menu bantuan di [`src/core/helpView.js`](file:///d:/Naura%20Hoshino%20V2/src/core/helpView.js) dan kamus bahasa terkait (aturan wajib `RULES.md` Bagian 1.12).
-6. Uji sintaks require: `npm run test:requires`.
-7. Uji paritas bahasa: `npm run locales:check:strict`.
-
-### 4.2 Menambah Kolom atau Skema Database Baru
-
-1. Definisikan model di [`src/models/<ModelName>.js`](file:///d:/Naura%20Hoshino%20V2/src/models/).
-2. Buat fungsi migrasi bernomor baru di [`src/managers/dbMigrator.js`](file:///d:/Naura%20Hoshino%20V2/src/managers/dbMigrator.js) (misal: `v42_add_new_feature`).
-3. Catat migrasi di tabel `schema_migrations` agar tidak dieksekusi ganda.
-4. Hubungkan akses baca/tulis ke [`src/managers/cacheManager.js`](file:///d:/Naura%20Hoshino%20V2/src/managers/cacheManager.js).
-
-### 4.3 Checklist Validasi Kualitas Sebelum Melaporkan Selesai (QA Gate)
-
-Sebelum meminta user mengonfirmasi atau melakukan commit, jalankan urutan ini:
-
-```powershell
-# 1. Pengecekan linter dan standar kode
+```bash
 npm run lint
-
-# 2. Pengecekan larangan simbol em-dash
+npm run format:check
 node scripts/check-em-dash.js
-
-# 3. Pengecekan paritas kamus bahasa ID & EN
 npm run locales:check:strict
-
-# 4. Pengecekan integritas resolusi internal require
 npm run test:requires
-
-# 5. Pengecekan sintaks seluruh script inline halaman dashboard
 npm run test:inline-scripts
-
-# 6. Menjalankan automated test suite (semua test wajib 100% hijau)
+npm run test:secrets
+npm run verify:drift
 npm test
+npm run qa
 ```
 
-Semua 6 tahapan di atas WAJIB berstatus hijau (0 error), atau cukup jalankan `npm run qa` untuk menjalankan semuanya berurutan.
+- `npm run qa` menjalankan 9 tahap secara berurutan: lint, em dash, locale, versi, require graph, inline script, secret scan, drift, lalu seluruh test.
+- Untuk satu test Node: `node --test --test-timeout=60000 path/to/file.test.js`.
+- Untuk test dashboard Vitest: `npx vitest run dashboard/tests/path/to/file.test.js`. Konfigurasi Vitest hanya mencakup `dashboard/tests` dan memakai `jsdom`.
+- Untuk satu Playwright test: `npx playwright test path/to/file.spec.js`.
+- CI memakai Node 24, `npm ci`, `npm run format:check`, `npm run lint`, `npm test`, locale check, require check, dan `npm audit --audit-level=high`.
+- Jangan menyatakan QA hijau jika salah satu tahap gagal atau timeout; laporkan tahap dan perintah yang gagal.
 
-### 4.4 Prosedur Format Pesan Commit GitHub (3-Tingkat Terstruktur)
+## Batas arsitektur
 
-Ketika seluruh QA Gate telah berstatus hijau dan agen atau kontributor siap melakukan commit ke repositori GitHub, pesan commit WAJIB diformat menjadi 3 bagian terstruktur dengan emoji yang disesuaikan:
+- `plugin/` hanya memvalidasi input dan memanggil service/manager/contract. Jangan melakukan query database mentah di command.
+- `src/core/` berisi `container.js` dan `eventBus.js`; gunakan `container.resolve(...)` dan `eventBus.broadcast(...)` untuk komunikasi lintas service/shard. Jangan memakai `global.client` atau monkey-patching `client.dashboardIo`.
+- Akses lintas domain gunakan contract di `src/domain/contracts/` (`economyContract`, `survivalContract`, `musicContract`). Return publik contract harus immutable.
+- `src/services/` menangani integrasi eksternal dan pekerjaan background; `src/managers/` menangani stateful resource seperti cache, database, musik, dan Lavalink.
+- `dashboard/` adalah Express API plus frontend Vite MPA. Route dashboard tidak boleh mengakses model dengan cara yang melewati authorization dan cache policy.
+- `src/interactions/registry.js` memetakan button/select/modal berdasarkan exact ID atau prefix. Tambahkan handler di folder interaksi yang sesuai, bukan rantai routing baru di `interactionCreate.js`.
 
-```text
-<emoji> <tipe>: <ringkasan judul commit>
+## Data dan transaksi
 
-⚙️ [System Update]
-- <perubahan arsitektur, konfigurasi server, skema database, routing, atau dependensi>
+- Saldo atau counter numerik wajib memakai `cacheManager.incrementUserProfile`, `incrementUserSurvival`, `debitUserProfile`, atau `debitUserSurvival`. Jangan memakai pola read-modify-write atau `update*` dengan nilai saldo absolut.
+- Mutasi JSON (`inventory`, `rpg_state`, cooldown, playlist, dan sejenisnya) wajib memakai `mutate*Json`, `addItemsAtomic`, atau `takeItemsAtomic`.
+- Jangan memanggil `UserProfile.update()` atau `UserSurvival.update()` langsung. Jangan memanggil `row.save()` tanpa `fields: [...]` yang eksplisit.
+- Untuk pembayaran yang menggabungkan debit dan aksi lanjutan, gunakan `executeAtomicPayment()` dari `src/utils/transactionHelper.js`; aksi harus dapat di-rollback secara kompensasi.
+- Gunakan lock per user/guild untuk operasi yang dapat dipanggil paralel. Jangan menganggap cache write-behind 5 detik sebagai transaksi database penuh.
+- Data produksi harus berasal dari database/cache nyata. Fallback guest, SQLite, atau data demo hanya boleh aktif secara kondisional ketika layanan utama memang tidak tersedia.
 
-🚀 [Major Update]
-- <fitur besar baru, perombakan modul utama, halaman/UI baru, atau sistem game/ekonomi baru>
+## Discord UI dan interaksi
 
-🔧 [Minor Update]
-- <perbaikan bug, optimasi performa, refactoring, penyesuaian styling, dan pembersihan file>
-```
+- Respons baru gunakan `buildContainerV2()` dari `src/utils/NauraContainerBuilder.js` dengan `MessageFlags.IsComponentsV2`; respons ephemeral gunakan `MessageFlags.Ephemeral`, bukan `ephemeral: true`.
+- Jangan mencampur `content` atau `embeds` dengan payload Components V2 baru. Attachment `attachment://name` wajib memiliki file yang sama di `files`.
+- Custom emoji harus disanitasi dari `authorName` dan footer; custom ID button/select/modal dalam satu pesan harus unik.
+- Saat button survival meneruskan aksi ke subcommand, gunakan `adaptSurvivalInteraction(...)` dan guard status reply/defer yang sudah ada.
+- Saat berpindah halaman, hentikan collector lama dengan alasan `navigated`. Saat timeout, pertahankan halaman aktif dan hanya nonaktifkan tombol.
+- Batasi root slash command pada 25 opsi. Audit struktur command setelah `.toJSON()`, bukan dari properti builder internal.
+- `src/interactions/safeExecute.js` harus menjadi jalur penanganan error interaksi; jangan membiarkan exception async keluar tanpa balasan defensif.
 
-Pilihlah emoji pada judul dan setiap butir pembaruan yang selaras dengan isi perubahannya (misal 🛡️ untuk keamanan, 🎨 untuk visual/desain, 📦 untuk dependensi/modul, ⚡ untuk performa, 🩹 untuk bugfix).
+## Rendering, AI, audio, dan UI web
 
----
+- Canvas hanya melalui `src/canvas/canvasRuntime.js` dan `canvasWorkerPool.js`; jangan `require('@napi-rs/canvas')` langsung dari renderer/handler.
+- Kalkulasi domain seperti ekonomi, vital, combat, dan leveling harus pure function bila memungkinkan agar dapat diuji tanpa database.
+- AI menerima konten pengguna sebagai data tidak tepercaya. Pertahankan routing, timeout, circuit breaker, dan fallback provider di `src/ai/aiEnsembleRouter.js`.
+- Perubahan audio harus mempertimbangkan Poru/Lavalink cluster, node fallback, dan migrasi player.
+- Warna lintas Discord, Canvas, dan web ambil dari `src/config/tokens/designTokens.js`; warna survival ambil dari helper survival, bukan hex baru di plugin.
+- Perubahan token perlu diikuti `npm run tokens:generate` atau `npm run build`. Jangan mengedit hasil generated tanpa memperbaiki sumber token.
 
-## ⚠️ 5. Jebakan Kritis (_Fatal Gotchas_) yang Sering Terjadi
+## Locale, secret, dan file lokal
 
-1. **Memanggil `process.env.XXX` langsung:**
-   _Akibat:_ Crash di lingkungan panel atau lint warning. Selalu impor `{ env }` dari `src/config/env.js`.
-2. **Read-Modify-Write Saldo:**
-   _Akibat:_ Duplikasi saldo pemain saat double click tombol interaksi. Selalu gunakan `cacheManager.increment*` atau `debit*`.
-3. **Menggunakan `ephemeral: true`:**
-   _Akibat:_ Warning lint dan inkonsistensi Discord v14. Selalu gunakan `flags: MessageFlags.Ephemeral`.
-4. **Hardcode warna Hex di Modul Survival:**
-   _Akibat:_ Melanggar identitas sub-brand Naura Wilds. Selalu ambil token dari `survivalUIHelper.js`.
-5. **Menyimpan `.env` ke Git:**
-   _Akibat:_ Kebocoran token kritis. File `.env` dilarang disentuh oleh `git add`.
-6. **Menghapus Folder `.cache/`:**
-   _Akibat:_ Memicu deploy ulang seluruh slash command ke Discord API dan menghabiskan rate limit bot saat restart.
-7. **Mereferensikan `attachment://` tanpa melampirkan file di `files: []`:**
-   _Akibat:_ `DiscordAPIError[50035] UNFURLED_MEDIA_ITEM_REFERENCED_ATTACHMENT_NOT_FOUND`. Pastikan gambar atau aset thumbnail/banner yang dirujuk dengan skema attachment benar-benar dilampirkan via `AttachmentBuilder` di array `files`.
-8. **Meneruskan `ButtonInteraction` ke subcommand lain tanpa `adaptSurvivalInteraction`:**
-   _Akibat:_ `DiscordAPIError[40060] Interaction has already been acknowledged` atau `TypeError: interaction.options.getString is not a function`. Selalu bungkus `interaction` dengan `adaptSurvivalInteraction(interaction, action)` sebelum meneruskan ke subcommand tujuan.
-9. **Duplikasi `custom_id` komponen interaktif dalam pesan yang sama:**
-   _Akibat:_ `DiscordAPIError[50035] COMPONENT_CUSTOM_ID_DUPLICATED`. Jangan menduplikasi komponen baris atau memasukkan kembali array baris yang sudah ditambahkan ke builder.
-10. **Mutasi seluruh objek UserSurvival saat hanya beberapa statistik yang berubah:**
-   _Akibat:_ Race condition dan penimpaan data vital yang tidak perlu. Selalu susun patch parsial (`const patch = {}`) yang hanya menyertakan statistik yang terpengaruh efek konsumsi sebelum memanggil `cacheManager.updateUserSurvival(userId, patch)`.
-11. **Menghapus pesan kartu utama saat membalas ephemeral dari tombol:**
-   _Akibat:_ Kartu bot hilang dari channel. Dilarang memanggil `deleteReply()` pada `ButtonInteraction` jika pesan respons berstatus ephemeral (hanya panggil `deleteReply()` bila `interaction.isChatInputCommand?.()`).
-12. **Tidak menghentikan collector lama dengan alasan `navigated`:**
-   _Akibat:_ Tombol pada layar baru tiba-tiba hilang setelah 60 detik karena timeout collector layar lama memanggil `editReply({ components: [] })`. Selalu panggil `stopMessageCollector(messageId, "navigated")` saat berpindah layar.
-13. **Melebihi batas 25 subcommands per root command:**
-   _Akibat:_ Discord API melempar error `ExpectedConstraintError: Expected at most 25 options, received X`. Discord membatasi maksimal 25 opsi/subcommand per root command. Solusi: kelompokkan perintah terkait ke dalam subcommand group terstruktur atau pisahkan ke command independen jika kapasitas perintah sudah mencapai batas.
-14. **Menginspeksi `options` builder sebelum memanggil `.toJSON()`:**
-   _Akibat:_ Properti internal `SlashCommandBuilder.options` belum sepenuhnya ter-resolve dan strukturnya berbeda dengan payload Discord REST API. Selalu lakukan serialisasi `.toJSON()` terlebih dahulu saat memverifikasi atau mengaudit opsi slash command.
-15. **Inkonsistensi konvensi impor konfigurasi environment (`src/config/env.js`):**
-   _Akibat:_ `src/config/env.js` mengekspor objek konfigurasi secara langsung (`module.exports = env`). Meskipun mendukung fallback `env.env = env`, konvensi baku repositori adalah impor objek langsung (`const env = require("../../config/env.js")`) demi kejelasan namespace dan performa.
-16. **Mereset active page state saat collector timeout di Components V2:**
-   _Akibat:_ Tampilan informasi kartu yang sedang dibaca pengguna mendadak hilang atau kembali ke halaman awal saat interaksi collector mencapai batas waktu (timeout). Penanganan timeout (`collector.on("end")`) wajib mempertahankan data kartu dan nomor halaman aktif terakhir, serta cukup menonaktifkan (`disabled: true`) baris tombol aksi tanpa merombak isi payload atau mereset state tampilan.
+- Jika menambah teks, perbarui `assets/language/id.json` dan `assets/language/en.json`, lalu jalankan strict locale check. Repository juga memuat `es.json` dan `ja.json`, jadi jangan menghapus key yang sudah ada.
+- Karakter em dash (`\u2014`) dilarang di source, dokumentasi, dan locale.
+- Jangan membaca, mencetak, atau commit token/API key. `.env` tidak boleh disentuh untuk commit; gunakan `.env.example` untuk perubahan konfigurasi yang terdokumentasi.
+- Jangan menghapus `.cache/`; cache deploy command mencegah deploy slash command berulang ke Discord API.
+- Periksa `git status` sebelum mengedit dan pertahankan perubahan user yang sudah ada.
 
----
+## Selesai bekerja
 
-## 🧭 7. Panduan Membaca & Memahami Kode bagi Developer (Keterbacaan & Navigasi)
-
-Jika di kemudian hari kamu kembali ke repositori ini dan lupa bagaimana fitur-fiturnya terhubung, gunakan ringkasan alur berikut sebagai panduan mental:
-
-### 7.1 Diagram Alur Eksekusi (Dari Discord ke Database)
-
-```text
-[ Pengguna Discord Mengetik Command / Mengklik Tombol ]
-                         │
-                         ▼
-        [ Discord Gateway WebSocket ]
-                         │
-                         ▼
-  [ src/events/interactionCreate.js ] (Router Pusat)
-   ├── Is Autocomplete? ──► [ src/interactions/autocomplete.js ]
-   ├── Is Button/Select? ──► [ src/interactions/safeExecute.js ] ──► [ buttons/ / selects/ ]
-   └── Is Slash Command? ──► [ CommandHandler.js ]
-                                   │
-                                   ▼
-                   [ plugin/<kategori>/<command>.js ]
-                                   │
-                    ┌──────────────┴──────────────┐
-                    ▼                             ▼
-        [ Kalkulasi Murni & Aturan ]    [ Transaksi Data & State ]
-        (src/domain/decisions/)          (src/managers/cacheManager.js)
-        - Hitung XP / Level              - decrement / increment atomik
-        - Validasi kecukupan biaya       - mutateJson (SELECT FOR UPDATE)
-                    │                             │
-                    └──────────────┬──────────────┘
-                                   │
-                                   ▼
-         [ Render UI Respons: src/utils/NauraContainerBuilder.js ]
-             (Discord Components V2: Header -> Body -> Tombol -> Footer)
-                                   │
-                                   ▼
-                 [ interaction.reply(payload) ]
-```
-
-### 7.2 Glosarium Konsep & Terminologi Domain
-
-| Istilah                        | Arti & Tanggung Jawab                                                                                                 | Lokasi Kode Kunci                                                                    |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| **SC (Sukamaju Koin)**         | Mata uang umum survival (Desa Sukamaju) untuk belanja barang biasa, makan di kafe, dan upgrade perlengkapan.          | `UserSurvival.sukamajuCoins` via `cacheManager.incrementUserSurvival`                |
-| **PD (Pratama Dollar)**        | Mata uang ekonomi global server (Kota Pratama, dompet & bank) untuk transfer pemain dan pasar saham.                  | `UserProfile.pratamaDollars`, `economy_bank` via `cacheManager.incrementUserProfile` |
-| **VB (Voucher Beasiswa)**      | Mata uang prestasi & festival langka untuk gacha kosmetik, Battle Pass premium, dan sertifikasi akademi.              | Kolom numerik `UserSurvival.scholarshipVouchers`                                     |
-| **BA (Berlian Adisha)**        | Mata uang legendaris endgame dari dunia Adisha, hanya via World Boss Draken, Istana Draken L50+, Clan War, Mythic.   | Kolom numerik `UserSurvival.adishaDiamonds`                                          |
-| **Components V2**              | Format pesan modern Discord berbasis Container 5-lapisan (bukan embed tradisional).                                   | `src/utils/NauraContainerBuilder.js`                                                 |
-| **Write-Behind Cache**         | Sistem penulisan bertahap di mana data diubah di Redis/memori secara instan lalu di-flush ke Postgres setiap 5 detik. | `src/managers/cacheManager.js`                                                       |
-| **Naura Wilds**                | Sub-brand sistem survival hybrid cyberpunk-nature dengan bar vital 3-warna (moss, amber, danger).                     | `src/utils/survivalUIHelper.js`                                                      |
-
-### 7.3 Standar Dokumentasi Mandiri (Self-Documenting Code)
-
-Saat menambahkan fungsi atau modul baru:
-
-1. **Gunakan JSDoc berbahasa Indonesia** di setiap fungsi publik yang menjelaskan `@param`, `@returns`, dan kemungkinan gagal.
-2. **Pisahkan Logika Murni (Law 5)**: Rumus hitungan matematika harus berada di fungsi tanpa side-effects agar tidak memerlukan mock database saat di-test.
-3. **Gunakan Guard Clauses (Law 1)**: Letakkan pengecekan error/izin di baris pertama dengan `return` awal agar alur utama (_happy path_) tetap berada di indentasi terluar dan mudah dibaca secara cepat.
-
----
-
-## 🔗 8. Dokumen Pendukung Terkait (Pentalogi Dokumentasi)
-
-Seluruh agen AI dan kontributor wajib merujuk pada pilar dokumentasi yang tepat sesuai dengan ranah tugasnya:
-
-| Dokumen | Sumber Kebenaran (*Source of Truth*) | Kapan Agen Wajib Membacanya? |
-| :--- | :--- | :--- |
-| [`README.md`](README.md) | **Portal & Instalasi Publik** | Saat butuh gambaran arsitektur umum, dependensi runtime, atau langkah setup lokal. |
-| [`PRD.md`](PRD.md) | **Kebutuhan Produk & Personas** | Saat merancang fitur baru, memahami *what & why*, target persona, dan prioritas MoSCoW. |
-| [`DESIGN.md`](DESIGN.md) | **Bahasa Desain & UI Tokens** | Saat membuat tampilan UI bot (Components V2), web dashboard, token warna, atau model 3D. |
-| [`RULES.md`](RULES.md) | **Konstitusi & Standar Teknis** | Sebelum menulis kode: patuhi transaksi atomik DB, larangan em-dash, dan anti-crash. |
-| [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | Untuk memetakan direktori file, alur eksekusi, dan menjalankan checklist QA sebelum commit. |
-| [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | Untuk melihat status tugas yang sedang dikerjakan dan backlog sprint berikutnya. |
-| [`.agents/skills/naura-dev/SKILL.md`](.agents/skills/naura-dev/SKILL.md) | **Workspace Skill Naura Dev** | Prosedur cepat eksekusi subagent untuk development bot. |
-| [`.agents/skills/i-have-adhd/SKILL.md`](.agents/skills/i-have-adhd/SKILL.md) | **ADHD-Friendly Output Skill** | Panduan format respon AI coding: action-first, bernomor, tanpa basa-basi. |
-| [`.agents/skills/strix/SKILL.md`](.agents/skills/strix/SKILL.md) | **Strix Security Audit Skill** | Triase kerentanan AI, validasi PoC, dan eliminasi false positive. |
-| [`.agents/skills/ponytail/SKILL.md`](.agents/skills/ponytail/SKILL.md) | **Ponytail Lazy Senior Dev** | YAGNI ladder: pangkas kode berlebih, utamakan helper native Naura. |
-| [`.agents/skills/test-driven-development/SKILL.md`](.agents/skills/test-driven-development/SKILL.md) | **TDD Engineering Skill** | Siklus red-green-refactor untuk menjaga 510 test selalu 100% hijau. |
-| [`.agents/skills/code-review-and-quality/SKILL.md`](.agents/skills/code-review-and-quality/SKILL.md) | **Code Review & Quality** | Review multi-axis (arsitektur, sekuriti, performa) sebelum QA gate. |
-| [`.agents/skills/code-simplification/SKILL.md`](.agents/skills/code-simplification/SKILL.md) | **Code Simplification** | Refactoring kejernihan kode tanpa mengubah fungsionalitas. |
-| [`.agents/skills/frontend-ui-engineering/SKILL.md`](.agents/skills/frontend-ui-engineering/SKILL.md) | **Frontend UI Engineering** | Standar UI komponen web dashboard Vite dan Three.js 3D viewer. |
-| [`.agents/skills/security-and-hardening/SKILL.md`](.agents/skills/security-and-hardening/SKILL.md) | **Security & Hardening** | Sanitasi input Discord, parameterize query DB, dan proteksi OWASP. |
-| [`.agents/skills/design-taste-frontend/SKILL.md`](.agents/skills/design-taste-frontend/SKILL.md) | **Taste Skill Frontend** | Anti-slop layout, micro-motion, bento grid, dan tipografi kontras. |
-| [`.agents/skills/stitch-design-taste/SKILL.md`](.agents/skills/stitch-design-taste/SKILL.md) | **Stitch Semantic Design** | Penegak standar sistem DESIGN.md, spring physics, dan layout asimetris. |
-| [`.agents/skills/prd/SKILL.md`](.agents/skills/prd/SKILL.md) | **PRD Generator (Ralph)** | Generator PRD terstruktur dengan pertanyaan klarifikasi beropsi. |
-| [`.agents/skills/ralph/SKILL.md`](.agents/skills/ralph/SKILL.md) | **Ralph PRD Converter** | Konverter PRD ke format atomic user stories prd.json untuk loop otonom. |
-| [`.agents/skills/bm-plan/SKILL.md`](.agents/skills/bm-plan/SKILL.md) | **Buildomator Phase Planning** | Perencanaan fase terstruktur (Plan -> Execute -> Verify) hemat token. |
-| [`.agents/skills/bm-drift/SKILL.md`](.agents/skills/bm-drift/SKILL.md) | **Buildomator Drift Scanner** | Pemindai kode duplikat, phantom code, dan pelanggaran konvensi RULES.md. |
-| [`.agents/skills/bm-handoff/SKILL.md`](.agents/skills/bm-handoff/SKILL.md) | **Buildomator Session Handoff** | Kontinuitas sesi dan catatan state antar giliran di .planning/HANDOFF.json. |
-
-
-<!-- antislop:start -->
-## 🛡️ Anti-Slop (Filter Desain & Copy AI)
-Untuk pembuatan/perombakan UI, penulisan copy, evaluasi aksesibilitas, responsive layout, atau komentar kode, rujuk `antislop.md` (core filter) dan skill terkait:
-- UI & Visual: `.agents/skills/antislop-ui/SKILL.md`, `.agents/skills/design-taste-frontend/SKILL.md`, `.agents/skills/high-end-visual-design/SKILL.md`
-- Redesign & Audit: `.agents/skills/redesign-existing-projects/SKILL.md`, `.agents/skills/minimalist-ui/SKILL.md`
-- Semantic Design System: `.agents/skills/stitch-design-taste/SKILL.md` (standar DESIGN.md)
-- Output Integrity: `.agents/skills/full-output-enforcement/SKILL.md`
-- Copy & Teks: `.agents/skills/antislop-copywriting/SKILL.md`
-- Aksesibilitas & Kontras: `.agents/skills/antislop-human/SKILL.md`
-- Tata Letak Mobile & Responsif: `.agents/skills/antislop-layoutmobile/SKILL.md`
-- Komentar Kode Bersih: `.agents/skills/antislop-code/SKILL.md`
-- Gaya Respon Efisien: `.agents/skills/i-have-adhd/SKILL.md`
-Sebelum memulai pekerjaan UI, tanyakan kepada pengguna mode kerja antislop yang diinginkan: DURING (saat proses kerja) atau AFTER (audit setelah selesai).
-<!-- antislop:end -->
-
-<!-- slash-commands:start -->
-## ⚡ 9. Daftar Slash Commands & Shortcut Skill Agent (Workspace Trigger)
-
-Pengguna dapat memanggil skill secara instan di chat Antigravity menggunakan prefix slash (`/`). Agen AI WAJIB langsung membaca dan mengaktifkan file skill terkait saat mendeteksi perintah berikut:
-
-| Slash Command | File Skill Target | Tanggung Jawab & Fungsi Utama |
-| :--- | :--- | :--- |
-| `/i-have-adhd` atau `/adhd` | [`.agents/skills/i-have-adhd/SKILL.md`](.agents/skills/i-have-adhd/SKILL.md) | Format output singkat, action-first, bernomor, dan ramah ADHD. |
-| `/antislop` | [`.agents/skills/antislop/SKILL.md`](.agents/skills/antislop/SKILL.md) | Filter inti pencegah desain dan copy teks generik AI. |
-| `/ponytail` | [`.agents/skills/ponytail/SKILL.md`](.agents/skills/ponytail/SKILL.md) | Mode lazy senior dev: YAGNI ladder, pangkas kode dan token berlebih. |
-| `/ponytail-review` | [`.agents/skills/ponytail-review/SKILL.md`](.agents/skills/ponytail-review/SKILL.md) | Audit kode khusus mencari baris atau dependensi yang bisa dihapus. |
-| `/ponytail-audit` | [`.agents/skills/ponytail-audit/SKILL.md`](.agents/skills/ponytail-audit/SKILL.md) | Audit menyeluruh repo untuk membersihkan bloatware. |
-| `/tdd` atau `/test` | [`.agents/skills/test-driven-development/SKILL.md`](.agents/skills/test-driven-development/SKILL.md) | Siklus red-green-refactor sebelum menulis kode solusi. |
-| `/review` atau `/code-review` | [`.agents/skills/code-review-and-quality/SKILL.md`](.agents/skills/code-review-and-quality/SKILL.md) | Review 5 sumbu (correctness, readability, architecture, security, performance). |
-| `/simplify` atau `/code-simplify` | [`.agents/skills/code-simplification/SKILL.md`](.agents/skills/code-simplification/SKILL.md) | Sederhanakan kode rumit tanpa mengubah perilaku program. |
-| `/security` atau `/audit` | [`.agents/skills/security-and-hardening/SKILL.md`](.agents/skills/security-and-hardening/SKILL.md) | Audit keamanan OWASP, validasi input batas sistem, dan hard protection. |
-| `/taste` atau `/frontend` | [`.agents/skills/design-taste-frontend/SKILL.md`](.agents/skills/design-taste-frontend/SKILL.md) | Terapkan estetika frontend premium, bento grid, dan tipografi kontras. |
-| `/stitch` atau `/design-md` | [`.agents/skills/stitch-design-taste/SKILL.md`](.agents/skills/stitch-design-taste/SKILL.md) | Standar token DESIGN.md, spring physics, dan layout asimetris. |
-| `/minimalist` | [`.agents/skills/minimalist-ui/SKILL.md`](.agents/skills/minimalist-ui/SKILL.md) | Gaya desain clean utilitarian monokromatik ala Linear dan Notion. |
-| `/ui` atau `/component` | [`.agents/skills/frontend-ui-engineering/SKILL.md`](.agents/skills/frontend-ui-engineering/SKILL.md) | Bangun komponen UI web production-ready, aksesibel (WCAG), dan performan. |
-| `/agency` atau `/high-end` | [`.agents/skills/high-end-visual-design/SKILL.md`](.agents/skills/high-end-visual-design/SKILL.md) | Desain visual mewah Awwwards-tier dengan haptic depth dan spatial motion. |
-| `/redesign` | [`.agents/skills/redesign-existing-projects/SKILL.md`](.agents/skills/redesign-existing-projects/SKILL.md) | Tingkatkan kualitas UI yang sudah ada tanpa merusak layout dasar. |
-| `/full-output` | [`.agents/skills/full-output-enforcement/SKILL.md`](.agents/skills/full-output-enforcement/SKILL.md) | Cegah pemotongan kode atau placeholder saat model menghasilkan output panjang. |
-| `/prd` | [`.agents/skills/prd/SKILL.md`](.agents/skills/prd/SKILL.md) | Generator PRD terstruktur dengan pertanyaan klarifikasi beropsi (Ralph Pattern). |
-| `/ralph` | [`.agents/skills/ralph/SKILL.md`](.agents/skills/ralph/SKILL.md) | Konversi PRD markdown ke prd.json untuk eksekusi loop otonom per story. |
-| `/bm-plan` | [`.agents/skills/bm-plan/SKILL.md`](.agents/skills/bm-plan/SKILL.md) | Perencanaan bertahap Buildomator (Plan -> Execute -> Verify) hemat token. |
-| `/drift` atau `/verify-drift` | [`.agents/skills/bm-drift/SKILL.md`](.agents/skills/bm-drift/SKILL.md) | Pemindai degradasi arsitektur, kode duplikat, dan kepatuhan konvensi RULES.md. |
-| `/handoff` | [`.agents/skills/bm-handoff/SKILL.md`](.agents/skills/bm-handoff/SKILL.md) | Kontinuitas sesi dan catatan handoff antar sesi di .planning/HANDOFF.json. |
-<!-- slash-commands:end -->
-
+- Jalankan verifikasi paling sempit yang relevan, lalu `npm run qa` bila waktunya memungkinkan.
+- Jika test penuh terlalu lama atau gagal karena service eksternal, laporkan perintah, tahap, dan alasan sebenarnya; jangan mengganti hasil dengan mock atau menghapus test.
+- Untuk UI/copy, gunakan skill lokal yang relevan dari `.agents/skills` dan ikuti `DESIGN.md`; jangan menambahkan pola visual generik atau data telemetry fiktif.

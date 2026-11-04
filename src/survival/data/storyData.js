@@ -8,7 +8,7 @@ const ui = require("../../config/ui");
  */
 const storyData = [
   // ==========================================
-  // ACT I: FAJAR DI LEMBAH PERMATA (Desa Sukamaju)
+  // ACT I: FAJAR DI LEMBAH PERMATA (Desa Adisha)
   // ==========================================
   {
     arc: 1,
@@ -22,7 +22,7 @@ const storyData = [
         background: "desa",
         speakerNpcId: "kades_tirto",
         narrative:
-          "Kamu tersadar di pematang sawah Desa Sukamaju tanpa ingatan masa lalu, hanya sebuah serpihan batu kristal yang berdenyut hangat di telapak tanganmu. Seorang gadis berpakaian cerah dan pria paruh baya berwibawa menyambutmu dengan cemas.",
+          "Kamu tersadar di pematang sawah Desa Adisha tanpa ingatan masa lalu, hanya sebuah serpihan batu kristal yang berdenyut hangat di telapak tanganmu. Seorang gadis berpakaian cerah dan pria paruh baya berwibawa menyambutmu dengan cemas.",
         dialogue: [
           {
             speaker: "Naura",
@@ -30,7 +30,7 @@ const storyData = [
           },
           {
             speaker: "Pak Kades Tirto",
-            text: "Tenang dulu, anak muda. Tarik napas perlahan. Kamu berada di Desa Sukamaju, lembah permata yang damai. Batu di genggamanmu itu... bukan batu biasa.",
+            text: "Tenang dulu, anak muda. Tarik napas perlahan. Kamu berada di Desa Adisha, lembah permata yang damai. Batu di genggamanmu itu... bukan batu biasa.",
           },
           {
             speaker: "{player}",
@@ -62,7 +62,7 @@ const storyData = [
         background: "desa",
         speakerNpcId: "bagas",
         narrative:
-          "Kapak kayumu mulai retak setelah beberapa kali digunakan. Pak Kades menyarankanmu menemui Bagas di Bengkel Tempa Desa Sukamaju untuk memahami cara merawat ketahanan barang.",
+          "Kapak kayumu mulai retak setelah beberapa kali digunakan. Pak Kades menyarankanmu menemui Bagas di Bengkel Tempa Desa Adisha untuk memahami cara merawat ketahanan barang.",
         dialogue: [
           {
             speaker: "Bagas",
@@ -88,7 +88,12 @@ const storyData = [
           failMsg:
             'Bagas: "Bijih besimu belum cukup, kawan! Ambil beliungmu dan gali urat besi di celah bebatuan bukit!"',
         },
-        reward: { item: "iron_pickaxe", amount: 1, exp: 100, starFragments: 150 },
+        reward: {
+          item: "iron_pickaxe",
+          amount: 1,
+          exp: 100,
+          starFragments: 150,
+        },
         nextArc: 1,
         nextChapter: 3,
       },
@@ -142,7 +147,7 @@ const storyData = [
         dialogue: [
           {
             speaker: "Gatot",
-            text: "Berhenti. Siapa pun yang ingin melangkah keluar dari Lembah Sukamaju harus membuktikan ketangguhan jiwanya di hadapanku.",
+            text: "Berhenti. Siapa pun yang ingin melangkah keluar dari Lembah Adisha harus membuktikan ketangguhan jiwanya di hadapanku.",
           },
           {
             speaker: "Ki Prawiro",
@@ -168,7 +173,12 @@ const storyData = [
           failMsg:
             'Gatot: "Kamu belum menuntaskan latihan di mulut gua! Kumpulkan pecahan batu dungeon untuk membuktikan ketangguhanmu!"',
         },
-        reward: { item: "travel_pass", amount: 1, exp: 250, starFragments: 300 },
+        reward: {
+          item: "travel_pass",
+          amount: 1,
+          exp: 250,
+          starFragments: 300,
+        },
         nextArc: 2,
         nextChapter: 1,
       },
@@ -190,7 +200,7 @@ const storyData = [
         background: "laut",
         speakerNpcId: "mang_ujang",
         narrative:
-          "Dengan Travel Pass di tangan, kamu menuju pesisir dermaga nelayan Desa Sukamaju. Mang Ujang dan Tari menemukan fenomena aneh di terumbu karang.",
+          "Dengan Travel Pass di tangan, kamu menuju pesisir dermaga nelayan Desa Adisha. Mang Ujang dan Tari menemukan fenomena aneh di terumbu karang.",
         dialogue: [
           {
             speaker: "Mang Ujang",
@@ -220,7 +230,12 @@ const storyData = [
           failMsg:
             'Mang Ujang: "Tangkapan ikanmu belum cukup untuk perbekalan jalan jauh. Pancinglah beberapa ikan lagi di dermaga!"',
         },
-        reward: { item: "cooked_fish", amount: 5, exp: 300, starFragments: 350 },
+        reward: {
+          item: "cooked_fish",
+          amount: 5,
+          exp: 300,
+          starFragments: 350,
+        },
         nextArc: 2,
         nextChapter: 2,
       },
@@ -256,7 +271,12 @@ const storyData = [
           failMsg:
             'Ki Ageng Joyo: "Bahan racikan ramuan penawarmu masih kurang, anak muda. Petiklah daun herbal liar di sela akar pinus."',
         },
-        reward: { item: "antidote_potion", amount: 2, exp: 400, starFragments: 400 },
+        reward: {
+          item: "antidote_potion",
+          amount: 2,
+          exp: 400,
+          starFragments: 400,
+        },
         nextArc: 2,
         nextChapter: 3,
       },
@@ -300,7 +320,12 @@ const storyData = [
           failMsg:
             'Gaston: "Bijih tembaga yang kamu bawa belum pas hitungannya, sobat. Bisnis adalah bisnis!"',
         },
-        reward: { item: "stealth_cloak", amount: 1, exp: 500, starFragments: 450 },
+        reward: {
+          item: "stealth_cloak",
+          amount: 1,
+          exp: 500,
+          starFragments: 450,
+        },
         nextArc: 2,
         nextChapter: 4,
       },
@@ -310,7 +335,7 @@ const storyData = [
         background: "desa",
         speakerNpcId: "mayor_lucy",
         narrative:
-          "Di gerbang perbatasan antara Desa Sukamaju dan akses jalan menuju Kota Pratama, Mayor Lucy memimpin pertahanan garnisun militer dari serbuan monster bayangan.",
+          "Di gerbang perbatasan antara Desa Adisha dan akses jalan menuju Kota Pratama, Mayor Lucy memimpin pertahanan garnisun militer dari serbuan monster bayangan.",
         dialogue: [
           {
             speaker: "Mayor Lucy",
@@ -336,7 +361,12 @@ const storyData = [
           failMsg:
             'Mayor Lucy: "Material penguat benteng masih kurang! Pasukan perbatasan butuh pasokan besi sekarang juga!"',
         },
-        reward: { item: "caravan_ticket", amount: 1, exp: 600, starFragments: 500 },
+        reward: {
+          item: "caravan_ticket",
+          amount: 1,
+          exp: 600,
+          starFragments: 500,
+        },
         nextArc: 3,
         nextChapter: 1,
       },
@@ -374,7 +404,7 @@ const storyData = [
           },
           {
             speaker: "Bripka Agus",
-            text: "Semua dokumen sah. Selamat datang di Kota Pratama! Kamu bisa menukarkan Sukamaju Koin milikmu di Bank Sentral Pratama untuk mendapatkan Pratama Dollar.",
+            text: "Semua dokumen sah. Selamat datang di Kota Pratama! Kamu bisa menukarkan Adisha Koin milikmu di Bank Sentral Pratama untuk mendapatkan Pratama Dollar.",
           },
         ],
         challenge: {
@@ -387,7 +417,12 @@ const storyData = [
           failMsg:
             'Bripka Agus: "Anda perlu menunjukkan kecukupan saldo survival awal untuk jaminan izin tinggal di Kota Pratama."',
         },
-        reward: { item: "city_resident_id", amount: 1, exp: 700, nauraCoins: 2500 },
+        reward: {
+          item: "city_resident_id",
+          amount: 1,
+          exp: 700,
+          nauraCoins: 2500,
+        },
         nextArc: 3,
         nextChapter: 2,
       },
@@ -423,7 +458,12 @@ const storyData = [
           failMsg:
             'Laras: "Nikmati minumanmu dulu dengan tenang, sayang. Petualangan besar butuh pikiran yang jernih."',
         },
-        reward: { item: "laras_special_blend", amount: 2, exp: 800, nauraCoins: 3000 },
+        reward: {
+          item: "laras_special_blend",
+          amount: 2,
+          exp: 800,
+          nauraCoins: 3000,
+        },
         nextArc: 3,
         nextChapter: 3,
       },
@@ -463,7 +503,12 @@ const storyData = [
           failMsg:
             'Wulan: "Kita butuh setidaknya satu kepingan pecahan relik purba untuk mengkalibrasi arah kompas astral menuju Khul\'Khas."',
         },
-        reward: { item: "khulkhas_secret_map", amount: 1, exp: 1000, nauraCoins: 5000 },
+        reward: {
+          item: "khulkhas_secret_map",
+          amount: 1,
+          exp: 1000,
+          nauraCoins: 5000,
+        },
         nextArc: 3,
         nextChapter: 4,
       },
@@ -502,7 +547,12 @@ const storyData = [
           failMsg:
             'Mbak Rini: "Uangmu belum cukup untuk memborong kompas eksklusif ini, ganteng. Kumpulkan lagi koinmu di bursa kerja kota!"',
         },
-        reward: { item: "astral_compass", amount: 1, exp: 1200, nauraCoins: 5000 },
+        reward: {
+          item: "astral_compass",
+          amount: 1,
+          exp: 1200,
+          nauraCoins: 5000,
+        },
         nextArc: 4,
         nextChapter: 1,
       },
@@ -550,7 +600,12 @@ const storyData = [
           failMsg:
             'Bupati Rahmat: "Kita butuh satu Diamond murni berkilau untuk mengaktifkan medan pelindung kota sebelum kamu berangkat!"',
         },
-        reward: { item: "commander_insignia", amount: 1, exp: 1500, coupons: 50 },
+        reward: {
+          item: "commander_insignia",
+          amount: 1,
+          exp: 1500,
+          coupons: 50,
+        },
         nextArc: 4,
         nextChapter: 2,
       },
@@ -560,7 +615,7 @@ const storyData = [
         background: "desa",
         speakerNpcId: "kades_tirto",
         narrative:
-          "Sebelum menembus gerbang Istana Draken, seluruh penduduk Desa Sukamaju dan Kota Pratama berkumpul memberikan bekal terbaik mereka untuk mengawal perjuanganmu.",
+          "Sebelum menembus gerbang Istana Draken, seluruh penduduk Desa Adisha dan Kota Pratama berkumpul memberikan bekal terbaik mereka untuk mengawal perjuanganmu.",
         dialogue: [
           {
             speaker: "Bagas",
@@ -640,7 +695,7 @@ const storyData = [
         dialogue: [
           {
             speaker: "Naura",
-            text: "{player}, lihat! Pecahan kristal kita telah menyatu kembali... energi hangat ini mengalir ke seluruh tanah Desa Sukamaju dan Kota Pratama!",
+            text: "{player}, lihat! Pecahan kristal kita telah menyatu kembali... energi hangat ini mengalir ke seluruh tanah Desa Adisha dan Kota Pratama!",
           },
           {
             speaker: "{player}",

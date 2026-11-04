@@ -38,7 +38,7 @@
                 headerAuthButton.className = 'btn btn-ghost btn-sm';
                 headerAuthButton.style.color = 'var(--accent-green)';
                 headerAuthButton.style.borderColor = 'rgba(52,211,153,0.3)';
-                headerAuthButton.href = '#';
+                headerAuthButton.href = '/profile';
                 headerAuthButton.title = `Akun: ${currentUser.username} (${currentUser.role}), Klik untuk opsi`;
                 headerAuthButton.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${currentUser.username}</span>`;
                 headerAuthButton.onclick = (clickEvent) => {
@@ -49,7 +49,7 @@
                 headerAuthButton.className = 'btn btn-discord btn-sm';
                 headerAuthButton.style.color = '';
                 headerAuthButton.style.borderColor = '';
-                headerAuthButton.href = '#';
+                headerAuthButton.href = '/auth/discord';
                 headerAuthButton.title = 'Login ke Naura OS';
                 headerAuthButton.innerHTML = `<i class="fa-brands fa-discord"></i> <span id="headerAuthLabel">Login</span>`;
                 headerAuthButton.onclick = (clickEvent) => {
@@ -87,10 +87,19 @@
         });
         sidebarUserCards.forEach((card) => {
             card.removeAttribute('onclick');
+            card.setAttribute('role', 'link');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', isAuthenticated ? 'Buka profil' : 'Masuk dengan Discord');
             card.onclick = (clickEvent) => {
                 clickEvent.preventDefault();
                 clickEvent.stopPropagation();
                 window.location.href = isAuthenticated ? '/profile' : '/login?redirect=/profile';
+            };
+            card.onkeydown = (keyEvent) => {
+                if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
+                    keyEvent.preventDefault();
+                    card.click();
+                }
             };
         });
 
@@ -205,6 +214,19 @@
 
         document.head.appendChild(styleSheet);
         document.body.appendChild(modalContainer);
+
+        modalContainer.setAttribute('role', 'dialog');
+        modalContainer.setAttribute('aria-modal', 'true');
+        modalContainer.setAttribute('aria-labelledby', 'nauraAuthModalTitle');
+        const modalTitle = Array.from(modalContainer.querySelectorAll('.auth-modal-header span'))
+            .find((element) => element.textContent?.includes('Masuk ke Naura Hoshino OS'));
+        if (modalTitle) modalTitle.id = 'nauraAuthModalTitle';
+        modalContainer.querySelector('.auth-modal-card')?.setAttribute('tabindex', '-1');
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modalContainer.classList.contains('open')) {
+                callbacks?.onCloseModal?.();
+            }
+        });
 
         document.getElementById('authModalCloseBtn')?.addEventListener('click', () => { if (callbacks && callbacks.onCloseModal) callbacks.onCloseModal(); });
         modalContainer.addEventListener('click', (clickEvent) => { if (clickEvent.target === modalContainer && callbacks && callbacks.onCloseModal) callbacks.onCloseModal(); });

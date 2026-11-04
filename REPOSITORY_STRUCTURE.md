@@ -98,7 +98,7 @@ core/
 managers/
 ├── cacheManager.js             # Write-behind cache dengan Redis + Postgres flush
 ├── dbManager.js                # Database connection manager
-├── dbMigrator.js               # Migrasi skema bernomor (v1-v46+)
+├── dbMigrator.js               # Migrasi skema bernomor (v1-v50)
 ├── lavalinkClusterManager.js   # Multi-node Lavalink cluster dengan failover
 ├── musicManager.js             # Music playback controller
 ├── aiDjManager.js              # Fish Audio AI DJ companion

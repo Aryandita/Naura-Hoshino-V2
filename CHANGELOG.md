@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.5.0] - 2026-11-04
+
+### 🚀 Added
+- **Layered 3-Pillar Design System**:
+  - Pilar 1: THEME_NAURA (Senja Ruang Ekskul) - Nuansa Cherry Blossom, hangat, dan ramah untuk persona inti Discord & profil.
+  - Pilar 2: THEME_SURVIVAL (Jurnal Ekspedisi Dunia Adisha) - Nuansa petualangan Adisha, moss green, parchment, dan RPG lore.
+  - Pilar 3: THEME_DASHBOARD (Studio Kontrol OSIS) - Matte deep slate, cyberpunk accents, dan glassmorphism terukur untuk monitoring.
+  - Single Source of Truth tokens di `src/config/tokens/designTokens.js` dan CSS generation via `scripts/generate-css-tokens.js`.
+- **Anti-Slop 3D Tactile Micro-Tilt**:
+  - `tactileTilt.js` engine dengan rAF pooling, max 3.5 derajat rotasi, specular highlight matte, dan `prefers-reduced-motion` safety.
+- **3-Pillar Dock Switcher & Navigation Filtering**:
+  - Komponen navigasi dinamis dengan filter menu per pilar (Ekskul, Adisha, Kontrol) di `sharedNav.js`.
+- **Lore Modernization**:
+  - Penyelarasan nama dunia survival dari Sukamaju menjadi Adisha di seluruh dialog NPC, catalog, story scene, dan 4 bahasa locale (id, en, es, ja).
+
+### 🛡️ Security & Performance
+- **Strix Security Hardening**:
+  - Guest sessions capped ke 500 entri dengan TTL 30 menit.
+  - Cooldown 1 jam pada berkat NPC Kades Tirto (`lastKadesBlessingAt`) via atomic mutation.
+  - One-time claim guard untuk starter kit Bagas dan pancing Mang Ujang.
+  - Daily quest auto-recording hook pada aktivitas gathering (`/activity/gather`).
+  - Open Graph meta tag XSS sanitization di route portfolio (`/u/:userId`).
+  - Proteksi rute `/metrics` terhadap akses eksternal tanpa otorisasi.
+  - Optimasi query agregasi database `/api/economy_stats` menggunakan SQL SUM langsung alih-alih full table scan.
+  - Pembelian marketplace atomik (`POST /marketplace/buy`) dengan kompensasi rollback.
+  - Rate limiting AI companion chat dan TTS (20 request/menit).
+  - Socket.IO session user binding untuk mencegah ID spoofing.
+
+---
+
 ## [2.4.0] - 2026-10-25
 
 ### 🚀 Added

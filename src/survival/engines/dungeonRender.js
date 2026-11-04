@@ -10,7 +10,7 @@ const {
   AttachmentBuilder,
 } = require("discord.js");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
-const { drawBattle } = require("../../canvas/battleCanvas");
+const canvasWorkerPool = require("../../canvas/canvasWorkerPool");
 const ui = require("../../config/ui");
 const helpers = require("../helpers/craftHelpers");
 const currency = require("./currency");
@@ -120,7 +120,11 @@ async function buildBattleView({
     maxHp: enemy.maxHp,
   };
 
-  const buffer = await drawBattle(playerInfo, enemyInfo, logText);
+  const buffer = await canvasWorkerPool.runTask("renderBattle", {
+    playerInfo,
+    enemyInfo,
+    roundLog: logText,
+  });
   const attachment = new AttachmentBuilder(buffer, { name: IMAGE_NAME });
 
   let footer = ui.getFooter("survival");

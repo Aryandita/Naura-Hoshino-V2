@@ -453,8 +453,8 @@
           // Update stats cards
           if (data.stats) {
             document.getElementById("statActiveTickets").textContent = `${data.stats.open} Tiket`;
-            document.getElementById("statAvgResponse").textContent = `${data.stats.avgResponseMinutes} Menit`;
-            document.getElementById("statSatisfaction").textContent = data.stats.satisfactionRate;
+             document.getElementById("statAvgResponse").textContent = data.stats.avgResponseMinutes == null ? "Belum ada data" : `${data.stats.avgResponseMinutes} Menit`;
+             document.getElementById("statSatisfaction").textContent = data.stats.satisfactionRate == null ? "Belum ada data" : data.stats.satisfactionRate;
             document.getElementById("statTribunal").textContent = `${data.stats.tribunalCases} Kasus`;
           }
 

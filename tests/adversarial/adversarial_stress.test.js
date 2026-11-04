@@ -1,6 +1,6 @@
 "use strict";
 
-const { describe, it } = require("node:test");
+const { describe, it, after } = require("node:test");
 const assert = require("node:assert/strict");
 const { performance } = require("node:perf_hooks");
 
@@ -863,5 +863,10 @@ describe("Adversarial Suite 5: R5 Smart Utilities", () => {
       assert.equal(buffer[0], 0x89);
       assert.equal(buffer[1], 0x50);
     });
+  });
+
+  after(async () => {
+    const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
+    await canvasWorkerPool.shutdown();
   });
 });

@@ -3,7 +3,7 @@
 /**
  * Data Struktur Peta Dunia & Sub-Zona (POIs) Naura Wilds
  * 4 Wilayah Resmi:
- * 1. Desa Sukamaju (Pemukiman, Tambang, Hutan, Pantai) - Mata uang: NSF
+ * 1. Desa Adisha (Pemukiman, Tambang, Hutan, Pantai) - Mata uang: NSF
  * 2. Kota Pratama (Pusat Megapolitan & Ekonomi NC) - Mata uang: NC & Konversi NSF
  * 3. Desa Khul'Khas (Wilayah Mistis Tersembunyi - Self Exploration)
  * 4. Istana Draken (Benteng Kegelapan & Multi-Floor Dungeon)
@@ -12,10 +12,17 @@
 const REGIONS = {
   desa_sukamaju: {
     id: "desa_sukamaju",
-    aliases: ["desa", "village", "sukamaju", "desa_pemula"],
-    name: "Desa Sukamaju",
+    aliases: [
+      "desa",
+      "village",
+      "sukamaju",
+      "desa_pemula",
+      "adisha",
+      "desa_adisha",
+    ],
+    name: "Desa Adisha",
     title: "Lembah Permata & Ekosistem Awal Terpadu",
-    primaryCurrency: "SC (Sukamaju Koin)",
+    primaryCurrency: "SC (Adisha Koin)",
     currencyCode: "sukamajuCoins",
     themeColor: "#10B981",
     description:
@@ -23,7 +30,7 @@ const REGIONS = {
     pois: [
       {
         id: "balai_desa",
-        name: "Balai Desa Sukamaju",
+        name: "Balai Desa Adisha",
         category: "government",
         residentNpcIds: ["kades_tirto"],
         operatingHours: { start: 6, end: 22 },
@@ -45,7 +52,11 @@ const REGIONS = {
         emoji: "🔨",
         atmosphere:
           "Hawa panas berhembus dari tungku perapian, beradu dengan denting logam paron yang dipukul bertalu-talu.",
-        facilities: ["reparasi_durability", "forge_senjata", "upgrade_peralatan"],
+        facilities: [
+          "reparasi_durability",
+          "forge_senjata",
+          "upgrade_peralatan",
+        ],
       },
       {
         id: "kebun_ningsih",
@@ -93,7 +104,7 @@ const REGIONS = {
       },
       {
         id: "sma_cahaya_sukamaju",
-        name: "SMA Cahaya Sukamaju",
+        name: "SMA Cahaya Adisha",
         category: "education",
         residentNpcIds: ["bu_ratna", "budi", "siti"],
         operatingHours: { start: 7, end: 17 },
@@ -111,7 +122,7 @@ const REGIONS = {
       },
       {
         id: "sekolah_desa",
-        name: "Sekolah Dasar & SMA Cahaya Sukamaju",
+        name: "Sekolah Dasar & SMA Cahaya Adisha",
         category: "education",
         residentNpcIds: ["bu_ratna", "budi", "siti"],
         operatingHours: { start: 7, end: 17 },
@@ -120,7 +131,11 @@ const REGIONS = {
         emoji: "🏫",
         atmosphere:
           "Gedung sekolah terpadu berlatar perbukitan hijau dengan halaman rumput dan atap sekolah berangin.",
-        facilities: ["baca_buku_dasar", "rumor_anak_desa", "jimat_keberuntungan"],
+        facilities: [
+          "baca_buku_dasar",
+          "rumor_anak_desa",
+          "jimat_keberuntungan",
+        ],
       },
       {
         id: "dermaga_mang_ujang",
@@ -155,7 +170,7 @@ const REGIONS = {
       },
       {
         id: "padepokan_satwa",
-        name: "Padepokan Satwa & Hutan Sukamaju",
+        name: "Padepokan Satwa & Hutan Adisha",
         category: "wilderness",
         residentNpcIds: ["ki_prawiro", "ki_ageng_joyo"],
         operatingHours: { start: 6, end: 19 },
@@ -203,7 +218,11 @@ const REGIONS = {
         emoji: "🍵",
         atmosphere:
           "Aroma kunyit asam dan beras kencur segar yang menyegarkan badan sehabis bekerja seharian.",
-        facilities: ["minum_jamu_segar", "kekebalan_penyakit", "obrolan_hangat"],
+        facilities: [
+          "minum_jamu_segar",
+          "kekebalan_penyakit",
+          "obrolan_hangat",
+        ],
       },
       {
         id: "butik_luna",
@@ -220,7 +239,7 @@ const REGIONS = {
       },
     ],
     items: [
-      { name: "Kayu Pinus Sukamaju", emoji: "🌲", rarity: "Biasa" },
+      { name: "Kayu Pinus Adisha", emoji: "🌲", rarity: "Biasa" },
       { name: "Bijih Tembaga Mentah", emoji: "⛏️", rarity: "Biasa" },
       { name: "Ikan Mas Telaga", emoji: "🐟", rarity: "Biasa" },
       { name: "Beras Pandan Wangi", emoji: "🌾", rarity: "Biasa" },
@@ -285,7 +304,7 @@ const REGIONS = {
         icon: "fa-solid fa-vault",
         emoji: "🏦",
         atmosphere:
-          "Aula perbankan berteknologi tinggi tempat penukaran resmi Sukamaju Koin (SC) ke Pratama Dollar (PD).",
+          "Aula perbankan berteknologi tinggi tempat penukaran resmi Adisha Koin (SC) ke Pratama Dollar (PD).",
         facilities: ["konversi_sc_ke_pd", "deposito_bunga", "audit_keuangan"],
       },
       {
@@ -299,7 +318,11 @@ const REGIONS = {
         emoji: "💼",
         atmosphere:
           "Pusat lowongan kerja resmi bagi petualang untuk mengumpulkan Naura Coin (NC) lewat berbagai profesi.",
-        facilities: ["ambil_pekerjaan_nc", "klaim_gaji_harian", "jenjang_karir"],
+        facilities: [
+          "ambil_pekerjaan_nc",
+          "klaim_gaji_harian",
+          "jenjang_karir",
+        ],
       },
       {
         id: "kafe_laras",
@@ -312,7 +335,11 @@ const REGIONS = {
         emoji: "☕",
         atmosphere:
           "Suasana santai dengan pencahayaan neon temaram, alunan musik lofi, dan aroma kopi seduh murni yang menenangkan.",
-        facilities: ["kopi_hemat_stamina", "menu_sarapan_kafe", "tukar_rumor_kota"],
+        facilities: [
+          "kopi_hemat_stamina",
+          "menu_sarapan_kafe",
+          "tukar_rumor_kota",
+        ],
       },
       {
         id: "perpustakaan_wulan",
@@ -325,7 +352,11 @@ const REGIONS = {
         emoji: "📚",
         atmosphere:
           "Rak-rak buku kayu mahoni menjulang tinggi dengan jutaan manuskrip kuno, diagram dimensi, dan lentera meja yang damai.",
-        facilities: ["riset_blueprint", "baca_sejarah_astral", "kencan_pustaka"],
+        facilities: [
+          "riset_blueprint",
+          "baca_sejarah_astral",
+          "kencan_pustaka",
+        ],
       },
       {
         id: "rs_pratama",
@@ -338,7 +369,11 @@ const REGIONS = {
         emoji: "🏥",
         atmosphere:
           "Peralatan medis mutakhir dan ruang rawat intensif dengan staf medis berdedikasi tinggi.",
-        facilities: ["detox_racun_akut", "perawatan_spesialis", "injeksi_vitalitas"],
+        facilities: [
+          "detox_racun_akut",
+          "perawatan_spesialis",
+          "injeksi_vitalitas",
+        ],
       },
       {
         id: "balai_lelang_rini",
@@ -351,7 +386,11 @@ const REGIONS = {
         emoji: "🏷️",
         atmosphere:
           "Karpet beludru merah dan lampu gantung kristal tempat para jutawan menawar relik dan komoditas langka.",
-        facilities: ["ikut_lelang_eksklusif", "jual_barang_antik", "investasi_dividen"],
+        facilities: [
+          "ikut_lelang_eksklusif",
+          "jual_barang_antik",
+          "investasi_dividen",
+        ],
       },
       {
         id: "polsek_pratama",
@@ -409,7 +448,13 @@ const REGIONS = {
 
   desa_khulkhas: {
     id: "desa_khulkhas",
-    aliases: ["khulkhas", "desa_khulkhas", "salju_khulkhas", "tanah_salju", "salju"],
+    aliases: [
+      "khulkhas",
+      "desa_khulkhas",
+      "salju_khulkhas",
+      "tanah_salju",
+      "salju",
+    ],
     name: "Desa Khul'Khas",
     title: "Wilayah Pegunungan Salju Abadi & Altar Kristal Es",
     primaryCurrency: "Kristal Es Salju & NSF Langka",
@@ -429,7 +474,11 @@ const REGIONS = {
         emoji: "❄️",
         atmosphere:
           "Monolit kristal es purba bertatahkan aksara berpendar yang berdenyut selaras dengan detak jantung Astral Core di tengah hembusan badai salju.",
-        facilities: ["resonansi_kristal_es", "meditasi_salju", "buka_segel_es_purba"],
+        facilities: [
+          "resonansi_kristal_es",
+          "meditasi_salju",
+          "buka_segel_es_purba",
+        ],
       },
       {
         id: "bazaar_nomad",
@@ -442,7 +491,11 @@ const REGIONS = {
         emoji: "🛖",
         atmosphere:
           "Pondok kayu hangat di tengah hamparan salju, tempat para pengembara bertransaksi mantel tebal, kristal salju, dan rempah penghangat tubuh.",
-        facilities: ["barter_kristal_salju", "beli_mantel_penahan_badai", "ramalan_musim_dingin"],
+        facilities: [
+          "barter_kristal_salju",
+          "beli_mantel_penahan_badai",
+          "ramalan_musim_dingin",
+        ],
       },
       {
         id: "mata_air_kabut",
@@ -455,7 +508,11 @@ const REGIONS = {
         emoji: "♨️",
         atmosphere:
           "Kolam pemandian air hangat alami yang mengepulkan uap putih suci diapit tebing gletser bersalju, menyembuhkan radang beku dan memulihkan vitalitas penuh.",
-        facilities: ["sembuhkan_radang_beku", "pemulihan_vitalitas_penuh", "berkah_alam_salju"],
+        facilities: [
+          "sembuhkan_radang_beku",
+          "pemulihan_vitalitas_penuh",
+          "berkah_alam_salju",
+        ],
       },
       {
         id: "pondok_alkimia_khulkhas",
@@ -468,7 +525,11 @@ const REGIONS = {
         emoji: "🧪",
         atmosphere:
           "Gubuk terpencil tempat penyulingan es murni bersanding dengan paron tempa Tarek yang menempa senjata kristal beku tanpa melelehkannya.",
-        facilities: ["sintesis_elixir_es", "forge_senjata_es", "racik_bunga_salju_abadi"],
+        facilities: [
+          "sintesis_elixir_es",
+          "forge_senjata_es",
+          "racik_bunga_salju_abadi",
+        ],
       },
     ],
     items: [
@@ -515,7 +576,11 @@ const REGIONS = {
         emoji: "🌳",
         atmosphere:
           "Lengkungan akar gantung dari pepohonan raksasa berusia ribuan tahun yang memancarkan aroma kayu damar wangi dan tetesan embun sejuk.",
-        facilities: ["penjaga_gerbang_rimba", "berkah_penjaga_alam", "daftar_sayembara_hutan"],
+        facilities: [
+          "penjaga_gerbang_rimba",
+          "berkah_penjaga_alam",
+          "daftar_sayembara_hutan",
+        ],
       },
       {
         id: "sarang_lebah_rimba",
@@ -528,7 +593,11 @@ const REGIONS = {
         emoji: "🐝",
         atmosphere:
           "Dahan kanopi tinggi tempat koloni lebah rimba membangun sarang madu emas bercahaya, dijaga oleh lebah pejuang bertubuh gempal.",
-        facilities: ["panen_madu_rimba", "buru_ratu_lebah", "perangkap_binatang_buas"],
+        facilities: [
+          "panen_madu_rimba",
+          "buru_ratu_lebah",
+          "perangkap_binatang_buas",
+        ],
       },
       {
         id: "pondok_penyadap_damar",
@@ -541,7 +610,11 @@ const REGIONS = {
         emoji: "🪵",
         atmosphere:
           "Pondok kayu sederhana berselimut lumut tempat Kakek Danu mengumpulkan getah resin damar wangi kristal bernilai tinggi.",
-        facilities: ["tukar_getah_damar", "beli_kayu_akar_gelap", "cerita_pohon_tertua"],
+        facilities: [
+          "tukar_getah_damar",
+          "beli_kayu_akar_gelap",
+          "cerita_pohon_tertua",
+        ],
       },
       {
         id: "lab_alkimis_embun",
@@ -554,7 +627,11 @@ const REGIONS = {
         emoji: "🧪",
         atmosphere:
           "Rumah kaca beratap anyaman bambu dengan deretan toples spora jamur violet berpendar dan aroma seduhan teh herbal pemulih stamina.",
-        facilities: ["racik_eliksir_embun", "seduh_teh_rimba", "penawar_racun_spora"],
+        facilities: [
+          "racik_eliksir_embun",
+          "seduh_teh_rimba",
+          "penawar_racun_spora",
+        ],
       },
       {
         id: "altar_sumpah_rimba",
@@ -567,7 +644,11 @@ const REGIONS = {
         emoji: "🛡️",
         atmosphere:
           "Batu monolit purba berselimut lumut di bawah naungan pohon tertua Dha Mhai, menganugerahkan berkat perlindungan bagi mereka yang menghormati alam.",
-        facilities: ["sumpah_penjaga_hutan", "buff_pertahanan_rimba", "meditasi_kanopi"],
+        facilities: [
+          "sumpah_penjaga_hutan",
+          "buff_pertahanan_rimba",
+          "meditasi_kanopi",
+        ],
       },
     ],
     items: [
@@ -580,13 +661,23 @@ const REGIONS = {
       { name: "Jubah Daun Rimba", emoji: "🍃", rarity: "Langka" },
       { name: "Eliksir Embun Purba", emoji: "🧪", rarity: "Epik" },
       { name: "Kristal Spora Aether", emoji: "💎", rarity: "Epik" },
-      { name: "Resep Teh Herbal Rimba Dha Mhai", emoji: "📜", rarity: "Langka" },
+      {
+        name: "Resep Teh Herbal Rimba Dha Mhai",
+        emoji: "📜",
+        rarity: "Langka",
+      },
     ],
   },
 
   desa_lauh_than: {
     id: "desa_lauh_than",
-    aliases: ["lauh_than", "desa_lauh_than", "dermaga_lauh_than", "pelabuhan_selatan", "pesisir_selatan"],
+    aliases: [
+      "lauh_than",
+      "desa_lauh_than",
+      "dermaga_lauh_than",
+      "pelabuhan_selatan",
+      "pesisir_selatan",
+    ],
     name: "Desa Lauh Than",
     title: "Pesisir Samudra Selatan & Dermaga Ekspedisi Bawah Laut",
     primaryCurrency: "NSF & Koin Nelayan Laut Dalam",
@@ -606,7 +697,11 @@ const REGIONS = {
         emoji: "⚓",
         atmosphere:
           "Dermaga kayu jati ulin yang menjulang ke perairan biru jernih tempat bersandarnya kapal layar cadik dan perahu selam mini bertenaga Aether.",
-        facilities: ["sewa_kapal_selam", "ekspedisi_samudra", "periksa_kondisi_cuaca_laut"],
+        facilities: [
+          "sewa_kapal_selam",
+          "ekspedisi_samudra",
+          "periksa_kondisi_cuaca_laut",
+        ],
       },
       {
         id: "balai_adat_nyai_bahari",
@@ -619,7 +714,11 @@ const REGIONS = {
         emoji: "🧿",
         atmosphere:
           "Pendopo panggung beralas tikar pandan berhias kerang mutiara, tempat Nyai Bahari memimpin doa keselamatan laut dan merajut jimat ombak.",
-        facilities: ["ritual_larung_laut", "beli_jimat_penolak_ombak", "berkah_dewi_samudra"],
+        facilities: [
+          "ritual_larung_laut",
+          "beli_jimat_penolak_ombak",
+          "berkah_dewi_samudra",
+        ],
       },
       {
         id: "pasar_ikan_rempah",
@@ -632,7 +731,11 @@ const REGIONS = {
         emoji: "🍲",
         atmosphere:
           "Aroma sedap ikan bakar bumbu rempah kelapa menyeruak di antara keriuhan tawar-menawar hasil tangkapan nelayan pesisir.",
-        facilities: ["santap_ikan_bakar_rempah", "jual_hasil_pancing_laut", "beli_ransum_pelaut"],
+        facilities: [
+          "santap_ikan_bakar_rempah",
+          "jual_hasil_pancing_laut",
+          "beli_ransum_pelaut",
+        ],
       },
       {
         id: "pos_patroli_maritim",
@@ -645,7 +748,11 @@ const REGIONS = {
         emoji: "🛡️",
         atmosphere:
           "Menara pantau kayu berteleskop kuningan dengan teropong jarak jauh yang mengawasi pergerakan monster laut dan bajak laut liar.",
-        facilities: ["lapor_ancaman_leviathan", "sayembara_monster_laut", "asuransi_kapal"],
+        facilities: [
+          "lapor_ancaman_leviathan",
+          "sayembara_monster_laut",
+          "asuransi_kapal",
+        ],
       },
       {
         id: "gerbang_palung_bawah_laut",
@@ -658,7 +765,11 @@ const REGIONS = {
         emoji: "🤿",
         atmosphere:
           "Tepian tubir karang curam tempat arus laut dalam mengalir menuju palung samudra purba. Portal gerbang penyelaman bawah laut terdalam.",
-        facilities: ["selam_palung_bebas", "buka_gerbang_portal_laut", "tukar_mutiara_hitam"],
+        facilities: [
+          "selam_palung_bebas",
+          "buka_gerbang_portal_laut",
+          "tukar_mutiara_hitam",
+        ],
       },
     ],
     items: [
@@ -697,7 +808,11 @@ const REGIONS = {
         emoji: "🚪",
         atmosphere:
           "Pintu gerbang besi hitam bertabur tengkorak menyala dengan patung gargoyle batu yang siap menghabisi penyusup.",
-        facilities: ["tantangan_gargoyle", "periksa_kelayakan_tim", "masuk_istana"],
+        facilities: [
+          "tantangan_gargoyle",
+          "periksa_kelayakan_tim",
+          "masuk_istana",
+        ],
       },
       {
         id: "labirin_bertingkat",
@@ -710,7 +825,11 @@ const REGIONS = {
         emoji: "🏰",
         atmosphere:
           "Lorong labirin berliku yang semakin dalam semakin berbahaya, dipenuhi iblis bayangan dan jebakan maut.",
-        facilities: ["ekspedisi_lantai_bertingkat", "checkpoint_tangga", "boss_lantai_10"],
+        facilities: [
+          "ekspedisi_lantai_bertingkat",
+          "checkpoint_tangga",
+          "boss_lantai_10",
+        ],
       },
       {
         id: "singgasana_draken",
@@ -723,7 +842,11 @@ const REGIONS = {
         emoji: "👑",
         atmosphere:
           "Ruang aula beratap kubah hancur tempat World Boss Penguasa Draken menunggu para penantang terkuat.",
-        facilities: ["raid_boss_draken", "klaim_air_mata_naga", "harmoni_abyss"],
+        facilities: [
+          "raid_boss_draken",
+          "klaim_air_mata_naga",
+          "harmoni_abyss",
+        ],
       },
       {
         id: "khazanah_terkutuk",
@@ -736,7 +859,11 @@ const REGIONS = {
         emoji: "💎",
         atmosphere:
           "Peti-peti perhiasan emas berlapis aura hitam tempat Hadiah Mythic dan senjata terkutuk terkunci rapi.",
-        facilities: ["buka_peti_mythic", "tukar_permata_jiwa", "senjata_terkutuk"],
+        facilities: [
+          "buka_peti_mythic",
+          "tukar_permata_jiwa",
+          "senjata_terkutuk",
+        ],
       },
     ],
     items: [

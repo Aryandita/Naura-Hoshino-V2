@@ -2,7 +2,7 @@
 
 const { AttachmentBuilder, MessageFlags } = require("discord.js");
 const CardEngine = require("../../card/cardEngine");
-const { drawAnimeCard } = require("../../canvas/cardCanvas");
+const canvasWorkerPool = require("../../canvas/canvasWorkerPool");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -49,7 +49,7 @@ module.exports = {
     await interaction.deferReply();
 
     const card = result.card;
-    const cardBuffer = await drawAnimeCard(card);
+    const cardBuffer = await canvasWorkerPool.runTask("renderCard", card);
     const attachment = new AttachmentBuilder(cardBuffer, {
       name: `${card.cardCode}.png`,
     });

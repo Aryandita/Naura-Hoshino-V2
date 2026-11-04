@@ -1,46 +1,47 @@
 # 📜 NAURA HOSHINO, Repository Governance & Architecture Rules
 
-> **Versi:** 2.4.0 · **Engine:** 2.4.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
+> **Versi:** 2.5.0 · **Engine:** 2.5.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!IMPORTANT]
 > **Sumber Kebenaran & Ekosistem Tata Kelola:**
-> - [`PRD.md`](PRD.md): Sumber kebenaran untuk visi produk, persona pengguna, dan spesifikasi fungsional 6 pilar (*What & Why*).
-> - [`DESIGN.md`](DESIGN.md): Sumber kebenaran untuk token warna, tema glassmorphism, dan standar antarmuka UI (*Look & Feel*).
-> - [`RULES.md`](RULES.md) (Dokumen ini): Sumber kebenaran untuk arsitektur teknis, hukum rekayasa kode, dan standar keamanan (*How & Governance*).
-> - [`AGENTS.md`](AGENTS.md): Sumber kebenaran untuk navigasi repositori, alur eksekusi, dan SOP agen AI (*Workflow & Navigation*).
-> - [`README.md`](README.md): Sumber kebenaran untuk gambaran umum publik dan panduan instalasi (*Portal & Quickstart*).
-> - `package.json`: Sumber kebenaran mutlak versi ekosistem (`version: 2.4.0`) dan dependensi. `src/config/env.js`: Sumber kebenaran variabel environment. `TODO.md`: Sumber kebenaran prioritas sprint. [`SECURITY.md`](SECURITY.md): Kebijakan pelaporan kerentanan dan standar keamanan GitHub.
+>
+> - [`PRD.md`](PRD.md): Sumber kebenaran untuk visi produk, persona pengguna, dan spesifikasi fungsional 6 pilar (_What & Why_).
+> - [`DESIGN.md`](DESIGN.md): Sumber kebenaran untuk token warna, tema glassmorphism, dan standar antarmuka UI (_Look & Feel_).
+> - [`RULES.md`](RULES.md) (Dokumen ini): Sumber kebenaran untuk arsitektur teknis, hukum rekayasa kode, dan standar keamanan (_How & Governance_).
+> - [`AGENTS.md`](AGENTS.md): Sumber kebenaran untuk navigasi repositori, alur eksekusi, dan SOP agen AI (_Workflow & Navigation_).
+> - [`README.md`](README.md): Sumber kebenaran untuk gambaran umum publik dan panduan instalasi (_Portal & Quickstart_).
+> - `package.json`: Sumber kebenaran mutlak versi ekosistem (`version: 2.5.0`) dan dependensi. `src/config/env.js`: Sumber kebenaran variabel environment. `TODO.md`: Sumber kebenaran prioritas sprint. [`SECURITY.md`](SECURITY.md): Kebijakan pelaporan kerentanan dan standar keamanan GitHub.
 
 ---
 
 ## ⚡ Quick Reference Aturan Wajib
 
-| Topik                   | Aturan Pokok                                                                              | Referensi / Lokasi |
-| ----------------------- | ----------------------------------------------------------------------------------------- | ------------------ |
-| **Format & SSOT Versi** | Versi dipusatkan di `package.json`, format X.Y.Z (X=Era, Y=Major, Z=Patch)                | Bagian 1.1         |
-| **Gaya Kode**           | CommonJS, indentasi 4 spasi, semicolon wajib, tanpa em dash (`\u2014`)                    | Bagian 1.1         |
-| **Commit & Branch**     | `<emoji> <tipe>: <deskripsi singkat>`, branch `main` (prod), `dev`, `feature/*`           | Bagian 1.2         |
-| **Keamanan**            | Jangan pernah commit `.env`, timingSafeEqual untuk webhook, batasi eval                   | Bagian 1.3         |
-| **UI Discord**          | Wajib Components V2 via `buildContainerV2()` struktur 5-lapisan, flags `32768`            | Bagian 1.4         |
-| **Standar Anti-Slop**   | Filter desain & copy AI (R-01 s/d R-38), data jujur, tanpa gradien/orb generik, Delivery Gate | Bagian 1.4.3 |
-| **Desain Survival**     | Sub-brand Naura Wilds, token warna dari `src/utils/survivalUIHelper.js`                   | Bagian 1.5         |
-| **Tulis Data User**     | HANYA via `cacheManager` (increment/debit/mutateJson), bukan model langsung               | Bagian 1.6         |
-| **Currency V2 Moneter** | One-Way Bridge (1000 SC = 1 PD, Spread Fee 5-25%), 4-Channel Closed-Loop Pool       | Bagian 1.6.3 & 1.6.4 |
-| **Diskon & Modifier NPC** | Single Modifier tertinggi, Hard Cap 50%, Pengecualian Mythic/Bursa, Floor Price 1       | Bagian 1.6.5         |
-| **Tulis GuildSettings** | HANYA via `guildSettingsService.updateGuildSetting()`                                     | Bagian 1.8         |
-| **Render Canvas**       | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (Worker Threads)         | Bagian 1.9         |
-| **AI Ensemble Router**  | Multi-LLM (Gemini 2.5 -> Groq LLaMA 3.3 -> Ollama) dengan Circuit Breaker otomatis       | Bagian 1.11        |
-| **Sistem Bantuan**     | Wajib sinkronkan `src/core/helpView.js` setiap menambah/mengubah fitur atau command        | Bagian 1.12        |
-| **Service Container**   | In-memory registry (`src/core/container.js`), larangan `global.client` / `client.dashboardIo` | Bagian 1.13        |
-| **Domain Contracts**    | Acyclic contracts (`economyContract`, `survivalContract`, `musicContract`), return frozen | Bagian 1.14        |
-| **Interaction Pipeline**| Managed collector & pagination (`interactionPipeline.js`), atomic rollback (`transactionHelper.js`) | Bagian 1.15 |
-| **SSOT Design Tokens**  | Unified tokens (`src/config/tokens/designTokens.js`) untuk Discord Int, Hex, RGB, dan CSS Var | Bagian 1.16 |
-| **Fitur Premium Non-P2W** | Ingestion Dual-Rail (Saweria/Trakteer QRIS + Discord Native), constant-time HMAC, etika non-P2W | Bagian 1.17 |
-| **Polyglot DB & Live Data**| Supabase PG, MongoDB, Redis. Wajib data riil di dashboard produksi tanpa mock override  | Bagian 1.7         |
-| **Migrasi Skema**       | Eksklusif di `dbMigrator.js` bernomor (46 migrasi) + ledger; DILARANG ALTER TABLE manual | Bagian 1.7.1 & 3.2 |
-| **Pterodactyl Panel**   | `CMD_RUN` tetap `npm start`, migrasi via `prestart` di `package.json`                     | Bagian 3.1         |
-| **Senior Laws**         | 7 Coding Laws of Senior Developer (Clean Architecture & Flat Flow)                        | Bagian 2.1         |
+| Topik                       | Aturan Pokok                                                                                        | Referensi / Lokasi   |
+| --------------------------- | --------------------------------------------------------------------------------------------------- | -------------------- |
+| **Format & SSOT Versi**     | Versi dipusatkan di `package.json`, format X.Y.Z (X=Era, Y=Major, Z=Patch)                          | Bagian 1.1           |
+| **Gaya Kode**               | CommonJS, indentasi 4 spasi, semicolon wajib, tanpa em dash (`\u2014`)                              | Bagian 1.1           |
+| **Commit & Branch**         | `<emoji> <tipe>: <deskripsi singkat>`, branch `main` (prod), `dev`, `feature/*`                     | Bagian 1.2           |
+| **Keamanan**                | Jangan pernah commit `.env`, timingSafeEqual untuk webhook, batasi eval                             | Bagian 1.3           |
+| **UI Discord**              | Wajib Components V2 via `buildContainerV2()` struktur 5-lapisan, flags `32768`                      | Bagian 1.4           |
+| **Standar Anti-Slop**       | Filter desain & copy AI (R-01 s/d R-38), data jujur, tanpa gradien/orb generik, Delivery Gate       | Bagian 1.4.3         |
+| **Desain Survival**         | Sub-brand Naura Wilds, token warna dari `src/utils/survivalUIHelper.js`                             | Bagian 1.5           |
+| **Tulis Data User**         | HANYA via `cacheManager` (increment/debit/mutateJson), bukan model langsung                         | Bagian 1.6           |
+| **Currency V2 Moneter**     | One-Way Bridge (1000 SC = 1 PD, Spread Fee 5-25%), 4-Channel Closed-Loop Pool                       | Bagian 1.6.3 & 1.6.4 |
+| **Diskon & Modifier NPC**   | Single Modifier tertinggi, Hard Cap 50%, Pengecualian Mythic/Bursa, Floor Price 1                   | Bagian 1.6.5         |
+| **Tulis GuildSettings**     | HANYA via `guildSettingsService.updateGuildSetting()`                                               | Bagian 1.8           |
+| **Render Canvas**           | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (Worker Threads)                   | Bagian 1.9           |
+| **AI Ensemble Router**      | Multi-LLM (Gemini 2.5 -> Groq LLaMA 3.3 -> Ollama) dengan Circuit Breaker otomatis                  | Bagian 1.11          |
+| **Sistem Bantuan**          | Wajib sinkronkan `src/core/helpView.js` setiap menambah/mengubah fitur atau command                 | Bagian 1.12          |
+| **Service Container**       | In-memory registry (`src/core/container.js`), larangan `global.client` / `client.dashboardIo`       | Bagian 1.13          |
+| **Domain Contracts**        | Acyclic contracts (`economyContract`, `survivalContract`, `musicContract`), return frozen           | Bagian 1.14          |
+| **Interaction Pipeline**    | Managed collector & pagination (`interactionPipeline.js`), atomic rollback (`transactionHelper.js`) | Bagian 1.15          |
+| **SSOT Design Tokens**      | Unified tokens (`src/config/tokens/designTokens.js`) untuk Discord Int, Hex, RGB, dan CSS Var       | Bagian 1.16          |
+| **Fitur Premium Non-P2W**   | Ingestion Dual-Rail (Saweria/Trakteer QRIS + Discord Native), constant-time HMAC, etika non-P2W     | Bagian 1.17          |
+| **Polyglot DB & Live Data** | Supabase PG, MongoDB, Redis. Wajib data riil di dashboard produksi tanpa mock override              | Bagian 1.7           |
+| **Migrasi Skema**           | Eksklusif di `dbMigrator.js` bernomor (50 migrasi) + ledger; DILARANG ALTER TABLE manual            | Bagian 1.7.1 & 3.2   |
+| **Pterodactyl Panel**       | `CMD_RUN` tetap `npm start`, migrasi via `prestart` di `package.json`                               | Bagian 3.1           |
+| **Senior Laws**             | 7 Coding Laws of Senior Developer (Clean Architecture & Flat Flow)                                  | Bagian 2.1           |
 
 ---
 
@@ -48,34 +49,34 @@
 
 ## 1.1 Bahasa, Format Versi, & Konvensi Kode
 
-| Aturan                   | Penjelasan                                                                                                                     |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| **Standar Versi X.Y.Z**  | X = Generasi Platform (2), Y = Major Architecture Update, Z = Minor Update/Patch. Seragam di seluruh repo dan dokumen.        |
-| **Pemusatan Versi SSOT** | `package.json` adalah Single Source of Truth mutlak untuk nomor versi rilis (`2.4.0`). Modul `src/config/version.js` dan `src/config/env.js` membaca versi secara dinamis dari `package.json`. Update versi berikutnya cukup dilakukan di `package.json`. |
-| **Bahasa Kode**          | JavaScript (CommonJS `require` / `module.exports`). Tidak menggunakan TypeScript atau ESM pada bot runtime.                    |
-| **Dynamic Import**       | `await import()` diizinkan dan dianjurkan untuk lazy-load dependensi berat atau library ESM-only (seperti Three.js addons).    |
-| **Bahasa Komentar**      | Bahasa Indonesia untuk komentar inline, docstring, dan pesan log. Bahasa Inggris untuk nama variabel, fungsi, dan kelas.       |
-| **Indentasi**            | 4 spasi seragam sesuai konfigurasi Prettier repo.                                                                              |
-| **Linting & Formatting** | ESLint v10 + Prettier v3. Seluruh commit wajib bebas error linter (`npm run lint`).                                            |
-| **Testing**              | Runner bawaan Node (`node:test`) colocated dengan source (`*.test.js`). Tidak menambah framework testing eksternal.            |
-| **Semicolons**           | Wajib digunakan di setiap akhir statement.                                                                                     |
-| **String Literal**       | Single quotes (`'...'`) untuk string statis, backticks (`` `...` ``) untuk template string.                                    |
-| **Em Dash Terlarang**    | Karakter em dash (`\u2014`) dilarang di seluruh repo termasuk kamus i18n (`check-em-dash.js`). Gunakan tanda hubung `-` biasa. |
+| Aturan                   | Penjelasan                                                                                                                                                                                                                                                |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Standar Versi X.Y.Z**  | X = Generasi Platform (2), Y = Major Architecture Update, Z = Minor Update/Patch. Seragam di seluruh repo dan dokumen.                                                                                                                                    |
+| **Pemusatan Versi SSOT** | `package.json` adalah Single Source of Truth mutlak untuk nomor versi rilis (`2.5.0`). Modul `src/config/version.js` dan `src/config/env.js` membaca versi secara dinamis dari `package.json`. Update versi berikutnya cukup dilakukan di `package.json`. |
+| **Bahasa Kode**          | JavaScript (CommonJS `require` / `module.exports`). Tidak menggunakan TypeScript atau ESM pada bot runtime.                                                                                                                                               |
+| **Dynamic Import**       | `await import()` diizinkan dan dianjurkan untuk lazy-load dependensi berat atau library ESM-only (seperti Three.js addons).                                                                                                                               |
+| **Bahasa Komentar**      | Bahasa Indonesia untuk komentar inline, docstring, dan pesan log. Bahasa Inggris untuk nama variabel, fungsi, dan kelas.                                                                                                                                  |
+| **Indentasi**            | 4 spasi seragam sesuai konfigurasi Prettier repo.                                                                                                                                                                                                         |
+| **Linting & Formatting** | ESLint v10 + Prettier v3. Seluruh commit wajib bebas error linter (`npm run lint`).                                                                                                                                                                       |
+| **Testing**              | Runner bawaan Node (`node:test`) colocated dengan source (`*.test.js`). Tidak menambah framework testing eksternal.                                                                                                                                       |
+| **Semicolons**           | Wajib digunakan di setiap akhir statement.                                                                                                                                                                                                                |
+| **String Literal**       | Single quotes (`'...'`) untuk string statis, backticks (`` `...` ``) untuk template string.                                                                                                                                                               |
+| **Em Dash Terlarang**    | Karakter em dash (`\u2014`) dilarang di seluruh repo termasuk kamus i18n (`check-em-dash.js`). Gunakan tanda hubung `-` biasa.                                                                                                                            |
 
 ## 1.2 Aturan Penamaan & Struktur Berkas
 
-| Elemen                 | Pola                          | Contoh                                             |
-| ---------------------- | ----------------------------- | -------------------------------------------------- |
-| File command/plugin    | `kebab-case.js`               | `steal-emoji.js`, `warn.js`                        |
-| File manager/utility   | `camelCase.js`                | `cronManager.js`, `bootScreen.js`                  |
-| File model (Sequelize) | `PascalCase.js`               | `UserProfile.js`, `GuildSettings.js`               |
-| File model (Mongoose)  | `PascalCase.js`               | `AiChatHistory.js`, `CommandAuditLog.js`           |
-| File builder/utility   | `PascalCase.js`               | `NauraContainerBuilder.js`, `NauraEmbedBuilder.js` |
-| Variabel & fungsi      | `camelCase`                   | `cleanEnv()`, `buildContainerV2()`                 |
-| Kelas & model          | `PascalCase`                  | `CommandHandler`, `MusicManager`                   |
-| Konstanta global       | `UPPER_SNAKE_CASE`            | `OWNER_IDS`, `LAVA_HOST`                           |
-| Event handler files    | `camelCase.js` (nama event)   | `messageCreate.js`, `voiceStateUpdate.js`          |
-| File unit test         | `<nama>.test.js` bersebelahan | `rateLimiter.test.js`, `inventoryHelper.test.js`   |
+| Elemen                        | Pola                          | Contoh                                             |
+| ----------------------------- | ----------------------------- | -------------------------------------------------- |
+| File command/plugin           | `kebab-case.js`               | `steal-emoji.js`, `warn.js`                        |
+| File manager/utility          | `camelCase.js`                | `cronManager.js`, `bootScreen.js`                  |
+| File model (Sequelize)        | `PascalCase.js`               | `UserProfile.js`, `GuildSettings.js`               |
+| File model (Mongoose)         | `PascalCase.js`               | `AiChatHistory.js`, `CommandAuditLog.js`           |
+| File builder/utility          | `PascalCase.js`               | `NauraContainerBuilder.js`, `NauraEmbedBuilder.js` |
+| Variabel & fungsi             | `camelCase`                   | `cleanEnv()`, `buildContainerV2()`                 |
+| Kelas & model                 | `PascalCase`                  | `CommandHandler`, `MusicManager`                   |
+| Konstanta global              | `UPPER_SNAKE_CASE`            | `OWNER_IDS`, `LAVA_HOST`                           |
+| Event handler files           | `camelCase.js` (nama event)   | `messageCreate.js`, `voiceStateUpdate.js`          |
+| File unit test                | `<nama>.test.js` bersebelahan | `rateLimiter.test.js`, `inventoryHelper.test.js`   |
 | Sub-helper plugin (14 berkas) | `camelCase.js` (pengecualian) | `adminCosmetic.js`, `ownerOps.js`, `roleShop.js`   |
 
 > [!NOTE]
@@ -114,7 +115,7 @@
 
 > [!IMPORTANT]
 > Semua respons command WAJIB menggunakan **Discord Components V2** via `buildContainerV2()` dari `NauraContainerBuilder.js`. Embed lama (`EmbedBuilder`) hanya diizinkan untuk pesan loading sementara atau error sederhana.  
-> *(Rujukan visual dan token warna diatur di [`DESIGN.md`](DESIGN.md#discord-components-v2-container-system), rujukan spesifikasi fitur diatur di [`PRD.md`](PRD.md#pilar-1-bot-engine--discord-components-v2))*
+> _(Rujukan visual dan token warna diatur di [`DESIGN.md`](DESIGN.md#discord-components-v2-container-system), rujukan spesifikasi fitur diatur di [`PRD.md`](PRD.md#pilar-1-bot-engine--discord-components-v2))_
 
 ### 1.4.1 Struktur Layout 5-Lapisan Wajib
 
@@ -144,9 +145,9 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 - **Keunikan ID Komponen (Anti-COMPONENT_CUSTOM_ID_DUPLICATED)**: Setiap tombol atau menu interaktif dalam hierarki pesan dilarang memiliki `custom_id` yang kembar. Hindari penggabungan manual row ke properti `components` di luar builder; gunakan `buttonsRow: [row1, row2]` dan builder akan membersihkan duplikasi melalui `sanitizeComponentCustomIds()`.
 - **Auto-Deferral & Guard Navigasi Antar-Subcommand (Anti-InteractionNotReplied)**: Tombol aksi cepat yang meneruskan `ButtonInteraction` ke subcommand lain (misal: ransel ke bekal, craft, atau shop) WAJIB mendahului eksekusi dengan `await i.deferUpdate().catch(() => {})` dan memanggil `collector.stop("navigated")`. Subcommand target WAJIB membungkus eksekusi dengan guard `if (!interaction.deferred && !interaction.replied)` untuk menangani interaksi yang belum ter-defer.
 - **Standar Adapter Interaksi Tombol (Anti-DiscordAPIError 40060)**: Semua tombol aksi cepat (CTA, navigation row, auto-action) yang memicu subcommand wajib dinormalisasi via `adaptSurvivalInteraction(interaction, actionName)`. Adapter ini menjamin:
-  1. *Routing Otomatis:* Mengalihkan pemanggilan `interaction.reply()` ke `interaction.editReply()` saat interaksi telah berstatus `deferred` atau `replied`.
-  2. *Mock Options Aman:* Mengisi objek `interaction.options` lengkap (`getSubcommand()`, `getString()`, `getInteger()`, `getBoolean()`) dengan nilai default aksi agar subcommand tidak crash saat membaca opsi slash command.
-  3. *Proteksi Pesan Ephemeral:* Respons ephemeral via tombol dialihkan ke `interaction.followUp({ flags: MessageFlags.Ephemeral })` dan dilarang memanggil `deleteReply()` yang dapat menghapus kartu pesan utama pengguna.
+  1. _Routing Otomatis:_ Mengalihkan pemanggilan `interaction.reply()` ke `interaction.editReply()` saat interaksi telah berstatus `deferred` atau `replied`.
+  2. _Mock Options Aman:_ Mengisi objek `interaction.options` lengkap (`getSubcommand()`, `getString()`, `getInteger()`, `getBoolean()`) dengan nilai default aksi agar subcommand tidak crash saat membaca opsi slash command.
+  3. _Proteksi Pesan Ephemeral:_ Respons ephemeral via tombol dialihkan ke `interaction.followUp({ flags: MessageFlags.Ephemeral })` dan dilarang memanggil `deleteReply()` yang dapat menghapus kartu pesan utama pengguna.
 - **Pembersihan Collector Lintas-Layar (Collector Navigation Suppression)**: Navigasi layar pesan via tombol wajib memanggil `stopMessageCollector(messageId, "navigated")`. Seluruh listener `collector.on("end")` wajib mengabaikan penghapusan komponen jika `reason === "navigated"`, sehingga timeout layar sebelumnya tidak menghapus tombol layar baru.
 - **Larangan Kartu Buntu (No Dead-End Cards)**: Setiap kartu pesan respons survival, baik onboarding, status sukses, empty state, klaim hadiah, maupun penolakan izin, WAJIB menyertakan baris tombol navigasi kontekstual (`buttonsRow: [survivalUI.buildSurvivalActionRow(...)]`) agar pemain selalu dapat melanjutkan siklus bermain tanpa terdampar di kartu buntu.
 
@@ -156,19 +157,19 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 > Seluruh pembuatan atau modifikasi antarmuka UI (Web Dashboard, Canvas, dan Embed/Container Discord) serta penulisan copy WAJIB mematuhi sistem **Anti-Slop** ([`antislop.md`](antislop.md) dan `.agents/skills/antislop-*/`). Anti-Slop berfungsi sebagai **filter pencegah output AI murahan**, sedangkan [`DESIGN.md`](DESIGN.md) adalah sumber arah gaya dan jiwa visual proyek.
 
 - **Modus Eksekusi Wajib**: Sebelum memulai tugas perancangan atau perubahan UI/copy, agen WAJIB mengonfirmasi mode kerja kepada pengguna:
-  1. *DURING*: Diterapkan secara langsung saat penulisan kode berlangsung (mencegah slop sejak awal + penutupan dengan Delivery Gate).
-  2. *AFTER*: Dilakukan melalui audit menyeluruh terhadap kode/tampilan yang sudah ada dengan daftar temuan bernomor (*findings list*) dan prioritas.
-- **Larangan Gradien Default & Orb Buram (R-01, R-07)**: Dilarang menggunakan gradien ungu-biru/pelangi generik atau lingkaran cahaya buram (*blurred radial orbs*) di latar belakang tanpa fungsi struktural nyata.
+  1. _DURING_: Diterapkan secara langsung saat penulisan kode berlangsung (mencegah slop sejak awal + penutupan dengan Delivery Gate).
+  2. _AFTER_: Dilakukan melalui audit menyeluruh terhadap kode/tampilan yang sudah ada dengan daftar temuan bernomor (_findings list_) dan prioritas.
+- **Larangan Gradien Default & Orb Buram (R-01, R-07)**: Dilarang menggunakan gradien ungu-biru/pelangi generik atau lingkaran cahaya buram (_blurred radial orbs_) di latar belakang tanpa fungsi struktural nyata.
 - **Kejujuran Data & Telemetri Nyata (R-02, R-03, R-36)**: Seluruh angka, persentase, latensi, dan metrik server WAJIB diambil dari data nyata (Gateway WebSocket, memori Node.js, status PostgreSQL/MongoDB, cluster shard). Dilarang mengarang metrik vanity ("99.999% satisfaction", "10,000% synergy") atau widget terminal palsu dengan output buatan.
-- **Copywriting Lugas Tanpa Buzzword AI (R-04)**: Dilarang menggunakan frasa klise AI seperti *"Unlock the power of..."*, *"Next-Gen 2.0 AI"*, atau *"Revolutionize your server"*. Gunakan teks bahasa manusia yang padat, jelas, dan berorientasi manfaat nyata.
+- **Copywriting Lugas Tanpa Buzzword AI (R-04)**: Dilarang menggunakan frasa klise AI seperti _"Unlock the power of..."_, _"Next-Gen 2.0 AI"_, atau _"Revolutionize your server"_. Gunakan teks bahasa manusia yang padat, jelas, dan berorientasi manfaat nyata.
 - **Batas Dosis Glassmorphism (R-10)**: Efek blur/glassmorphism dibatasi maksimal 1-2 elemen utama per halaman (misalnya stage kanvas maskot 3D atau navbar utama). Kontainer data lainnya harus berupa permukaan solid matte dengan border 1px presisi.
-- **Skala Radius Terarah (R-11)**: Dilarang menyeragamkan seluruh elemen menjadi bentuk pil (*pill-shaped*). Kartu data memakai sudut tegas (8-12px), tombol interaktif proporsional, dan badge status ringkas.
+- **Skala Radius Terarah (R-11)**: Dilarang menyeragamkan seluruh elemen menjadi bentuk pil (_pill-shaped_). Kartu data memakai sudut tegas (8-12px), tombol interaktif proporsional, dan badge status ringkas.
 - **Pembatasan Palet Aktif (R-29)**: Maksimal 2-3 warna inti netral/gelap + 1 aksen terarah ([`DESIGN.md`](DESIGN.md): Sakura Pink `#FFC0CB` = identitas brand/karakter, Naura Rose `#F472B6` = chrome UI, dan Cyan `#22D3EE` untuk indikator koneksi aktif).
 - **Liveliness Dials (Part 3)**: Desain antarmuka baru wajib menetapkan skala:
-  - *ENERGY (1-3)*: Tingkat fokus fungsional dan karakter.
-  - *RHYTHM (1-3)*: Variasi ukuran dan tata letak hierarki visual.
-  - *MOTION (1-3)*: Responsivitas interaksi (klik maskot, micro-lift tombol, tanpa animasi berulang tak bermakna).
-- **Delivery Gate Mandatori (R-38)**: Setiap pekerjaan UI sebelum dinyatakan selesai WAJIB melewati evaluasi 4 blok: *Honesty*, *Purpose*, *Liveliness*, dan *Accessibility* (WCAG AA/AAA).
+  - _ENERGY (1-3)_: Tingkat fokus fungsional dan karakter.
+  - _RHYTHM (1-3)_: Variasi ukuran dan tata letak hierarki visual.
+  - _MOTION (1-3)_: Responsivitas interaksi (klik maskot, micro-lift tombol, tanpa animasi berulang tak bermakna).
+- **Delivery Gate Mandatori (R-38)**: Setiap pekerjaan UI sebelum dinyatakan selesai WAJIB melewati evaluasi 4 blok: _Honesty_, _Purpose_, _Liveliness_, dan _Accessibility_ (WCAG AA/AAA).
 
 ### 1.4.4 Batas Keras Struktur Slash Command Discord & Preservasi State Collector
 
@@ -181,7 +182,7 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 
 > [!IMPORTANT]
 > Sistem survival mengusung sub-brand **Naura Wilds** dengan gaya visual **Hybrid Nature-Tech**: fondasi Cyber-Anime Glassmorphism dipadukan dengan palet earth-tone.  
-> *(Rujukan palet visual lengkap di [`DESIGN.md`](DESIGN.md#naura-wilds-survival-sub-brand), rujukan aturan gameplay di [`PRD.md`](PRD.md#pilar-5-survival-rpg-naura-wilds))*
+> _(Rujukan palet visual lengkap di [`DESIGN.md`](DESIGN.md#naura-wilds-survival-sub-brand), rujukan aturan gameplay di [`PRD.md`](PRD.md#pilar-5-survival-rpg-naura-wilds))_
 
 - **Sumber Token**: Semua warna survival (emerald, moss, amber, bark, river, danger) wajib bersumber dari `src/utils/survivalUIHelper.js`.
 - **Panel Khusus**: Panel survival memakai tinted glass hijau (`surface-glass-wilds`) dengan hairline hijau.
@@ -203,7 +204,7 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 
 > [!CAUTION]
 > Kesalahan transaksi ekonomi (race condition, double spend) adalah bug paling merusak. Dilarang melakukan pola read-modify-write!  
-> *(Spesifikasi mata uang NSF, NC, dan kupon diatur di [`PRD.md`](PRD.md#pilar-4-polyglot-database--arsitektur-atomik) dan [`PRD.md`](PRD.md#pilar-5-survival-rpg-naura-wilds))*
+> _(Spesifikasi mata uang NSF, NC, dan kupon diatur di [`PRD.md`](PRD.md#pilar-4-polyglot-database--arsitektur-atomik) dan [`PRD.md`](PRD.md#pilar-5-survival-rpg-naura-wilds))_
 
 ### 1.6.1 Nilai Numerik Saldo
 
@@ -224,34 +225,34 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 ### 1.6.3 Sistem Moneter Currency V2 & Closed-Loop Recycling Pool
 
 - **Closed-Loop 4-Channel Recycling Pool (`ServerTreasury`)**: Seluruh pajak lelang, denda, spread fee penukaran mata uang, dan biaya transaksi pasar dialirkan 100% secara tertutup ke dalam 4 alokasi kas server persisten:
-  1. *40% Kas Infrastruktur:* Upgrade fasilitas teritori klan dan maintenance node.
-  2. *25% Pool Undian (Lottery):* Jackpot berkala bagi pemain pemegang tiket lotre survival.
-  3. *20% Subsidi Pemula (Novice Aid):* Bantuan darurat pemain baru atau pemain yang bangkrut di Desa Sukamaju.
-  4. *15% Insentif Pedagang (Merchant Pool):* Bonus karavan dagang dan penjamin likuiditas pasar.
+  1. _40% Kas Infrastruktur:_ Upgrade fasilitas teritori klan dan maintenance node.
+  2. _25% Pool Undian (Lottery):_ Jackpot berkala bagi pemain pemegang tiket lotre survival.
+  3. _20% Subsidi Pemula (Novice Aid):_ Bantuan darurat pemain baru atau pemain yang bangkrut di Desa Sukamaju.
+  4. _15% Insentif Pedagang (Merchant Pool):_ Bonus karavan dagang dan penjamin likuiditas pasar.
 - **Durability & Wear/Tear Surcharge**: Setiap alat dan senjata tempur memiliki poin ketahanan (`durability`). Biaya perbaikan wajib dihitung via `durabilityEngine.js` dengan penambahan biaya keausan progresif.
 
 ### 1.6.4 Tata Kelola Multi-Mata Uang Regional & Bank Sentral Pratama
 
 - **Pemisahan Sirkulasi Regional**:
-  - *Sukamaju Koin (SC)*: Mata uang sirkulasi primer wilayah Desa Sukamaju untuk kebutuhan vital dasar (makanan warung, penginapan, perkakas dasar, bibit pertanian).
-  - *Pratama Dollar (PD)*: Mata uang ekonomi makro Kota Pratama untuk transaksi bernilai tinggi (bursa karir, layanan medis rumah sakit, balai lelang, pasar saham server).
-  - *Voucher Beasiswa (VB)*: Mata uang prestasi & festival langka untuk gacha kosmetik, battle pass premium, dan sertifikasi akademi.
-  - *Berlian Adisha (BA)*: Mata uang legendaris endgame dari dunia Adisha, hanya didapatkan melalui World Boss Draken, Istana Draken L50+, Clan War, dan Achievement Mythic.
-- **Jembatan Satu Arah Terkunci (*One-Way Bridge*)**:
-  - *Penukaran Maju (SC -> PD)*: Pemain dapat menukarkan 1.000 SC menjadi 1 PD di Bank Sentral Pratama secara bebas sesuai kecukupan saldo grinding mereka dengan biaya spread fee dinamis (5% hingga 25%).
-  - *Penukaran Balik Terkunci (PD -> SC)*: Ditolak secara permanen (`one_way_restricted`). Bank Sentral Pratama tidak melayani penukaran Pratama Dollar kembali ke Sukamaju Koin untuk menjaga integritas ekosistem bertahan hidup dan mencegah inflasi dari ekonomi makro server.
-  - *VB & BA Non-Convertible*: Voucher Beasiswa dan Berlian Adisha tidak bisa dikonversi dari/ke mata uang lain.
-  - *Alokasi Biaya*: 100% dari biaya spread fee penukaran mata uang wajib disalurkan langsung ke kas `ServerTreasury` (skema 4 alokasi pool).
+  - _Sukamaju Koin (SC)_: Mata uang sirkulasi primer wilayah Desa Sukamaju untuk kebutuhan vital dasar (makanan warung, penginapan, perkakas dasar, bibit pertanian).
+  - _Pratama Dollar (PD)_: Mata uang ekonomi makro Kota Pratama untuk transaksi bernilai tinggi (bursa karir, layanan medis rumah sakit, balai lelang, pasar saham server).
+  - _Voucher Beasiswa (VB)_: Mata uang prestasi & festival langka untuk gacha kosmetik, battle pass premium, dan sertifikasi akademi.
+  - _Berlian Adisha (BA)_: Mata uang legendaris endgame dari dunia Adisha, hanya didapatkan melalui World Boss Draken, Istana Draken L50+, Clan War, dan Achievement Mythic.
+- **Jembatan Satu Arah Terkunci (_One-Way Bridge_)**:
+  - _Penukaran Maju (SC -> PD)_: Pemain dapat menukarkan 1.000 SC menjadi 1 PD di Bank Sentral Pratama secara bebas sesuai kecukupan saldo grinding mereka dengan biaya spread fee dinamis (5% hingga 25%).
+  - _Penukaran Balik Terkunci (PD -> SC)_: Ditolak secara permanen (`one_way_restricted`). Bank Sentral Pratama tidak melayani penukaran Pratama Dollar kembali ke Sukamaju Koin untuk menjaga integritas ekosistem bertahan hidup dan mencegah inflasi dari ekonomi makro server.
+  - _VB & BA Non-Convertible_: Voucher Beasiswa dan Berlian Adisha tidak bisa dikonversi dari/ke mata uang lain.
+  - _Alokasi Biaya_: 100% dari biaya spread fee penukaran mata uang wajib disalurkan langsung ke kas `ServerTreasury` (skema 4 alokasi pool).
 
 ### 1.6.5 Batas Pengubah Harga Ekonomi & Diskon Relasi NPC
 
 - **Aturan Single Modifier Tertinggi**: Jika terdapat beberapa sumber diskon (tingkat persahabatan NPC, perk klan, atau event server), sistem HANYA menerapkan satu nilai diskon tunggal tertinggi. Dilarang melakukan penumpukan diskon aditif atau multiplikatif ganda yang tidak terkontrol.
-- **Batas Maksimal Diskon (*Hard Cap 50%*)**: Total potongan diskon harga pada transaksi belanja apapun tidak boleh melampaui 50% dari harga dasar katalog.
-- **Pengecualian Komoditas (*Exemptions*)**: Diskon ekonomi dilarang berlaku untuk:
+- **Batas Maksimal Diskon (_Hard Cap 50%_)**: Total potongan diskon harga pada transaksi belanja apapun tidak boleh melampaui 50% dari harga dasar katalog.
+- **Pengecualian Komoditas (_Exemptions_)**: Diskon ekonomi dilarang berlaku untuk:
   1. Layanan konversi mata uang di Bank Sentral Pratama.
   2. Transaksi bursa saham klan, pasar prediksi, dan balai lelang pemain.
   3. Pembelian item langka berkategori Mythic, Artifact, atau Relik Kuno.
-- **Batas Lantai Harga (*Floor Price*)**: Harga akhir setelah pemotongan diskon wajib bernilai minimal **1 unit** mata uang (1 NSF atau 1 NC). Nilai transaksi dilarang bernilai nol (gratis) atau negatif akibat kalkulasi diskon.
+- **Batas Lantai Harga (_Floor Price_)**: Harga akhir setelah pemotongan diskon wajib bernilai minimal **1 unit** mata uang (1 NSF atau 1 NC). Nilai transaksi dilarang bernilai nol (gratis) atau negatif akibat kalkulasi diskon.
 
 ### 1.6.6 Normalisasi Efek Konsumsi Bekal & Sinkronisasi Parsial Survival
 
@@ -319,6 +320,7 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
   3. 🔧 **[Minor Update]** : Perbaikan bug (bugfix), optimasi performa, refactoring, penyesuaian teks/styling, dan pembersihan file.
 
   **Struktur Format Baku Pesan Commit:**
+
   ```text
   <emoji> <tipe>: <ringkasan judul commit>
 
@@ -331,20 +333,24 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
   🔧 [Minor Update]
   - <rincian perbaikan bug / styling / pembersihan>
   ```
-  *(Catatan: Pilih emoji pada judul dan setiap butir pembaruan yang selaras dengan isi perubahannya, misal 🛡️ untuk keamanan, 🎨 untuk visual/desain, 📦 untuk modul/dependensi, ⚡ untuk performa, 🩹 untuk bugfix).*
+
+  _(Catatan: Pilih emoji pada judul dan setiap butir pembaruan yang selaras dengan isi perubahannya, misal 🛡️ untuk keamanan, 🎨 untuk visual/desain, 📦 untuk modul/dependensi, ⚡ untuk performa, 🩹 untuk bugfix)._
+
 - **Satu PR Per Sprint**: Seluruh commit dikumpulkan dan direview dalam satu PR sprint sebelum digabung ke `main`.
 - **CI Wajib Hijau**: Linting, pengecekan em dash, paritas bahasa, dan test suite wajib 100% lulus sebelum merge.
 
 ## 1.11 AI Ensemble Router & Audio Cluster Governance
 
 ### 1.11.1 Cross-Model AI Ensemble Router & Circuit Breaker
+
 - Eksekusi inferensi AI menggunakan `src/ai/aiEnsembleRouter.js` yang secara dinamis memetakan tugas ke model terbaik:
-  - *Tugas Cepat, Multimodal & Percakapan:* Gemini 2.5 Flash (`@google/genai`).
-  - *Penalaran Taktis & Tribunal Court:* Groq LLaMA 3.3.
-  - *Mode Offline Darurat:* Ollama lokal.
+  - _Tugas Cepat, Multimodal & Percakapan:_ Gemini 2.5 Flash (`@google/genai`).
+  - _Penalaran Taktis & Tribunal Court:_ Groq LLaMA 3.3.
+  - _Mode Offline Darurat:_ Ollama lokal.
 - **Circuit Breaker Otomatis**: Jika provider mengalami rate limit (HTTP 429) atau error berulang, status sirkuit beralih ke `OPEN` dengan cooldown 60 detik dan otomatis melakukan failover mulus ke model alternatif tanpa mengganggu pengalaman pengguna.
 
 ### 1.11.2 Lavalink Cluster Manager & Soundboard Studio
+
 - Manajemen node Lavalink dikendalikan secara bertingkat melalui `src/managers/lavalinkClusterManager.js` dengan evaluasi kesehatan otomatis dan failover antar tier (Primary -> Secondary -> Fallback) tanpa memutus sesi suara Discord.
 - Fitur Soundboard Web Dashboard (`/soundboard`) menyiarkan audio instan melalui WebSocket Socket.IO yang diverifikasi oleh session rate limiter.
 
@@ -352,7 +358,7 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 
 - **Wajib Sinkron Saat Menambah Fitur**: Setiap kali menambahkan command baru, subcommand baru, atau merombak alur interaksi pengguna, pengembang/agen AI WAJIB secara bersamaan memperbarui berkas sentral sistem bantuan di [`src/core/helpView.js`](src/core/helpView.js).
 - **Paritas Kategori & Subcommand**: Pastikan setiap entri slash command tercatat pada kategori yang sesuai (`core`, `music`, `admin`, `survival`, `naura`, dll.) lengkap dengan deskripsi fungsional yang ringkas, parameter utama, dan bebas dari AI slop.
-- **Kepatuhan QA Gate**: Kelalaian menyertakan atau memperbarui entri bantuan di `helpView.js` untuk fitur baru dianggap sebagai pekerjaan yang belum selesai (*incomplete task*) dan tidak diperkenankan lolos QA Gate maupun digabungkan (*merge*) ke branch utama.
+- **Kepatuhan QA Gate**: Kelalaian menyertakan atau memperbarui entri bantuan di `helpView.js` untuk fitur baru dianggap sebagai pekerjaan yang belum selesai (_incomplete task_) dan tidak diperkenankan lolos QA Gate maupun digabungkan (_merge_) ke branch utama.
 
 ## 1.13 Tata Kelola Modularisasi, Service Container, & EventBus
 
@@ -402,8 +408,8 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
   - Seluruh keuntungan premium (VIP Tier 1 Starter, Tier 2 Supporter, Tier 3 Guild Patron) DILARANG memberikan keunggulan statistik in-game (HP, Damage, Speed), bypass regulasi ekonomi, atau merusak keseimbangan permainan survival/RPG.
   - Keuntungan premium dibatasi secara eksklusif pada estetika (neon hologram frame, sparkle canvas, gold badge), kenyamanan sensorik (living AI persona, kuota chat unlimited, fish audio voice greeting), dan utilitas komunitas (24/7 standby voice channel, ekspansi slot custom soundboard hingga 50).
 - **Dual-Rail Ingestion & Verifikasi Webhook**:
-  - *Rail 1 (Lokal QRIS):* Saweria & Trakteer webhook di `dashboard/routes/donationWebhooks.js`.
-  - *Rail 2 (Global Discord):* Discord Native App Subscriptions SKU sync di `src/services/entitlementService.js`.
+  - _Rail 1 (Lokal QRIS):_ Saweria & Trakteer webhook di `dashboard/routes/donationWebhooks.js`.
+  - _Rail 2 (Global Discord):_ Discord Native App Subscriptions SKU sync di `src/services/entitlementService.js`.
   - Verifikasi signature wajib menggunakan `crypto.timingSafeEqual` untuk mencegah serangan timing side-channel.
   - Parsing Discord ID wajib mematuhi format Snowflake numerik 17-20 digit (`\b\d{17,20}\b`).
 - **Idempotensi & Atomisitas Transaksi**:
@@ -463,58 +469,60 @@ Semua penulisan kode baru dan refaktorisasi wajib menerapkan 7 hukum arsitektur 
   ```
 - Dilarang memindahkan script migrasi ke kolom panel. Jika migrasi gagal, proses berhenti sebelum bot online demi integritas database.
 
-## 3.2 Daftar Migrasi Skema Bernomor (Ledger 46 Migrasi)
+## 3.2 Daftar Migrasi Skema Bernomor (Ledger 50 Migrasi)
 
-| ID Migrasi | Deskripsi & Fungsi |
-| :--- | :--- |
-| `v1_add_mannersPoint` | Tambah kolom mannersPoint ke user_leveling |
-| `v2_add_dailyNotify` | Tambah kolom dailyNotify ke user_profiles |
-| `v3_add_economy_deposit` | Tambah kolom economy_deposit ke user_profiles |
-| `v4_add_economy_investments` | Tambah kolom economy_investments ke user_profiles |
-| `v5_add_coupons` | Tambah kolom coupons ke UserSurvivals (Naura Coupon jadi kolom sendiri) |
-| `v6_move_coupons_to_column` | Pindahkan saldo Naura Coupon dari rpg_state ke kolom coupons |
-| `v7_add_index_user_leveling` | Tambah composite index (guildId, userId) ke user_leveling |
-| `v8_add_index_user_warns` | Tambah composite index (guildId, userId) ke user_warns |
-| `v9_add_index_user_friends` | Tambah index pada user1Id dan user2Id di UserFriends |
-| `v10_add_index_user_friends_2` | Tambah index pada user2Id di UserFriends |
-| `v11_add_index_user_cosmetics` | Tambah index pada userId di user_cosmetics |
-| `v12_add_index_user_pets` | Tambah index pada userId di UserPets |
-| `v13_add_reputation` | Tambah kolom reputation ke user_profiles |
-| `v14_make_language_nullable` | Ubah kolom language agar DEFAULT NULL supaya fallback ke pengaturan Guild bekerja |
-| `v15_add_aiPersona` | Tambah kolom aiPersona ke user_profiles |
-| `v16_add_activeBanners` | Tambah kolom activeBanners ke user_profiles |
-| `v17_add_role_leases` | Buat tabel role_leases untuk sewa role berbayar |
-| `v18_giveaway_participants` | Tambah kolom requirements, participants, dan winners ke giveaways |
-| `v19_add_clan_columns` | Tambah kolom clanId di UserSurvivals |
-| `v20_add_clan_quests` | Tambah kolom questsState di GuildClans |
-| `v21_create_duel_records` | Buat tabel duel_records untuk menyimpan PvP MMR dan statistik |
-| `v22_add_notification_prefs` | Tambah kolom notification_prefs ke user_profiles |
-| `v23_upgrade_user_pets` | Sistem Pet Lanjutan: Tambah mood, evolutionStage, dan passiveSkill |
-| `v24_add_world_boss_and_clan_territory` | Buat tabel world_bosses dan clan_territories untuk MMORPG Survival |
-| `v25_upgrade_user_cards_system` | Upgrade tabel user_cards dengan cardCode, printNumber, quality, frame, dan dyeColor |
-| `v26_create_user_card_decks` | Buat tabel user_card_decks untuk TCG Battle Deck & Tower of Babel |
-| `v27_create_minecraft_links` | Buat tabel minecraft_links untuk penautan akun Minecraft & Discord |
-| `v28_create_prediction_markets_and_bets` | Buat tabel prediction_markets dan prediction_bets untuk Pari-Mutuel Prediction Market |
-| `v29_upgrade_world_boss_phases` | Tambah kolom phase, shieldHp, maxShieldHp, roleContributions, mvpUserId, dan lastHitUserId ke world_bosses |
-| `v30_create_user_cafes` | Buat tabel user_cafes untuk Cozy Cyber-Cafe & Maid Lounge Sim |
-| `v31_upgrade_user_cards_fusion_inscription` | Tambah kolom isAwakened, awakeningLevel, inscription, dan originalMinterId ke user_cards |
-| `v32_upgrade_territories_and_pets` | Tambah kolom defenseLevel, clanName, contributingClanIds ke clan_territories dan fusionCount, cosmicAura, habitatRoom ke UserPets |
-| `v33_create_sprint20_milestone_tables` | Buat tabel coliseum_teams, guild_personas, server_stocks, user_stock_holdings, dan tambah kolom hallLayout di GuildClans |
-| `v34_add_voiceMinutes_to_user_leveling` | Tambah kolom voiceMinutes ke user_leveling untuk tracking Voice XP dan aktivitas voice |
-| `v35_create_user_portfolios` | Buat tabel user_portfolios untuk sistem Member Portfolio publik (Sprint 21) |
-| `v36_create_season_passes` | Buat tabel season_progress untuk sistem Musim & Battle Pass 30-Hari |
-| `v37_create_user_greenhouses` | Buat tabel user_greenhouses untuk sistem Cyber-Agronomy & Hidroponik |
-| `v38_create_cross_server_caravans` | Buat tabel trade_caravans dan caravan_escorts untuk Karavan Dagang Lintas Server & PvP Ambush |
-| `v39_create_community_dungeons` | Buat tabel community_dungeons untuk Custom Community Dungeon Maker & Creator Royalty |
-| `v40_create_semantic_memories_table` | Buat tabel semantic_memories untuk Living AI Semantic Vector Memory & Server RAG |
-| `v41_create_server_treasuries_and_currency_v2` | Buat tabel server_treasuries dan tambah kolom lotteryTickets, lastNoviceAidClaimAt di UserSurvivals serta infrastructurePoints di clan_territories |
-| `v42_create_lottery_winners_ledger` | Buat tabel lottery_winners untuk mencatat riwayat pemenang undian mingguan Astral Lottery |
-| `v43_add_buyout_to_market_auctions` | Tambah kolom buyoutPrice ke market_auctions untuk fitur beli instan di bursa lelang |
+| ID Migrasi                                       | Deskripsi & Fungsi                                                                                                                                                        |
+| :----------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `v1_add_mannersPoint`                            | Tambah kolom mannersPoint ke user_leveling                                                                                                                                |
+| `v2_add_dailyNotify`                             | Tambah kolom dailyNotify ke user_profiles                                                                                                                                 |
+| `v3_add_economy_deposit`                         | Tambah kolom economy_deposit ke user_profiles                                                                                                                             |
+| `v4_add_economy_investments`                     | Tambah kolom economy_investments ke user_profiles                                                                                                                         |
+| `v5_add_coupons`                                 | Tambah kolom coupons ke UserSurvivals (Naura Coupon jadi kolom sendiri)                                                                                                   |
+| `v6_move_coupons_to_column`                      | Pindahkan saldo Naura Coupon dari rpg_state ke kolom coupons                                                                                                              |
+| `v7_add_index_user_leveling`                     | Tambah composite index (guildId, userId) ke user_leveling                                                                                                                 |
+| `v8_add_index_user_warns`                        | Tambah composite index (guildId, userId) ke user_warns                                                                                                                    |
+| `v9_add_index_user_friends`                      | Tambah index pada user1Id dan user2Id di UserFriends                                                                                                                      |
+| `v10_add_index_user_friends_2`                   | Tambah index pada user2Id di UserFriends                                                                                                                                  |
+| `v11_add_index_user_cosmetics`                   | Tambah index pada userId di user_cosmetics                                                                                                                                |
+| `v12_add_index_user_pets`                        | Tambah index pada userId di UserPets                                                                                                                                      |
+| `v13_add_reputation`                             | Tambah kolom reputation ke user_profiles                                                                                                                                  |
+| `v14_make_language_nullable`                     | Ubah kolom language agar DEFAULT NULL supaya fallback ke pengaturan Guild bekerja                                                                                         |
+| `v15_add_aiPersona`                              | Tambah kolom aiPersona ke user_profiles                                                                                                                                   |
+| `v16_add_activeBanners`                          | Tambah kolom activeBanners ke user_profiles                                                                                                                               |
+| `v17_add_role_leases`                            | Buat tabel role_leases untuk sewa role berbayar                                                                                                                           |
+| `v18_giveaway_participants`                      | Tambah kolom requirements, participants, dan winners ke giveaways                                                                                                         |
+| `v19_add_clan_columns`                           | Tambah kolom clanId di UserSurvivals                                                                                                                                      |
+| `v20_add_clan_quests`                            | Tambah kolom questsState di GuildClans                                                                                                                                    |
+| `v21_create_duel_records`                        | Buat tabel duel_records untuk menyimpan PvP MMR dan statistik                                                                                                             |
+| `v22_add_notification_prefs`                     | Tambah kolom notification_prefs ke user_profiles                                                                                                                          |
+| `v23_upgrade_user_pets`                          | Sistem Pet Lanjutan: Tambah mood, evolutionStage, dan passiveSkill                                                                                                        |
+| `v24_add_world_boss_and_clan_territory`          | Buat tabel world_bosses dan clan_territories untuk MMORPG Survival                                                                                                        |
+| `v25_upgrade_user_cards_system`                  | Upgrade tabel user_cards dengan cardCode, printNumber, quality, frame, dan dyeColor                                                                                       |
+| `v26_create_user_card_decks`                     | Buat tabel user_card_decks untuk TCG Battle Deck & Tower of Babel                                                                                                         |
+| `v27_create_minecraft_links`                     | Buat tabel minecraft_links untuk penautan akun Minecraft & Discord                                                                                                        |
+| `v28_create_prediction_markets_and_bets`         | Buat tabel prediction_markets dan prediction_bets untuk Pari-Mutuel Prediction Market                                                                                     |
+| `v29_upgrade_world_boss_phases`                  | Tambah kolom phase, shieldHp, maxShieldHp, roleContributions, mvpUserId, dan lastHitUserId ke world_bosses                                                                |
+| `v30_create_user_cafes`                          | Buat tabel user_cafes untuk Cozy Cyber-Cafe & Maid Lounge Sim                                                                                                             |
+| `v31_upgrade_user_cards_fusion_inscription`      | Tambah kolom isAwakened, awakeningLevel, inscription, dan originalMinterId ke user_cards                                                                                  |
+| `v32_upgrade_territories_and_pets`               | Tambah kolom defenseLevel, clanName, contributingClanIds ke clan_territories dan fusionCount, cosmicAura, habitatRoom ke UserPets                                         |
+| `v33_create_sprint20_milestone_tables`           | Buat tabel coliseum_teams, guild_personas, server_stocks, user_stock_holdings, dan tambah kolom hallLayout di GuildClans                                                  |
+| `v34_add_voiceMinutes_to_user_leveling`          | Tambah kolom voiceMinutes ke user_leveling untuk tracking Voice XP dan aktivitas voice                                                                                    |
+| `v35_create_user_portfolios`                     | Buat tabel user_portfolios untuk sistem Member Portfolio publik (Sprint 21)                                                                                               |
+| `v36_create_season_passes`                       | Buat tabel season_progress untuk sistem Musim & Battle Pass 30-Hari                                                                                                       |
+| `v37_create_user_greenhouses`                    | Buat tabel user_greenhouses untuk sistem Cyber-Agronomy & Hidroponik                                                                                                      |
+| `v38_create_cross_server_caravans`               | Buat tabel trade_caravans dan caravan_escorts untuk Karavan Dagang Lintas Server & PvP Ambush                                                                             |
+| `v39_create_community_dungeons`                  | Buat tabel community_dungeons untuk Custom Community Dungeon Maker & Creator Royalty                                                                                      |
+| `v40_create_semantic_memories_table`             | Buat tabel semantic_memories untuk Living AI Semantic Vector Memory & Server RAG                                                                                          |
+| `v41_create_server_treasuries_and_currency_v2`   | Buat tabel server_treasuries dan tambah kolom lotteryTickets, lastNoviceAidClaimAt di UserSurvivals serta infrastructurePoints di clan_territories                        |
+| `v42_create_lottery_winners_ledger`              | Buat tabel lottery_winners untuk mencatat riwayat pemenang undian mingguan Astral Lottery                                                                                 |
+| `v43_add_buyout_to_market_auctions`              | Tambah kolom buyoutPrice ke market_auctions untuk fitur beli instan di bursa lelang                                                                                       |
 | `v44_add_paranoid_deleted_at_to_critical_tables` | Tambah kolom deletedAt untuk Sequelize paranoid soft-delete architecture pada tabel-tabel krusial (UserProfile, GuildSettings, UserSurvival, TradeCaravan, MarketAuction) |
-| `v45_repair_corrupt_vitals_dead_end` | Perbaiki dan pulihkan data vitals (HP, hunger, thirst, stamina) pemain yang korup atau bernilai 0 ke kondisi aman (100) |
-| `v46_add_premium_tier_to_user_profiles` | Tambah kolom premium_tier ke user_profiles untuk sinkronisasi tingkatan VIP/Patron |
-| `v47_rename_currencies_to_slice_of_life` | Perbarui nama kolom mata uang ke era Slice of Life: sukamajuCoins, scholarshipVouchers, dan pratamaDollars |
-| `v48_add_adisha_diamonds` | Tambah kolom adishaDiamonds ke UserSurvivals untuk mata uang premium Berlian Adisha (BA) |
+| `v45_repair_corrupt_vitals_dead_end`             | Perbaiki dan pulihkan data vitals (HP, hunger, thirst, stamina) pemain yang korup atau bernilai 0 ke kondisi aman (100)                                                   |
+| `v46_add_premium_tier_to_user_profiles`          | Tambah kolom premium_tier ke user_profiles untuk sinkronisasi tingkatan VIP/Patron                                                                                        |
+| `v47_rename_currencies_to_slice_of_life`         | Perbarui nama kolom mata uang ke era Slice of Life: sukamajuCoins, scholarshipVouchers, dan pratamaDollars                                                                |
+| `v48_add_adisha_diamonds`                        | Tambah kolom adishaDiamonds ke UserSurvivals untuk mata uang premium Berlian Adisha (BA)                                                                                  |
+| `v49_add_medali_permainan`                       | Tambah kolom medaliPermainan untuk reward dan progres permainan                                                                                                           |
+| `v50_create_story_progress_and_user_npcs`        | Buat persistensi story progress dan relasi NPC pemain                                                                                                                     |
 
 ---
 
@@ -522,12 +530,11 @@ Semua penulisan kode baru dan refaktorisasi wajib menerapkan 7 hukum arsitektur 
 
 Seluruh kontributor dan agen AI wajib memahami posisi dokumen ini dalam ekosistem tata kelola repositori:
 
-| Dokumen | Sumber Kebenaran (*Source of Truth*) | Pertanyaan Utama yang Dijawab |
-| :--- | :--- | :--- |
-| [`README.md`](README.md) | **Portal & Instalasi Publik** | "Bagaimana cara memasang, menjalankan, dan memahami arsitektur dasar bot?" |
-| [`PRD.md`](PRD.md) | **Kebutuhan Produk & Personas** | "Fitur apa yang sedang dibangun, mengapa dibuat, untuk siapa, dan prioritasnya apa?" |
-| [`DESIGN.md`](DESIGN.md) | **Bahasa Desain & UI Tokens** | "Bagaimana aturan warna, glassmorphism, 3D avatar viewer, dan Components V2?" |
-| [`RULES.md`](RULES.md) | **Konstitusi & Standar Teknis** | "Bagaimana aturan hukum kode, batas transaksi atomik DB, keamanan, dan anti-crash?" |
-| [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | "Di mana letak file-nya, bagaimana alur data interaksi ke database, dan apa checklist QA?" |
-| [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | "Pekerjaan apa yang sedang berlangsung dan apa prioritas berikutnya?" |
-
+| Dokumen                  | Sumber Kebenaran (_Source of Truth_) | Pertanyaan Utama yang Dijawab                                                              |
+| :----------------------- | :----------------------------------- | :----------------------------------------------------------------------------------------- |
+| [`README.md`](README.md) | **Portal & Instalasi Publik**        | "Bagaimana cara memasang, menjalankan, dan memahami arsitektur dasar bot?"                 |
+| [`PRD.md`](PRD.md)       | **Kebutuhan Produk & Personas**      | "Fitur apa yang sedang dibangun, mengapa dibuat, untuk siapa, dan prioritasnya apa?"       |
+| [`DESIGN.md`](DESIGN.md) | **Bahasa Desain & UI Tokens**        | "Bagaimana aturan warna, glassmorphism, 3D avatar viewer, dan Components V2?"              |
+| [`RULES.md`](RULES.md)   | **Konstitusi & Standar Teknis**      | "Bagaimana aturan hukum kode, batas transaksi atomik DB, keamanan, dan anti-crash?"        |
+| [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent**          | "Di mana letak file-nya, bagaimana alur data interaksi ke database, dan apa checklist QA?" |
+| [`TODO.md`](TODO.md)     | **Roadmap & Sprint Backlog**         | "Pekerjaan apa yang sedang berlangsung dan apa prioritas berikutnya?"                      |

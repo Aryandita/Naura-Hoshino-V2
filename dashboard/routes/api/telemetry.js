@@ -6,7 +6,7 @@ const { getDbStatus } = require("../../../src/managers/dbManager");
 const redisManager = require("../../../src/managers/redisManager");
 const mongoManager = require("../../../src/managers/mongoManager");
 const { getSystemMetrics } = require("../../utils/systemMetrics");
-const { requireGuildManager } = require("../../middleware/auth");
+const { requireApiLogin, requireGuildManager, requireOwner } = require("../../middleware/auth");
 const { scanPluginDirectory, resolveUsername } = require("./helpers");
 
 let cachedOverviewSnapshot = null;
@@ -85,7 +85,7 @@ function register(router, client) {
   });
 
   // --- 2. Supabase / Postgres Status ---
-  router.get("/supabase/status", async (req, res) => {
+  router.get("/supabase/status", requireApiLogin, async (req, res) => {
     try {
       const startTime = Date.now();
       const { sequelize } = require("../../../src/managers/dbManager");
@@ -117,12 +117,11 @@ function register(router, client) {
   });
 
   // --- 3. SSE Live Telemetry Stream ---
-  router.get("/realtime/stream", async (req, res) => {
+  router.get("/realtime/stream", requireApiLogin, async (req, res) => {
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
       "Connection": "keep-alive",
-      "Access-Control-Allow-Origin": "*",
     });
 
     const sendSnapshot = async () => {
@@ -211,7 +210,7 @@ function register(router, client) {
   });
 
   // --- 4. Realtime Overview (3000ms TTL Snapshot) ---
-  router.get("/realtime/overview", async (req, res) => {
+  router.get("/realtime/overview", requireApiLogin, async (req, res) => {
     try {
       if (
         cachedOverviewSnapshot &&
@@ -254,7 +253,6 @@ function register(router, client) {
           0,
         );
       }
-      if (!userQueryOk && !registeredUsers) registeredUsers = 1420;
 
       let activeSurvivalPlayers = 0;
       let survivalQueryOk = false;
@@ -262,16 +260,12 @@ function register(router, client) {
         activeSurvivalPlayers = await UserSurvival.count();
         survivalQueryOk = true;
       } catch (_) {}
-      if (!survivalQueryOk && !activeSurvivalPlayers) activeSurvivalPlayers = 48;
 
-      const activeGuilds = client.guilds?.cache?.size || (dbConnected ? 0 : 18);
-      const uptimeSeconds = client.uptime
-        ? Math.floor(client.uptime / 1000)
-        : 3600;
+      const activeGuilds = client.guilds?.cache?.size || 0;
+      const uptimeSeconds = client.uptime ? Math.floor(client.uptime / 1000) : 0;
 
       let treasuryPoolNc = 0;
       let treasuryPoolNsf = 0;
-      let treasuryQueryOk = false;
       try {
         const treasury = await ServerTreasury.findOne({
           order: [["updatedAt", "DESC"]],
@@ -286,12 +280,7 @@ function register(router, client) {
         if (!treasuryPoolNsf) {
           treasuryPoolNsf = Number((await UserSurvival.sum("starFragments")) || 0);
         }
-        treasuryQueryOk = true;
       } catch (_) {}
-      if (!treasuryQueryOk) {
-        treasuryPoolNc = 500000;
-        treasuryPoolNsf = 25000;
-      }
 
       const sysMetrics = getSystemMetrics();
       const pluginStats = scanPluginDirectory();
@@ -335,20 +324,21 @@ function register(router, client) {
       res.json({
         success: true,
         data: {
-          dbLatencyMs: 24,
-          registeredUsers: 1420,
-          activeGuilds: 18,
-          uptimeSeconds: 3600,
-          treasuryPoolNc: 500000,
-          treasuryPoolNsf: 25000,
-          activeSurvivalPlayers: 48,
+          dataAvailable: false,
+          dbLatencyMs: null,
+          registeredUsers: null,
+          activeGuilds: null,
+          uptimeSeconds: null,
+          treasuryPoolNc: null,
+          treasuryPoolNsf: null,
+          activeSurvivalPlayers: null,
         },
       });
     }
   });
 
   // --- 5. Realtime Feed ---
-  router.get("/realtime/feed", async (req, res) => {
+  router.get("/realtime/feed", requireApiLogin, async (req, res) => {
     try {
       const UserProfile = require("../../../src/models/UserProfile");
       const UserSurvival = require("../../../src/models/UserSurvival");
@@ -463,44 +453,6 @@ function register(router, client) {
         badge: "ONLINE",
       });
 
-      if (!feedItems.some((f) => f.type === "economy")) {
-        feedItems.push({
-          type: "economy",
-          title: "Transaksi Bursa NC Pasar Pratama",
-          desc: "Pembelian 250 lembar saham NAUR selesai dieksekusi di Pasar Modal Kota Pratama.",
-          time: "8 menit lalu",
-          badge: "+4,280 NC",
-        });
-      }
-      if (!feedItems.some((f) => f.type === "leveling")) {
-        feedItems.push({
-          type: "leveling",
-          title: "Pencapaian Baru Survivor!",
-          desc: "Pemain berhasil menembus Level 42 dan membuka lisensi ekspedisi Khul'Khas.",
-          time: "2 menit lalu",
-          badge: "+850 XP",
-        });
-      }
-      if (!feedItems.some((f) => f.type === "mod")) {
-        feedItems.push({
-          type: "mod",
-          title: "Tribunal AI Safety Shield",
-          desc: "Pemeriksaan pesan otomatis oleh Groq LLaMA 3.3 membersihkan antrean laporan chat.",
-          time: "18 menit lalu",
-          badge: "SECURE",
-        });
-      }
-
-      if (feedItems.length === 0) {
-        feedItems.push({
-          type: "system",
-          title: "Sistem Ekosistem Siap",
-          desc: "Bot dan seluruh pilar terhubung ke Supabase PostgreSQL.",
-          time: "Baru saja",
-          badge: "READY",
-        });
-      }
-
       res.json({ success: true, data: feedItems });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message, data: [] });
@@ -508,7 +460,7 @@ function register(router, client) {
   });
 
   // --- 6. Automations Status & Pipeline Metrics ---
-  router.get("/automations/status", async (req, res) => {
+  router.get("/automations/status", requireApiLogin, async (req, res) => {
     try {
       const cacheManager = require("../../../src/managers/cacheManager");
       const trafficMonitor = require("../../../src/managers/trafficMonitor");
@@ -856,7 +808,7 @@ function register(router, client) {
   });
 
   // --- 9. Live Stats Endpoint (3000ms TTL Snapshot) ---
-  router.get("/stats/live", async (req, res) => {
+  router.get("/stats/live", requireApiLogin, async (req, res) => {
     try {
       if (
         cachedStatsLiveSnapshot &&
@@ -870,32 +822,24 @@ function register(router, client) {
       const ServerTreasury = require("../../../src/models/ServerTreasury");
 
       let totalUsers = client.users?.cache?.size || 0;
-      let userQuerySuccess = false;
       if (!totalUsers) {
         try {
           totalUsers = await UserProfile.count();
-          userQuerySuccess = true;
         } catch (_) {}
       }
-      if (!totalUsers && !userQuerySuccess) totalUsers = 1420;
 
       const totalGuilds = client.guilds?.cache?.size || 0;
       let activeSurvivalPlayers = 0;
-      let survivalQuerySuccess = false;
       try {
         activeSurvivalPlayers = await UserSurvival.count();
-        survivalQuerySuccess = true;
       } catch (_) {}
-      if (!activeSurvivalPlayers && !survivalQuerySuccess) activeSurvivalPlayers = 48;
 
       let activeVoiceSessions = 0;
       if (client.poru?.players) {
         activeVoiceSessions = client.poru.players.size;
       }
 
-      const uptimeSec = client.uptime
-        ? Math.floor(client.uptime / 1000)
-        : 3600;
+      const uptimeSec = client.uptime ? Math.floor(client.uptime / 1000) : 0;
       const hours = Math.floor(uptimeSec / 3600);
       const mins = Math.floor((uptimeSec % 3600) / 60);
 
@@ -904,7 +848,6 @@ function register(router, client) {
 
       let treasuryNc = 0;
       let treasuryNsf = 0;
-      let treasuryQuerySuccess = false;
       try {
         const tr = await ServerTreasury.findOne({
           order: [["updatedAt", "DESC"]],
@@ -919,17 +862,12 @@ function register(router, client) {
         if (!treasuryNsf) {
           treasuryNsf = Number((await UserSurvival.sum("starFragments")) || 0);
         }
-        treasuryQuerySuccess = true;
       } catch (_) {}
-      if (!treasuryQuerySuccess) {
-        treasuryNc = 8520000;
-        treasuryNsf = 485000;
-      }
 
       const ping =
         client.ws?.ping !== undefined && client.ws.ping >= 0
           ? client.ws.ping
-          : 28;
+          : null;
 
       const statsPayload = {
         success: true,
@@ -959,46 +897,20 @@ function register(router, client) {
   });
 
   // --- 10. Status History ---
-  router.get("/status/history", async (req, res) => {
+  router.get("/status/history", requireApiLogin, async (req, res) => {
     try {
       const services = ["bot", "database", "mongodb", "redis", "lavalink", "ai"];
       const historyMap = {};
 
-      services.forEach((svcId) => {
-        const ticks = [];
-        for (let i = 0; i < 90; i++) {
-          ticks.push("operational");
-        }
-        if (svcId === "lavalink") {
-          ticks[70] = "offline";
-          ticks[71] = "offline";
-          ticks[72] = "degraded";
-        }
-        if (svcId === "ai") {
-          ticks[40] = "degraded";
-        }
-        historyMap[svcId] = ticks;
-      });
-      historyMap.postgres = historyMap.database;
-
-      const incidents = [
-        {
-          id: "inc_01",
-          service: "Lavalink v4 Cluster",
-          timestamp: Date.now() - 8 * 3600000,
-          title: "Lavalink Node-2 Timeout & Failover",
-          description:
-            "Node-2 mengalami latensi tinggi di atas 800ms. Poru cluster manager otomatis merutekan koneksi ke Node SG. Semua sesi audio pulih tanpa interupsi.",
-          status: "resolved",
-          durationMinutes: 12,
-        },
-      ];
+      services.forEach((svcId) => { historyMap[svcId] = []; });
+      historyMap.postgres = [];
+      const incidents = [];
 
       res.json({
         success: true,
         data: {
-          pointsCount: 90,
-          intervalMinutes: 5,
+          pointsCount: 0,
+          intervalMinutes: null,
           history: historyMap,
           incidents,
           timestamp: Date.now(),
@@ -1010,7 +922,7 @@ function register(router, client) {
   });
 
   // --- 11. Metrics Subsystems ---
-  router.get("/metrics/cache", (req, res) => {
+  router.get("/metrics/cache", requireOwner, (req, res) => {
     try {
       const cacheManager = require("../../../src/managers/cacheManager");
       res.json({ success: true, cache: cacheManager.getFlushMetrics() });
@@ -1019,7 +931,7 @@ function register(router, client) {
     }
   });
 
-  router.get("/metrics/traffic", (req, res) => {
+  router.get("/metrics/traffic", requireOwner, (req, res) => {
     try {
       const trafficMonitor = require("../../../src/managers/trafficMonitor");
       res.json({ success: true, traffic: trafficMonitor.getSummary() });
@@ -1028,7 +940,7 @@ function register(router, client) {
     }
   });
 
-  router.get("/metrics/locks", (req, res) => {
+  router.get("/metrics/locks", requireOwner, (req, res) => {
     try {
       const redisLockHelper = require("../../../src/utils/redisLockHelper");
       res.json({ success: true, locks: redisLockHelper.getLockStats() });
@@ -1037,7 +949,7 @@ function register(router, client) {
     }
   });
 
-  router.get("/metrics/growth", async (req, res) => {
+  router.get("/metrics/growth", requireOwner, async (req, res) => {
     try {
       const UserProfile = require("../../../src/models/UserProfile");
       const GuildSettings = require("../../../src/models/GuildSettings");
@@ -1071,7 +983,7 @@ function register(router, client) {
   });
 
   // --- 13. Live Server Radar & Activity Matrix ---
-  router.get("/radar", async (req, res) => {
+  router.get("/radar", requireApiLogin, async (req, res) => {
     try {
       const worldBossEngine = require("../../../src/survival/engines/worldBossEngine");
       const astralService = require("../../../src/services/astralService");

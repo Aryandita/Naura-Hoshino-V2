@@ -1,6 +1,6 @@
 # Dashboard Audit Report - Naura Hoshino V2
 **Generated:** 2026-10-23  
-**Version:** 2.4.0  
+**Version:** 2.5.0  
 **Auditor:** AI Assistant
 
 ---
@@ -78,7 +78,7 @@
 
 ## 1.2 Database Integration Audit
 
-### Migrasi (46 migrasi di `dbMigrator.js`)
+### Migrasi (50 migrasi di `dbMigrator.js`)
 - **v1-v10:** Indeks & kolom dasar (mannersPoint, dailyNotify, economy_deposit, dll)
 - **v11-v20:** Reputation, language, aiPersona, activeBanners, role_leases, giveaway, clan
 - **v21-v30:** Duel records, notification_prefs, pet upgrade, world_boss, clan_territory, user_cards, card_decks, minecraft_links, prediction_markets

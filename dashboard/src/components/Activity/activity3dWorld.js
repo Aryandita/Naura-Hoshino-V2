@@ -5,8 +5,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
  * Activity3DWorld - Authentic 3D Multi-Player Open World Hub for Naura Wilds (Discord Activity)
  * 
  * Fitur Utama:
- * 1. Open World Hub Desa Sukamaju: Satu peta kontinu tanpa portal terpisah:
- *    - Balai Desa (Pusat): Paviliun kayu, Pak Kades Tirto, Monumen Bintang Sukamaju.
+ * 1. Open World Hub Desa Adisha: Satu peta kontinu tanpa portal terpisah:
+ *    - Balai Desa (Pusat): Paviliun kayu, Pak Kades Tirto, Monumen Bintang Adisha.
  *    - Bengkel Tempa (Barat): Tungku batu menyala, paron besi, Pandai Besi Bagas.
  *    - Hutan Pinus (Barat Laut): Rimbun pohon pinus, log kayu, node gathering Tebang Kayu.
  *    - Bukit Tambang (Timur Laut): Tebing andesit, kristal mineral, node gathering Tambang Batu/Bijih.
@@ -38,7 +38,7 @@ export class Activity3DWorld {
     }
 
     this.options = {
-      user: options.user || { id: 'guest_' + Math.random().toString(36).slice(2, 7), username: 'Petualang Sukamaju', level: 1 },
+      user: options.user || { id: 'guest_' + Math.random().toString(36).slice(2, 7), username: 'Petualang Adisha', level: 1 },
       socket: options.socket || null,
       channelId: options.channelId || 'global_sanctuary',
       modelPath: options.modelPath || '/models/naura%20NEW.glb',
@@ -75,7 +75,7 @@ export class Activity3DWorld {
       {
         id: 'kades_tirto',
         name: 'Pak Kades Tirto',
-        title: 'Kepala Desa Sukamaju',
+        title: 'Kepala Desa Adisha',
         type: 'NPC',
         icon: '💬',
         actionLabel: 'Bicara dengan Pak Kades',
@@ -94,7 +94,7 @@ export class Activity3DWorld {
       },
       {
         id: 'pine_tree',
-        name: 'Pohon Pinus Sukamaju',
+        name: 'Pohon Pinus Adisha',
         title: 'Sumber Kayu Pinus & Serat',
         type: 'GATHER_CHOP',
         icon: '🪓',
@@ -130,7 +130,7 @@ export class Activity3DWorld {
     this.lastNetworkBroadcast = 0;
 
     this.initScene();
-    this.buildDesaSukamaju();
+    this.buildDesaAdisha();
     this.createLocalPlayerAvatar();
     this.setupDesktopControls();
     this.setupMobileControls();
@@ -143,7 +143,7 @@ export class Activity3DWorld {
     const height = this.container.clientHeight || 520;
 
     this.scene = new THREE.Scene();
-    // Warna langit Desa Sukamaju (siang tropis sejuk & cerah)
+    // Warna langit Desa Adisha (siang tropis sejuk & cerah)
     this.scene.background = new THREE.Color(0x8ecae6);
     this.scene.fog = new THREE.FogExp2(0x8ecae6, 0.016);
 
@@ -203,10 +203,10 @@ export class Activity3DWorld {
   }
 
   /**
-   * Membangun lanskap utuh Desa Sukamaju:
+   * Membangun lanskap utuh Desa Adisha:
    * Alun-alun balai desa, paviliun kades, bengkel pandai besi, hutan pinus, tebing tambang, kolam ikan.
    */
-  buildDesaSukamaju() {
+  buildDesaAdisha() {
     this.worldGroup = new THREE.Group();
 
     // 1. Tanah Utama / Padang Rumput Desa (radius ~32m)
@@ -275,7 +275,7 @@ export class Activity3DWorld {
     pondPath.position.set(6.5, 0.025, 7.5);
     this.worldGroup.add(pondPath);
 
-    // 3. Monumen Bintang Sukamaju (Pusat Alun-alun)
+    // 3. Monumen Bintang Adisha (Pusat Alun-alun)
     const monumentBaseGeo = new THREE.CylinderGeometry(1.6, 2.0, 0.6, 8);
     const monumentBaseMat = new THREE.MeshStandardMaterial({ color: 0x3f3f46, roughness: 0.6 });
     const monumentBase = new THREE.Mesh(monumentBaseGeo, monumentBaseMat);
@@ -299,7 +299,7 @@ export class Activity3DWorld {
     this.centralCrystal.castShadow = true;
     this.worldGroup.add(this.centralCrystal);
 
-    // 4. Balai Desa Sukamaju & NPC Pak Kades Tirto
+    // 4. Balai Desa Adisha & NPC Pak Kades Tirto
     this.buildBalaiDesa();
 
     // 5. Bengkel Tempa Pandai Besi & NPC Bagas
@@ -1147,7 +1147,7 @@ export class Activity3DWorld {
   triggerContextInteraction() {
     if (!this.activePoi) {
       this.playGatherAnimation('cheers');
-      this.spawnFloatingRpgText('✨ Desa Sukamaju Damai', '#f472b6');
+      this.spawnFloatingRpgText('✨ Desa Adisha Damai', '#f472b6');
       return;
     }
 

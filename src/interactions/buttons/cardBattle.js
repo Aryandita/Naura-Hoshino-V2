@@ -13,7 +13,7 @@ const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const UserCardDeck = require("../../models/UserCardDeck");
 const currency = require("../../survival/engines/currency");
 const ui = require("../../config/ui");
-const { drawCardBattleArena } = require("../../canvas/cardBattleCanvas");
+const canvasWorkerPool = require("../../canvas/canvasWorkerPool");
 
 module.exports = [
   {
@@ -267,7 +267,7 @@ module.exports = [
           );
         }
 
-        const endBuffer = await drawCardBattleArena({
+        const endBuffer = await canvasWorkerPool.runTask("renderCardBattle", {
           p1: session.p1Card,
           p2: session.p2Card,
           p1User: session.p1User,
@@ -362,7 +362,7 @@ module.exports = [
 
         if (aiStateResult.isFinished || session.p1Card.currentHp <= 0) {
           await redisManager.del(`card:battle:${sessionId}`);
-          const endBuffer = await drawCardBattleArena({
+          const endBuffer = await canvasWorkerPool.runTask("renderCardBattle", {
             p1: session.p1Card,
             p2: session.p2Card,
             p1User: session.p1User,
@@ -400,7 +400,7 @@ module.exports = [
         600,
       );
 
-      const arenaBuffer = await drawCardBattleArena({
+      const arenaBuffer = await canvasWorkerPool.runTask("renderCardBattle", {
         p1: session.p1Card,
         p2: session.p2Card,
         p1User: session.p1User,

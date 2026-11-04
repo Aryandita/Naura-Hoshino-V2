@@ -9,6 +9,20 @@
 
 const express = require("express");
 const { logger } = require("../../src/managers/logger");
+const RateLimiter = require("../../src/utils/rateLimiter");
+
+async function aiRateLimit(req, res, next) {
+  const identifier = req.user?.id || req.ip || "anon_ai";
+  const result = await RateLimiter.consume(identifier, "ai_companion_api", 20, 60);
+  if (result.limited) {
+    return res.status(429).json({
+      success: false,
+      error: `Terlalu banyak permintaan AI. Silakan coba lagi dalam ${result.retryAfter} detik.`,
+      retryAfter: result.retryAfter,
+    });
+  }
+  next();
+}
 
 let aiEnsembleRouter = null;
 try {
@@ -59,7 +73,7 @@ module.exports = () => {
   // ------------------------------------------------------------------
   // 1. Endpoint Percakapan AI Companion
   // ------------------------------------------------------------------
-  router.post("/companion/chat", async (req, res) => {
+  router.post("/companion/chat", aiRateLimit, async (req, res) => {
     const { message, history = [], persona = "cheerful" } = req.body;
     if (!message || typeof message !== "string") {
       return res.status(400).json({ success: false, error: "Pesan wajib diisi." });
@@ -144,7 +158,7 @@ module.exports = () => {
   // ------------------------------------------------------------------
   // 2. Endpoint Fish Audio Text-to-Speech (TTS) Streaming
   // ------------------------------------------------------------------
-  router.post("/companion/tts", async (req, res) => {
+  router.post("/companion/tts", aiRateLimit, async (req, res) => {
     const { text, voiceId } = req.body;
     if (!text || typeof text !== "string") {
       return res.status(400).json({ success: false, error: "Teks untuk sintesis audio wajib diisi." });

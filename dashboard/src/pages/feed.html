@@ -262,8 +262,8 @@
             <button class="btn btn-ghost btn-sm" id="btnToggleStream">
               <i class="fa-solid fa-pause" id="streamIcon"></i> <span id="streamLbl">Jeda Stream</span>
             </button>
-            <button class="btn btn-secondary btn-sm" id="btnSimulateEvent">
-              <i class="fa-solid fa-plus"></i> Buat Event Baru
+             <button class="btn btn-secondary btn-sm" id="btnSimulateEvent">
+               <i class="fa-solid fa-rotate"></i> Muat Ulang Feed
             </button>
           </div>
         </header>
@@ -290,7 +290,7 @@
               <button class="filter-pill" data-filter="mod"><i class="fa-solid fa-shield-halved"></i> Moderasi & Tiket</button>
             </div>
             <div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono);">
-              EVENT TERLOG: <b style="color:var(--accent-cyan);" id="eventCountBadge">6</b>
+               EVENT TERLOG: <b style="color:var(--accent-cyan);" id="eventCountBadge">0</b>
             </div>
           </div>
 
@@ -370,18 +370,18 @@
         const div = document.createElement('div');
         div.className = 'feed-item';
         div.setAttribute('data-cat', cfg.cat);
-        div.innerHTML = `
+         div.innerHTML = `
           <div class="feed-icon" style="background:${cfg.color}20;color:${cfg.color};border:1px solid ${cfg.color}40;">
             <i class="fa-solid ${cfg.icon}"></i>
           </div>
           <div class="feed-details">
             <div class="feed-title">
-              <span>${ev.title || 'Aktivitas Ekosistem'}</span>
-              <span class="badge" style="background:${cfg.color}20;color:${cfg.color};font-size:10px;">${ev.badge || cfg.badge}</span>
+               <span>${window.escapeHtml(ev.title || 'Aktivitas Ekosistem')}</span>
+               <span class="badge" style="background:${cfg.color}20;color:${cfg.color};font-size:10px;">${window.escapeHtml(ev.badge || cfg.badge)}</span>
             </div>
-            <div class="feed-desc">${ev.desc || ''}</div>
-          </div>
-          <div class="feed-time">${ev.time || 'Baru saja'}</div>
+             <div class="feed-desc">${window.escapeHtml(ev.desc || '')}</div>
+           </div>
+           <div class="feed-time">${window.escapeHtml(ev.time || 'Baru saja')}</div>
         `;
         const placeholder = document.getElementById('feedLoadingState');
         if (placeholder) placeholder.remove();
@@ -398,9 +398,9 @@
           const res = await fetch('/api/realtime/feed');
           if (!res.ok) return;
           const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            feedContainer.innerHTML = '';
-            json.data.forEach(item => {
+           if (json.success && Array.isArray(json.data)) {
+             feedContainer.innerHTML = '';
+             json.data.forEach(item => {
               const cfg = typeConfig[item.type] || typeConfig.default;
               const div = document.createElement('div');
               div.className = 'feed-item';
@@ -411,18 +411,24 @@
                 </div>
                 <div class="feed-details">
                   <div class="feed-title">
-                    <span>${item.title}</span>
-                    <span class="badge" style="background:${cfg.color}20;color:${cfg.color};font-size:10px;">${item.badge || cfg.badge}</span>
+                     <span>${window.escapeHtml(item.title || 'Aktivitas Ekosistem')}</span>
+                     <span class="badge" style="background:${cfg.color}20;color:${cfg.color};font-size:10px;">${window.escapeHtml(item.badge || cfg.badge)}</span>
                   </div>
-                  <div class="feed-desc">${item.desc}</div>
+                   <div class="feed-desc">${window.escapeHtml(item.desc || '')}</div>
                 </div>
-                <div class="feed-time">${item.time || 'Baru saja'}</div>
+                 <div class="feed-time">${window.escapeHtml(item.time || 'Baru saja')}</div>
               `;
               feedContainer.appendChild(div);
             });
-            eventCountBadge.textContent = feedContainer.children.length;
-          }
-        } catch (_) {}
+             eventCountBadge.textContent = feedContainer.children.length;
+             if (feedContainer.children.length === 0) {
+               feedContainer.innerHTML = '<div class="naura-state"><div class="naura-state__title">Belum ada aktivitas</div><p class="naura-state__body">Aktivitas nyata akan muncul setelah server mencatat event baru.</p></div>';
+             }
+           }
+         } catch (_) {
+           feedContainer.innerHTML = '<div class="naura-state naura-state--error"><div class="naura-state__title">Feed tidak tersedia</div><p class="naura-state__body">Koneksi ke aliran aktivitas gagal. Muat ulang untuk mencoba lagi.</p></div>';
+           eventCountBadge.textContent = '0';
+         }
       }
       loadRealFeed();
 

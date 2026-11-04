@@ -1,11 +1,11 @@
 /* ==========================================================================
  * AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  * Generated from: src/config/tokens/designTokens.js
- * Timestamp: 2026-10-23T04:48:17.578Z
+ * Timestamp: 2026-11-04T19:54:39.132Z
  * ========================================================================== */
 
 :root {
-  /* ── Brand Tokens ── */
+  /* -- Brand Tokens -- */
   --naura-primary: #ffc0cb;
   --naura-primary-rgb: 255, 192, 203;
   --naura-primary-int: 16761035;
@@ -22,7 +22,7 @@
   --text-light-rgb: 240, 240, 240;
   --text-light-int: 15790320;
 
-  /* ── Survival/Wilds Tokens ── */
+  /* -- Survival/Wilds Tokens -- */
   --wilds-emerald: #86efac;
   --wilds-emerald-rgb: 134, 239, 172;
   --wilds-moss: #34d399;
@@ -36,7 +36,7 @@
   --wilds-danger: #f87171;
   --wilds-danger-rgb: 248, 113, 113;
 
-  /* ── Rarity Tokens ── */
+  /* -- Rarity Tokens -- */
   --rarity-common: #9ca3af;
   --rarity-common-rgb: 156, 163, 175;
   --rarity-common-emoji: "⚪";
@@ -62,7 +62,7 @@
   --rarity-mythic-emoji: "🔴";
   --rarity-mythic-tier: 6;
 
-  /* ── Status Tokens ── */
+  /* -- Status Tokens -- */
   --status-online: #22c55e;
   --status-online-rgb: 34, 197, 94;
   --status-online-badge: "🟢 AKTIF";
@@ -79,7 +79,7 @@
   --status-info-rgb: 56, 189, 248;
   --status-info-badge: "⚡ SINKRON";
 
-  /* ── System Tokens ── */
+  /* -- System Tokens -- */
   --system-economy: #ffd700;
   --system-economy-rgb: 255, 215, 0;
   --system-music: #8a2be2;
@@ -91,7 +91,7 @@
   --system-hub: #7b68ee;
   --system-hub-rgb: 123, 104, 238;
 
-  /* ── Semantic Tokens ── */
+  /* -- Semantic Tokens -- */
   --semantic-success: #00ff00;
   --semantic-success-rgb: 0, 255, 0;
   --semantic-error: #ff0000;
@@ -128,7 +128,114 @@
   --premium-accent-rgb: 253, 230, 138;
   --premium-glow: rgba(255,215,0,0.3);
 
-  /* ── UI Chrome Tokens ── */
+  /* -- 3-Pillar Shared Primitives -- */
+  --canvas-void: #060810;
+  --canvas-void-rgb: 6, 8, 16;
+  --canvas-dark: #0b0c10;
+  --canvas-dark-rgb: 11, 12, 16;
+  --surface-shell: #12151f;
+  --surface-shell-rgb: 18, 21, 31;
+  --surface-elevated-card: #171b26;
+  --surface-elevated-card-rgb: 23, 27, 38;
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-telemetry: 'JetBrains Mono', monospace;
+  --ease-spring-snappy: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring-tactile: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-duration: 320ms;
+  --card-tilt-max: 3.5deg;
+
+  /* -- Pillar 1: THEME_NAURA (Senja Ruang Ekskul) -- */
+  --pillar-naura-primary: #ffc0cb;
+  --pillar-naura-primary-rgb: 255, 192, 203;
+  --pillar-naura-primary-int: 16761035;
+  --pillar-naura-chrome: #f472b6;
+  --pillar-naura-chrome-rgb: 244, 114, 182;
+  --pillar-naura-chrome-int: 16020150;
+  --pillar-naura-soft: #ff9ebb;
+  --pillar-naura-soft-rgb: 255, 158, 187;
+  --pillar-naura-soft-int: 16752315;
+  --pillar-naura-accent: #00ffff;
+  --pillar-naura-accent-rgb: 0, 255, 255;
+  --pillar-naura-accent-int: 65535;
+  --pillar-naura-canvas: #060810;
+  --pillar-naura-canvas-rgb: 6, 8, 16;
+  --pillar-naura-canvas-int: 395280;
+  --pillar-naura-surface: #12151f;
+  --pillar-naura-surface-rgb: 18, 21, 31;
+  --pillar-naura-surface-int: 1185055;
+  --pillar-naura-elevated: #171b26;
+  --pillar-naura-elevated-rgb: 23, 27, 38;
+  --pillar-naura-elevated-int: 1514278;
+  --pillar-naura-discord: #ffc0cb;
+  --pillar-naura-discord-int: 16761035;
+
+  /* -- Pillar 2: THEME_SURVIVAL (Jurnal Ekspedisi Dunia Adisha) -- */
+  --pillar-survival-primary: #86efac;
+  --pillar-survival-primary-rgb: 134, 239, 172;
+  --pillar-survival-primary-int: 8843180;
+  --pillar-survival-vitals: #34d399;
+  --pillar-survival-vitals-rgb: 52, 211, 153;
+  --pillar-survival-vitals-int: 3462041;
+  --pillar-survival-amber: #fbbf24;
+  --pillar-survival-amber-rgb: 251, 191, 36;
+  --pillar-survival-amber-int: 16498468;
+  --pillar-survival-bark: #92400e;
+  --pillar-survival-bark-rgb: 146, 64, 14;
+  --pillar-survival-bark-int: 9584654;
+  --pillar-survival-river: #7dd3fc;
+  --pillar-survival-river-rgb: 125, 211, 252;
+  --pillar-survival-river-int: 8246268;
+  --pillar-survival-canvas: #061209;
+  --pillar-survival-canvas-rgb: 6, 18, 9;
+  --pillar-survival-canvas-int: 397833;
+  --pillar-survival-surface: #0b1c11;
+  --pillar-survival-surface-rgb: 11, 28, 17;
+  --pillar-survival-surface-int: 728081;
+  --pillar-survival-elevated: #122a1a;
+  --pillar-survival-elevated-rgb: 18, 42, 26;
+  --pillar-survival-elevated-int: 1190426;
+  --pillar-survival-discord: #86efac;
+  --pillar-survival-discord-int: 8843180;
+
+  /* -- Pillar 3: THEME_DASHBOARD (Studio Kontrol OSIS) -- */
+  --pillar-dashboard-primary: #22d3ee;
+  --pillar-dashboard-primary-rgb: 34, 211, 238;
+  --pillar-dashboard-primary-int: 2282478;
+  --pillar-dashboard-hub: #7b68ee;
+  --pillar-dashboard-hub-rgb: 123, 104, 238;
+  --pillar-dashboard-hub-int: 8087790;
+  --pillar-dashboard-economy: #ffd700;
+  --pillar-dashboard-economy-rgb: 255, 215, 0;
+  --pillar-dashboard-economy-int: 16766720;
+  --pillar-dashboard-purple: #8a2be2;
+  --pillar-dashboard-purple-rgb: 138, 43, 226;
+  --pillar-dashboard-purple-int: 9055202;
+  --pillar-dashboard-canvas: #0b0c10;
+  --pillar-dashboard-canvas-rgb: 11, 12, 16;
+  --pillar-dashboard-canvas-int: 723984;
+  --pillar-dashboard-surface: #12151f;
+  --pillar-dashboard-surface-rgb: 18, 21, 31;
+  --pillar-dashboard-surface-int: 1185055;
+  --pillar-dashboard-elevated: #171b26;
+  --pillar-dashboard-elevated-rgb: 23, 27, 38;
+  --pillar-dashboard-elevated-int: 1514278;
+  --pillar-dashboard-discord: #22d3ee;
+  --pillar-dashboard-discord-int: 2282478;
+
+  /* -- Active Pillar Current Fallback (Default: Naura) -- */
+  --active-pillar: "naura";
+  --pillar-current-id: "naura";
+  --pillar-current-name: "Senja Ruang Ekskul";
+  --pillar-current-icon: "🌸";
+  --pillar-current-primary: var(--pillar-naura-primary, #ffc0cb);
+  --pillar-current-primary-rgb: 255, 192, 203;
+  --pillar-current-accent: var(--pillar-naura-accent, #00ffff);
+  --pillar-current-canvas: var(--pillar-naura-canvas, #060810);
+  --pillar-current-surface: var(--pillar-naura-surface, #12151f);
+  --pillar-current-elevated: var(--pillar-naura-elevated, #171b26);
+
+  /* -- UI Chrome Tokens -- */
   --ui-primary: var(--naura-secondary, #f472b6);
   --ui-primary-glow: rgba(244, 114, 182, 0.25);
   --ui-primary-hover: #f472b6;
@@ -138,12 +245,12 @@
   --accent-blue: #93c5fd;
   --accent-green: var(--wilds-emerald, #86efac);
 
-  /* ── Surface Tokens ── */
+  /* -- Surface Tokens -- */
   --surface-glass: rgba(255, 255, 255, 0.03);
   --surface-glass-hover: rgba(255, 255, 255, 0.05);
   --surface-elevated: rgba(0, 0, 0, 0.4);
 
-  /* ── Text Tokens ── */
+  /* -- Text Tokens -- */
   --ink: #ffffff;
   --body: #9ca3af;
   --body-strong: #d1d5db;
@@ -151,47 +258,47 @@
   --on-primary: #0b0c10;
   --on-dark: #ffffff;
 
-  /* ── Hairline & Border Tokens ── */
+  /* -- Hairline & Border Tokens -- */
   --hairline: rgba(255, 192, 203, 0.15);
   --hairline-strong: rgba(255, 192, 203, 0.3);
   --hairline-brand: rgba(244, 114, 182, 0.35);
 
-  /* ── Glass Specular & Focus ── */
+  /* -- Glass Specular & Focus -- */
   --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
   --glass-specular-strong: inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
   --glass-specular-primary: inset 0 1px 0 0 rgba(255, 192, 203, 0.25);
   --focus-ring: 0 0 0 2px #060810, 0 0 0 4px var(--ui-primary);
 
-  /* ── Breakpoints ── */
+  /* -- Breakpoints -- */
   --bp-mobile: 480px;
   --bp-tablet: 768px;
   --bp-desktop: 1024px;
   --bp-wide: 1280px;
 
-  /* ── Motion (Anti-Slop: spring physics) ── */
+  /* -- Motion (Anti-Slop: spring physics) -- */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-tactile: cubic-bezier(0.34, 1.56, 0.64, 1);
   --touch-target-min: 44px;
 
-  /* ── Fluid Typography ── */
+  /* -- Fluid Typography -- */
   --fs-display: clamp(2rem, 4vw + 0.5rem, 3.25rem);
   --fs-h1: clamp(1.625rem, 3vw + 0.25rem, 2.375rem);
   --fs-h2: clamp(1.25rem, 2vw + 0.2rem, 1.625rem);
   --fs-h3: clamp(1.05rem, 1.5vw + 0.15rem, 1.25rem);
   --fs-body: clamp(0.875rem, 0.2vw + 0.825rem, 0.965rem);
 
-  /* ── Density ── */
+  /* -- Density -- */
   --density: comfortable;
   --sp-card-padding: var(--sp-5, 20px);
   --sp-card-gap: var(--sp-3, 12px);
   --r-card-inner: var(--r-lg, 14px);
   --fs-stat-val: 28px;
 
-  /* ── Tabular Nums ── */
+  /* -- Tabular Nums -- */
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* ── Density Modes ── */
+/* -- Density Modes -- */
 [data-density="compact"] {
   --density: compact;
   --sp-card-padding: 12px;
@@ -212,4 +319,89 @@
   --sp-card-gap: 16px;
   --r-card-inner: 18px;
   --fs-stat-val: 34px;
+}
+
+/* ==========================================================================
+ * Scoped 3-Pillar Dataset Rules (Anti-Slop Theming Architecture)
+ * Memungkinkan re-theming instan per halaman atau per komponen.
+ * ========================================================================== */
+
+/* Pilar 1: THEME_NAURA (Senja Ruang Ekskul) */
+:root[data-pillar="naura"], [data-pillar="naura"],
+:root[data-pillar="theme_naura"], [data-pillar="theme_naura"],
+:root[data-pillar="ekskul"], [data-pillar="ekskul"] {
+  --active-pillar: "naura";
+  --pillar-current-id: "naura";
+  --pillar-current-name: "Senja Ruang Ekskul";
+  --pillar-current-icon: "🌸";
+  --pillar-current-primary: var(--pillar-naura-primary, #ffc0cb);
+  --pillar-current-primary-rgb: 255, 192, 203;
+  --pillar-current-accent: var(--pillar-naura-accent, #00ffff);
+  --pillar-current-canvas: var(--pillar-naura-canvas, #060810);
+  --pillar-current-surface: var(--pillar-naura-surface, #12151f);
+  --pillar-current-elevated: var(--pillar-naura-elevated, #171b26);
+  --ui-primary: var(--pillar-naura-chrome, #f472b6);
+  --ui-primary-glow: rgba(244, 114, 182, 0.25);
+  --ui-primary-hover: #f472b6;
+  --bg-deep: var(--pillar-naura-canvas, #060810);
+  --bg-layer: var(--pillar-naura-surface, #12151f);
+  --bg-layer-elevated: var(--pillar-naura-elevated, #171b26);
+  --hairline: rgba(255, 192, 203, 0.15);
+  --hairline-strong: rgba(255, 192, 203, 0.3);
+  --hairline-brand: rgba(244, 114, 182, 0.35);
+  --focus-ring: 0 0 0 2px #060810, 0 0 0 4px var(--ui-primary);
+}
+
+/* Pilar 2: THEME_SURVIVAL (Jurnal Ekspedisi Dunia Adisha) */
+:root[data-pillar="survival"], [data-pillar="survival"],
+:root[data-pillar="theme_survival"], [data-pillar="theme_survival"],
+:root[data-pillar="adisha"], [data-pillar="adisha"],
+:root[data-pillar="wilds"], [data-pillar="wilds"] {
+  --active-pillar: "survival";
+  --pillar-current-id: "survival";
+  --pillar-current-name: "Jurnal Ekspedisi Dunia Adisha";
+  --pillar-current-icon: "🏕️";
+  --pillar-current-primary: var(--pillar-survival-primary, #86efac);
+  --pillar-current-primary-rgb: 134, 239, 172;
+  --pillar-current-accent: var(--pillar-survival-vitals, #34d399);
+  --pillar-current-canvas: var(--pillar-survival-canvas, #061209);
+  --pillar-current-surface: var(--pillar-survival-surface, #0b1c11);
+  --pillar-current-elevated: var(--pillar-survival-elevated, #122a1a);
+  --ui-primary: var(--pillar-survival-primary, #86efac);
+  --ui-primary-glow: rgba(134, 239, 172, 0.28);
+  --ui-primary-hover: #34d399;
+  --bg-deep: var(--pillar-survival-canvas, #061209);
+  --bg-layer: var(--pillar-survival-surface, #0b1c11);
+  --bg-layer-elevated: var(--pillar-survival-elevated, #122a1a);
+  --hairline: rgba(134, 239, 172, 0.18);
+  --hairline-strong: rgba(134, 239, 172, 0.35);
+  --hairline-brand: rgba(52, 211, 153, 0.35);
+  --focus-ring: 0 0 0 2px #061209, 0 0 0 4px var(--ui-primary);
+}
+
+/* Pilar 3: THEME_DASHBOARD (Studio Kontrol OSIS) */
+:root[data-pillar="dashboard"], [data-pillar="dashboard"],
+:root[data-pillar="theme_dashboard"], [data-pillar="theme_dashboard"],
+:root[data-pillar="kontrol"], [data-pillar="kontrol"],
+:root[data-pillar="osis"], [data-pillar="osis"] {
+  --active-pillar: "dashboard";
+  --pillar-current-id: "dashboard";
+  --pillar-current-name: "Studio Kontrol OSIS";
+  --pillar-current-icon: "🎛️";
+  --pillar-current-primary: var(--pillar-dashboard-primary, #22d3ee);
+  --pillar-current-primary-rgb: 34, 211, 238;
+  --pillar-current-accent: var(--pillar-dashboard-hub, #7b68ee);
+  --pillar-current-canvas: var(--pillar-dashboard-canvas, #0b0c10);
+  --pillar-current-surface: var(--pillar-dashboard-surface, #12151f);
+  --pillar-current-elevated: var(--pillar-dashboard-elevated, #171b26);
+  --ui-primary: var(--pillar-dashboard-primary, #22d3ee);
+  --ui-primary-glow: rgba(34, 211, 238, 0.25);
+  --ui-primary-hover: #06b6d4;
+  --bg-deep: var(--pillar-dashboard-canvas, #0b0c10);
+  --bg-layer: var(--pillar-dashboard-surface, #12151f);
+  --bg-layer-elevated: var(--pillar-dashboard-elevated, #171b26);
+  --hairline: rgba(34, 211, 238, 0.18);
+  --hairline-strong: rgba(34, 211, 238, 0.35);
+  --hairline-brand: rgba(34, 211, 238, 0.35);
+  --focus-ring: 0 0 0 2px #0b0c10, 0 0 0 4px var(--ui-primary);
 }

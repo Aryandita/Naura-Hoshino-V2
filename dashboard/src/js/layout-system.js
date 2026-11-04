@@ -114,31 +114,32 @@ class LayoutSystem {
   setupMobileNav() {
     // Create mobile bottom navigation if not exists
     if (!document.querySelector('.mobile-nav')) {
+      const activePillar = document.documentElement.getAttribute('data-pillar') || 'kontrol';
       const nav = document.createElement('nav');
       nav.className = 'mobile-nav';
       nav.setAttribute('aria-label', 'Mobile Navigation');
       nav.innerHTML = `
         <div class="mobile-nav-inner">
-          <a href="/" class="mobile-nav-item" data-group="dashboard">
+          <button type="button" class="mobile-nav-item ${activePillar === 'kontrol' ? 'active' : ''}" data-pillar="kontrol" data-primary-route="/">
             <span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span>
-            <span class="mn-label">Dashboard</span>
-          </a>
-          <a href="/world" class="mobile-nav-item" data-group="map">
+            <span class="mn-label">Kontrol</span>
+          </button>
+          <button type="button" class="mobile-nav-item ${activePillar === 'adisha' ? 'active' : ''}" data-pillar="adisha" data-primary-route="/world">
             <span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span>
-            <span class="mn-label">Map</span>
+            <span class="mn-label">Adisha</span>
+          </button>
+          <button type="button" class="mobile-nav-item ${activePillar === 'ekskul' ? 'active' : ''}" data-pillar="ekskul" data-primary-route="/profile">
+            <span class="mn-icon"><i class="fa-solid fa-id-card"></i></span>
+            <span class="mn-label">Ekskul</span>
+          </button>
+          <a href="/music" class="mobile-nav-item" data-pillar="kontrol">
+            <span class="mn-icon"><i class="fa-solid fa-music"></i></span>
+            <span class="mn-label">Musik</span>
           </a>
-          <a href="/automations" class="mobile-nav-item" data-group="config">
-            <span class="mn-icon"><i class="fa-solid fa-sliders"></i></span>
-            <span class="mn-label">Config</span>
-          </a>
-          <a href="/music" class="mobile-nav-item" data-group="system">
-            <span class="mn-icon"><i class="fa-solid fa-microchip"></i></span>
-            <span class="mn-label">System</span>
-          </a>
-          <a href="/settings" class="mobile-nav-item" data-group="settings">
-            <span class="mn-icon"><i class="fa-solid fa-gears"></i></span>
-            <span class="mn-label">Settings</span>
-          </a>
+          <button type="button" class="mobile-nav-item" id="btnMobileSidebar">
+            <span class="mn-icon"><i class="fa-solid fa-bars"></i></span>
+            <span class="mn-label">Menu</span>
+          </button>
         </div>
       `;
       document.body.appendChild(nav);

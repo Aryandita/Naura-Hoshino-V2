@@ -12,9 +12,9 @@
     <script type="importmap">
       {
         "imports": {
-          "three": "/node_modules/three/build/three.module.js",
-          "three/addons/": "/node_modules/three/examples/jsm/",
-          "@pixiv/three-vrm": "/node_modules/@pixiv/three-vrm/lib/three-vrm.module.js"
+          "three": "/vendor/three/build/three.module.js",
+          "three/addons/": "/vendor/three/examples/jsm/",
+          "@pixiv/three-vrm": "/vendor/three-vrm/lib/three-vrm.module.js"
         }
       }
     </script>
@@ -569,7 +569,7 @@
           <div class="sidebar-user" onclick="window.location.href='/profile'">
             <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" id="sidebarUserAvatar" />
             <div class="sidebar-user-info">
-              <div class="sidebar-user-name" id="sidebarUserName">Petualang Sukamaju</div>
+              <div class="sidebar-user-name" id="sidebarUserName">Petualang Adisha</div>
               <div class="sidebar-user-role" id="sidebarUserRole">Survivor Lv. 1</div>
             </div>
           </div>
@@ -582,7 +582,7 @@
             <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
             <div>
               <div class="page-title">Naura Wilds 3D · Activity Hub</div>
-              <div class="breadcrumb"><span>Discord Activity</span><span class="breadcrumb-sep">/</span><span>Desa Sukamaju 3D Open World</span></div>
+              <div class="breadcrumb"><span>Discord Activity</span><span class="breadcrumb-sep">/</span><span>Desa Adisha 3D Open World</span></div>
             </div>
           </div>
           <div class="header-right">
@@ -602,7 +602,7 @@
                 <img src="/assets/images/naura_hoshino_mascot.jpg" alt="Naura Mascot" class="mascot-avatar-img" onerror="this.src='/assets/core/avatar.png';" />
               </div>
               <div style="font-family: var(--font-heading); font-size: 17px; font-weight: 700; color: #fff;" id="loadingStatusText">
-                Menghubungkan ke Desa Sukamaju 3D...
+                Menghubungkan ke Desa Adisha 3D...
               </div>
               <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
                 Memuat Lanskap Alam, Model 3D, dan Sinkronisasi Voice Channel
@@ -674,11 +674,11 @@
                     <img src="/assets/survival/characters/kades_tirto.jpeg" alt="NPC" class="npc-portrait-img" id="npcModalImg" onerror="this.src='/assets/core/avatar.png';" />
                     <div>
                       <div style="font-family: var(--font-heading); font-size: 17px; font-weight: 700; color: #fff;" id="npcModalName">Pak Kades Tirto</div>
-                      <div style="font-size: 12px; color: var(--accent-cyan);" id="npcModalTitle">Kepala Desa Sukamaju</div>
+                      <div style="font-size: 12px; color: var(--accent-cyan);" id="npcModalTitle">Kepala Desa Adisha</div>
                     </div>
                   </div>
                   <div class="npc-dialogue-text" id="npcModalDialogue">
-                    Selamat datang di Desa Sukamaju, petualang! Apakah ada yang bisa kubantu?
+                    Selamat datang di Desa Adisha, petualang! Apakah ada yang bisa kubantu?
                   </div>
                   <div class="npc-options-grid" id="npcModalOptions">
                     <!-- Dynamic option buttons -->
@@ -859,7 +859,7 @@
             body: JSON.stringify({
               code: urlParams.get('code') || null,
               guestId,
-              username: document.querySelector('.sidebar-user-name')?.textContent || 'Petualang Sukamaju'
+              username: document.querySelector('.sidebar-user-name')?.textContent || 'Petualang Adisha'
             })
           });
 
@@ -871,13 +871,13 @@
           }
         } catch (err) {
           console.warn('[Activity] Fallback ke guest session lokal:', err);
-          activeUser = { id: guestId, username: 'Petualang Sukamaju', level: 1 };
+          activeUser = { id: guestId, username: 'Petualang Adisha', level: 1 };
           activeSurvival = { hp: 100, stamina: 100, starFragments: 150, survival_level: 1 };
           updateHudData();
         }
 
         if (fill) fill.style.width = '70%';
-        if (statusText) statusText.textContent = 'Membangun Dunia 3D Desa Sukamaju...';
+        if (statusText) statusText.textContent = 'Membangun Dunia 3D Desa Adisha...';
 
         // Inisialisasi Dunia 3D
         init3DWorld();
@@ -987,7 +987,7 @@
             if (typeof window.showToast === 'function') {
               window.showToast({
                 type: 'success',
-                title: 'Panen Sumber Daya Sukamaju',
+                title: 'Panen Sumber Daya Adisha',
                 message: json.message || 'Berhasil mengumpulkan hasil alam!',
                 duration: 4000
               });
@@ -1034,7 +1034,7 @@
               }
               updateHudData();
               if (activeWorld && json.reward.starFragments) {
-                activeWorld.spawnFloatingRpgText(`+${json.reward.starFragments} NSF (Berkah Sukamaju)`, '#facc15');
+                activeWorld.spawnFloatingRpgText(`+${json.reward.starFragments} NSF (Berkah Adisha)`, '#facc15');
               }
             }
           }
@@ -1055,7 +1055,7 @@
 
         if (img) img.src = npc.image || '/assets/core/avatar.png';
         if (name) name.textContent = npc.name || 'Warga Desa';
-        if (title) title.textContent = npc.title || 'Penduduk Sukamaju';
+        if (title) title.textContent = npc.title || 'Penduduk Adisha';
         if (dial) dial.textContent = dialogue || '';
 
         if (optGrid) {

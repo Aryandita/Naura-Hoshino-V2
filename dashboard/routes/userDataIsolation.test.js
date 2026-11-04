@@ -167,6 +167,24 @@ test("Security: requireGuildManager menolak request tanpa parameter guildId (HTT
   assert.equal(getStatus(), 400);
 });
 
+test("Security: requireGuildManager menolak scope guild current yang tidak terverifikasi", () => {
+  const user = {
+    id: "123",
+    guilds: [{ id: "123456789012345678", permissions: String(MANAGE_GUILD), owner: false }],
+  };
+  const { req, res, getStatus, getJson } = createMockReqRes({
+    user,
+    query: { guildId: "current" },
+  });
+  let nextCalled = false;
+
+  requireGuildManager(req, res, () => { nextCalled = true; });
+
+  assert.equal(nextCalled, false);
+  assert.equal(getStatus(), 400);
+  assert.match(getJson()?.error, /Pilih server/i);
+});
+
 test("Security: requireGuildManager menolak format guildId bukan snowflake 17-20 digit (HTTP 400)", () => {
   const user = { id: "123", guilds: [] };
   const { req, res, getStatus, getJson } = createMockReqRes({
@@ -350,8 +368,13 @@ test("Security M2: GET /api/realtime/survival tidak membocorkan data vital pengg
     query: { userId: victimId },
   });
 
-  const handler = survivalRoute.route.stack[0].handle;
-  await handler(req, res);
+  for (const layer of survivalRoute.route.stack) {
+    let advanced = false;
+    await layer.handle(req, res, () => {
+      advanced = true;
+    });
+    if (!advanced) break;
+  }
 
   const body = getJson();
   assert.ok(body, "Response harus berupa JSON");

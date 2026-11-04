@@ -1,11 +1,36 @@
 ---
-version: 2.4.0-naura-os
+version: 2.5.0-naura-os
 name: Naura Hoshino OS
-description: Antarmuka sistem kontrol Naura OS dengan tema cyber-anime. Brand memakai dua-tier warna pink: Sakura Pink #FFC0CB untuk identitas karakter, dan Naura Rose #F472B6 untuk chrome UI. Latar kanvas gelap #0b0c10, glassmorphism terbatas pada shell + satu hero stage per halaman, dan tipografi Orbitron + Outfit + JetBrains Mono.
+description: Antarmuka sistem kontrol Naura OS v2.5.0 dengan arsitektur 3-Pillar Theme Ecosystem (Ekskul, Dunia Adisha, Studio Kontrol OSIS), navigasi 3-Pillar Dock Switcher, dan interaksi 3D Tactile Micro-Tilt Anti-Slop.
 brand:
   identity-color: "#FFC0CB"
   ui-color: "#F472B6"
   live-color: "#22D3EE"
+pillars:
+  naura:
+    name: "Senja Ruang Ekskul"
+    tagline: "Teman sekelas, ruang klub musik sepulang sekolah & pendamping AI"
+    primary: "#FFB7C5"
+    secondary: "#F4A261"
+    accent: "#FDFBF7"
+    deep: "#141722"
+    layer: "#1C2030"
+  survival:
+    name: "Jurnal Ekspedisi Dunia Adisha"
+    tagline: "Petualangan RPG Nusantara di benua Adisha"
+    primary: "#34D399"
+    secondary: "#F59E0B"
+    accent: "#38BDF8"
+    deep: "#111914"
+    layer: "#17221B"
+  dashboard:
+    name: "Studio Kontrol OSIS"
+    tagline: "Ruang penyiaran, telemetri real-time & kendali server"
+    primary: "#6366F1"
+    secondary: "#22D3EE"
+    accent: "#F59E0B"
+    deep: "#0B0E14"
+    layer: "#111621"
 colors:
   brand-sakura-pink: "#FFC0CB"
   brand-sakura-rose: "#F472B6"

@@ -107,12 +107,37 @@ module.exports = (containerOrClient) => {
   webApp.set("trust proxy", 1);
 
   // --- Header keamanan dasar ---
-  // Menggunakan helmet untuk keamanan standar. Content-Security-Policy dimatikan
-  // karena halaman views masih memakai skrip inline.
+  // Halaman MPA masih memiliki skrip/style inline, jadi CSP memakai unsafe-inline
+  // sebagai tahap transisi. Sumber pihak ketiga tetap dibatasi secara eksplisit.
   webApp.use(
     helmet({
-      contentSecurityPolicy: false,
-      frameguard: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          baseUri: ["'self'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+            "https://cdnjs.cloudflare.com",
+          ],
+          fontSrc: [
+            "'self'",
+            "data:",
+            "https://fonts.gstatic.com",
+            "https://cdnjs.cloudflare.com",
+          ],
+          imgSrc: ["'self'", "data:", "blob:", "https:"],
+          mediaSrc: ["'self'", "data:", "blob:", "https:"],
+          workerSrc: ["'self'", "blob:"],
+          connectSrc: ["'self'", "https:", "ws:", "wss:"],
+          frameSrc: ["'self'"],
+        },
+      },
+      frameguard: { action: "sameorigin" },
       crossOriginResourcePolicy: false,
       crossOriginEmbedderPolicy: false,
       crossOriginOpenerPolicy: false,
@@ -202,40 +227,20 @@ module.exports = (containerOrClient) => {
     express.static(path.join(__dirname, "../src/utils"), { index: false }),
   );
   webApp.use("/vendor", express.static(path.join(__dirname, "public/vendor")));
-  webApp.use("/node_modules", express.static(path.join(__dirname, "../node_modules")));
+  // Hanya expose dependency files yang dipakai import map Three.js. Jangan
+  // expose seluruh node_modules sebagai filesystem publik.
+  webApp.use(
+    "/vendor/three",
+    express.static(path.join(__dirname, "../node_modules/three")),
+  );
+  webApp.use(
+    "/vendor/three-vrm",
+    express.static(path.join(__dirname, "../node_modules/@pixiv/three-vrm")),
+  );
   webApp.get("/health", (req, res) => res.redirect("/api/health"));
   webApp.get("/health/detailed", (req, res) =>
     res.redirect("/api/health/detailed"),
   );
-
-  // Sajikan Dashboard Mobile di subpath /mobile
-  webApp.use("/mobile", express.static(path.join(__dirname, "mobile/dist")));
-  webApp.get("/mobile", (req, res) => {
-    const mobileIndex = path.join(__dirname, "mobile/dist/src/pages/index.html");
-    if (fs.existsSync(mobileIndex)) {
-      return res.sendFile(mobileIndex);
-    }
-    res.redirect("/");
-  });
-  webApp.get("/mobile/:page", (req, res) => {
-    const page = req.params.page;
-    if (!/^[a-zA-Z0-9_-]+$/.test(page)) {
-      return res.redirect("/mobile");
-    }
-    const targetPage = path.join(
-      __dirname,
-      "mobile/dist/src/pages",
-      `${page}.html`,
-    );
-    if (fs.existsSync(targetPage)) {
-      return res.sendFile(targetPage);
-    }
-    const mobileIndex = path.join(__dirname, "mobile/dist/src/pages/index.html");
-    if (fs.existsSync(mobileIndex)) {
-      return res.sendFile(mobileIndex);
-    }
-    res.redirect("/mobile");
-  });
 
   // Sajikan berkas model 3D (VRM & GLB) dengan Content-Type model/gltf-binary yang valid
   const setModelMime = (res, filePath) => {
@@ -416,6 +421,27 @@ module.exports = (containerOrClient) => {
 
   // --- Prometheus / Grafana Metrics Telemetry Endpoint ---
   webApp.get("/metrics", (req, res) => {
+    const isLocalhost =
+      req.ip === "127.0.0.1" ||
+      req.ip === "::1" ||
+      req.ip === "::ffff:127.0.0.1";
+    const authHeader = req.headers.authorization;
+    const bearerToken =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : null;
+    const internalSecret = env.METRICS_TOKEN || env.BOT_TOKEN;
+    const isAuthorizedToken =
+      bearerToken && internalSecret && bearerToken === internalSecret;
+    const isOwnerUser =
+      req.user?.id && env.OWNER_IDS && env.OWNER_IDS.includes(req.user.id);
+
+    if (!isLocalhost && !isAuthorizedToken && !isOwnerUser) {
+      return res.status(403).json({
+        error: "Akses telemetri metrics dibatasi hanya untuk internal dan owner.",
+      });
+    }
+
     const telemetryMetrics = require("../src/services/telemetryMetrics");
     res.set("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
     res.send(telemetryMetrics.generatePrometheusMetrics(client));

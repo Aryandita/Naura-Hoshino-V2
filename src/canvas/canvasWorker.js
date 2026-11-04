@@ -123,7 +123,11 @@ if (parentPort) {
           const rendered = await safeRender(
             "renderBattle",
             function () {
-              return battleCanvas.renderBattle(payload);
+              return battleCanvas.renderBattle(
+                payload.playerInfo,
+                payload.enemyInfo,
+                payload.roundLog,
+              );
             },
           );
           if (!rendered.ok) {

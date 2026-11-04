@@ -448,12 +448,37 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       socket.to(`jam:${roomId}`).emit("jam:clear");
     });
 
+    // Helper untuk memvalidasi dan mengunci identitas socket ke sesi server
+    function resolveSocketUser(fallbackUser) {
+      const sessionUser = socket.request?.session?.passport?.user;
+      if (sessionUser && sessionUser.id) {
+        return {
+          userId: String(sessionUser.id),
+          username: sessionUser.globalName || sessionUser.username || "Petualang",
+          avatar: sessionUser.avatar
+            ? `https://cdn.discordapp.com/avatars/${sessionUser.id}/${sessionUser.avatar}.png`
+            : null,
+          isAuthenticated: true,
+        };
+      }
+      const rawId = fallbackUser?.id ? String(fallbackUser.id) : socket.id;
+      const safeId = rawId.startsWith("guest_") ? rawId : `guest_${rawId.slice(0, 12)}`;
+      const safeUsername = String(fallbackUser?.username || "Tamu Adisha").slice(0, 32);
+      return {
+        userId: safeId,
+        username: safeUsername,
+        avatar: fallbackUser?.avatar || null,
+        isAuthenticated: false,
+      };
+    }
+
     // --- 3D Discord Embedded Activity Sanctuary Events ---
     socket.on("activity:join", ({ channelId = "global_sanctuary", user, position } = {}) => {
+      const authUser = resolveSocketUser(user);
       const room = `activity:${channelId}`;
       socket.join(room);
       socket.activityChannelId = channelId;
-      socket.activityUser = user;
+      socket.activityUser = authUser;
 
       if (!activityRooms.has(channelId)) {
         activityRooms.set(channelId, new Map());
@@ -461,9 +486,9 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       const roomPlayers = activityRooms.get(channelId);
 
       const playerData = {
-        userId: user?.id || socket.id,
-        username: user?.username || "Explorer",
-        avatar: user?.avatar || null,
+        userId: authUser.userId,
+        username: authUser.username,
+        avatar: authUser.avatar,
         level: user?.level || 1,
         x: position?.x || 0,
         z: position?.z || 0,
@@ -483,7 +508,8 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       socket.to(room).emit("activity:player_move", playerData);
     });
 
-    socket.on("activity:move", ({ channelId = "global_sanctuary", userId, username, avatar, level, x, z, rotation, isMoving, action } = {}) => {
+    socket.on("activity:move", ({ channelId = "global_sanctuary", x, z, rotation, isMoving, action } = {}) => {
+      const authUser = resolveSocketUser(socket.activityUser);
       const room = `activity:${channelId}`;
       const roomPlayers = activityRooms.get(channelId);
       if (roomPlayers && roomPlayers.has(socket.id)) {
@@ -496,10 +522,10 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       }
 
       socket.to(room).emit("activity:player_move", {
-        userId: userId || socket.id,
-        username: username || "Explorer",
-        avatar: avatar || null,
-        level: level || 1,
+        userId: authUser.userId,
+        username: authUser.username,
+        avatar: authUser.avatar,
+        level: 1,
         x: Number(x) || 0,
         z: Number(z) || 0,
         rotation: Number(rotation) || 0,
@@ -508,11 +534,12 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       });
     });
 
-    socket.on("activity:action", ({ channelId = "global_sanctuary", userId, username, actionType, targetName, resultText } = {}) => {
+    socket.on("activity:action", ({ channelId = "global_sanctuary", actionType, targetName, resultText } = {}) => {
+      const authUser = resolveSocketUser(socket.activityUser);
       const room = `activity:${channelId}`;
       socket.to(room).emit("activity:player_action", {
-        userId: userId || socket.id,
-        username: username || "Explorer",
+        userId: authUser.userId,
+        username: authUser.username,
         actionType,
         targetName,
         resultText,
@@ -520,13 +547,14 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       });
     });
 
-    socket.on("activity:chat", ({ channelId = "global_sanctuary", userId, username, message } = {}) => {
+    socket.on("activity:chat", ({ channelId = "global_sanctuary", message } = {}) => {
+      const authUser = resolveSocketUser(socket.activityUser);
       const room = `activity:${channelId}`;
       const safeMessage = String(message || "").trim().slice(0, 100);
       if (safeMessage) {
         socket.to(room).emit("activity:player_chat", {
-          userId: userId || socket.id,
-          username: username || "Explorer",
+          userId: authUser.userId,
+          username: authUser.username,
           message: safeMessage,
           timestamp: Date.now(),
         });
@@ -535,22 +563,24 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
 
     // --- Town Square Live Multiplayer Avatar Radar (#12) ---
     socket.on("town:join", ({ location = "desa_sukamaju", user } = {}) => {
+      const authUser = resolveSocketUser(user);
       const room = `town:${location}`;
       socket.join(room);
       socket.townLocation = location;
-      socket.townUser = user;
+      socket.townUser = authUser;
       socket.to(room).emit("town:avatar_appear", {
-        userId: user?.id || socket.id,
-        username: user?.username || "Petualang",
-        avatar: user?.avatar || null,
+        userId: authUser.userId,
+        username: authUser.username,
+        avatar: authUser.avatar,
         location,
       });
     });
 
-    socket.on("town:move", ({ location = "desa_sukamaju", x, y, user } = {}) => {
+    socket.on("town:move", ({ location = "desa_sukamaju", x, y } = {}) => {
+      const authUser = resolveSocketUser(socket.townUser);
       socket.to(`town:${location}`).emit("town:avatar_move", {
-        userId: user?.id || socket.id,
-        username: user?.username || "Petualang",
+        userId: authUser.userId,
+        username: authUser.username,
         x,
         y,
       });

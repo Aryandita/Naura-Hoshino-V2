@@ -10,7 +10,7 @@ function register(router) {
   router.post("/discord/token", async (req, res) => {
     try {
       const { code } = req.body || {};
-      if (!code) {
+      if (typeof code !== "string" || code.length < 8 || code.length > 512) {
         return res
           .status(400)
           .json({ success: false, error: "Missing authorization code" });
@@ -56,8 +56,8 @@ function register(router) {
         expires_in: data.expires_in,
         scope: data.scope,
       });
-    } catch (err) {
-      res.status(500).json({ success: false, error: err.message });
+      } catch (err) {
+      res.status(502).json({ success: false, error: "Discord OAuth token exchange failed." });
     }
   });
 
@@ -95,7 +95,7 @@ function register(router) {
 
       res.json({ success: true, received: true });
     } catch (err) {
-      res.status(500).json({ success: false, error: err.message });
+      res.status(500).json({ success: false, error: "Failed to register push subscription." });
     }
   });
 
@@ -131,7 +131,7 @@ function register(router) {
         totalSubscribers: count,
       });
     } catch (err) {
-      res.status(500).json({ success: false, error: err.message });
+      res.status(500).json({ success: false, error: "Failed to read VAPID configuration." });
     }
   });
 
@@ -204,9 +204,14 @@ function register(router) {
 
   router.post("/admin/backup", requireOwner, async (req, res) => {
     try {
+      const backupManager = require("../../../src/managers/backupManager");
+      const result = await backupManager.runBackup();
       return res.json({
-        success: true,
-        message: "Perintah auto-backup database berhasil dipicu di latar belakang.",
+        success: result.success,
+        files: result.files || [],
+        message: result.success
+          ? "Cadangan database berhasil diproses dan disimpan."
+          : `Pencadangan database gagal: ${result.error}`,
         timestamp: new Date().toISOString(),
       });
     } catch (err) {

@@ -1,9 +1,12 @@
 const { MessageFlags, AttachmentBuilder } = require("discord.js");
 const fs = require("node:fs");
 const path = require("node:path");
-const ui = new Proxy({}, {
-  get: (_, prop) => require("../config/ui")[prop],
-});
+const ui = new Proxy(
+  {},
+  {
+    get: (_, prop) => require("../config/ui")[prop],
+  },
+);
 const designTokens = require("../config/tokens/designTokens");
 const nauraExpression = require("./nauraExpression");
 const nauraText = require("./nauraText");
@@ -22,6 +25,128 @@ const {
 // pernah dilihat pengguna.
 const TRUNCATION_NOTICE =
   "-# Sebagian isi dipotong karena melewati batas tampilan Discord.";
+
+const PILLAR_COLORS = Object.freeze({
+  // Naura: naura, theme_naura, ekskul, core (0xFFC0CB)
+  naura: 0xffc0cb,
+  theme_naura: 0xffc0cb,
+  ekskul: 0xffc0cb,
+  core: 0xffc0cb,
+
+  // Survival: survival, theme_survival, adisha, wilds (0x86EFAC)
+  survival: 0x86efac,
+  theme_survival: 0x86efac,
+  adisha: 0x86efac,
+  wilds: 0x86efac,
+
+  // Dashboard: dashboard, theme_dashboard, kontrol, osis, admin, system (0x22D3EE)
+  dashboard: 0x22d3ee,
+  theme_dashboard: 0x22d3ee,
+  kontrol: 0x22d3ee,
+  osis: 0x22d3ee,
+  admin: 0x22d3ee,
+  system: 0x22d3ee,
+});
+
+const FOOTER_CATEGORY_PILLAR_MAP = Object.freeze({
+  // Survival domain
+  survival: 0x86efac,
+  theme_survival: 0x86efac,
+  adisha: 0x86efac,
+  wilds: 0x86efac,
+
+  // Dashboard domain
+  dashboard: 0x22d3ee,
+  theme_dashboard: 0x22d3ee,
+  kontrol: 0x22d3ee,
+  osis: 0x22d3ee,
+  admin: 0x22d3ee,
+  system: 0x22d3ee,
+
+  // Naura domain
+  naura: 0xffc0cb,
+  theme_naura: 0xffc0cb,
+  ekskul: 0xffc0cb,
+  core: 0xffc0cb,
+  default: 0xffc0cb,
+});
+
+function parseColorToInt(colorVal) {
+  if (typeof colorVal === "number") {
+    return Number.isFinite(colorVal) ? colorVal : null;
+  }
+  if (typeof colorVal === "string") {
+    const cleaned = colorVal.trim().replace(/^#|^0x/i, "");
+    const parsed = parseInt(cleaned, 16);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+}
+
+function resolvePillarColor(pillar) {
+  if (!pillar || typeof pillar !== "string") return null;
+  const key = pillar.trim().toLowerCase();
+
+  if (
+    Object.prototype.hasOwnProperty.call(PILLAR_COLORS, key) &&
+    typeof PILLAR_COLORS[key] === "number"
+  ) {
+    return PILLAR_COLORS[key];
+  }
+
+  if (designTokens && designTokens.PILLARS) {
+    for (const [themeKey, p] of Object.entries(designTokens.PILLARS)) {
+      if (
+        p &&
+        ((p.id && p.id.toLowerCase() === key) ||
+          themeKey.toLowerCase() === key) &&
+        typeof p.discordAccent === "number" &&
+        Number.isFinite(p.discordAccent)
+      ) {
+        return p.discordAccent;
+      }
+    }
+  }
+
+  return null;
+}
+
+function resolveFooterCategoryColor(category, fallbackColorInt = 0xffc0cb) {
+  const safeFallback =
+    typeof fallbackColorInt === "number" && Number.isFinite(fallbackColorInt)
+      ? fallbackColorInt
+      : 0xffc0cb;
+  if (!category || typeof category !== "string") return safeFallback;
+  const key = category.trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(FOOTER_CATEGORY_PILLAR_MAP, key) &&
+    typeof FOOTER_CATEGORY_PILLAR_MAP[key] === "number"
+    ? FOOTER_CATEGORY_PILLAR_MAP[key]
+    : safeFallback;
+}
+
+function resolveContainerAccentColor({
+  accentColorHex,
+  color,
+  pillar,
+  footerCategory = "core",
+  defaultColor = ui.getColor("primary") || designTokens.BRAND.primary.hex,
+} = {}) {
+  // 1. Explicit accentColorHex / color has highest precedence
+  const explicit = parseColorToInt(accentColorHex) ?? parseColorToInt(color);
+  if (explicit !== null) {
+    return explicit;
+  }
+
+  // 2. Explicit pillar parameter
+  const pillarColor = resolvePillarColor(pillar);
+  if (pillarColor !== null) {
+    return pillarColor;
+  }
+
+  // 3. Inferred pillar from footerCategory
+  const defaultColorInt = parseColorToInt(defaultColor) ?? 0xffc0cb;
+  return resolveFooterCategoryColor(footerCategory, defaultColorInt);
+}
 
 function textDisplay(content) {
   return { type: 10, content };
@@ -53,10 +178,13 @@ function warnMissingTitle(author) {
 
 function resolveLanguage(langOrContext) {
   if (!langOrContext) return languageManager.default;
-  if (typeof langOrContext === "string") return languageManager.normalize(langOrContext);
+  if (typeof langOrContext === "string")
+    return languageManager.normalize(langOrContext);
   if (typeof langOrContext === "object" && langOrContext !== null) {
-    if (langOrContext.localeLang) return languageManager.normalize(langOrContext.localeLang);
-    if (langOrContext.locale) return languageManager.normalize(langOrContext.locale);
+    if (langOrContext.localeLang)
+      return languageManager.normalize(langOrContext.localeLang);
+    if (langOrContext.locale)
+      return languageManager.normalize(langOrContext.locale);
     const userId = langOrContext.user?.id || langOrContext.author?.id;
     if (userId) {
       const cached = languageManager.userCache?.get(userId);
@@ -92,10 +220,14 @@ function isAttachmentPresent(ref, filesList) {
   if (!Array.isArray(filesList) || filesList.length === 0) return false;
   return filesList.some((item) => {
     if (!item) return false;
-    if (typeof item === "string") return path.basename(item) === targetName || item === targetName;
+    if (typeof item === "string")
+      return path.basename(item) === targetName || item === targetName;
     if (item.name && item.name === targetName) return true;
     if (item.attachment && typeof item.attachment === "string") {
-      return path.basename(item.attachment) === targetName || item.attachment === targetName;
+      return (
+        path.basename(item.attachment) === targetName ||
+        item.attachment === targetName
+      );
     }
     return false;
   });
@@ -117,58 +249,73 @@ function resolveAttachmentUrl(ref, filesList, context) {
   return resolved;
 }
 
-function buildContainerV2({
-  lang,
-  interaction,
-  footerCategory = "core",
-  accentColorHex,
-  authorName,
-  title,
-  iconURL,
-  expression,
-  expressionImage = "auto",
-  expressionEmoji = true,
-  expressionAs = "icon",
-  description,
-  fields = [],
-  color,
-  bannerAttachmentName,
-  topBannerAttachmentName,
-  bannerPosition = "bottom",
-  media,
-  mediaUrl,
-  imageAttachment,
-  mediaAttachmentNames = [],
-  fileAttachmentNames = [],
-  files = [],
-  selectMenu,
-  components,
-  buttonsRow,
-  allowCleanup = false,
-  expiresInSeconds = null,
-  footerText,
-}) {
+function buildContainerV2(arg1 = {}, arg2) {
+  const opts =
+    arg2 && typeof arg2 === "object"
+      ? arg2
+      : arg1 && typeof arg1 === "object"
+        ? arg1
+        : {};
+  const {
+    lang,
+    interaction,
+    pillar,
+    footerCategory = "core",
+    accentColorHex,
+    authorName,
+    title,
+    iconURL,
+    expression,
+    expressionImage = "auto",
+    expressionEmoji = true,
+    expressionAs = "icon",
+    description,
+    fields = [],
+    color,
+    topBannerAttachmentName,
+    bannerPosition = "bottom",
+    media,
+    mediaUrl,
+    imageAttachment,
+    mediaAttachmentNames = [],
+    fileAttachmentNames = [],
+    files = [],
+    selectMenu,
+    components,
+    allowCleanup = false,
+    expiresInSeconds = null,
+    footerText,
+  } = opts;
+  let { bannerAttachmentName, buttonsRow } = opts;
   const hasExplicitLang = Boolean(lang || interaction);
   const activeLang = resolveLanguage(lang || interaction);
   const defaultColor = ui.getColor("primary") || designTokens.BRAND.primary.hex;
-  const resolvedColorInput = accentColorHex || color || defaultColor;
-  const accentColor =
-    typeof resolvedColorInput === "number"
-      ? resolvedColorInput
-      : parseInt(String(resolvedColorInput).replace("#", ""), 16) || 0xffc0cb;
+  const accentColor = resolveContainerAccentColor({
+    accentColorHex,
+    color,
+    pillar,
+    footerCategory,
+    defaultColor,
+  });
   if (!bannerAttachmentName) {
     bannerAttachmentName = imageAttachment || media || mediaUrl || undefined;
   }
   if (selectMenu || components) {
     const mergedRows = [];
     if (selectMenu) {
-      mergedRows.push(...(Array.isArray(selectMenu) ? selectMenu : [selectMenu]));
+      mergedRows.push(
+        ...(Array.isArray(selectMenu) ? selectMenu : [selectMenu]),
+      );
     }
     if (buttonsRow) {
-      mergedRows.push(...(Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow]));
+      mergedRows.push(
+        ...(Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow]),
+      );
     }
     if (components) {
-      mergedRows.push(...(Array.isArray(components) ? components : [components]));
+      mergedRows.push(
+        ...(Array.isArray(components) ? components : [components]),
+      );
     }
     buttonsRow = mergedRows;
   }
@@ -222,7 +369,11 @@ function buildContainerV2({
 
   if (!headerTitle && cleanAuthor) warnMissingTitle(cleanAuthor);
 
-  headerIconURL = resolveAttachmentUrl(headerIconURL, attachedFiles, "headerIconURL");
+  headerIconURL = resolveAttachmentUrl(
+    headerIconURL,
+    attachedFiles,
+    "headerIconURL",
+  );
 
   const headerLines = [];
   if (cleanAuthor) headerLines.push(`-# ${cleanAuthor}`);
@@ -289,7 +440,9 @@ function buildContainerV2({
     expressionGalleryRef,
   ]
     .filter(Boolean)
-    .map((ref) => resolveAttachmentUrl(ref, attachedFiles, "mediaAttachmentNames"))
+    .map((ref) =>
+      resolveAttachmentUrl(ref, attachedFiles, "mediaAttachmentNames"),
+    )
     .filter(Boolean);
 
   if (bottomGalleryRefs.length > 0) {
@@ -305,7 +458,9 @@ function buildContainerV2({
   if (Array.isArray(fileAttachmentNames)) {
     fileAttachmentNames
       .filter(Boolean)
-      .map((name) => resolveAttachmentUrl(name, attachedFiles, "fileAttachmentNames"))
+      .map((name) =>
+        resolveAttachmentUrl(name, attachedFiles, "fileAttachmentNames"),
+      )
       .filter(Boolean)
       .forEach((url) => {
         containerComponents.push({
@@ -360,7 +515,7 @@ function buildContainerV2({
   }
   rowsArray = sanitizedRows;
 
-if (allowCleanup && !seenCustomIds.has("msg_cleanup")) {
+  if (allowCleanup && !seenCustomIds.has("msg_cleanup")) {
     const cleanupBtn = {
       type: 2, // BUTTON
       style: 2, // SECONDARY
@@ -395,7 +550,7 @@ if (allowCleanup && !seenCustomIds.has("msg_cleanup")) {
     rowsArray.forEach((rowJson) => containerComponents.push(rowJson));
   }
 
-// -- Indikator Auto-Delete Countdown --
+  // -- Indikator Auto-Delete Countdown --
   if (typeof expiresInSeconds === "number" && expiresInSeconds > 0) {
     const expireTimestamp =
       Math.floor(Date.now() / 1000) + Math.round(expiresInSeconds);
@@ -506,7 +661,10 @@ function buildErrorContainerV2(opts) {
   let title = pick(opts, "title") || t(activeLang, "common.error.title");
   if (typeof title === "string" && title.trim()) {
     const trimmedTitle = title.trim();
-    if (trimmedTitle.startsWith("err_sys_") || /^[a-z0-9_.-]+$/i.test(trimmedTitle)) {
+    if (
+      trimmedTitle.startsWith("err_sys_") ||
+      /^[a-z0-9_.-]+$/i.test(trimmedTitle)
+    ) {
       const translatedTitle = t(activeLang, trimmedTitle);
       if (translatedTitle && translatedTitle !== trimmedTitle) {
         title = translatedTitle;
@@ -675,7 +833,9 @@ function buildMaintenanceContainerV2(opts) {
     lang: activeLang,
     footerCategory,
     accentColorHex:
-      pick(opts, "accentColorHex") || ui.getColor("warning") || designTokens.STATUS.idle.hex,
+      pick(opts, "accentColorHex") ||
+      ui.getColor("warning") ||
+      designTokens.STATUS.idle.hex,
     authorName,
     title: `${warnEmoji} ${title}`,
     description: rawMaintenance,
@@ -718,7 +878,9 @@ function buildSuccessContainerV2(opts) {
   const okEmoji =
     nauraExpression.getEmoji("success") || ui.getEmoji("success") || "?";
   const expression =
-    pick(opts, "expression") !== undefined ? pick(opts, "expression") : "success";
+    pick(opts, "expression") !== undefined
+      ? pick(opts, "expression")
+      : "success";
 
   const bannerAttachmentName = pick(opts, "bannerAttachmentName");
   const files = [...(pick(opts, "files") || [])];
@@ -727,7 +889,9 @@ function buildSuccessContainerV2(opts) {
     lang: activeLang,
     footerCategory,
     accentColorHex:
-      pick(opts, "accentColorHex") || ui.getColor("success") || designTokens.STATUS.online.hex,
+      pick(opts, "accentColorHex") ||
+      ui.getColor("success") ||
+      designTokens.STATUS.online.hex,
     authorName,
     title: `${okEmoji} ${title}`,
     description:
@@ -799,7 +963,10 @@ function buildPersonaContainerV2({
     title || defaultTitleMap[type] || `${eNaura} Naura Hoshino`;
 
   return buildContainerV2({
-    accentColorHex: accentColorHex || ui.getColor("primary") || designTokens.BRAND.primary.hex,
+    accentColorHex:
+      accentColorHex ||
+      ui.getColor("primary") ||
+      designTokens.BRAND.primary.hex,
     title: finalTitle,
     description: message,
     expression: chosenExpression,
@@ -860,11 +1027,19 @@ function sanitizeComponentCustomIds(components) {
   return sanitized;
 }
 
-function buildDashboardLinkButton(pagePath = "", label = "?? Buka di Dashboard") {
+function buildDashboardLinkButton(
+  pagePath = "",
+  label = "?? Buka di Dashboard",
+) {
   const { ButtonBuilder, ButtonStyle } = require("discord.js");
   const env = require("../config/env");
-  const baseUrl = env.DASHBOARD_ORIGIN || `http://localhost:${env.DASHBOARD_PORT || 3000}`;
-  const cleanPath = pagePath ? (pagePath.startsWith("/") ? pagePath : `/${pagePath}`) : "";
+  const baseUrl =
+    env.DASHBOARD_ORIGIN || `http://localhost:${env.DASHBOARD_PORT || 3000}`;
+  const cleanPath = pagePath
+    ? pagePath.startsWith("/")
+      ? pagePath
+      : `/${pagePath}`
+    : "";
   const url = `${baseUrl.replace(/\/$/, "")}${cleanPath}`;
   return new ButtonBuilder()
     .setStyle(ButtonStyle.Link)
@@ -881,7 +1056,10 @@ function buildDashboardLinkButton(pagePath = "", label = "?? Buka di Dashboard")
 function disableComponents(components) {
   if (!Array.isArray(components)) return [];
   return components.map((comp) => {
-    const raw = typeof comp?.toJSON === "function" ? comp.toJSON() : JSON.parse(JSON.stringify(comp));
+    const raw =
+      typeof comp?.toJSON === "function"
+        ? comp.toJSON()
+        : JSON.parse(JSON.stringify(comp));
     if (raw.type === 17 && Array.isArray(raw.components)) {
       return {
         ...raw,
@@ -995,17 +1173,28 @@ function buildGreetingContainerV2(opts = {}) {
   const langContext = pick(opts, "lang") || pick(opts, "interaction");
   const activeLang = resolveLanguage(langContext);
   const userName = pick(opts, "userName") || pick(opts, "user")?.username || "";
-  const greetingText = pick(opts, "message") || t(activeLang, "container.greeting.body") || `Halo ${userName ? `, ${userName}` : ""}! Naura senang bertemu kamu!`;
-  const title = pick(opts, "title") || `${nauraExpression.getEmoji("greeting") || "✨"} Selamat Datang!`;
+  const greetingText =
+    pick(opts, "message") ||
+    t(activeLang, "container.greeting.body") ||
+    `Halo ${userName ? `, ${userName}` : ""}! Naura senang bertemu kamu!`;
+  const title =
+    pick(opts, "title") ||
+    `${nauraExpression.getEmoji("greeting") || "✨"} Selamat Datang!`;
 
   return buildContainerV2({
     lang: activeLang,
-    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("primary") || designTokens.BRAND.primary.hex,
+    accentColorHex:
+      pick(opts, "accentColorHex") ||
+      ui.getColor("primary") ||
+      designTokens.BRAND.primary.hex,
     authorName: pick(opts, "authorName") || "Naura Hoshino",
     title,
     description: greetingText,
     expression: pick(opts, "expression") || "greeting",
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : "auto",
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -1022,17 +1211,29 @@ function buildGreetingContainerV2(opts = {}) {
 function buildFarewellContainerV2(opts = {}) {
   const langContext = pick(opts, "lang") || pick(opts, "interaction");
   const activeLang = resolveLanguage(langContext);
-  const farewellText = pick(opts, "message") || t(activeLang, "container.farewell.body") || "Sampai jumpa lagi! Naura akan selalu menunggu kamu kembali.";
-  const title = pick(opts, "title") || `${nauraExpression.getEmoji("farewell") || "💋"} Sampai Jumpa!`;
+  const farewellText =
+    pick(opts, "message") ||
+    t(activeLang, "container.farewell.body") ||
+    "Sampai jumpa lagi! Naura akan selalu menunggu kamu kembali.";
+  const title =
+    pick(opts, "title") ||
+    `${nauraExpression.getEmoji("farewell") || "💋"} Sampai Jumpa!`;
 
   return buildContainerV2({
     lang: activeLang,
-    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-pink") || designTokens.BRAND.secondary?.hex || 0xffb6c1,
+    accentColorHex:
+      pick(opts, "accentColorHex") ||
+      ui.getColor("accent-pink") ||
+      designTokens.BRAND.secondary?.hex ||
+      0xffb6c1,
     authorName: pick(opts, "authorName") || "Naura Hoshino",
     title,
     description: farewellText,
     expression: pick(opts, "expression") || "farewell",
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : "auto",
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -1049,17 +1250,28 @@ function buildFarewellContainerV2(opts = {}) {
 function buildCuriousContainerV2(opts = {}) {
   const langContext = pick(opts, "lang") || pick(opts, "interaction");
   const activeLang = resolveLanguage(langContext);
-  const curiousText = pick(opts, "message") || t(activeLang, "container.curious.body") || "Hmm, menarik sekali! Ceritakan lebih banyak kepada Naura?";
-  const title = pick(opts, "title") || `${nauraExpression.getEmoji("curious") || "🤔"} Penasaran...`;
+  const curiousText =
+    pick(opts, "message") ||
+    t(activeLang, "container.curious.body") ||
+    "Hmm, menarik sekali! Ceritakan lebih banyak kepada Naura?";
+  const title =
+    pick(opts, "title") ||
+    `${nauraExpression.getEmoji("curious") || "🤔"} Penasaran...`;
 
   return buildContainerV2({
     lang: activeLang,
-    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-blue") || designTokens.STATUS.syncing.hex,
+    accentColorHex:
+      pick(opts, "accentColorHex") ||
+      ui.getColor("accent-blue") ||
+      designTokens.STATUS.syncing.hex,
     authorName: pick(opts, "authorName") || "Naura Hoshino",
     title,
     description: curiousText,
     expression: pick(opts, "expression") || "curious",
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : false,
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : false,
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -1076,17 +1288,28 @@ function buildCuriousContainerV2(opts = {}) {
 function buildExcitedContainerV2(opts = {}) {
   const langContext = pick(opts, "lang") || pick(opts, "interaction");
   const activeLang = resolveLanguage(langContext);
-  const excitedText = pick(opts, "message") || t(activeLang, "container.excited.body") || "Wah, luar biasa! Naura sangat bersemangat melihat ini!";
-  const title = pick(opts, "title") || `${nauraExpression.getEmoji("excited") || "🎉"} Luar Biasa!`;
+  const excitedText =
+    pick(opts, "message") ||
+    t(activeLang, "container.excited.body") ||
+    "Wah, luar biasa! Naura sangat bersemangat melihat ini!";
+  const title =
+    pick(opts, "title") ||
+    `${nauraExpression.getEmoji("excited") || "🎉"} Luar Biasa!`;
 
   return buildContainerV2({
     lang: activeLang,
-    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("success") || designTokens.STATUS.online.hex,
+    accentColorHex:
+      pick(opts, "accentColorHex") ||
+      ui.getColor("success") ||
+      designTokens.STATUS.online.hex,
     authorName: pick(opts, "authorName") || "Naura Hoshino",
     title,
     description: excitedText,
     expression: pick(opts, "expression") || "excited",
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : "auto",
     expressionAs: pick(opts, "expressionAs") || "gallery",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -1104,17 +1327,28 @@ function buildProudContainerV2(opts = {}) {
   const langContext = pick(opts, "lang") || pick(opts, "interaction");
   const activeLang = resolveLanguage(langContext);
   const userName = pick(opts, "userName") || pick(opts, "user")?.username || "";
-  const proudText = pick(opts, "message") || t(activeLang, "container.proud.body") || `Naura bangga padamu${userName ? `, ${userName}` : ""}! Kerja kerasmu membuahkan hasil!`;
-  const title = pick(opts, "title") || `${nauraExpression.getEmoji("proud") || "⭐"} Naura Bangga!`;
+  const proudText =
+    pick(opts, "message") ||
+    t(activeLang, "container.proud.body") ||
+    `Naura bangga padamu${userName ? `, ${userName}` : ""}! Kerja kerasmu membuahkan hasil!`;
+  const title =
+    pick(opts, "title") ||
+    `${nauraExpression.getEmoji("proud") || "⭐"} Naura Bangga!`;
 
   return buildContainerV2({
     lang: activeLang,
-    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("warning") || designTokens.STATUS.idle.hex,
+    accentColorHex:
+      pick(opts, "accentColorHex") ||
+      ui.getColor("warning") ||
+      designTokens.STATUS.idle.hex,
     authorName: pick(opts, "authorName") || "Naura Hoshino",
     title,
     description: proudText,
     expression: pick(opts, "expression") || "proud",
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : "auto",
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -1131,17 +1365,26 @@ function buildProudContainerV2(opts = {}) {
 function buildSympathyContainerV2(opts = {}) {
   const langContext = pick(opts, "lang") || pick(opts, "interaction");
   const activeLang = resolveLanguage(langContext);
-  const sympathyText = pick(opts, "message") || t(activeLang, "container.sympathy.body") || "Naura mengerti perasaanmu. Jangan khawatir, semuanya akan baik-baik saja.";
-  const title = pick(opts, "title") || `${nauraExpression.getEmoji("sympathy") || "💝"} Naura Mengerti...`;
+  const sympathyText =
+    pick(opts, "message") ||
+    t(activeLang, "container.sympathy.body") ||
+    "Naura mengerti perasaanmu. Jangan khawatir, semuanya akan baik-baik saja.";
+  const title =
+    pick(opts, "title") ||
+    `${nauraExpression.getEmoji("sympathy") || "💝"} Naura Mengerti...`;
 
   return buildContainerV2({
     lang: activeLang,
-    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-pink") || 0xffb6c1,
+    accentColorHex:
+      pick(opts, "accentColorHex") || ui.getColor("accent-pink") || 0xffb6c1,
     authorName: pick(opts, "authorName") || "Naura Hoshino",
     title,
     description: sympathyText,
     expression: pick(opts, "expression") || "sympathy",
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : false,
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : false,
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -1158,17 +1401,29 @@ function buildSympathyContainerV2(opts = {}) {
 function buildPlayfulContainerV2(opts = {}) {
   const langContext = pick(opts, "lang") || pick(opts, "interaction");
   const activeLang = resolveLanguage(langContext);
-  const playfulText = pick(opts, "message") || t(activeLang, "container.playful.body") || "Hehe, seru banget! Ayo kita bersenang-senang bersama!";
-  const title = pick(opts, "title") || `${nauraExpression.getEmoji("playful") || "🎵"} Waktu Bermain!`;
+  const playfulText =
+    pick(opts, "message") ||
+    t(activeLang, "container.playful.body") ||
+    "Hehe, seru banget! Ayo kita bersenang-senang bersama!";
+  const title =
+    pick(opts, "title") ||
+    `${nauraExpression.getEmoji("playful") || "🎵"} Waktu Bermain!`;
 
   return buildContainerV2({
     lang: activeLang,
-    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-cyan") || designTokens.BRAND.accent?.hex || 0x87ceeb,
+    accentColorHex:
+      pick(opts, "accentColorHex") ||
+      ui.getColor("accent-cyan") ||
+      designTokens.BRAND.accent?.hex ||
+      0x87ceeb,
     authorName: pick(opts, "authorName") || "Naura Hoshino",
     title,
     description: playfulText,
     expression: pick(opts, "expression") || "playful",
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : false,
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : false,
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -1185,17 +1440,26 @@ function buildPlayfulContainerV2(opts = {}) {
 function buildGratefulContainerV2(opts = {}) {
   const langContext = pick(opts, "lang") || pick(opts, "interaction");
   const activeLang = resolveLanguage(langContext);
-  const gratefulText = pick(opts, "message") || t(activeLang, "container.grateful.body") || "Terima kasih banyak! Naura sangat menghargai dukunganmu!";
-  const title = pick(opts, "title") || `${nauraExpression.getEmoji("grateful") || "💖"} Terima Kasih!`;
+  const gratefulText =
+    pick(opts, "message") ||
+    t(activeLang, "container.grateful.body") ||
+    "Terima kasih banyak! Naura sangat menghargai dukunganmu!";
+  const title =
+    pick(opts, "title") ||
+    `${nauraExpression.getEmoji("grateful") || "💖"} Terima Kasih!`;
 
   return buildContainerV2({
     lang: activeLang,
-    accentColorHex: pick(opts, "accentColorHex") || ui.getColor("accent-gold") || 0xffd700,
+    accentColorHex:
+      pick(opts, "accentColorHex") || ui.getColor("accent-gold") || 0xffd700,
     authorName: pick(opts, "authorName") || "Naura Hoshino",
     title,
     description: gratefulText,
     expression: pick(opts, "expression") || "grateful",
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : "auto",
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -1206,6 +1470,7 @@ function buildGratefulContainerV2(opts = {}) {
 
 module.exports = {
   buildContainerV2,
+  resolveContainerAccentColor,
   buildErrorContainerV2,
   buildLoadingContainerV2,
   buildMaintenanceContainerV2,
