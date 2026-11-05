@@ -483,31 +483,86 @@
     // ── Inisialisasi Header Bersama & Reconciler Sidebar ──
     function mountSharedNav() {
         const sharedNavContainer = document.getElementById('shared-nav');
-        if (sharedNavContainer && !sharedNavContainer.hasChildNodes()) {
-            sharedNavContainer.innerHTML = `
-                <header class="top-header shared-top-nav">
-                    <div class="header-left">
-                        <a href="/" class="shared-nav-brand" title="Ke Beranda Dashboard">
-                            <img src="/assets/core/avatar.png" alt="Naura" class="shared-nav-logo" onerror="this.src='/assets/core/avatar.png'">
-                            <div class="shared-nav-brand-text">
-                                <div class="shared-brand-name">Naura Hoshino</div>
-                                <div class="shared-brand-tag">v2.5.0 · Hub</div>
-                            </div>
-                        </a>
-                        <nav class="shared-nav-links" aria-label="Navigasi Cepat">
-                            <a href="/" class="shared-nav-link ${currentPath === '/' ? 'active' : ''}"><i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span></a>
-                            <a href="/profile" class="shared-nav-link ${currentPath === '/profile' ? 'active' : ''}"><i class="fa-solid fa-id-card"></i> <span>Profil</span></a>
-                            <a href="/world" class="shared-nav-link ${currentPath === '/world' ? 'active' : ''}"><i class="fa-solid fa-earth-asia"></i> <span>Adisha</span></a>
-                            <a href="/clan" class="shared-nav-link ${currentPath === '/clan' ? 'active' : ''}"><i class="fa-solid fa-users-rays"></i> <span>Klan</span></a>
-                            <a href="/economy" class="shared-nav-link ${currentPath === '/economy' ? 'active' : ''}"><i class="fa-solid fa-coins"></i> <span>Ekonomi</span></a>
-                            <a href="/leaderboard" class="shared-nav-link ${currentPath === '/leaderboard' ? 'active' : ''}"><i class="fa-solid fa-trophy"></i> <span>Peringkat</span></a>
-                            <a href="/music" class="shared-nav-link ${currentPath === '/music' ? 'active' : ''}"><i class="fa-solid fa-music"></i> <span>Musik</span></a>
-                            <a href="/settings" class="shared-nav-link ${currentPath === '/settings' ? 'active' : ''}"><i class="fa-solid fa-gears"></i> <span>Settings</span></a>
-                        </nav>
+        if (sharedNavContainer && !document.querySelector('.app-shell')) {
+            const pageTitle = document.title.split('|')[0].trim() || 'Naura Hoshino OS';
+            const activePillarDef = PILLARS[activePillar] || PILLARS.kontrol;
+
+            const appShell = document.createElement('div');
+            appShell.className = 'app-shell';
+
+            const overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            overlay.id = 'sidebarOverlay';
+            appShell.appendChild(overlay);
+
+            const sidebar = document.createElement('aside');
+            sidebar.className = 'sidebar';
+            sidebar.id = 'sidebar';
+            sidebar.innerHTML = `
+                <div class="sidebar-brand">
+                    <div class="sidebar-logo-icon">
+                        <img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" />
                     </div>
-                    <div class="header-right"></div>
+                    <div class="sidebar-brand-text">
+                        <div class="sidebar-brand-name">Naura Hoshino</div>
+                        <div class="sidebar-brand-sub">v2.5.0 · Online</div>
+                    </div>
+                    <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <nav class="sidebar-nav" id="sidebarNav" role="navigation"></nav>
+                <div class="sidebar-footer">
+                    <div class="sidebar-user" onclick="window.location.href='/profile'">
+                        <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" id="sidebarUserAvatar" />
+                        <div class="sidebar-user-info">
+                            <div class="sidebar-user-name" id="sidebarUserName">Petualang Adisha</div>
+                            <div class="sidebar-user-role" id="sidebarUserRole">Naura OS v2.5.0</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            appShell.appendChild(sidebar);
+
+            const mainContent = document.createElement('div');
+            mainContent.className = 'main-content';
+            mainContent.innerHTML = `
+                <header class="top-header">
+                    <div class="header-left">
+                        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Buka menu"><i class="fa-solid fa-bars"></i></button>
+                        <div>
+                            <div class="page-title">${window.escapeHtml(pageTitle)}</div>
+                            <div class="breadcrumb">
+                                <span>${activePillarDef.icon} ${activePillarDef.name}</span>
+                                <span class="breadcrumb-sep">/</span>
+                                <span>${window.escapeHtml(pageTitle)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+                        <a href="/world" class="btn btn-ghost btn-sm"><i class="fa-solid fa-earth-asia"></i> Peta Adisha</a>
+                    </div>
                 </header>
             `;
+
+            const pageContent = document.createElement('div');
+            pageContent.className = 'page-content';
+
+            // Pindahkan elemen konten body (selain script dan shared-nav) ke dalam .page-content
+            const childrenToMove = Array.from(document.body.childNodes).filter((node) => {
+                if (node === sharedNavContainer) return false;
+                if (node.nodeType === 1 && (node.tagName === 'SCRIPT' || node.classList.contains('mobile-nav') || node.classList.contains('toast-stack'))) {
+                    return false;
+                }
+                return true;
+            });
+
+            sharedNavContainer.remove();
+            childrenToMove.forEach((node) => pageContent.appendChild(node));
+            mainContent.appendChild(pageContent);
+            appShell.appendChild(mainContent);
+            document.body.insertBefore(appShell, document.body.firstChild);
         }
 
         // Pastikan container navigasi mobile ada di halaman

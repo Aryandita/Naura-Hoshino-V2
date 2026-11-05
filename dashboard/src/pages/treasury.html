@@ -1,45 +1,171 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-pillar="kontrol">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Server Treasury | Naura OS</title>
+    <title>Kas Server Treasury | Naura OS</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <style>
-      .treasury-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
-      .treasury-card { background: rgba(134, 239, 172, 0.06); border: 1px solid rgba(134, 239, 172, 0.2); border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
-      .treasury-card h3 { margin: 0; font-size: 0.95rem; color: #86EFAC; display: flex; justify-content: space-between; align-items: baseline; }
-      .treasury-card .value { font-size: 1.5rem; font-weight: 700; color: #ffffff; }
-      .treasury-card .pct { font-size: 0.85rem; color: #9CA3AF; }
-      .treasury-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 0.5rem; }
-      .treasury-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
-      .chart-wrap { background: rgba(134, 239, 172, 0.04); border: 1px solid rgba(134, 239, 172, 0.15); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem; }
-      .pool-stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-      .pool-stat { flex: 1; min-width: 140px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1rem; text-align: center; }
-      .pool-stat .label { font-size: 0.8rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
-      .pool-stat .number { font-size: 1.4rem; font-weight: 700; color: #ffffff; }
-      .updated-badge { display: inline-block; margin-top: 1rem; padding: 0.4rem 0.8rem; background: rgba(34, 211, 238, 0.1); border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 20px; font-size: 0.75rem; color: #22D3EE; }
-      .error-msg { color: #F87171; padding: 1rem; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 8px; }
+      .treasury-container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 8px 0 64px;
+      }
+      .treasury-hero {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(34, 211, 238, 0.08) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .treasury-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+      }
+      .treasury-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+      .treasury-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent-cyan);
+      }
+      .treasury-card h3 {
+        margin: 0;
+        font-size: 14px;
+        color: #86efac;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .treasury-card .value {
+        font-family: var(--font-mono);
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+      .treasury-card .pct {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      .treasury-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 6px;
+      }
+      .treasury-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.6s ease;
+      }
+      .chart-wrap {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-xl);
+        padding: 24px;
+        margin-top: 24px;
+      }
+      .chart-canvas-box {
+        position: relative;
+        height: 280px;
+        max-width: 520px;
+        margin: 0 auto;
+      }
+      .pool-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      .pool-stat {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 18px 20px;
+        text-align: center;
+      }
+      .pool-stat .label {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+      }
+      .pool-stat .number {
+        font-family: var(--font-mono);
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+      .updated-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 18px;
+        padding: 6px 14px;
+        background: rgba(34, 211, 238, 0.1);
+        border: 1px solid rgba(34, 211, 238, 0.3);
+        border-radius: 999px;
+        font-size: 12px;
+        color: #22d3ee;
+      }
+      .error-msg {
+        color: #f87171;
+        padding: 16px;
+        background: rgba(248, 113, 113, 0.1);
+        border: 1px solid rgba(248, 113, 113, 0.25);
+        border-radius: 12px;
+      }
     </style>
   </head>
   <body>
-    <nav class="navbar">
-      <div class="nav-brand"><i class="fa-solid fa-coins"></i> Naura Treasury</div>
-      <div class="nav-links">
-        <a href="/" class="nav-link"><i class="fa-solid fa-house"></i> Beranda</a>
-        <a href="/economy" class="nav-link">Ekonomi</a>
-        <a href="/treasury" class="nav-link active">Treasury</a>
-      </div>
-    </nav>
-    <main class="container">
-      <header class="page-header">
-        <h1><i class="fa-solid fa-coins"></i> Server Treasury</h1>
-        <p>Transparansi alokasi kas server Naura Hoshino V2 (Currency V2 Closed-Loop)</p>
+    <div id="shared-nav"></div>
+    <main class="treasury-container">
+      <header class="treasury-hero">
+        <div>
+          <h1 style="margin: 0 0 6px; font-family: var(--font-heading); font-size: 24px; color: #fff;">
+            <i class="fa-solid fa-vault" style="color: #34d399; margin-right: 8px;"></i> Kas Server Treasury
+          </h1>
+          <p style="margin: 0; color: var(--text-secondary); font-size: 13.5px;">
+            Transparansi alokasi kas server Naura Hoshino V2 (Sirkulasi Ekonomi Tertutup V2)
+          </p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <a href="/economy" class="btn btn-secondary btn-sm"><i class="fa-solid fa-coins"></i> Halaman Ekonomi</a>
+          <a href="/marketplace" class="btn btn-ghost btn-sm"><i class="fa-solid fa-shop"></i> Balai Lelang</a>
+        </div>
       </header>
 
       <div id="treasuryLoading" class="pool-stat">
-        <div class="label">Memuat</div>
+        <div class="label">Memuat Data Kas Server</div>
         <div class="number">...</div>
       </div>
 
@@ -51,13 +177,18 @@
         <div class="treasury-grid" id="allocationGrid"></div>
 
         <div class="chart-wrap">
-          <h3 style="margin:0 0 1rem 0; color:#ffffff;">Alokasi 4 Saluran Kas Server</h3>
-          <canvas id="treasuryChart" width="400" height="200"></canvas>
+          <h3 style="margin: 0 0 16px 0; font-family: var(--font-heading); font-size: 16px; color: #ffffff;">
+            <i class="fa-solid fa-chart-pie" style="color: #22d3ee; margin-right: 8px;"></i> Proporsi 4 Saluran Kas Server
+          </h3>
+          <div class="chart-canvas-box">
+            <canvas id="treasuryChart"></canvas>
+          </div>
         </div>
 
         <div id="treasuryUpdated" class="updated-badge"></div>
       </div>
     </main>
+    <script src="/src/js/sharedNav.js"></script>
     <script>
       const API_BASE = '/api/treasury';
       const COLORS = { moss: '#34D399', amber: '#FBBF24', emerald: '#86EFAC', danger: '#F87171' };
@@ -95,14 +226,33 @@
             `;
           }).join('');
           setTimeout(() => { document.querySelectorAll('.treasury-bar-fill').forEach(el => { el.style.width = el.dataset.pct + '%'; }); }, 100);
-          const ctx = document.getElementById('treasuryChart').getContext('2d');
-          new Chart(ctx, {
-            type: 'doughnut',
-            data: { labels: order.map(k => alloc[k].label), datasets: [{ data: order.map(k => alloc[k].value), backgroundColor: order.map(k => alloc[k].color), borderWidth: 0, hoverOffset: 4 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#ffffff', font: { size: 12 } } }, title: { display: false } }, cutout: '70%' },
-          });
+          if (typeof Chart !== 'undefined') {
+            const ctx = document.getElementById('treasuryChart').getContext('2d');
+            const values = order.map(k => Math.max(1, Number(alloc[k].value) || Number(alloc[k].pct) || 1));
+            new Chart(ctx, {
+              type: 'doughnut',
+              data: {
+                labels: order.map(k => `${alloc[k].label} (${alloc[k].pct}%)`),
+                datasets: [{
+                  data: values,
+                  backgroundColor: order.map(k => alloc[k].color || COLORS.moss),
+                  borderWidth: 0,
+                  hoverOffset: 6
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { size: 12 } } },
+                  title: { display: false }
+                },
+                cutout: '68%'
+              }
+            });
+          }
           const badge = document.getElementById('treasuryUpdated');
-          badge.textContent = 'Terakhir diperbarui: ' + new Date(data.updatedAt).toLocaleString('id-ID');
+          badge.innerHTML = '<i class="fa-solid fa-clock"></i> Terakhir diperbarui: ' + new Date(data.updatedAt || Date.now()).toLocaleString('id-ID');
         } catch (err) {
           loading.style.display = 'none';
           error.style.display = 'block';

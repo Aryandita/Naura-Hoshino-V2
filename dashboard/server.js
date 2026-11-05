@@ -134,7 +134,7 @@ module.exports = (containerOrClient) => {
           imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
           mediaSrc: ["'self'", "data:", "blob:", "https:", "http:"],
           workerSrc: ["'self'", "blob:"],
-          connectSrc: ["'self'", "https:", "http:", "ws:", "wss:"],
+          connectSrc: ["'self'", "blob:", "data:", "https:", "http:", "ws:", "wss:"],
           frameSrc: ["'self'"],
           upgradeInsecureRequests: null,
         },

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-11-05T09:24:00+08:00",
+  "phase": "v2.5.0 Visual & UX Polish (5-Point Dashboard Review)",
+  "activePlan": "Perbaikan menyeluruh Peta Satelit Adisha, Radar Taktis, Dunia 3D Interaktif, Tekstur Model 3D Naura, dan Tata Letak HTML/CSS",
+  "lastCompletedTask": "Step 5 of 5: Build produksi dashboard, verifikasi QA statis, dan penyegelan Handoff",
+  "recentDecisions": [
+    "D-01: Menambahkan blob: dan data: ke CSP connectSrc di dashboard/server.js serta fallback HTMLImageElement di loader.js agar tekstur embedded PNG pada model 3D Naura (.vrm/.glb) tidak pernah terblokir CSP dan tidak merender putih polos",
+    "D-02: Merancang dan mengekspor citra radar satelit top-down Adisha melalui Canva MCP (adisha_satellite_radar.png, adisha_satellite_wide.jpg, survival_radar_art.jpg) untuk adisha-map.html dan survival-map.html",
+    "D-03: Menata ulang 38 koordinat POI di adishaWorldData.js serta menambahkan fitur Zoom In/Out/Reset, drag-pan, dan pill-label anti-tabrakan di adisha-map.html",
+    "D-04: Memperluas dunia 3D di activity3dWorld.js dari radius 30m ke 70m (7 zona Adisha, 13 POI/NPC) lengkap dengan Raycaster Click-to-Move/Interact dan bar Fast-Travel 7 Zona",
+    "D-05: Meningkatkan mountSharedNav() di sharedNav.js agar membungkus semua halaman berbasis #shared-nav ke dalam struktur .app-shell + 3-Pillar Sidebar + Topbar serta memperbaiki treasury.html dan player.html"
+  ],
+  "uncommittedFiles": [],
+  "nextAction": "Jalankan npm start atau deploy ke server produksi untuk memverifikasi seluruh halaman dashboard v2.5.0 secara live.",
+  "resumptionHint": "Seluruh 5 poin review visual dan interaktivitas dashboard telah selesai, terverifikasi oleh dashboard:build dan test:inline-scripts, serta telah di-commit dan push ke branch main."
+}

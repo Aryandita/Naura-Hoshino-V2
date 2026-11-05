@@ -750,6 +750,62 @@ function register(router, client) {
             { id: "close", label: "Pamit Memancing" },
           ],
         },
+        bu_yati: {
+          id: "bu_yati",
+          name: "Bu Yati",
+          title: "Pemilik Warung Desa Adisha",
+          image: "/assets/survival/characters/bu_yati.jpeg",
+          defaultDialogue: "Ayo mampir dulu, Nak! Nasi hangat, sayur asem, dan teh manis baru matang. Makan yang kenyang supaya tenagamu pulih sebelum lanjut menjelajah Adisha.",
+          options: [
+            { id: "meal", label: "Santap Hidangan Warung (+30 Stamina)" },
+            { id: "gossip", label: "Tanya Kabar Warga Desa" },
+            { id: "close", label: "Terima Kasih, Bu Yati" },
+          ],
+        },
+        kakek_danu: {
+          id: "kakek_danu",
+          name: "Kakek Danu",
+          title: "Penjaga Rimba Dha Mhai",
+          image: "/assets/survival/characters/kakek_danu.jpeg",
+          defaultDialogue: "Pepohonan pinus dan rimba Dha Mhai menyimpan napas kuno Adisha. Tebanglah secukupnya, dan hutan akan memberimu kayu terbaik serta getah damar murni.",
+          options: [
+            { id: "forest_lore", label: "Dengarkan Petuah Hutan (+25 NSF)" },
+            { id: "close", label: "Pamit Menjelajah Hutan" },
+          ],
+        },
+        barista_chloe: {
+          id: "barista_chloe",
+          name: "Barista Laras & Chloe",
+          title: "Kafe Siber Distrik Pratama",
+          image: "/assets/core/avatar.png",
+          defaultDialogue: "Selamat datang di Neo-Cyber Cafe Pratama! Mau pesan Espresso Aether dingin atau mencoba peruntungan Gacha dan Mesin Slot di pojok arkade?",
+          options: [
+            { id: "espresso", label: "Minum Espresso Aether (+25 Stamina)" },
+            { id: "close", label: "Lanjut Keliling Kota" },
+          ],
+        },
+        syeikh_malik: {
+          id: "syeikh_malik",
+          name: "Syeikh Malik",
+          title: "Tetua Lembah Salju Khul'Khas",
+          image: "/assets/core/avatar.png",
+          defaultDialogue: "Angin puncak Khul'Khas memang membekukan tulang, namun kristal es di altar utara menyimpan ketenangan batin bagi siapa pun yang bermeditasi di dekatnya.",
+          options: [
+            { id: "meditate", label: "Meditasi Kristal Es (+30 NSF & +20 Stamina)" },
+            { id: "close", label: "Turun dari Puncak Salju" },
+          ],
+        },
+        draken_archivist: {
+          id: "draken_archivist",
+          name: "Profesor Arsip Draken",
+          title: "Peneliti Kampus & Obelisk Hextech",
+          image: "/assets/core/avatar.png",
+          defaultDialogue: "Obelisk Hextech di Gerbang Selatan ini memancarkan resonansi kristal dari kawah tambang. Pelajari polanya untuk mempercepat pemahaman ekspedisimu.",
+          options: [
+            { id: "study_obelisk", label: "Pelajari Resonansi Obelisk (+35 NSF)" },
+            { id: "close", label: "Kembali ke Lapangan" },
+          ],
+        },
       };
 
       const npc = NPC_DATABASE[npcId] || NPC_DATABASE.kades_tirto;
@@ -901,6 +957,33 @@ function register(router, client) {
           reward = { items: rodItem };
         } else if (choice === "tips") {
           dialogue = "Mang Ujang: 'Ikan Mas Koki Bintang suka berenang di dekat dermaga saat riak air tenang. Perhatikan lingkaran cahaya air dan lempar kailmu ke sana!'";
+        }
+      } else if (npcId === "bu_yati") {
+        if (choice === "meal") {
+          dialogue = "Bu Yati menyajikan sepiring nasi hangat dan teh manis: 'Makan pelan-pelan ya, Nak. Semoga staminamu pulih kembali!' (+30 Stamina)";
+          reward = { stamina: 30 };
+        } else if (choice === "gossip") {
+          dialogue = "Bu Yati: 'Katanya di puncak utara Khul'Khas sedang turun salju abadi, sedangkan anak-anak muda di Barat Daya sibuk nongkrong di Neo-Cyber Cafe Pratama!'";
+        }
+      } else if (npcId === "kakek_danu") {
+        if (choice === "forest_lore") {
+          dialogue = "Kakek Danu menyerahkan kantung kecil berisi kristal: 'Terima kasih sudah menjaga kelestarian pohon pinus Adisha. Ini sedikit bekal untukmu.' (+25 NSF)";
+          reward = { starFragments: 25 };
+        }
+      } else if (npcId === "barista_chloe") {
+        if (choice === "espresso") {
+          dialogue = "Barista menyajikan secangkir Espresso Aether hangat: 'Aroma biji kopi pegunungan Adisha siap menyegarkan fokusmu!' (+25 Stamina)";
+          reward = { stamina: 25 };
+        }
+      } else if (npcId === "syeikh_malik") {
+        if (choice === "meditate") {
+          dialogue = "Syeikh Malik mengangguk tenang saat kamu bermeditasi di depan Altar Es: 'Pikiran yang jernih membawa langkah yang ringan.' (+30 NSF & +20 Stamina)";
+          reward = { stamina: 20, starFragments: 30 };
+        }
+      } else if (npcId === "draken_archivist") {
+        if (choice === "study_obelisk") {
+          dialogue = "Profesor Arsip Draken mencatat hasil pengamatanmu: 'Data resonansi Hextech ini sangat berharga! Terimalah insentif riset kampus ini.' (+35 NSF)";
+          reward = { starFragments: 35 };
         }
       }
 

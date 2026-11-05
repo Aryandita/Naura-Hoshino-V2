@@ -11,11 +11,91 @@
  *       3. /models/naura%20NEW.vrm
  *       4. Raw GLTF parse bila VRM plugin parsing melempar exception.
  */
+import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { VRMLoaderPlugin } from "@pixiv/three-vrm";
 
 /** Cache Promise ArrayBuffer untuk mencegah download dobel */
 const bufferCache = new Map();
+
+/**
+ * Ekstrak dan pasang tekstur PNG langsung via HTMLImageElement / TextureLoader
+ * dari bufferView GLB bila ImageBitmapLoader gagal akibat pembatasan CSP fetch(blob:).
+ * @param {ArrayBuffer} arrayBuffer
+ * @param {THREE.Object3D} scene
+ */
+async function ensureGlbEmbeddedTextures(arrayBuffer, scene) {
+  try {
+    let hasMissingMap = false;
+    scene.traverse((node) => {
+      if ((node.isMesh || node.isSkinnedMesh) && node.material) {
+        const mats = Array.isArray(node.material) ? node.material : [node.material];
+        for (const m of mats) {
+          if (m && !m.map) hasMissingMap = true;
+        }
+      }
+    });
+    if (!hasMissingMap) return;
+
+    const view = new DataView(arrayBuffer);
+    if (view.getUint32(0, true) !== 0x46546c67) return; // 'glTF'
+    const jsonLen = view.getUint32(12, true);
+    const jsonBytes = new Uint8Array(arrayBuffer, 20, jsonLen);
+    const json = JSON.parse(new TextDecoder("utf-8").decode(jsonBytes));
+    const binStart = 20 + jsonLen + 8;
+
+    const loadTexFromImageIndex = (imgIdx, isColor = false) =>
+      new Promise((resolve) => {
+        const imgDef = json.images && json.images[imgIdx];
+        if (!imgDef || imgDef.bufferView === undefined) return resolve(null);
+        const bv = json.bufferViews && json.bufferViews[imgDef.bufferView];
+        if (!bv) return resolve(null);
+        const slice = new Uint8Array(arrayBuffer, binStart + (bv.byteOffset || 0), bv.byteLength);
+        const blob = new Blob([slice], { type: imgDef.mimeType || "image/png" });
+        const url = URL.createObjectURL(blob);
+        const imgEl = new Image();
+        imgEl.onload = () => {
+          URL.revokeObjectURL(url);
+          const tex = new THREE.Texture(imgEl);
+          tex.flipY = false;
+          tex.colorSpace = isColor ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+          tex.wrapS = THREE.RepeatWrapping;
+          tex.wrapT = THREE.RepeatWrapping;
+          tex.needsUpdate = true;
+          resolve(tex);
+        };
+        imgEl.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+        imgEl.src = url;
+      });
+
+    const baseTexDef = json.textures && json.textures[0];
+    const normTexDef = json.textures && json.textures[1];
+    const [baseMap, normalMap] = await Promise.all([
+      baseTexDef ? loadTexFromImageIndex(baseTexDef.source ?? 0, true) : Promise.resolve(null),
+      normTexDef ? loadTexFromImageIndex(normTexDef.source ?? 1, false) : Promise.resolve(null),
+    ]);
+
+    if (!baseMap) return;
+
+    scene.traverse((node) => {
+      if ((node.isMesh || node.isSkinnedMesh) && node.material) {
+        const mats = Array.isArray(node.material) ? node.material : [node.material];
+        mats.forEach((m) => {
+          if (m && !m.map) {
+            m.map = baseMap;
+            if (normalMap && !m.normalMap) m.normalMap = normalMap;
+            m.needsUpdate = true;
+          }
+        });
+      }
+    });
+  } catch (err) {
+    console.warn("[NauraViewer/loader] Fallback tekstur embedded gagal:", err);
+  }
+}
 
 /**
  * Deteksi format model berdasarkan path.
@@ -172,14 +252,25 @@ export async function loadModel(modelPath = "/models/naura.glb", onProgress = nu
           }
         }
 
+        // Pastikan tekstur terpasang meskipun browser/CSP sempat memblokir ImageBitmapLoader(blob:)
+        await ensureGlbEmbeddedTextures(arrayBuffer, gltf.scene);
+
         // Optimasi bayangan dan material
         gltf.scene.traverse((node) => {
-          if (node.isMesh) {
+          if (node.isMesh || node.isSkinnedMesh) {
             node.castShadow = true;
             node.receiveShadow = false;
-            if (node.material) {
-              node.material.depthWrite = true;
-            }
+            const mats = Array.isArray(node.material) ? node.material : node.material ? [node.material] : [];
+            mats.forEach((mat) => {
+              if (mat) {
+                mat.depthWrite = true;
+                if (mat.map && mat.map.colorSpace !== THREE.SRGBColorSpace) {
+                  mat.map.colorSpace = THREE.SRGBColorSpace;
+                  mat.map.needsUpdate = true;
+                }
+                mat.needsUpdate = true;
+              }
+            });
           }
         });
 

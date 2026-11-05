@@ -70,59 +70,158 @@ export class Activity3DWorld {
     // Floating text items
     this.floatingTexts = [];
 
-    // Interactivity POIs
+    // Interactivity POIs across 7 Expanded Adisha Zones (Radius ~90m)
     this.poiNodes = [
       {
         id: 'kades_tirto',
         name: 'Pak Kades Tirto',
         title: 'Kepala Desa Adisha',
+        zone: 'desa',
         type: 'NPC',
         icon: '💬',
         actionLabel: 'Bicara dengan Pak Kades',
-        pos: new THREE.Vector3(0, 0, -3.8),
-        radius: 3.6,
+        pos: new THREE.Vector3(0, 0, -4.5),
+        radius: 4.5,
       },
       {
         id: 'bagas',
         name: 'Pandai Besi Bagas',
-        title: 'Pandai Besi Desa',
+        title: 'Bengkel Tempa Adisha',
+        zone: 'desa',
         type: 'NPC',
         icon: '🔨',
         actionLabel: 'Tempa & Servis Perkakas',
-        pos: new THREE.Vector3(-6.2, 0, 1.2),
-        radius: 3.6,
+        pos: new THREE.Vector3(-8.5, 0, 1.5),
+        radius: 4.5,
+      },
+      {
+        id: 'bu_yati',
+        name: 'Warung Bu Yati',
+        title: 'Kuliner & Pemulihan Stamina',
+        zone: 'desa',
+        type: 'NPC',
+        icon: '🍲',
+        actionLabel: 'Mampir ke Warung Bu Yati',
+        pos: new THREE.Vector3(8.5, 0, 1.5),
+        radius: 4.5,
       },
       {
         id: 'pine_tree',
-        name: 'Pohon Pinus Adisha',
+        name: 'Hutan Pinus Adisha',
         title: 'Sumber Kayu Pinus & Serat',
+        zone: 'hutan',
         type: 'GATHER_CHOP',
         icon: '🪓',
         actionLabel: 'Tebang Kayu Pinus',
-        pos: new THREE.Vector3(-14.0, 0, -10.5),
-        radius: 4.2,
+        pos: new THREE.Vector3(-24.0, 0, -19.0),
+        radius: 5.5,
+      },
+      {
+        id: 'ancient_tree',
+        name: 'Pohon Damar Raksasa Dha Mhai',
+        title: 'Kayu Purba & Serat Rimba',
+        zone: 'hutan',
+        type: 'GATHER_CHOP',
+        icon: '🌲',
+        actionLabel: 'Panen Kayu Rimba Dha Mhai',
+        pos: new THREE.Vector3(-34.0, 0, -28.0),
+        radius: 5.8,
+      },
+      {
+        id: 'kakek_danu',
+        name: 'Kakek Danu',
+        title: 'Penjaga Rimba Dha Mhai',
+        zone: 'hutan',
+        type: 'NPC',
+        icon: '🌿',
+        actionLabel: 'Bicara dengan Kakek Danu',
+        pos: new THREE.Vector3(-29.0, 0, -23.0),
+        radius: 4.8,
       },
       {
         id: 'ore_rock',
         name: 'Bukit Tambang Andesit & Bijih',
         title: 'Deposit Batu & Mineral',
+        zone: 'tambang',
         type: 'GATHER_MINE',
         icon: '⛏️',
         actionLabel: 'Tambang Batu & Bijih',
-        pos: new THREE.Vector3(15.2, 0, -11.0),
-        radius: 4.2,
+        pos: new THREE.Vector3(24.0, 0, -19.0),
+        radius: 5.5,
+      },
+      {
+        id: 'crystal_vein',
+        name: 'Kawah Kristal Aether',
+        title: 'Urat Bijih Besi & Kristal Murni',
+        zone: 'tambang',
+        type: 'GATHER_MINE',
+        icon: '💎',
+        actionLabel: 'Tambang Kristal Kawah',
+        pos: new THREE.Vector3(35.0, 0, -29.0),
+        radius: 5.8,
       },
       {
         id: 'fishing_pier',
         name: 'Dermaga Kolam Bintang',
         title: 'Spot Pemancingan Ikan',
+        zone: 'dermaga',
         type: 'GATHER_FISH',
         icon: '🎣',
         actionLabel: 'Mancing di Kolam Bintang',
-        pos: new THREE.Vector3(12.5, 0, 13.5),
-        radius: 4.2,
+        pos: new THREE.Vector3(22.5, 0, 22.5),
+        radius: 5.8,
+      },
+      {
+        id: 'mang_ujang',
+        name: 'Mang Ujang',
+        title: 'Nelayan Kolam Bintang & Lauh Than',
+        zone: 'dermaga',
+        type: 'NPC',
+        icon: '⚓',
+        actionLabel: 'Sapa Mang Ujang',
+        pos: new THREE.Vector3(18.0, 0, 18.5),
+        radius: 4.8,
+      },
+      {
+        id: 'barista_chloe',
+        name: 'Neo-Cyber Cafe Pratama',
+        title: 'Barista Laras & Arkade Kota',
+        zone: 'pratama',
+        type: 'NPC',
+        icon: '☕',
+        actionLabel: 'Pesan Kopi di Cyber Cafe',
+        pos: new THREE.Vector3(-25.0, 0, 22.0),
+        radius: 5.2,
+      },
+      {
+        id: 'syeikh_malik',
+        name: 'Altar Es Khul\'Khas & Syeikh Malik',
+        title: 'Puncak Salju Utara Adisha',
+        zone: 'khulkhas',
+        type: 'NPC',
+        icon: '❄️',
+        actionLabel: 'Meditasi di Puncak Khul\'Khas',
+        pos: new THREE.Vector3(0, 0, -42.0),
+        radius: 5.5,
+      },
+      {
+        id: 'draken_archivist',
+        name: 'Obelisk Riset Kampus Draken',
+        title: 'Gerbang Akademi Selatan',
+        zone: 'draken',
+        type: 'NPC',
+        icon: '🏛️',
+        actionLabel: 'Teliti Obelisk Hextech Draken',
+        pos: new THREE.Vector3(0, 0, 40.0),
+        radius: 5.5,
       },
     ];
+
+    this.interactableMeshes = [];
+    this.autoWalkTarget = null;
+    this.autoWalkPoi = null;
+    this.raycaster = new THREE.Raycaster();
+    this.pointerNdc = new THREE.Vector2();
 
     this.activePoi = null;
     this.isRunning = false;
@@ -143,11 +242,11 @@ export class Activity3DWorld {
     const height = this.container.clientHeight || 520;
 
     this.scene = new THREE.Scene();
-    // Warna langit Desa Adisha (siang tropis sejuk & cerah)
-    this.scene.background = new THREE.Color(0x8ecae6);
-    this.scene.fog = new THREE.FogExp2(0x8ecae6, 0.016);
+    // Warna langit Benua Adisha (siang tropis cerah dengan cakrawala luas)
+    this.scene.background = new THREE.Color(0x7cc4e8);
+    this.scene.fog = new THREE.FogExp2(0x7cc4e8, 0.0065);
 
-    this.camera = new THREE.PerspectiveCamera(45, width / height, 0.2, 160);
+    this.camera = new THREE.PerspectiveCamera(48, width / height, 0.2, 280);
     this.updateCameraPosition();
 
     this.renderer = new THREE.WebGLRenderer({
@@ -166,20 +265,20 @@ export class Activity3DWorld {
     this.container.appendChild(this.renderer.domElement);
 
     // Pencahayaan Luar Ruangan Desa Tropis
-    const ambientLight = new THREE.AmbientLight(0xfff7ed, 1.15);
+    const ambientLight = new THREE.AmbientLight(0xfff7ed, 1.2);
     this.scene.add(ambientLight);
 
-    const hemiLight = new THREE.HemisphereLight(0xdff0fc, 0x3d5a36, 0.85);
+    const hemiLight = new THREE.HemisphereLight(0xdff0fc, 0x3d5a36, 0.9);
     this.scene.add(hemiLight);
 
     const sunLight = new THREE.DirectionalLight(0xfffaed, 2.2);
-    sunLight.position.set(28, 45, 22);
+    sunLight.position.set(42, 68, 36);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 1024;
-    sunLight.shadow.mapSize.height = 1024;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
     sunLight.shadow.camera.near = 0.5;
-    sunLight.shadow.camera.far = 90;
-    const shadowD = 28;
+    sunLight.shadow.camera.far = 180;
+    const shadowD = 62;
     sunLight.shadow.camera.left = -shadowD;
     sunLight.shadow.camera.right = shadowD;
     sunLight.shadow.camera.top = shadowD;
@@ -188,14 +287,14 @@ export class Activity3DWorld {
     this.scene.add(sunLight);
 
     // Lampu temaram aksen bengkel tempa
-    const forgeFireLight = new THREE.PointLight(0xf97316, 2.8, 12);
-    forgeFireLight.position.set(-6.2, 1.6, 1.2);
+    const forgeFireLight = new THREE.PointLight(0xf97316, 2.8, 16);
+    forgeFireLight.position.set(-8.5, 1.8, 1.5);
     this.scene.add(forgeFireLight);
     this.forgeLight = forgeFireLight;
 
     // Lampu pendar kristal danau
-    const pondBeaconLight = new THREE.PointLight(0x38bdf8, 2.2, 10);
-    pondBeaconLight.position.set(12.5, 1.8, 13.5);
+    const pondBeaconLight = new THREE.PointLight(0x38bdf8, 2.5, 18);
+    pondBeaconLight.position.set(22.5, 2.0, 22.5);
     this.scene.add(pondBeaconLight);
 
     this.boundResize = this.onResize.bind(this);
@@ -203,16 +302,45 @@ export class Activity3DWorld {
   }
 
   /**
-   * Membangun lanskap utuh Desa Adisha:
-   * Alun-alun balai desa, paviliun kades, bengkel pandai besi, hutan pinus, tebing tambang, kolam ikan.
+   * Membangun lanskap luas Benua Adisha (Radius ~78m, 7 Zona Terhubung):
+   * 1. Pusat Alun-alun Desa Adisha (Balai Desa, Bengkel Bagas, Warung Bu Yati)
+   * 2. Hutan Pinus & Rimba Dha Mhai (Barat Laut)
+   * 3. Bukit Tambang Andesit & Kawah Kristal (Timur Laut)
+   * 4. Danau Kolam Bintang & Dermaga Lauh Than (Tenggara)
+   * 5. Distrik Neon Kota Pratama & Cyber Cafe (Barat Daya)
+   * 6. Puncak Salju & Altar Es Khul'Khas (Utara)
+   * 7. Gerbang Akademi & Obelisk Kampus Draken (Selatan)
    */
   buildDesaAdisha() {
     this.worldGroup = new THREE.Group();
 
-    // 1. Tanah Utama / Padang Rumput Desa (radius ~32m)
-    const islandGeo = new THREE.CylinderGeometry(30, 26, 4, 48);
+    // Samudra Luar Mengelilingi Pulau Adisha
+    const oceanGeo = new THREE.CircleGeometry(180, 64);
+    const oceanMat = new THREE.MeshStandardMaterial({
+      color: 0x0369a1,
+      roughness: 0.18,
+      metalness: 0.35,
+    });
+    const oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
+    oceanMesh.rotation.x = -Math.PI / 2;
+    oceanMesh.position.y = -0.65;
+    this.worldGroup.add(oceanMesh);
+
+    // Pesisir Pasir Pantai Pulau Adisha
+    const beachGeo = new THREE.CylinderGeometry(74, 78, 3.6, 64);
+    const beachMat = new THREE.MeshStandardMaterial({
+      color: 0xd6b87c,
+      roughness: 0.9,
+    });
+    const beachMesh = new THREE.Mesh(beachGeo, beachMat);
+    beachMesh.position.y = -1.85;
+    beachMesh.receiveShadow = true;
+    this.worldGroup.add(beachMesh);
+
+    // 1. Daratan Utama Benua Adisha (radius ~70m)
+    const islandGeo = new THREE.CylinderGeometry(68, 72, 4, 64);
     const islandMat = new THREE.MeshStandardMaterial({
-      color: 0x3e7b3e, // Rumput tropis asri
+      color: 0x3e7b3e,
       roughness: 0.85,
       metalness: 0.05,
       flatShading: true,
@@ -222,8 +350,7 @@ export class Activity3DWorld {
     islandMesh.receiveShadow = true;
     this.worldGroup.add(islandMesh);
 
-    // Lapisan permukaan tanah atas dengan lereng lembut
-    const groundGeo = new THREE.CircleGeometry(29.8, 48);
+    const groundGeo = new THREE.CircleGeometry(67.8, 64);
     const groundMat = new THREE.MeshStandardMaterial({
       color: 0x478c45,
       roughness: 0.9,
@@ -233,10 +360,11 @@ export class Activity3DWorld {
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.position.y = 0.01;
     groundMesh.receiveShadow = true;
+    this.groundMesh = groundMesh;
     this.worldGroup.add(groundMesh);
 
     // 2. Alun-alun Pusat Desa (Cobblestone Village Square)
-    const plazaGeo = new THREE.CircleGeometry(9.2, 32);
+    const plazaGeo = new THREE.CircleGeometry(13.5, 40);
     const plazaMat = new THREE.MeshStandardMaterial({
       color: 0x71717a,
       roughness: 0.75,
@@ -248,84 +376,94 @@ export class Activity3DWorld {
     plazaMesh.receiveShadow = true;
     this.worldGroup.add(plazaMesh);
 
-    // Jalan Setapak Tanah Penghubung (Pathways)
+    // Jaringan Jalan Raya & Setapak Penghubung 7 Zona
     const pathMat = new THREE.MeshStandardMaterial({ color: 0x926c48, roughness: 0.95 });
+    const asphaltMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
 
-    // Jalan ke Hutan Pinus (Barat Laut)
-    const forestPathGeo = new THREE.PlaneGeometry(3.2, 16);
-    const forestPath = new THREE.Mesh(forestPathGeo, pathMat);
-    forestPath.rotation.x = -Math.PI / 2;
-    forestPath.rotation.z = Math.PI / 3.8;
-    forestPath.position.set(-7, 0.025, -5.5);
-    this.worldGroup.add(forestPath);
+    const createRoad = (x, z, width, length, angleZ, mat = pathMat) => {
+      const geo = new THREE.PlaneGeometry(width, length);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.rotation.z = angleZ;
+      mesh.position.set(x, 0.025, z);
+      mesh.receiveShadow = true;
+      this.worldGroup.add(mesh);
+    };
 
-    // Jalan ke Bukit Tambang (Timur Laut)
-    const minePathGeo = new THREE.PlaneGeometry(3.0, 16);
-    const minePath = new THREE.Mesh(minePathGeo, pathMat);
-    minePath.rotation.x = -Math.PI / 2;
-    minePath.rotation.z = -Math.PI / 3.6;
-    minePath.position.set(7.5, 0.025, -5.5);
-    this.worldGroup.add(minePath);
-
-    // Jalan ke Kolam Pancing (Tenggara)
-    const pondPathGeo = new THREE.PlaneGeometry(3.0, 15);
-    const pondPath = new THREE.Mesh(pondPathGeo, pathMat);
-    pondPath.rotation.x = -Math.PI / 2;
-    pondPath.rotation.z = -Math.PI / 4.5;
-    pondPath.position.set(6.5, 0.025, 7.5);
-    this.worldGroup.add(pondPath);
+    // Jalan ke Hutan Pinus & Dha Mhai (Barat Laut)
+    createRoad(-19, -15, 3.6, 36, Math.PI / 3.8, pathMat);
+    // Jalan ke Bukit Tambang & Kawah (Timur Laut)
+    createRoad(19, -15, 3.6, 36, -Math.PI / 3.8, pathMat);
+    // Jalan ke Kolam Bintang & Dermaga (Tenggara)
+    createRoad(14, 14, 3.6, 28, -Math.PI / 4, pathMat);
+    // Jalan Aspal ke Distrik Kota Pratama (Barat Daya)
+    createRoad(-15, 14, 4.0, 28, Math.PI / 4, asphaltMat);
+    // Jalan Tanjakan ke Puncak Salju Khul'Khas (Utara)
+    createRoad(0, -26, 3.6, 32, 0, pathMat);
+    // Jalan Boulevard ke Gerbang Kampus Draken (Selatan)
+    createRoad(0, 26, 4.0, 30, 0, asphaltMat);
 
     // 3. Monumen Bintang Adisha (Pusat Alun-alun)
-    const monumentBaseGeo = new THREE.CylinderGeometry(1.6, 2.0, 0.6, 8);
+    const monumentBaseGeo = new THREE.CylinderGeometry(1.8, 2.3, 0.65, 8);
     const monumentBaseMat = new THREE.MeshStandardMaterial({ color: 0x3f3f46, roughness: 0.6 });
     const monumentBase = new THREE.Mesh(monumentBaseGeo, monumentBaseMat);
-    monumentBase.position.set(0, 0.3, 0);
+    monumentBase.position.set(0, 0.32, 0);
     monumentBase.castShadow = true;
     monumentBase.receiveShadow = true;
     this.worldGroup.add(monumentBase);
 
-    const crystalGeo = new THREE.OctahedronGeometry(0.7, 0);
+    const crystalGeo = new THREE.OctahedronGeometry(0.85, 0);
     const crystalMat = new THREE.MeshStandardMaterial({
       color: 0x38bdf8,
       emissive: 0x0284c7,
-      emissiveIntensity: 0.65,
+      emissiveIntensity: 0.75,
       roughness: 0.15,
       metalness: 0.3,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.92,
     });
     this.centralCrystal = new THREE.Mesh(crystalGeo, crystalMat);
-    this.centralCrystal.position.set(0, 1.4, 0);
+    this.centralCrystal.position.set(0, 1.55, 0);
     this.centralCrystal.castShadow = true;
     this.worldGroup.add(this.centralCrystal);
 
-    // 4. Balai Desa Adisha & NPC Pak Kades Tirto
+    // 4. Balai Desa Adisha, Warung Bu Yati & NPC Pak Kades Tirto
     this.buildBalaiDesa();
 
     // 5. Bengkel Tempa Pandai Besi & NPC Bagas
     this.buildBlacksmithForge();
 
-    // 6. Zona Hutan Pinus (North-West) & Node Tebang Kayu
+    // 6. Zona Hutan Pinus & Rimba Dha Mhai (North-West)
     this.buildPineForest();
 
-    // 7. Zona Bukit Tambang (North-East) & Node Tambang
+    // 7. Zona Bukit Tambang & Kawah Kristal (North-East)
     this.buildMiningQuarry();
 
-    // 8. Zona Danau Kolam Bintang (South-East) & Node Mancing
+    // 8. Zona Danau Kolam Bintang & Dermaga Mang Ujang (South-East)
     this.buildStarlightPond();
 
-    // 9. Pagar Kayu & Partikel Spora Bintang
+    // 9. Zona Distrik Kota Pratama, Puncak Salju Khul'Khas & Kampus Draken
+    this.buildExpandedRegions();
+
+    // 10. Partikel Spora Bintang Seluruh Peta
     this.buildFencesAndParticles();
 
     this.scene.add(this.worldGroup);
   }
 
+  registerInteractable(meshOrGroup, poiId) {
+    meshOrGroup.userData.poiId = poiId;
+    meshOrGroup.traverse((child) => {
+      child.userData.poiId = poiId;
+    });
+    this.interactableMeshes.push(meshOrGroup);
+  }
+
   buildBalaiDesa() {
     const balaiGroup = new THREE.Group();
-    balaiGroup.position.set(0, 0, -6.5);
+    balaiGroup.position.set(0, 0, -7.5);
 
-    // Lantai panggung kayu
-    const floorGeo = new THREE.BoxGeometry(6.5, 0.4, 4.5);
+    const floorGeo = new THREE.BoxGeometry(7.5, 0.4, 5.0);
     const woodFloorMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
     const floor = new THREE.Mesh(floorGeo, woodFloorMat);
     floor.position.y = 0.2;
@@ -333,14 +471,13 @@ export class Activity3DWorld {
     floor.receiveShadow = true;
     balaiGroup.add(floor);
 
-    // 4 Pilar kayu penyangga
-    const pillarGeo = new THREE.CylinderGeometry(0.18, 0.18, 2.8, 8);
+    const pillarGeo = new THREE.CylinderGeometry(0.18, 0.18, 3.0, 8);
     const pillarMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 });
     const pillarPositions = [
-      [-2.9, 1.6, -1.9],
-      [2.9, 1.6, -1.9],
-      [-2.9, 1.6, 1.9],
-      [2.9, 1.6, 1.9],
+      [-3.3, 1.7, -2.1],
+      [3.3, 1.7, -2.1],
+      [-3.3, 1.7, 2.1],
+      [3.3, 1.7, 2.1],
     ];
     for (const pos of pillarPositions) {
       const pillar = new THREE.Mesh(pillarGeo, pillarMat);
@@ -349,119 +486,156 @@ export class Activity3DWorld {
       balaiGroup.add(pillar);
     }
 
-    // Atap Tradisional Genteng Merah / Pelana
-    const roofGeo = new THREE.ConeGeometry(5.2, 1.8, 4);
+    const roofGeo = new THREE.ConeGeometry(5.8, 2.0, 4);
     const roofMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.65 });
     const roof = new THREE.Mesh(roofGeo, roofMat);
     roof.rotation.y = Math.PI / 4;
-    roof.position.y = 3.8;
+    roof.position.y = 4.0;
     roof.castShadow = true;
     balaiGroup.add(roof);
 
-    // Papan Nama Balai Desa
-    const boardGeo = new THREE.BoxGeometry(2.4, 0.6, 0.1);
+    const boardGeo = new THREE.BoxGeometry(2.6, 0.6, 0.1);
     const boardMat = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.5 });
     const board = new THREE.Mesh(boardGeo, boardMat);
-    board.position.set(0, 2.4, 1.95);
+    board.position.set(0, 2.5, 2.15);
     balaiGroup.add(board);
 
+    this.registerInteractable(balaiGroup, 'kades_tirto');
     this.worldGroup.add(balaiGroup);
 
     // NPC: Pak Kades Tirto
-    this.createNpcMesh('kades_tirto', 'Pak Kades Tirto', 0x2563eb, new THREE.Vector3(0, 0, -3.8));
+    this.createNpcMesh('kades_tirto', 'Pak Kades Tirto [Klik]', 0x2563eb, new THREE.Vector3(0, 0, -4.5));
+
+    // Warung Bu Yati di sisi Timur Alun-alun
+    const warungGroup = new THREE.Group();
+    warungGroup.position.set(9.2, 0, 1.5);
+    const wBase = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.3, 3.6), woodFloorMat);
+    wBase.position.y = 0.15;
+    warungGroup.add(wBase);
+    const wRoof = new THREE.Mesh(
+      new THREE.ConeGeometry(3.4, 1.4, 4),
+      new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.7 })
+    );
+    wRoof.rotation.y = Math.PI / 4;
+    wRoof.position.y = 2.8;
+    warungGroup.add(wRoof);
+    const counter = new THREE.Mesh(
+      new THREE.BoxGeometry(2.8, 0.9, 0.8),
+      new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.8 })
+    );
+    counter.position.set(-0.4, 0.6, 0.8);
+    warungGroup.add(counter);
+    this.registerInteractable(warungGroup, 'bu_yati');
+    this.worldGroup.add(warungGroup);
+
+    this.createNpcMesh('bu_yati', '🍲 Warung Bu Yati [Klik]', 0xec4899, new THREE.Vector3(8.5, 0, 1.5));
   }
 
   buildBlacksmithForge() {
     const forgeGroup = new THREE.Group();
-    forgeGroup.position.set(-6.5, 0, 1.2);
+    forgeGroup.position.set(-9.0, 0, 1.5);
 
-    // Pondasi Batu Bengkel
-    const baseGeo = new THREE.BoxGeometry(4.2, 0.3, 3.8);
+    const baseGeo = new THREE.BoxGeometry(4.6, 0.3, 4.0);
     const stoneMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.9 });
     const base = new THREE.Mesh(baseGeo, stoneMat);
     base.position.y = 0.15;
     base.castShadow = true;
     forgeGroup.add(base);
 
-    // Tungku Api Batu Bara (Furnace)
-    const furnaceGeo = new THREE.BoxGeometry(1.6, 2.2, 1.6);
+    const furnaceGeo = new THREE.BoxGeometry(1.8, 2.4, 1.8);
     const furnace = new THREE.Mesh(furnaceGeo, stoneMat);
-    furnace.position.set(-0.9, 1.25, -0.6);
+    furnace.position.set(-1.0, 1.35, -0.6);
     furnace.castShadow = true;
     forgeGroup.add(furnace);
 
-    // Bara api membara di mulut tungku
-    const fireGeo = new THREE.BoxGeometry(0.7, 0.5, 0.5);
+    const fireGeo = new THREE.BoxGeometry(0.8, 0.55, 0.55);
     const fireMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
     const fire = new THREE.Mesh(fireGeo, fireMat);
-    fire.position.set(-0.9, 0.7, 0.2);
+    fire.position.set(-1.0, 0.75, 0.25);
     forgeGroup.add(fire);
 
-    // Paron Tempa Besi (Anvil)
-    const anvilGeo = new THREE.BoxGeometry(0.8, 0.7, 0.45);
+    const anvilGeo = new THREE.BoxGeometry(0.9, 0.75, 0.5);
     const metalMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.8, roughness: 0.3 });
     const anvil = new THREE.Mesh(anvilGeo, metalMat);
-    anvil.position.set(0.6, 0.5, 0.4);
+    anvil.position.set(0.7, 0.55, 0.45);
     anvil.castShadow = true;
     forgeGroup.add(anvil);
 
+    this.registerInteractable(forgeGroup, 'bagas');
     this.worldGroup.add(forgeGroup);
 
     // NPC: Pandai Besi Bagas
-    this.createNpcMesh('bagas', 'Pandai Besi Bagas', 0xb45309, new THREE.Vector3(-6.2, 0, 1.2));
+    this.createNpcMesh('bagas', '🔨 Pandai Besi Bagas [Klik]', 0xb45309, new THREE.Vector3(-8.5, 0, 1.5));
   }
 
   buildPineForest() {
     const forestGroup = new THREE.Group();
 
-    // Buat deretan 10 pohon pinus rimbun
+    // Hamparan tanah lumut Hutan Pinus & Dha Mhai
+    const forestFloor = new THREE.Mesh(
+      new THREE.CircleGeometry(21, 32),
+      new THREE.MeshStandardMaterial({ color: 0x2d6a4f, roughness: 0.95 })
+    );
+    forestFloor.rotation.x = -Math.PI / 2;
+    forestFloor.position.set(-29, 0.018, -23);
+    forestGroup.add(forestFloor);
+
+    // 24 Pohon Pinus & Pohon Purba Dha Mhai
     const pineCoords = [
-      [-12, -9], [-15, -13], [-10, -14], [-17, -8],
-      [-13, -16], [-19, -12], [-11, -11], [-16, -15],
-      [-14, -18], [-8, -12],
+      [-24, -19], [-34, -28], [-20, -23], [-27, -15],
+      [-31, -19], [-22, -29], [-36, -21], [-28, -33],
+      [-18, -17], [-39, -26], [-33, -35], [-25, -26],
+      [-41, -19], [-16, -25], [-30, -13], [-43, -31],
+      [-21, -35], [-37, -15], [-45, -23], [-27, -39],
+      [-15, -20], [-32, -24], [-38, -33], [-23, -14],
     ];
 
     for (let i = 0; i < pineCoords.length; i++) {
       const [x, z] = pineCoords[i];
-      const isTargetNode = (i === 0); // Pohon pinus pertama adalah node gathering
-      const tree = this.createPineTreeMesh(isTargetNode);
+      const isPrimaryChop = (i === 0);
+      const isAncientChop = (i === 1);
+      const isMystic = (i % 4 === 2);
+      const tree = this.createPineTreeMesh(isPrimaryChop || isAncientChop, isMystic, isAncientChop ? '🌲 Damar Purba [Tebang]' : '🪓 Pohon Pinus [Tebang]');
       tree.position.set(x, 0, z);
+      if (isPrimaryChop) this.registerInteractable(tree, 'pine_tree');
+      if (isAncientChop) this.registerInteractable(tree, 'ancient_tree');
       forestGroup.add(tree);
     }
 
+    // NPC: Kakek Danu Penjaga Rimba
+    this.createNpcMesh('kakek_danu', '🌿 Kakek Danu [Klik]', 0x15803d, new THREE.Vector3(-29.0, 0, -23.0));
+
     // Kayu pinus tumbang dekoratif
-    const logGeo = new THREE.CylinderGeometry(0.28, 0.32, 3.2, 8);
+    const logGeo = new THREE.CylinderGeometry(0.32, 0.36, 3.8, 8);
     const logMat = new THREE.MeshStandardMaterial({ color: 0x5c3317, roughness: 0.85 });
     const log = new THREE.Mesh(logGeo, logMat);
     log.rotation.z = Math.PI / 2;
     log.rotation.y = 0.4;
-    log.position.set(-15.5, 0.28, -7.5);
+    log.position.set(-26.5, 0.3, -21.0);
     log.castShadow = true;
     forestGroup.add(log);
 
     this.worldGroup.add(forestGroup);
   }
 
-  createPineTreeMesh(isGatheringNode = false) {
+  createPineTreeMesh(isGatheringNode = false, isMystic = false, labelText = '🌲 Pohon Pinus [Tebang]') {
     const tree = new THREE.Group();
 
-    // Batang pohon kayu
-    const trunkH = isGatheringNode ? 2.8 : 2.2;
-    const trunkGeo = new THREE.CylinderGeometry(0.26, 0.38, trunkH, 8);
+    const trunkH = isGatheringNode ? 3.2 : 2.4;
+    const trunkGeo = new THREE.CylinderGeometry(0.28, 0.42, trunkH, 8);
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a2e18, roughness: 0.9 });
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
     trunk.position.y = trunkH / 2;
     trunk.castShadow = true;
     tree.add(trunk);
 
-    // 3 Tingkat Tajuk Daun Pinus Kerucut
-    const leavesColor = isGatheringNode ? 0x166534 : 0x15803d;
+    const leavesColor = isMystic ? 0x6d28d9 : (isGatheringNode ? 0x166534 : 0x15803d);
     const leavesMat = new THREE.MeshStandardMaterial({ color: leavesColor, roughness: 0.8 });
 
     const tiers = [
-      { r: isGatheringNode ? 2.4 : 2.0, h: 2.2, y: trunkH + 0.6 },
-      { r: isGatheringNode ? 1.8 : 1.5, h: 1.8, y: trunkH + 1.8 },
-      { r: isGatheringNode ? 1.2 : 0.9, h: 1.5, y: trunkH + 2.8 },
+      { r: isGatheringNode ? 2.6 : 2.1, h: 2.4, y: trunkH + 0.6 },
+      { r: isGatheringNode ? 2.0 : 1.6, h: 2.0, y: trunkH + 1.9 },
+      { r: isGatheringNode ? 1.3 : 1.0, h: 1.6, y: trunkH + 3.0 },
     ];
 
     for (const t of tiers) {
@@ -473,17 +647,15 @@ export class Activity3DWorld {
     }
 
     if (isGatheringNode) {
-      // Beacon penanda aksi
-      const beaconGeo = new THREE.RingGeometry(1.6, 1.9, 16);
+      const beaconGeo = new THREE.RingGeometry(1.8, 2.2, 20);
       const beaconMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide });
       const beacon = new THREE.Mesh(beaconGeo, beaconMat);
       beacon.rotation.x = -Math.PI / 2;
       beacon.position.y = 0.05;
       tree.add(beacon);
 
-      // Label Billboard 3D
-      const tag = this.createFloatingBillboard('🌲 Pohon Pinus [Tebang]', '#22c55e');
-      tag.position.set(0, 5.8, 0);
+      const tag = this.createFloatingBillboard(labelText, '#22c55e');
+      tag.position.set(0, 6.2, 0);
       tree.add(tag);
     }
 
@@ -493,145 +665,239 @@ export class Activity3DWorld {
   buildMiningQuarry() {
     const quarryGroup = new THREE.Group();
 
-    // Tebing & Bukit Batu Besar
+    // Lantai Batu Kawah Tambang
+    const quarryFloor = new THREE.Mesh(
+      new THREE.CircleGeometry(20, 32),
+      new THREE.MeshStandardMaterial({ color: 0x3f3f46, roughness: 0.95 })
+    );
+    quarryFloor.rotation.x = -Math.PI / 2;
+    quarryFloor.position.set(29, 0.018, -24);
+    quarryGroup.add(quarryFloor);
+
     const rockMat = new THREE.MeshStandardMaterial({ color: 0x52525b, roughness: 0.9, flatShading: true });
     const boulderCoords = [
-      [14, -13, 2.8], [17, -10, 3.4], [16, -15, 2.5],
-      [19, -13, 3.2], [12, -15, 2.0], [18, -7, 1.8],
+      [22, -24, 3.2], [28, -17, 3.8], [32, -23, 2.9],
+      [38, -26, 4.2], [26, -31, 3.4], [34, -35, 3.9],
+      [41, -20, 3.5], [19, -15, 2.2], [39, -32, 4.5],
     ];
 
     for (const [x, z, scale] of boulderCoords) {
       const rockGeo = new THREE.DodecahedronGeometry(scale, 1);
       const rock = new THREE.Mesh(rockGeo, rockMat);
-      rock.position.set(x, scale * 0.7, z);
+      rock.position.set(x, scale * 0.65, z);
       rock.rotation.set(Math.random(), Math.random(), Math.random());
       rock.castShadow = true;
       quarryGroup.add(rock);
     }
 
-    // Node Utama Penambangan: Batu Bijih Mineral
-    const oreNode = new THREE.Group();
-    oreNode.position.set(15.2, 0, -11.0);
+    // Helper pembuat node tambang kristal
+    const createOreCluster = (posX, posZ, poiId, label, hexColor, hexEmissive, borderHex) => {
+      const oreNode = new THREE.Group();
+      oreNode.position.set(posX, 0, posZ);
 
-    const oreRockGeo = new THREE.DodecahedronGeometry(1.5, 1);
-    const oreRockMat = new THREE.MeshStandardMaterial({ color: 0x3f3f46, roughness: 0.85, flatShading: true });
-    const oreRock = new THREE.Mesh(oreRockGeo, oreRockMat);
-    oreRock.position.y = 1.1;
-    oreRock.castShadow = true;
-    oreNode.add(oreRock);
+      const oreRockGeo = new THREE.DodecahedronGeometry(1.8, 1);
+      const oreRockMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.85, flatShading: true });
+      const oreRock = new THREE.Mesh(oreRockGeo, oreRockMat);
+      oreRock.position.y = 1.2;
+      oreRock.castShadow = true;
+      oreNode.add(oreRock);
 
-    // Kristal Bijih Bercahaya (Vein)
-    const crystalMat = new THREE.MeshStandardMaterial({
-      color: 0x06b6d4,
-      emissive: 0x0891b2,
-      emissiveIntensity: 0.8,
-      roughness: 0.2,
-      metalness: 0.6,
-    });
-    for (let c = 0; c < 4; c++) {
-      const cg = new THREE.ConeGeometry(0.25, 0.8, 5);
-      const cm = new THREE.Mesh(cg, crystalMat);
-      cm.position.set((Math.random() - 0.5) * 1.5, 1.3 + Math.random() * 0.6, (Math.random() - 0.5) * 1.5);
-      cm.rotation.set(Math.random() * 0.6, Math.random() * 3, Math.random() * 0.6);
-      oreNode.add(cm);
-    }
+      const crystalMat = new THREE.MeshStandardMaterial({
+        color: hexColor,
+        emissive: hexEmissive,
+        emissiveIntensity: 0.85,
+        roughness: 0.2,
+        metalness: 0.6,
+      });
+      for (let c = 0; c < 6; c++) {
+        const cg = new THREE.ConeGeometry(0.32, 1.05, 5);
+        const cm = new THREE.Mesh(cg, crystalMat);
+        cm.position.set((Math.random() - 0.5) * 1.8, 1.5 + Math.random() * 0.7, (Math.random() - 0.5) * 1.8);
+        cm.rotation.set(Math.random() * 0.6, Math.random() * 3, Math.random() * 0.6);
+        oreNode.add(cm);
+      }
 
-    // Cincin penanda aksi
-    const ringGeo = new THREE.RingGeometry(1.6, 1.9, 16);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4, side: THREE.DoubleSide });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.y = 0.05;
-    oreNode.add(ring);
+      const ringGeo = new THREE.RingGeometry(1.9, 2.3, 20);
+      const ringMat = new THREE.MeshBasicMaterial({ color: hexColor, side: THREE.DoubleSide });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.05;
+      oreNode.add(ring);
 
-    const tag = this.createFloatingBillboard('⛏️ Tambang Bijih & Batu', '#06b6d4');
-    tag.position.set(0, 3.2, 0);
-    oreNode.add(tag);
+      const tag = this.createFloatingBillboard(label, borderHex);
+      tag.position.set(0, 3.6, 0);
+      oreNode.add(tag);
 
-    quarryGroup.add(oreNode);
+      this.registerInteractable(oreNode, poiId);
+      quarryGroup.add(oreNode);
+    };
+
+    createOreCluster(24.0, -19.0, 'ore_rock', '⛏️ Tambang Bijih [Klik]', 0x06b6d4, 0x0891b2, '#06b6d4');
+    createOreCluster(35.0, -29.0, 'crystal_vein', '💎 Kawah Kristal [Klik]', 0xf59e0b, 0xd97706, '#f59e0b');
+
     this.worldGroup.add(quarryGroup);
   }
 
   buildStarlightPond() {
     const pondGroup = new THREE.Group();
-    pondGroup.position.set(13.0, 0, 13.0);
+    pondGroup.position.set(24.0, 0, 24.0);
 
-    // Cekungan Danau Air Transparan
-    const waterGeo = new THREE.CircleGeometry(6.4, 32);
+    // Danau Kolam Bintang diperluas (Radius 12m)
+    const waterGeo = new THREE.CircleGeometry(11.5, 40);
     const waterMat = new THREE.MeshStandardMaterial({
       color: 0x0284c7,
       roughness: 0.08,
       metalness: 0.4,
       transparent: true,
-      opacity: 0.82,
+      opacity: 0.85,
     });
     this.waterMesh = new THREE.Mesh(waterGeo, waterMat);
     this.waterMesh.rotation.x = -Math.PI / 2;
     this.waterMesh.position.y = 0.04;
     pondGroup.add(this.waterMesh);
 
-    // Bibir Kolam Berbatu
-    const rimGeo = new THREE.RingGeometry(6.2, 7.1, 32);
-    const rimMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9 });
+    const rimGeo = new THREE.RingGeometry(11.2, 12.6, 40);
+    const rimMat = new THREE.MeshStandardMaterial({ color: 0xd6b87c, roughness: 0.9 });
     const rim = new THREE.Mesh(rimGeo, rimMat);
     rim.rotation.x = -Math.PI / 2;
     rim.position.y = 0.05;
     pondGroup.add(rim);
 
     // Dermaga Kayu Memanjang ke Kolam
-    const pierGeo = new THREE.BoxGeometry(1.8, 0.25, 4.8);
+    const pierGeo = new THREE.BoxGeometry(2.4, 0.3, 8.2);
     const pierMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
     const pier = new THREE.Mesh(pierGeo, pierMat);
-    pier.position.set(-0.5, 0.2, 0.5);
-    pier.rotation.y = -Math.PI / 6;
+    pier.position.set(-2.5, 0.25, -2.5);
+    pier.rotation.y = -Math.PI / 4;
     pier.castShadow = true;
     pondGroup.add(pier);
 
-    // Tiang Dermaga dengan Lentera Nelayan
-    const postGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.8, 8);
-    const postMat = new THREE.MeshStandardMaterial({ color: 0x451a03 });
-    const post = new THREE.Mesh(postGeo, postMat);
-    post.position.set(-0.5, 0.9, 2.4);
-    post.castShadow = true;
-    pondGroup.add(post);
-
-    const lanternGeo = new THREE.BoxGeometry(0.3, 0.4, 0.3);
-    const lanternMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
-    const lantern = new THREE.Mesh(lanternGeo, lanternMat);
-    lantern.position.set(-0.5, 1.5, 2.4);
-    pondGroup.add(lantern);
-
-    // Penanda Node Mancing
-    const beaconGeo = new THREE.RingGeometry(1.4, 1.7, 16);
+    const beaconGeo = new THREE.RingGeometry(1.8, 2.2, 20);
     const beaconMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide });
     const beacon = new THREE.Mesh(beaconGeo, beaconMat);
     beacon.rotation.x = -Math.PI / 2;
-    beacon.position.set(-0.5, 0.35, 1.8);
+    beacon.position.set(-1.5, 0.42, -1.5);
     pondGroup.add(beacon);
 
-    const tag = this.createFloatingBillboard('🎣 Kolam Bintang [Mancing]', '#38bdf8');
-    tag.position.set(-0.5, 2.4, 1.8);
+    const tag = this.createFloatingBillboard('🎣 Dermaga Bintang [Mancing]', '#38bdf8');
+    tag.position.set(-1.5, 2.8, -1.5);
     pondGroup.add(tag);
 
+    this.registerInteractable(pondGroup, 'fishing_pier');
     this.worldGroup.add(pondGroup);
+
+    // NPC: Mang Ujang di tepi dermaga
+    this.createNpcMesh('mang_ujang', '⚓ Mang Ujang [Klik]', 0x0284c7, new THREE.Vector3(18.0, 0, 18.5));
+  }
+
+  buildExpandedRegions() {
+    // 1. Distrik Neon Kota Pratama (Barat Daya: -26, 23)
+    const pratamaGroup = new THREE.Group();
+    pratamaGroup.position.set(-26, 0, 23);
+
+    const plaza = new THREE.Mesh(
+      new THREE.CircleGeometry(12, 32),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 })
+    );
+    plaza.rotation.x = -Math.PI / 2;
+    plaza.position.y = 0.02;
+    pratamaGroup.add(plaza);
+
+    const cafeTower = new THREE.Mesh(
+      new THREE.BoxGeometry(5.5, 5.2, 4.5),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4, metalness: 0.5 })
+    );
+    cafeTower.position.set(-2, 2.6, -2);
+    cafeTower.castShadow = true;
+    pratamaGroup.add(cafeTower);
+
+    const neonSign = new THREE.Mesh(
+      new THREE.BoxGeometry(4.8, 0.9, 0.2),
+      new THREE.MeshBasicMaterial({ color: 0xf472b6 })
+    );
+    neonSign.position.set(-2, 4.2, 0.3);
+    pratamaGroup.add(neonSign);
+
+    this.registerInteractable(pratamaGroup, 'barista_chloe');
+    this.worldGroup.add(pratamaGroup);
+    this.createNpcMesh('barista_chloe', '☕ Cyber Cafe Pratama [Klik]', 0xf472b6, new THREE.Vector3(-25.0, 0, 22.0));
+
+    // 2. Puncak Salju & Altar Es Khul'Khas (Utara: 0, -44)
+    const snowGroup = new THREE.Group();
+    snowGroup.position.set(0, 0, -44);
+
+    const snowField = new THREE.Mesh(
+      new THREE.CircleGeometry(14, 32),
+      new THREE.MeshStandardMaterial({ color: 0xe0f2fe, roughness: 0.6 })
+    );
+    snowField.rotation.x = -Math.PI / 2;
+    snowField.position.y = 0.025;
+    snowGroup.add(snowField);
+
+    const iceSpire = new THREE.Mesh(
+      new THREE.ConeGeometry(2.2, 6.5, 6),
+      new THREE.MeshStandardMaterial({
+        color: 0x7dd3fc,
+        emissive: 0x0284c7,
+        emissiveIntensity: 0.5,
+        roughness: 0.15,
+        metalness: 0.3,
+      })
+    );
+    iceSpire.position.set(0, 3.2, -3.5);
+    iceSpire.castShadow = true;
+    snowGroup.add(iceSpire);
+
+    this.registerInteractable(snowGroup, 'syeikh_malik');
+    this.worldGroup.add(snowGroup);
+    this.createNpcMesh('syeikh_malik', '❄️ Syeikh Malik [Klik]', 0x38bdf8, new THREE.Vector3(0, 0, -42.0));
+
+    // 3. Gerbang Kampus & Obelisk Hextech Draken (Selatan: 0, 42)
+    const drakenGroup = new THREE.Group();
+    drakenGroup.position.set(0, 0, 42);
+
+    const court = new THREE.Mesh(
+      new THREE.CircleGeometry(13, 32),
+      new THREE.MeshStandardMaterial({ color: 0x312e81, roughness: 0.65 })
+    );
+    court.rotation.x = -Math.PI / 2;
+    court.position.y = 0.025;
+    drakenGroup.add(court);
+
+    const obelisk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.6, 1.3, 6.8, 4),
+      new THREE.MeshStandardMaterial({
+        color: 0xa855f7,
+        emissive: 0x6b21a8,
+        emissiveIntensity: 0.6,
+        roughness: 0.25,
+      })
+    );
+    obelisk.position.set(0, 3.4, 3.2);
+    obelisk.castShadow = true;
+    drakenGroup.add(obelisk);
+
+    this.registerInteractable(drakenGroup, 'draken_archivist');
+    this.worldGroup.add(drakenGroup);
+    this.createNpcMesh('draken_archivist', '🏛️ Profesor Draken [Klik]', 0xa855f7, new THREE.Vector3(0, 0, 40.0));
   }
 
   buildFencesAndParticles() {
-    // Partikel Spora Bintang Desa
-    const particleCount = 140;
+    // Partikel Spora Bintang Seluruh Peta Adisha
+    const particleCount = 260;
     const particleGeo = new THREE.BufferGeometry();
     const particlePos = new Float32Array(particleCount * 3);
 
     for (let i = 0; i < particleCount * 3; i += 3) {
-      particlePos[i] = (Math.random() - 0.5) * 54;
-      particlePos[i + 1] = Math.random() * 8 + 0.5;
-      particlePos[i + 2] = (Math.random() - 0.5) * 54;
+      particlePos[i] = (Math.random() - 0.5) * 120;
+      particlePos[i + 1] = Math.random() * 10 + 0.5;
+      particlePos[i + 2] = (Math.random() - 0.5) * 120;
     }
 
     particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
     const particleMat = new THREE.PointsMaterial({
       color: 0xfef08a,
-      size: 0.16,
+      size: 0.18,
       transparent: true,
       opacity: 0.65,
     });
@@ -644,23 +910,23 @@ export class Activity3DWorld {
     npcGroup.position.copy(position);
 
     // Tubuh NPC Stylized
-    const bodyGeo = new THREE.CapsuleGeometry(0.35, 0.7, 8, 16);
+    const bodyGeo = new THREE.CapsuleGeometry(0.38, 0.75, 8, 16);
     const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.4 });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 0.7;
+    body.position.y = 0.72;
     body.castShadow = true;
     npcGroup.add(body);
 
     // Kepala
-    const headGeo = new THREE.SphereGeometry(0.38, 16, 16);
+    const headGeo = new THREE.SphereGeometry(0.4, 16, 16);
     const headMat = new THREE.MeshStandardMaterial({ color: 0xffedd5, roughness: 0.6 });
     const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 1.45;
+    head.position.y = 1.5;
     head.castShadow = true;
     npcGroup.add(head);
 
     // Cincin Aura NPC
-    const auraGeo = new THREE.RingGeometry(0.6, 0.75, 16);
+    const auraGeo = new THREE.RingGeometry(0.65, 0.85, 20);
     const auraMat = new THREE.MeshBasicMaterial({ color: 0xfbcfe8, side: THREE.DoubleSide });
     const aura = new THREE.Mesh(auraGeo, auraMat);
     aura.rotation.x = -Math.PI / 2;
@@ -669,9 +935,10 @@ export class Activity3DWorld {
 
     // Label Billboard
     const tag = this.createFloatingBillboard(name, '#f472b6');
-    tag.position.set(0, 2.3, 0);
+    tag.position.set(0, 2.45, 0);
     npcGroup.add(tag);
 
+    this.registerInteractable(npcGroup, id);
     this.worldGroup.add(npcGroup);
   }
 
@@ -974,10 +1241,12 @@ export class Activity3DWorld {
     window.addEventListener('keydown', this.boundKeydown);
     window.addEventListener('keyup', this.boundKeyup);
 
-    // Orbit kamera via drag mouse
+    // Orbit kamera & Raycast Click-to-Interact / Click-to-Move
+    let pointerDownScreen = { x: 0, y: 0, time: 0 };
     this.boundMousedown = (e) => {
       this.isDraggingCamera = true;
       this.prevMousePos = { x: e.clientX, y: e.clientY };
+      pointerDownScreen = { x: e.clientX, y: e.clientY, time: performance.now() };
     };
     this.container.addEventListener('mousedown', this.boundMousedown);
 
@@ -991,16 +1260,85 @@ export class Activity3DWorld {
     };
     window.addEventListener('mousemove', this.boundMousemove);
 
-    this.boundMouseup = () => {
+    this.boundMouseup = (e) => {
       this.isDraggingCamera = false;
+      const moveDist = Math.hypot(e.clientX - pointerDownScreen.x, e.clientY - pointerDownScreen.y);
+      const elapsedMs = performance.now() - pointerDownScreen.time;
+      if (moveDist < 6 && elapsedMs < 400 && e.target === this.renderer?.domElement) {
+        this.handleCanvasTapOrClick(e.clientX, e.clientY);
+      }
     };
     window.addEventListener('mouseup', this.boundMouseup);
 
-    // Zoom mouse wheel
+    // Zoom mouse wheel (diperluas hingga 34m untuk melihat benua Adisha)
     this.boundWheel = (e) => {
-      this.cameraDistance = Math.max(6.0, Math.min(22.0, this.cameraDistance + e.deltaY * 0.01));
+      this.cameraDistance = Math.max(6.0, Math.min(34.0, this.cameraDistance + e.deltaY * 0.014));
     };
     this.container.addEventListener('wheel', this.boundWheel, { passive: true });
+  }
+
+  handleCanvasTapOrClick(clientX, clientY) {
+    if (!this.renderer || !this.camera) return;
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.pointerNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    this.pointerNdc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.pointerNdc, this.camera);
+
+    // 1. Cek apakah pemain mengklik salah satu 3D POI / NPC
+    if (this.interactableMeshes.length > 0) {
+      const hits = this.raycaster.intersectObjects(this.interactableMeshes, true);
+      if (hits.length > 0) {
+        let obj = hits[0].object;
+        while (obj && !obj.userData?.poiId) {
+          obj = obj.parent;
+        }
+        const clickedPoiId = obj?.userData?.poiId;
+        const poi = this.poiNodes.find((p) => p.id === clickedPoiId);
+        if (poi) {
+          const dist = this.localPlayerPos.distanceTo(poi.pos);
+          if (dist <= poi.radius + 1.2) {
+            this.activePoi = poi;
+            this.triggerContextInteraction();
+          } else {
+            this.autoWalkTarget = poi.pos.clone();
+            this.autoWalkPoi = poi;
+            this.spawnFloatingRpgText(`🚶 Menuju ${poi.name}...`, '#38bdf8');
+          }
+          return;
+        }
+      }
+    }
+
+    // 2. Jika mengklik tanah lapang, berjalan otomatis ke titik tersebut
+    if (this.groundMesh) {
+      const groundHits = this.raycaster.intersectObject(this.groundMesh, false);
+      if (groundHits.length > 0) {
+        const pt = groundHits[0].point;
+        this.autoWalkTarget = new THREE.Vector3(pt.x, 0, pt.z);
+        this.autoWalkPoi = null;
+      }
+    }
+  }
+
+  teleportToZone(zoneKey) {
+    const ZONE_COORDS = {
+      desa: { x: 0, z: 0, label: 'Alun-Alun Desa Adisha' },
+      hutan: { x: -24, z: -17, label: 'Hutan Pinus & Rimba Dha Mhai' },
+      tambang: { x: 22, z: -17, label: 'Bukit Tambang & Kawah Kristal' },
+      dermaga: { x: 18, z: 18, label: 'Dermaga Kolam Bintang' },
+      pratama: { x: -21, z: 19, label: 'Distrik Neon Kota Pratama' },
+      khulkhas: { x: 0, z: -37, label: 'Puncak Salju Khul\'Khas' },
+      draken: { x: 0, z: 35, label: 'Gerbang Kampus Draken' },
+    };
+    const dest = ZONE_COORDS[zoneKey] || ZONE_COORDS.desa;
+    this.autoWalkTarget = null;
+    this.autoWalkPoi = null;
+    this.localPlayerPos.set(dest.x, 0, dest.z);
+    if (this.localPlayerGroup) {
+      this.localPlayerGroup.position.copy(this.localPlayerPos);
+    }
+    this.checkPoiProximity();
+    this.spawnFloatingRpgText(`⚡ Pindah ke ${dest.label}`, '#38bdf8');
   }
 
   setupMobileControls() {
@@ -1197,7 +1535,7 @@ export class Activity3DWorld {
   }
 
   updateMovement(delta, elapsed) {
-    const baseSpeed = 5.2;
+    const baseSpeed = 7.4;
     this.moveVelocity.set(0, 0, 0);
 
     // Vektor gerak keyboard
@@ -1214,20 +1552,46 @@ export class Activity3DWorld {
       inputZ = this.joystickVector.y;
     }
 
-    const inputLen = Math.hypot(inputX, inputZ);
-    this.isMoving = inputLen > 0.05;
+    const manualInputLen = Math.hypot(inputX, inputZ);
+    if (manualInputLen > 0.05) {
+      this.autoWalkTarget = null;
+      this.autoWalkPoi = null;
+    }
+
+    let autoMoveAngle = null;
+    if (manualInputLen <= 0.05 && this.autoWalkTarget) {
+      const dx = this.autoWalkTarget.x - this.localPlayerPos.x;
+      const dz = this.autoWalkTarget.z - this.localPlayerPos.z;
+      const dist = Math.hypot(dx, dz);
+      const stopRadius = this.autoWalkPoi ? Math.max(1.8, this.autoWalkPoi.radius - 1.2) : 0.6;
+      if (dist <= stopRadius) {
+        const targetPoi = this.autoWalkPoi;
+        this.autoWalkTarget = null;
+        this.autoWalkPoi = null;
+        if (targetPoi) {
+          this.activePoi = targetPoi;
+          this.triggerContextInteraction();
+        }
+      } else {
+        autoMoveAngle = Math.atan2(dx, dz);
+      }
+    }
+
+    this.isMoving = manualInputLen > 0.05 || autoMoveAngle !== null;
 
     if (this.isMoving) {
-      // Rotasikan input relatif terhadap orientasi horizontal kamera
-      const moveAngle = Math.atan2(inputX, inputZ) + this.cameraAngleH;
+      // Rotasikan input relatif terhadap orientasi horizontal kamera (atau sudut auto-walk)
+      const moveAngle = autoMoveAngle !== null
+        ? autoMoveAngle
+        : Math.atan2(inputX, inputZ) + this.cameraAngleH;
       this.moveVelocity.x = Math.sin(moveAngle) * baseSpeed * delta;
       this.moveVelocity.z = Math.cos(moveAngle) * baseSpeed * delta;
 
       this.localPlayerPos.add(this.moveVelocity);
 
-      // Batasi pemain di area tanah desa (radius max 28.5m)
-      if (this.localPlayerPos.length() > 28.5) {
-        this.localPlayerPos.setLength(28.5);
+      // Batasi pemain di area daratan pulau Adisha (radius max 65.5m)
+      if (this.localPlayerPos.length() > 65.5) {
+        this.localPlayerPos.setLength(65.5);
       }
 
       this.localPlayerGroup.position.copy(this.localPlayerPos);

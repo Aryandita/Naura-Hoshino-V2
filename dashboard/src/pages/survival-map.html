@@ -52,21 +52,67 @@
         align-items: center;
         justify-content: center;
         background: 
-          radial-gradient(circle at center, rgba(11, 21, 43, 0.35) 0%, rgba(5, 8, 19, 0.8) 85%),
-          url('/assets/maps/survival_radar_art.jpg') center / cover no-repeat;
+          radial-gradient(circle at center, rgba(6, 46, 32, 0.28) 0%, rgba(4, 9, 20, 0.88) 84%),
+          url('/assets/maps/adisha_satellite_radar.png') center / cover no-repeat;
         overflow: hidden;
+        transition: background 0.4s ease, transform 0.3s ease;
       }
 
-      /* Grid Lines Background */
+      /* Satellite Topographic Scanline & Grid Overlay */
       .radar-scope-container::before {
         content: '';
         position: absolute;
         inset: 0;
         background-image: 
-          linear-gradient(rgba(34, 211, 238, 0.07) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(34, 211, 238, 0.07) 1px, transparent 1px);
-        background-size: 32px 32px;
+          linear-gradient(rgba(34, 211, 238, 0.09) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(34, 211, 238, 0.09) 1px, transparent 1px),
+          repeating-linear-gradient(0deg, rgba(16, 185, 129, 0.03) 0px, rgba(16, 185, 129, 0.03) 2px, transparent 2px, transparent 6px);
+        background-size: 36px 36px, 36px 36px, 100% 6px;
         pointer-events: none;
+        z-index: 1;
+      }
+
+      /* Satellite Corner Telemetry HUD */
+      .radar-sat-corner {
+        position: absolute;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        line-height: 1.45;
+        color: rgba(167, 243, 208, 0.85);
+        background: rgba(5, 11, 22, 0.78);
+        border: 1px solid rgba(16, 185, 129, 0.32);
+        border-radius: 6px;
+        padding: 6px 10px;
+        pointer-events: none;
+        z-index: 8;
+        backdrop-filter: blur(6px);
+      }
+      .radar-sat-corner.top-left { top: 12px; left: 12px; }
+      .radar-sat-corner.bottom-left { bottom: 12px; left: 12px; }
+      .radar-zoom-controls {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        display: flex;
+        gap: 6px;
+        z-index: 12;
+      }
+      .radar-zoom-btn {
+        background: rgba(8, 16, 30, 0.88);
+        border: 1px solid rgba(34, 211, 238, 0.35);
+        color: #e2e8f0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .radar-zoom-btn:hover, .radar-zoom-btn.active {
+        background: rgba(16, 185, 129, 0.25);
+        border-color: #10b981;
+        color: #ffffff;
       }
 
       /* Radar Circles */
@@ -537,6 +583,20 @@
               </div>
 
               <div class="radar-scope-container" id="radarScope">
+                <!-- Satellite Telemetry Overlays -->
+                <div class="radar-sat-corner top-left" id="radarSatOverlayTop">
+                  <div>SAT-ORBIT: ADISHA-GEO-04 (TOP-DOWN POV)</div>
+                  <div id="radarSatSectorCoords">LAT 06°14'S · LON 106°49'E · ALT 420KM</div>
+                </div>
+                <div class="radar-sat-corner bottom-left" id="radarSatOverlayBottom">
+                  <div>MODE: MULTISPECTRAL TOPOGRAPHIC RADAR</div>
+                  <div id="radarSatBiomeStatus">BIOME: LEMBAH AGRARIS & HUTAN PINUS</div>
+                </div>
+                <div class="radar-zoom-controls">
+                  <button class="radar-zoom-btn active" data-rzoom="1">1.0x</button>
+                  <button class="radar-zoom-btn" data-rzoom="1.35">1.4x</button>
+                  <button class="radar-zoom-btn" data-rzoom="1.75">1.8x</button>
+                </div>
                 <!-- Circular Rings -->
                 <div class="radar-rings"></div>
                 <!-- Crosshairs -->
@@ -982,39 +1042,64 @@
         const region = worldRegions[regionId];
         const isHere = (regionId === playerCanonicalRegion);
 
-        // Dynamic Radar Background and Color Palette per Region
+        // Top-Down Satellite Radar POV per Region (using Adisha Satellite Radar Imagery + Biome Spectral Filter)
         const REGION_RADAR_CONFIGS = {
           desa_sukamaju: {
-            bg: '/assets/survival/background/dermaga_mang_ujang.jpg',
-            gradient: 'radial-gradient(circle at center, rgba(6, 46, 32, 0.35) 0%, rgba(5, 8, 19, 0.82) 85%)',
+            bg: '/assets/maps/adisha_satellite_radar.png',
+            bgPos: '28% 58%',
+            bgSize: '135%',
+            gradient: 'radial-gradient(circle at center, rgba(6, 46, 32, 0.22) 0%, rgba(4, 9, 20, 0.86) 86%)',
             accent: '#10b981',
-            sweepGradient: 'conic-gradient(from 0deg, rgba(16, 185, 129, 0.35) 0deg, rgba(16, 185, 129, 0) 65deg, transparent 70deg)'
+            coords: "LAT 06°14'S · LON 106°49'E · SEKTOR LEMBAH ADISHA",
+            biome: 'BIOME: LEMBAH AGRARIS, HUTAN PINUS & SUNGAI JERNIH',
+            sweepGradient: 'conic-gradient(from 0deg, rgba(16, 185, 129, 0.38) 0deg, rgba(16, 185, 129, 0) 65deg, transparent 70deg)'
           },
           kota_pratama: {
-            bg: '/assets/survival/background/univ_negeri_pratama.jpg',
-            gradient: 'radial-gradient(circle at center, rgba(12, 35, 64, 0.35) 0%, rgba(5, 8, 19, 0.82) 85%)',
+            bg: '/assets/maps/adisha_satellite_radar.png',
+            bgPos: '50% 48%',
+            bgSize: '145%',
+            gradient: 'radial-gradient(circle at center, rgba(12, 42, 78, 0.25) 0%, rgba(4, 9, 22, 0.88) 86%)',
             accent: '#38bdf8',
-            sweepGradient: 'conic-gradient(from 0deg, rgba(56, 189, 248, 0.4) 0deg, rgba(56, 189, 248, 0) 65deg, transparent 70deg)'
+            coords: "LAT 06°11'S · LON 106°52'E · SEKTOR METROPOLITAN PRATAMA",
+            biome: 'BIOME: GRID DISTRIK URBAN, BANK SENTRAL & DERMAGA SELATAN',
+            sweepGradient: 'conic-gradient(from 0deg, rgba(56, 189, 248, 0.42) 0deg, rgba(56, 189, 248, 0) 65deg, transparent 70deg)'
           },
           desa_khulkhas: {
-            bg: '/assets/survival/background/frostsnow.png',
-            gradient: 'radial-gradient(circle at center, rgba(8, 47, 73, 0.38) 0%, rgba(5, 8, 19, 0.82) 85%)',
+            bg: '/assets/maps/adisha_satellite_radar.png',
+            bgPos: '78% 22%',
+            bgSize: '150%',
+            gradient: 'radial-gradient(circle at center, rgba(14, 65, 98, 0.30) 0%, rgba(4, 10, 24, 0.88) 86%)',
             accent: '#7dd3fc',
+            coords: "LAT 05°58'S · LON 107°04'E · SEKTOR PUNCAK KHUL'KHAS",
+            biome: 'BIOME: KALDERA ES ALPIN, HUTAN SALJU & MATA AIR PANAS',
             sweepGradient: 'conic-gradient(from 0deg, rgba(125, 211, 252, 0.45) 0deg, rgba(125, 211, 252, 0) 65deg, transparent 70deg)'
           },
           istana_draken: {
-            bg: '/assets/maps/world_map_art.jpg',
-            gradient: 'radial-gradient(circle at center, rgba(54, 10, 20, 0.45) 0%, rgba(5, 8, 19, 0.85) 85%)',
+            bg: '/assets/maps/adisha_satellite_radar.png',
+            bgPos: '78% 72%',
+            bgSize: '150%',
+            gradient: 'radial-gradient(circle at center, rgba(68, 12, 26, 0.35) 0%, rgba(6, 8, 19, 0.90) 86%)',
             accent: '#ef4444',
+            coords: "LAT 06°21'S · LON 107°08'E · SEKTOR KAMPUS & BENTENG DRAKEN",
+            biome: 'BIOME: ZONA ANOMALI HEXTECH, LABORATORIUM & KAWAH TAMBANG',
             sweepGradient: 'conic-gradient(from 0deg, rgba(239, 68, 68, 0.45) 0deg, rgba(239, 68, 68, 0) 65deg, transparent 70deg)'
           }
         };
 
         const radarCfg = REGION_RADAR_CONFIGS[regionId] || REGION_RADAR_CONFIGS.desa_sukamaju;
+        const activeRZoomBtn = document.querySelector('.radar-zoom-btn.active');
+        const currentRZoom = activeRZoomBtn ? parseFloat(activeRZoomBtn.dataset.rzoom || '1') : 1;
         if (radarScope) {
-          radarScope.style.background = `${radarCfg.gradient}, url('${radarCfg.bg}') center / cover no-repeat`;
-          radarScope.style.transition = 'background 0.4s ease';
+          const baseSize = parseFloat(radarCfg.bgSize || '135');
+          radarScope.style.backgroundImage = `${radarCfg.gradient}, url('${radarCfg.bg}')`;
+          radarScope.style.backgroundPosition = `center, ${radarCfg.bgPos}`;
+          radarScope.style.backgroundSize = `100% 100%, ${Math.round(baseSize * currentRZoom)}%`;
+          radarScope.style.backgroundRepeat = 'no-repeat';
         }
+        const satCoordsEl = document.getElementById('radarSatSectorCoords');
+        if (satCoordsEl) satCoordsEl.textContent = radarCfg.coords;
+        const satBiomeEl = document.getElementById('radarSatBiomeStatus');
+        if (satBiomeEl) satBiomeEl.textContent = radarCfg.biome;
 
         const sweepEl = document.querySelector('.radar-sweep');
         if (sweepEl) {
@@ -1152,6 +1237,16 @@
           const regionId = tab.getAttribute('data-region');
           playTone(480, 'sine', 0.08, 0.2);
           renderRegion(regionId);
+        });
+      });
+
+      // Satellite Radar Zoom Button Listeners
+      document.querySelectorAll('.radar-zoom-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.radar-zoom-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          playTone(540, 'sine', 0.06, 0.15);
+          renderRegion(currentRegionId);
         });
       });
 

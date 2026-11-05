@@ -298,12 +298,16 @@ export class Naura3DViewer {
                 materials.forEach((mat) => {
                     if (mat && mat.isMaterial) {
                         mat.side = THREE.DoubleSide;
+                        if (mat.map && mat.map.colorSpace !== THREE.SRGBColorSpace) {
+                            mat.map.colorSpace = THREE.SRGBColorSpace;
+                            mat.map.needsUpdate = true;
+                        }
                         mat.metalness = 0.0;
-                        mat.roughness = 0.75;
+                        mat.roughness = 0.78;
                         mat.roughnessMap = null;
                         mat.metalnessMap = null;
                         if ("envMapIntensity" in mat) {
-                            mat.envMapIntensity = 0.5;
+                            mat.envMapIntensity = 0.35;
                         }
                         mat.needsUpdate = true;
                     }

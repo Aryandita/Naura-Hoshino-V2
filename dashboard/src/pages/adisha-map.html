@@ -259,21 +259,93 @@
 
       .map-svg-container {
         width: 100%;
-        height: 570px;
+        height: 600px;
         position: relative;
-        background-color: #060913;
-        background-image: 
-          radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-          radial-gradient(rgba(56, 189, 248, 0.06) 1px, transparent 1px);
-        background-size: 30px 30px, 60px 60px;
+        background:
+          linear-gradient(180deg, rgba(4, 10, 22, 0.45) 0%, rgba(4, 10, 22, 0.65) 100%),
+          url('/assets/maps/adisha_satellite_wide.jpg') center / cover no-repeat,
+          #050a16;
         overflow: hidden;
+        cursor: grab;
+        touch-action: none;
+      }
+      .map-svg-container.is-panning {
+        cursor: grabbing;
       }
       svg.adisha-svg {
         width: 100%;
         height: 100%;
         user-select: none;
-        transform-origin: center center;
+        transform-origin: 0 0;
         will-change: transform;
+        transition: transform 0.08s ease-out;
+      }
+      .map-svg-container.is-panning svg.adisha-svg {
+        transition: none;
+      }
+
+      /* Floating Zoom & Satellite HUD Controls */
+      .adisha-zoom-hud {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        z-index: 25;
+      }
+      .adisha-zoom-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(10, 16, 30, 0.88);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        color: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.15s ease;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      }
+      .adisha-zoom-btn:hover {
+        background: rgba(56, 189, 248, 0.22);
+        border-color: #38bdf8;
+        color: #fff;
+        transform: translateY(-1px);
+      }
+      .adisha-sat-telemetry {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        background: rgba(8, 13, 26, 0.86);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(56, 189, 248, 0.28);
+        border-radius: 10px;
+        padding: 7px 12px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 25;
+        pointer-events: none;
+      }
+
+      /* Compact Pill Badge for Sub-Locations (Zero Clutter) */
+      .poi-label-pill {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease, transform 0.18s ease;
+      }
+      .poi-group:hover .poi-label-pill,
+      .poi-group.active-target .poi-label-pill,
+      .poi-group.player-here .poi-label-pill,
+      svg.adisha-svg.zoom-detailed .poi-label-pill {
+        opacity: 1;
       }
 
       /* Animasi Garis Rute */
@@ -1177,6 +1249,24 @@
                   <!-- 3. Lapisan Sub-Daerah POI (Di-render secara dinamis via JS) -->
                   <g id="poiNodesLayer"></g>
                 </svg>
+
+                <!-- Floating Telemetry & Zoom Controls -->
+                <div class="adisha-sat-telemetry">
+                  <span><i class="fa-solid fa-satellite" style="color:#38bdf8;"></i> SAT-POV: ADISHA ORBITAL</span>
+                  <span id="adishaZoomIndicator" style="color:#38bdf8;font-weight:700;">ZOOM 1.0x</span>
+                  <span>Geser / Scroll untuk Zoom</span>
+                </div>
+                <div class="adisha-zoom-hud">
+                  <button class="adisha-zoom-btn" id="btnAdishaZoomIn" title="Perbesar Peta (Zoom In)">
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
+                  <button class="adisha-zoom-btn" id="btnAdishaZoomOut" title="Perkecil Peta (Zoom Out)">
+                    <i class="fa-solid fa-minus"></i>
+                  </button>
+                  <button class="adisha-zoom-btn" id="btnAdishaZoomReset" title="Reset Pandangan Satelit">
+                    <i class="fa-solid fa-expand"></i>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1404,8 +1494,109 @@
             pill.classList.add("active");
             currentFilter = pill.dataset.filter;
             renderPoiNodes();
+            const REGION_ZOOM_TARGETS = {
+              all: { zoom: 1.0, panX: 0, panY: 0 },
+              desa_sukamaju: { zoom: 1.55, panX: 220, panY: -80 },
+              hutan_dhamhai: { zoom: 1.55, panX: 220, panY: 160 },
+              kota_pratama: { zoom: 1.5, panX: 0, panY: 30 },
+              desa_lauhthan: { zoom: 1.55, panX: 0, panY: -170 },
+              desa_khulkhas: { zoom: 1.55, panX: -230, panY: 160 },
+              kampus_draken: { zoom: 1.55, panX: -220, panY: -20 },
+              tambang_raksasa: { zoom: 1.65, panX: -250, panY: -180 },
+            };
+            const target = REGION_ZOOM_TARGETS[currentFilter] || REGION_ZOOM_TARGETS.all;
+            setAdishaMapTransform(target.zoom, target.panX, target.panY);
           });
         });
+
+        // 0. Kontrol Zoom In / Out & Drag Pan Peta Adisha
+        const mapSvgContainer = document.getElementById("mapSvgContainer");
+        const adishaSvgMap = document.getElementById("adishaSvgMap");
+        const btnZoomIn = document.getElementById("btnAdishaZoomIn");
+        const btnZoomOut = document.getElementById("btnAdishaZoomOut");
+        const btnZoomReset = document.getElementById("btnAdishaZoomReset");
+        const zoomLevelBadge = document.getElementById("adishaZoomLevelBadge");
+        const satCoordsTelemetry = document.getElementById("adishaSatCoordsTelemetry");
+
+        let mapZoom = 1.0;
+        let mapPanX = 0;
+        let mapPanY = 0;
+        let isDraggingMap = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+
+        function setAdishaMapTransform(newZoom, newPanX, newPanY) {
+          mapZoom = Math.min(3.2, Math.max(0.85, newZoom));
+          const maxPanX = (mapZoom - 0.8) * 380;
+          const maxPanY = (mapZoom - 0.8) * 260;
+          mapPanX = Math.min(maxPanX, Math.max(-maxPanX, newPanX));
+          mapPanY = Math.min(maxPanY, Math.max(-maxPanY, newPanY));
+
+          if (adishaSvgMap) {
+            adishaSvgMap.style.transformOrigin = "center center";
+            adishaSvgMap.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+            if (mapZoom >= 1.32) {
+              adishaSvgMap.classList.add("zoomed-labels-visible");
+            } else {
+              adishaSvgMap.classList.remove("zoomed-labels-visible");
+            }
+          }
+          if (mapSvgContainer) {
+            const bgScale = 100 * (1 + (mapZoom - 1) * 0.35);
+            const bgOffX = 50 + (mapPanX / 15);
+            const bgOffY = 50 + (mapPanY / 12);
+            mapSvgContainer.style.backgroundSize = `100% 100%, 40px 40px, ${bgScale}% ${bgScale}%`;
+            mapSvgContainer.style.backgroundPosition = `center, center, ${bgOffX}% ${bgOffY}%`;
+          }
+          if (zoomLevelBadge) {
+            zoomLevelBadge.textContent = `${Math.round(mapZoom * 100)}%`;
+          }
+        }
+
+        if (btnZoomIn) {
+          btnZoomIn.addEventListener("click", () => setAdishaMapTransform(mapZoom + 0.25, mapPanX, mapPanY));
+        }
+        if (btnZoomOut) {
+          btnZoomOut.addEventListener("click", () => setAdishaMapTransform(mapZoom - 0.25, mapPanX * 0.8, mapPanY * 0.8));
+        }
+        if (btnZoomReset) {
+          btnZoomReset.addEventListener("click", () => setAdishaMapTransform(1.0, 0, 0));
+        }
+
+        if (mapSvgContainer) {
+          mapSvgContainer.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 0.18 : -0.18;
+            setAdishaMapTransform(mapZoom + delta, mapPanX, mapPanY);
+          }, { passive: false });
+
+          mapSvgContainer.addEventListener("pointerdown", (e) => {
+            if (e.target.closest(".poi-group") || e.target.closest(".adisha-zoom-hud")) return;
+            isDraggingMap = true;
+            dragStartX = e.clientX - mapPanX;
+            dragStartY = e.clientY - mapPanY;
+            if (adishaSvgMap) adishaSvgMap.style.transition = "none";
+          });
+
+          window.addEventListener("pointermove", (e) => {
+            if (mapSvgContainer && satCoordsTelemetry) {
+              const rect = mapSvgContainer.getBoundingClientRect();
+              if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                const relX = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
+                const relY = Math.max(0, Math.min(100, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
+                satCoordsTelemetry.textContent = `SAT-GRID [${relX}, ${relY}] · ZOOM ${(mapZoom).toFixed(1)}x`;
+              }
+            }
+            if (!isDraggingMap) return;
+            setAdishaMapTransform(mapZoom, e.clientX - dragStartX, e.clientY - dragStartY);
+          });
+
+          window.addEventListener("pointerup", () => {
+            if (!isDraggingMap) return;
+            isDraggingMap = false;
+            if (adishaSvgMap) adishaSvgMap.style.transition = "transform 0.16s cubic-bezier(0.22, 1, 0.36, 1)";
+          });
+        }
 
         // 1. Ambil Data Peta & Status Pemain dari Server
         async function fetchInitialData() {
@@ -1569,16 +1760,52 @@
               centerCircle.setAttribute("class", "poi-center");
               g.appendChild(centerCircle);
 
-              // Label Teks Sub-Daerah
+              // Label Pill Teks Sub-Daerah (Anti-Tabrakan & Tidak Terpotong di Tepi)
+              const labelGroup = document.createElementNS(SVG_NS, "g");
+              labelGroup.setAttribute("class", "poi-label-pill");
+
+              const shortName = loc.name.length > 26 ? loc.name.slice(0, 24) + "…" : loc.name;
+              const pillWidth = Math.max(66, shortName.length * 5.8 + 16);
+              const pillHeight = 18;
+
+              // Flip posisi label jika dekat tepi kiri/kanan/atas
+              let pillX = -pillWidth / 2;
+              let textX = 0;
+              let textAnchor = "middle";
+              if (svgX < 135) {
+                pillX = -10;
+                textX = pillX + pillWidth / 2;
+              } else if (svgX > 865) {
+                pillX = -pillWidth + 10;
+                textX = pillX + pillWidth / 2;
+              }
+              const pillY = svgY < 55 ? 14 : -31;
+              const textY = svgY < 55 ? 26 : -19;
+
+              const pillRect = document.createElementNS(SVG_NS, "rect");
+              pillRect.setAttribute("class", "poi-label-bg");
+              pillRect.setAttribute("x", String(pillX));
+              pillRect.setAttribute("y", String(pillY));
+              pillRect.setAttribute("width", String(pillWidth));
+              pillRect.setAttribute("height", String(pillHeight));
+              if (isSelected) {
+                pillRect.setAttribute("stroke", area.themeColor || "#38bdf8");
+                pillRect.setAttribute("stroke-width", "1.5");
+              }
+              labelGroup.appendChild(pillRect);
+
               const text = document.createElementNS(SVG_NS, "text");
-              text.setAttribute("y", "-18");
-              text.setAttribute("text-anchor", "middle");
-              text.setAttribute("fill", isSelected ? "#ffffff" : "#cbd5e1");
-              text.setAttribute("font-size", isSelected ? "11" : "10");
-              text.setAttribute("font-weight", isSelected ? "700" : "500");
-              text.setAttribute("letter-spacing", "0.5");
-              text.textContent = loc.name;
-              g.appendChild(text);
+              text.setAttribute("x", String(textX));
+              text.setAttribute("y", String(textY));
+              text.setAttribute("text-anchor", textAnchor);
+              text.setAttribute("fill", isSelected ? "#ffffff" : "#e2e8f0");
+              text.setAttribute("font-size", isSelected ? "10.5" : "9.5");
+              text.setAttribute("font-weight", isSelected ? "700" : "600");
+              text.setAttribute("letter-spacing", "0.3");
+              text.textContent = shortName;
+              labelGroup.appendChild(text);
+
+              g.appendChild(labelGroup);
 
               // Event Klik Memilih Lokasi
               g.addEventListener("click", () => {

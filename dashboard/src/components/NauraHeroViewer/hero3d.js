@@ -204,11 +204,11 @@ export class NauraHero3DViewer {
 
     _initLighting() {
         // Soft Ambient Light merata
-        const ambientLight = new THREE.AmbientLight(HERO_AMBIENT_WHITE, 1.35);
+        const ambientLight = new THREE.AmbientLight(HERO_AMBIENT_WHITE, 0.92);
         this.scene.add(ambientLight);
 
         // Key Light Cyberpunk - Pink #FFB6C1 (SSOT: tidak ada token ekak #FFB6C1; BRAND.primary #FFC0CB landed terdekat)
-        const keyLight = new THREE.DirectionalLight(HERO_KEY_PINK, 1.25);
+        const keyLight = new THREE.DirectionalLight(HERO_KEY_PINK, 0.95);
         keyLight.position.set(1.4, 2.0, 1.6);
         this.scene.add(keyLight);
 
@@ -324,13 +324,17 @@ export class NauraHero3DViewer {
                     materials.forEach((mat) => {
                         if (mat && mat.isMaterial) {
                             mat.side = THREE.DoubleSide;
+                            if (mat.map && mat.map.colorSpace !== THREE.SRGBColorSpace) {
+                                mat.map.colorSpace = THREE.SRGBColorSpace;
+                                mat.map.needsUpdate = true;
+                            }
                             if (mat.isMeshStandardMaterial) {
                                 mat.metalness = 0.0;
-                                mat.roughness = 0.75;
+                                mat.roughness = 0.78;
                                 mat.roughnessMap = null;
                                 mat.metalnessMap = null;
                                 if ("envMapIntensity" in mat) {
-                                    mat.envMapIntensity = 0.5;
+                                    mat.envMapIntensity = 0.35;
                                 }
                             }
                             mat.needsUpdate = true;

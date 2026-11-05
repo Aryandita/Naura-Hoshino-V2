@@ -191,7 +191,7 @@
       /* Proximity Prompt Toast */
       .spatial-prompt-toast {
         position: absolute;
-        bottom: 24px;
+        bottom: 68px;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(15, 23, 42, 0.92);
@@ -212,6 +212,50 @@
       @keyframes pulsePrompt {
         0%, 100% { box-shadow: 0 0 16px rgba(6, 182, 212, 0.35); }
         50% { box-shadow: 0 0 28px rgba(6, 182, 212, 0.65); }
+      }
+
+      /* 3D World Zone Fast-Travel Bar */
+      .activity-zone-teleport-bar {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(9, 14, 28, 0.86);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(56, 189, 248, 0.28);
+        padding: 6px 10px;
+        border-radius: 999px;
+        z-index: 24;
+        max-width: calc(100% - 260px);
+        overflow-x: auto;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      }
+      .zone-tp-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 5px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s ease;
+      }
+      .zone-tp-btn:hover, .zone-tp-btn.active {
+        background: rgba(56, 189, 248, 0.22);
+        border-color: #38bdf8;
+        color: #fff;
+      }
+      @media (max-width: 768px) {
+        .activity-zone-teleport-bar {
+          top: 72px;
+          bottom: auto;
+          max-width: calc(100% - 24px);
+        }
       }
 
       /* Mobile Virtual Joystick (Bottom-Left) */
@@ -653,7 +697,18 @@
               <!-- Proximity Prompt Toast (Bottom-Center) -->
               <div class="spatial-prompt-toast" id="spatialPrompt">
                 <span id="spatialPromptIcon" style="font-size: 18px;">✨</span>
-                <span id="spatialPromptText">Tekan Space / E untuk berinteraksi</span>
+                <span id="spatialPromptText">Tekan Space / E atau Klik 3D Objek untuk berinteraksi</span>
+              </div>
+
+              <!-- 7-Zone Fast Travel Bar (Benua Adisha 3D) -->
+              <div class="activity-zone-teleport-bar" id="activityZoneTeleportBar">
+                <button class="zone-tp-btn active" data-zone="desa">🏡 Balai Desa</button>
+                <button class="zone-tp-btn" data-zone="hutan">🌲 Hutan Pinus</button>
+                <button class="zone-tp-btn" data-zone="tambang">⛏️ Kawah Tambang</button>
+                <button class="zone-tp-btn" data-zone="dermaga">🎣 Dermaga Bintang</button>
+                <button class="zone-tp-btn" data-zone="pratama">☕ Kota Pratama</button>
+                <button class="zone-tp-btn" data-zone="khulkhas">❄️ Puncak Khul'Khas</button>
+                <button class="zone-tp-btn" data-zone="draken">🏛️ Kampus Draken</button>
               </div>
 
               <!-- Mobile Virtual Joystick (Bottom-Left) -->
@@ -942,6 +997,18 @@
           // Sembunyikan Loading Screen setelah inisialisasi selesai
           const fill = document.getElementById('loadingProgressFill');
           if (fill) fill.style.width = '100%';
+
+          // Hubungkan tombol Fast-Travel 7 Zona Adisha
+          document.querySelectorAll('#activityZoneTeleportBar .zone-tp-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              document.querySelectorAll('#activityZoneTeleportBar .zone-tp-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              const zoneKey = btn.getAttribute('data-zone');
+              if (activeWorld && typeof activeWorld.teleportToZone === 'function') {
+                activeWorld.teleportToZone(zoneKey);
+              }
+            });
+          });
 
           setTimeout(() => {
             const overlay = document.getElementById('activityLoadingOverlay');

@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -611,6 +611,7 @@
     </style>
   </head>
   <body>
+    <div id="shared-nav"></div>
     <div class="player-app">
       <!-- Top Bar -->
       <header class="top-bar">
@@ -762,8 +763,9 @@
           </div>
         </aside>
       </main>
+      <!-- Local ticker for progress bar when playing -->
     </div>
-
+    <script src="/src/js/sharedNav.js"></script>
     <!-- Client Script -->
     <script>
       let socket = null;
