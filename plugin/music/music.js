@@ -128,6 +128,7 @@ async function runMusicLogic(
   sendReply,
   isSlash,
   deleteReply,
+  interaction = null,
 ) {
   const poru = client.musicManager.poru;
   const musicManager = client.musicManager;
@@ -150,6 +151,7 @@ async function runMusicLogic(
     musicManager,
     memberVoice,
     player: poru.players.get(guild.id),
+    interaction,
   };
 
   // Handle voteskip special case
@@ -734,6 +736,7 @@ module.exports = {
       sendReply,
       true,
       () => interaction.deleteReply().catch(() => {}),
+      interaction,
     );
   },
 

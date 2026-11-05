@@ -1,0 +1,38 @@
+# ==============================================================================
+# Naura Hoshino V2 - Minecraft Account Link & In-Game Verification Skript
+# Simpan berkas ini di folder: plugins/Skript/scripts/naura_link.sk
+# ==============================================================================
+
+options:
+    # URL Dashboard Bot Naura Hoshino (Sesuaikan dengan IP:Port atau Domain bot Anda)
+    api_url: "http://localhost:3000/api/minecraft/verify"
+
+command /naura [<text>] [<text>]:
+    permission: naura.use
+    permission message: "&cAnda tidak memiliki izin untuk menggunakan perintah ini."
+    trigger:
+        if arg-1 is "link":
+            if arg-2 is not set:
+                send "&c[Naura] Masukkan 6 digit kode verifikasi! Contoh: /naura link 123456" to player
+                stop
+            
+            set {_code} to arg-2
+            set {_name} to name of player
+            set {_uuid} to uuid of player
+            
+            send "&e[Naura] Menghubungi sistem Naura Hoshino..." to player
+            
+            # Kirim request HTTP POST ke Webhook Dashboard Naura
+            send a post request to "{@api_url}" with the body "{""code"": ""%{_code}%"", ""username"": ""%{_name}%"", ""uuid"": ""%{_uuid}%""}" and headers "Content-Type: application/json"
+            
+            # Respons diproses
+            set {_response} to last http response
+            if {_response}'s status code is 200:
+                send "&a&l[Naura] Sukses! Akun Minecraft Anda berhasil ditautkan ke Discord!" to player
+                send "&6+500 Star Fragments telah ditambahkan ke akun Discord Anda!" to player
+                play sound "entity.player.levelup" with volume 1 and pitch 1 to player
+            else:
+                send "&c[Naura] Gagal memverifikasi kode. Pastikan kode benar atau belum kadaluarsa (15 menit)." to player
+        else:
+            send "&b=== Naura Hoshino Minecraft Integration ===" to player
+            send "&e/naura link <kode> &7- Verifikasi tautan akun dari Discord /minecraft link" to player

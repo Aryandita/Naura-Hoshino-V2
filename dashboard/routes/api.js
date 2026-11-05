@@ -391,6 +391,84 @@ module.exports = function (client) {
     }
   });
 
+  // ------------------------------------------------------------------
+  // Minecraft Link Verification Webhook / In-Game Command Endpoint
+  // ------------------------------------------------------------------
+  const handleMinecraftVerify = async (req, res) => {
+    try {
+      const code = String(req.body?.code || req.query?.code || "").trim();
+      const inGameUsername = String(
+        req.body?.username || req.query?.username || "",
+      ).trim();
+
+      if (!code) {
+        return res.status(400).json({
+          success: false,
+          error: "Kode verifikasi 6 digit wajib disertakan.",
+        });
+      }
+
+      const MinecraftBridgeService = require("../../src/services/minecraftBridge");
+      const verified = await MinecraftBridgeService.verifyAccount(code);
+
+      if (!verified) {
+        return res.status(404).json({
+          success: false,
+          error: "Kode verifikasi tidak valid atau telah kadaluarsa (berlaku 15 menit).",
+        });
+      }
+
+      // Sinkronisasi ign jika ada
+      if (inGameUsername && verified.mcUsername !== inGameUsername) {
+        verified.mcUsername = inGameUsername;
+        await verified.save({ fields: ["mcUsername"] });
+      }
+
+      const cacheManager = require("../../src/managers/cacheManager");
+      await cacheManager.updateUserProfile(verified.userId, {
+        minecraft_ign: verified.mcUsername,
+      });
+
+      // Kirim DM konfirmasi ke user Discord bila memungkinkan
+      try {
+        const discordUser = await client.users
+          .fetch(verified.userId)
+          .catch(() => null);
+        if (discordUser) {
+          const {
+            buildSuccessContainerV2,
+          } = require("../../src/utils/NauraContainerBuilder");
+          const dmPayload = buildSuccessContainerV2({
+            title: "Akun Minecraft Berhasil Diverifikasi!",
+            description:
+              `Selamat! Akun Minecraft **${verified.mcUsername}** telah resmi diverifikasi.\n\n` +
+              `> 🌟 **Bonus:** +500 Star Fragments telah ditambahkan ke akunmu!\n` +
+              `> 🎮 Gunakan \`/minecraft sync\` di server Discord untuk mengklaim reward waktu bermain berkala.`,
+            footerText: "Naura Minecraft Bridge",
+          });
+          await discordUser.send(dmPayload).catch(() => {});
+        }
+      } catch (_) {}
+
+      return res.status(200).json({
+        success: true,
+        message: "Akun Minecraft berhasil diverifikasi!",
+        userId: verified.userId,
+        mcUsername: verified.mcUsername,
+        rewardStarFragments: 500,
+      });
+    } catch (err) {
+      logger.error("[API MINECRAFT VERIFY] Error:", err.message);
+      return res.status(500).json({
+        success: false,
+        error: "Terjadi kesalahan internal saat memverifikasi akun.",
+      });
+    }
+  };
+
+  router.post("/minecraft/verify", handleMinecraftVerify);
+  router.post("/api/minecraft/verify", handleMinecraftVerify);
+
   return router;
 };
 

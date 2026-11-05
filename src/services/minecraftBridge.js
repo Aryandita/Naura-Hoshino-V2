@@ -33,13 +33,29 @@ class MinecraftBridgeService {
    * Verifikasi penautan akun Minecraft (bisa dipanggil dari console/RCON/webhook).
    */
   static async verifyAccount(code) {
-    const raw = await redisManager.get(`mc:link:code:${code}`);
-    if (!raw) return null;
+    let userId = null;
 
-    const data = JSON.parse(raw);
-    const link = await MinecraftLink.findOne({
-      where: { userId: data.userId },
-    });
+    try {
+      const raw = await redisManager.get(`mc:link:code:${code}`);
+      if (raw) {
+        const data = JSON.parse(raw);
+        userId = data.userId;
+      }
+    } catch (_) {}
+
+    let link = null;
+    if (userId) {
+      link = await MinecraftLink.findOne({ where: { userId } });
+    }
+
+    // Fallback: cari langsung dari database berdasarkan verificationCode
+    if (!link && code) {
+      link = await MinecraftLink.findOne({ where: { verificationCode: String(code).trim() } });
+      if (link) {
+        userId = link.userId;
+      }
+    }
+
     if (!link) return null;
 
     link.isVerified = true;
@@ -48,14 +64,47 @@ class MinecraftBridgeService {
     await link.save({
       fields: ["isVerified", "verificationCode", "lastSyncedAt"],
     });
-    await redisManager.del(`mc:link:code:${code}`);
+
+    try {
+      await redisManager.del(`mc:link:code:${code}`);
+    } catch (_) {}
 
     // Bonus Star Fragments untuk penautan pertama
-    await currency.reward(
-      "starFragments",
-      { userId: data.userId },
-      500,
-    );
+    try {
+      await currency.reward(
+        "starFragments",
+        { userId: link.userId },
+        500,
+      );
+    } catch (_) {}
+
+    return link;
+  }
+
+  /**
+   * Verifikasi paksa oleh Administrator Discord tanpa memerlukan kode in-game.
+   */
+  static async adminVerifyAccount(userId, mcUsername) {
+    const [link] = await MinecraftLink.findOrCreate({
+      where: { userId },
+      defaults: { mcUsername, isVerified: true, verificationCode: null, lastSyncedAt: new Date() },
+    });
+
+    link.mcUsername = mcUsername;
+    link.isVerified = true;
+    link.verificationCode = null;
+    link.lastSyncedAt = new Date();
+    await link.save({
+      fields: ["mcUsername", "isVerified", "verificationCode", "lastSyncedAt"],
+    });
+
+    try {
+      await currency.reward(
+        "starFragments",
+        { userId },
+        500,
+      );
+    } catch (_) {}
 
     return link;
   }

@@ -173,6 +173,34 @@ module.exports = {
             .setDescription("Aktifkan atau nonaktifkan jembatan chat")
             .setRequired(false),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("verify")
+        .setDescription("Verifikasi tautan akun Minecraft menggunakan kode 6 digit")
+        .addStringOption((opt) =>
+          opt
+            .setName("code")
+            .setDescription("Kode verifikasi 6 digit yang didapatkan dari /minecraft link")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("admin-verify")
+        .setDescription("Admin: Tautkan dan verifikasi akun Minecraft pemain secara manual")
+        .addUserOption((opt) =>
+          opt
+            .setName("user")
+            .setDescription("User Discord yang akan diverifikasi")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("username")
+            .setDescription("Username Minecraft pemain")
+            .setRequired(true),
+        ),
     ),
 
   async execute(interaction) {
@@ -399,6 +427,79 @@ module.exports = {
       });
 
       return interaction.editReply(syncPayload);
+    } else if (subcommand === "verify") {
+      const code = interaction.options.getString("code");
+      const MinecraftBridgeService = require("../../src/services/minecraftBridge");
+      const verified = await MinecraftBridgeService.verifyAccount(code);
+
+      if (!verified) {
+        const errPayload = buildErrorContainerV2({
+          interaction,
+          title: "Verifikasi Gagal",
+          description: `${ui.getEmoji("naura_cry") || "😢"} Kode verifikasi \`${code}\` tidak ditemukan atau sudah kadaluarsa (kode berlaku 15 menit).\n\n${ui.getEmoji("sparkle") || "💡"} *Jalankan \`/minecraft link\` kembali untuk mendapatkan kode baru.*`,
+          expression: "cry",
+          withBanner: true,
+          footerText: ui.getFooter("utility"),
+        });
+        return interaction.editReply(errPayload);
+      }
+
+      await cacheManager.updateUserProfile(verified.userId, {
+        minecraft_ign: verified.mcUsername,
+      });
+
+      const verifyPayload = buildSuccessContainerV2({
+        interaction,
+        accentColorHex: ui.getColor("success") || "#22c55e",
+        authorName: `${ui.getEmoji("about") || "🔗"} Verifikasi Identitas Minecraft`,
+        title: "Akun Minecraft Berhasil Diverifikasi!",
+        description: `Akun Minecraft **${verified.mcUsername}** telah resmi diverifikasi untuk <@${verified.userId}>!\n\n` +
+          `> ${ui.getEmoji("star") || "🌟"} **Bonus Penautan:** \`+500 Star Fragments\`\n` +
+          `> ${ui.getEmoji("sparkle") || "✨"} Kamu sekarang dapat mengklaim hadiah waktu bermain secara berkala dengan \`/minecraft sync\`!`,
+        footerText: "Naura Minecraft Network Sync",
+      });
+      return interaction.editReply(verifyPayload);
+    } else if (subcommand === "admin-verify") {
+      if (
+        !interaction.member.permissions.has(PermissionFlagsBits.ManageGuild) &&
+        !interaction.member.permissions.has(PermissionFlagsBits.Administrator)
+      ) {
+        const errPayload = buildErrorContainerV2({
+          interaction,
+          title: "Akses Ditolak",
+          description: `${ui.getEmoji("naura_akward") || "😅"} Kamu memerlukan izin \`Manage Server\` atau \`Administrator\` untuk memverifikasi akun pemain secara manual.`,
+          expression: "akward",
+          withBanner: true,
+          footerText: ui.getFooter("utility"),
+        });
+        return interaction.editReply(errPayload);
+      }
+
+      const targetUser = interaction.options.getUser("user");
+      const mcUsername = interaction.options.getString("username");
+
+      const MinecraftBridgeService = require("../../src/services/minecraftBridge");
+      await MinecraftBridgeService.adminVerifyAccount(
+        targetUser.id,
+        mcUsername,
+      );
+
+      await cacheManager.updateUserProfile(targetUser.id, {
+        minecraft_ign: mcUsername,
+      });
+
+      const adminPayload = buildSuccessContainerV2({
+        interaction,
+        accentColorHex: ui.getColor("success") || "#22c55e",
+        authorName: "Naura Minecraft Admin Operations",
+        title: "Verifikasi Manual Berhasil!",
+        description: `Admin telah berhasil menautkan dan memverifikasi akun:\n\n` +
+          `> 👤 **User Discord:** <@${targetUser.id}>\n` +
+          `> 🎮 **Minecraft IGN:** \`${mcUsername}\`\n` +
+          `> 🌟 **Bonus:** +500 Star Fragments ditambahkan ke user.`,
+        footerText: "Naura Minecraft Admin System",
+      });
+      return interaction.editReply(adminPayload);
     } else if (subcommand === "broadcast") {
       const msgText = interaction.options.getString("message");
       const { sendRconCommand } = require("../../src/utils/rcon");
@@ -519,9 +620,10 @@ module.exports = {
           authorName: "Naura Minecraft Stats Generator",
           title: `${ui.getEmoji("core") || "🌸"} Statistik ${username}`,
           description: `> ${ui.getEmoji("naura_happy") || "✨"} *Kartu statistikmu sudah siap! Terus bermain dan kumpulkan waktu bermain untuk reward spesial!*`,
+          bannerAttachmentName: "mc-stats.png",
+          files: [attachment],
           footerText: ui.getFooter("utility"),
         });
-        statsPayload.files = [attachment];
         return interaction.editReply(statsPayload);
       } catch (error) {
         logger.error("[Stats Generation Error]:", error.message);

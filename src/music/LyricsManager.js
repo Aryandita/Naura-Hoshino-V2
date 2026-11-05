@@ -49,7 +49,7 @@ class LyricsManager {
     const redisManager = require("../managers/redisManager");
     const cacheKey = `lyrics_${encodeURIComponent(cleanArtist)}_${encodeURIComponent(cleanTitle)}`;
 
-    if (redisManager.client && redisManager.client.isReady) {
+    if (redisManager.isReady) {
       const cached = await redisManager.getCache(cacheKey);
       if (cached) return cached;
     }
@@ -132,7 +132,7 @@ class LyricsManager {
   }
 
   async sendLyrics(interaction, manager, player, track, isEphemeral = false) {
-    if (!interaction.deferred) {
+    if (!interaction.deferred && !interaction.replied) {
       const options = isEphemeral ? { flags: MessageFlags.Ephemeral } : {};
       await interaction.deferReply(options).catch(() => {});
     }
@@ -140,14 +140,17 @@ class LyricsManager {
     const lyricsObj = await this.fetchLyricsData(track);
 
     if (!lyricsObj) {
-      return interaction
-        .editReply({
-          content: `${ui.getEmoji("error") || "❌"} Lirik tidak ditemukan di database global maupun memori AI untuk lagu ini.`,
-        })
-        .catch(() => {});
+      const { buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
+      const errPayload = buildErrorContainerV2({
+        interaction,
+        title: "Lirik Tidak Ditemukan",
+        description: `${ui.getEmoji("error") || "❌"} Lirik tidak ditemukan di database global maupun memori AI untuk lagu ini.`,
+        footerText: ui.getFooter("music"),
+      });
+      return interaction.editReply(errPayload).catch(() => {});
     }
 
-    if (lyricsObj.type === "synced") {
+    if (lyricsObj.type === "synced" && player) {
       return this.startLiveLyrics(
         interaction,
         player,
@@ -304,6 +307,7 @@ class LyricsManager {
       const msg = isEdit
         ? await interaction.editReply(payload)
         : await interaction.reply({ ...payload, withResponse: true });
+      const targetMsg = msg?.resource?.message || msg;
 
       // 1. Bersihkan sisa timer lama
       this.clearLyrics(player.guildId);
@@ -312,11 +316,19 @@ class LyricsManager {
       this.lyricsCache.set(player.guildId, { timeout: null });
 
       // 3. Simpan ID agar otomatis terhapus saat lagu selesai
-      player.lyricsMessageId = msg.id;
+      player.lyricsMessageId = targetMsg?.id || null;
 
       const update = async () => {
         // Cek apakah lirik masih diizinkan berjalan
         if (!this.lyricsCache.has(player.guildId)) return;
+        if (
+          player.currentTrack &&
+          track &&
+          player.currentTrack.info.uri !== track.info.uri
+        ) {
+          this.clearLyrics(player.guildId);
+          return;
+        }
         if (!player.isPlaying || player.isPaused) {
           const t = setTimeout(update, 1000);
           this.lyricsCache.set(player.guildId, { timeout: t });
@@ -366,7 +378,9 @@ class LyricsManager {
             footerText: `Disinkronkan untuk ${interaction.user.username} • Naura Hoshino Music System`,
           });
 
-          await msg.edit(updatedPayload).catch(() => {});
+          if (targetMsg && typeof targetMsg.edit === "function") {
+            await targetMsg.edit(updatedPayload).catch(() => {});
+          }
 
           const nextTime = timedLyrics[index + 1]
             ? timedLyrics[index + 1].time - player.position
@@ -382,7 +396,9 @@ class LyricsManager {
             description: standbyInfo,
             footerText: `Disinkronkan untuk ${interaction.user.username} • Naura Hoshino Music System`,
           });
-          await msg.edit(standbyPayload).catch(() => {});
+          if (targetMsg && typeof targetMsg.edit === "function") {
+            await targetMsg.edit(standbyPayload).catch(() => {});
+          }
 
           const timeout = setTimeout(update, 1000);
           this.lyricsCache.set(player.guildId, { timeout });

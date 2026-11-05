@@ -370,8 +370,9 @@ module.exports = {
 
     // Jika Lavalink berhasil me-resolve stream HTTP intro (ttsTrack), putar langsung
     // lewat koneksi Lavalink yang sama (tanpa bentrok sesi @discordjs/voice).
-    // Fallback ke VoiceManager native hanya bila ttsTrack tidak tersedia.
-    if (djIntro && !djIntro.ttsTrack && (djIntro.audioBuffer || djIntro.localFilePath)) {
+    // Fallback ke VoiceManager native hanya bila ttsTrack tidak tersedia DAN Poru belum terhubung ke voice.
+    const isPoruConnected = Boolean(player && (player.isConnected || player.isPlaying || player.isPaused));
+    if (djIntro && !djIntro.ttsTrack && (djIntro.audioBuffer || djIntro.localFilePath) && !isPoruConnected) {
       const VoiceManager = require("../../../src/managers/voiceManager");
       const { logger } = require("../../../src/managers/logger");
 
@@ -416,6 +417,7 @@ module.exports = {
     const VoiceManagerCleanup = require("../../../src/managers/voiceManager");
     if (VoiceManagerCleanup.hasActiveConnection(guild.id)) {
       VoiceManagerCleanup.disconnect(guild.id);
+      await new Promise((r) => setTimeout(r, 200));
     }
 
     ensurePlayer();

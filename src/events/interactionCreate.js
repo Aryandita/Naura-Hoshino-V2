@@ -266,6 +266,53 @@ function wrapInteractionSafe(interaction) {
       if (hasV2) {
         options.flags = (options.flags || 0) | MessageFlags.IsComponentsV2;
       }
+
+      // Pastikan semua attachment:// yang dirujuk oleh accessory/media ada di options.files
+      try {
+        if (!options.files) options.files = [];
+        const attachedNames = new Set(
+          (Array.isArray(options.files) ? options.files : [])
+            .map((f) => {
+              if (!f) return "";
+              if (typeof f === "string") return require("path").basename(f);
+              return f.name || f.attachment?.name || "";
+            })
+            .filter(Boolean),
+        );
+
+        const nauraExpression = require("../utils/nauraExpression");
+
+        const auditItem = (node) => {
+          if (!node || typeof node !== "object") return;
+          const url =
+            node.accessory?.media?.url ||
+            node.accessory?.data?.media?.url ||
+            node.media?.url;
+          if (typeof url === "string" && url.startsWith("attachment://")) {
+            const fileName = url.slice("attachment://".length);
+            if (!attachedNames.has(fileName)) {
+              const mood = fileName
+                .replace(/^naura_/i, "")
+                .replace(/\.[^.]+$/, "");
+              const expObj = nauraExpression.getAttachment(mood);
+              if (expObj && expObj.attachment) {
+                options.files.push(expObj.attachment);
+                attachedNames.add(fileName);
+              } else if (node.accessory) {
+                delete node.accessory;
+              }
+            }
+          }
+          if (Array.isArray(node.components)) {
+            for (const child of node.components) auditItem(child);
+          }
+        };
+
+        for (const comp of comps) {
+          auditItem(comp);
+          if (comp.data) auditItem(comp.data);
+        }
+      } catch (_) {}
     }
     return options;
   }

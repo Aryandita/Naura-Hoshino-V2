@@ -14,7 +14,6 @@ const GuildSettings = require("../../../src/models/GuildSettings");
 const cacheManager = require("../../../src/managers/cacheManager");
 const aiDjManager = require("../../../src/managers/aiDjManager");
 const fishAudioService = require("../../../src/services/fishAudioService");
-const lyricsService = require("../../../src/services/lyricsService");
 const musicQuizEngine = require("../../../src/music/musicQuizEngine");
 const { lavalinkClusterManager } = require("../../../src/managers/lavalinkClusterManager");
 const {
@@ -113,9 +112,25 @@ module.exports = {
   },
 
   async lyrics(ctx) {
-    const { player, user, args, sendReply } = ctx;
+    const { player, user, args, sendReply, client, interaction } = ctx;
     const eError = ui.getEmoji("error") || "❌";
-    let query = args.query;
+    const LyricsManager = require("../../../src/music/LyricsManager");
+    const lyricsEngine = new LyricsManager(client);
+
+    // Kasus 1: Lagu sedang aktif di player dan tanpa query khusus -> Live Karaoke mode!
+    if (!args?.query && player && player.currentTrack) {
+      if (interaction) {
+        return await lyricsEngine.sendLyrics(
+          interaction,
+          client?.musicManager,
+          player,
+          player.currentTrack,
+        );
+      }
+    }
+
+    // Kasus 2: Query diberikan atau pencarian manual
+    let query = args?.query;
     if (!query && player && player.currentTrack) {
       query = player.currentTrack.info.title;
     }
@@ -129,9 +144,27 @@ module.exports = {
       return sendReply(errPayload, true);
     }
 
-    const result = await lyricsService.fetchLyrics(query);
+    const mockTrack = {
+      info: {
+        title: query,
+        author: "",
+        length: player?.currentTrack?.info?.length || 180000,
+        originalSource: "Search",
+      },
+    };
 
-    if (!result || !result.pages || result.pages.length === 0) {
+    if (interaction) {
+      return await lyricsEngine.sendLyrics(
+        interaction,
+        client?.musicManager,
+        player,
+        mockTrack,
+      );
+    }
+
+    // Prefix command fallback: gunakan paged format
+    const lyricsData = await lyricsEngine.fetchLyricsData(mockTrack);
+    if (!lyricsData) {
       const errPayload = buildErrorContainerV2({
         title: "Lirik Tidak Ditemukan",
         description: `❌ Maaf, tidak dapat menemukan lirik untuk lagu **${query}**.`,
@@ -140,65 +173,12 @@ module.exports = {
       return sendReply(errPayload, true);
     }
 
-    let currentPage = 0;
-    const totalPages = result.pages.length;
-
-    const renderLyricsContainer = (pageIndex) => {
-      const pageButtons = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`lyrics_prev_${user.id}`)
-          .setLabel("◀️ Halaman Sebelumnya")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(pageIndex <= 0),
-        new ButtonBuilder()
-          .setCustomId(`lyrics_next_${user.id}`)
-          .setLabel("Halaman Berikutnya ▶️")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(pageIndex >= totalPages - 1),
-      );
-
-      return buildContainerV2({
-        accentColorHex: "#38BDF8",
-        authorName: `🎵 Lirik Lagu: ${result.artist}`,
-        title: `📜 ${result.title} (Halaman ${pageIndex + 1}/${totalPages})`,
-        description: `\`\`\`text\n${result.pages[pageIndex]}\n\`\`\``,
-        buttonsRow: totalPages > 1 ? pageButtons : undefined,
-        footerText: ui.getFooter("music"),
-      });
-    };
-
-    const initialPayload = renderLyricsContainer(currentPage);
-    const sentMsg = await sendReply({ ...initialPayload, fetchReply: true });
-
-    if (totalPages > 1 && sentMsg && sentMsg.createMessageComponentCollector) {
-      const collector = sentMsg.createMessageComponentCollector({
-        componentType: ComponentType.Button,
-        time: 120000,
-      });
-
-      collector.on("collect", async (i) => {
-        if (i.user.id !== user.id) {
-          const errReply = buildErrorContainerV2({
-            title: "Akses Ditolak",
-            description: "❌ Hanya pemanggil command yang bisa mengubah halaman lirik.",
-            footerText: ui.getFooter("music"),
-          });
-          return i.reply({ ...errReply, flags: MessageFlags.Ephemeral });
-        }
-
-        if (i.customId.startsWith("lyrics_prev_")) {
-          currentPage = Math.max(0, currentPage - 1);
-        } else if (i.customId.startsWith("lyrics_next_")) {
-          currentPage = Math.min(totalPages - 1, currentPage + 1);
-        }
-
-        await i.update(renderLyricsContainer(currentPage));
-      });
-
-      collector.on("end", () => {
-        sentMsg.edit({ components: [] }).catch(() => {});
-      });
-    }
+    return await lyricsEngine.sendPagedLyrics(
+      { editReply: sendReply, client, user },
+      player,
+      mockTrack,
+      lyricsData.data,
+    );
   },
 
   async dedicate(ctx) {
