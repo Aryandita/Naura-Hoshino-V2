@@ -6,11 +6,11 @@ const version = require("./version");
 const env = require("./env");
 const packageJson = require("../../package.json");
 
-test("SSOT Version - package.json defines canonical 2.4.0", () => {
+test("SSOT Version - package.json defines canonical 2.5.0", () => {
   assert.equal(
     packageJson.version,
-    "2.4.0",
-    "package.json version harus 2.4.0 sebagai SSOT",
+    "2.5.0",
+    "package.json version harus 2.5.0 sebagai SSOT",
   );
 });
 

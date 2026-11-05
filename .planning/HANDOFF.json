@@ -1,16 +1,51 @@
 {
-  "timestamp": "2026-11-05T09:24:00+08:00",
-  "phase": "v2.5.0 Visual & UX Polish (5-Point Dashboard Review)",
-  "activePlan": "Perbaikan menyeluruh Peta Satelit Adisha, Radar Taktis, Dunia 3D Interaktif, Tekstur Model 3D Naura, dan Tata Letak HTML/CSS",
-  "lastCompletedTask": "Step 5 of 5: Build produksi dashboard, verifikasi QA statis, dan penyegelan Handoff",
-  "recentDecisions": [
-    "D-01: Menambahkan blob: dan data: ke CSP connectSrc di dashboard/server.js serta fallback HTMLImageElement di loader.js agar tekstur embedded PNG pada model 3D Naura (.vrm/.glb) tidak pernah terblokir CSP dan tidak merender putih polos",
-    "D-02: Merancang dan mengekspor citra radar satelit top-down Adisha melalui Canva MCP (adisha_satellite_radar.png, adisha_satellite_wide.jpg, survival_radar_art.jpg) untuk adisha-map.html dan survival-map.html",
-    "D-03: Menata ulang 38 koordinat POI di adishaWorldData.js serta menambahkan fitur Zoom In/Out/Reset, drag-pan, dan pill-label anti-tabrakan di adisha-map.html",
-    "D-04: Memperluas dunia 3D di activity3dWorld.js dari radius 30m ke 70m (7 zona Adisha, 13 POI/NPC) lengkap dengan Raycaster Click-to-Move/Interact dan bar Fast-Travel 7 Zona",
-    "D-05: Meningkatkan mountSharedNav() di sharedNav.js agar membungkus semua halaman berbasis #shared-nav ke dalam struktur .app-shell + 3-Pillar Sidebar + Topbar serta memperbaiki treasury.html dan player.html"
+  "project": "Naura Hoshino V2",
+  "version": "2.5.0",
+  "timestamp": "2026-11-06T02:39:00+08:00",
+  "status": "COMPLETED",
+  "summary": "Full migration of legacy minigames to Arcade system, resolved InteractionNotReplied Discord lifecycle bug, updated /core help and command registry, verified audio/music voice connection mutex, IMDb movie/anime search relevance, Minecraft canvas multi-provider fallback cascade, and safe total message cleanup.",
+  "resolvedIssues": [
+    {
+      "id": "ARCADE_SLASH_AND_BUTTON_INTERACTION_ERROR",
+      "symptom": "DiscordjsError [InteractionNotReplied]: The reply to this interaction has not been sent or deferred at claimDaily / showHub",
+      "rootCause": "Subcommand routing executed editReply() without prior deferReply() or reply(). Button and select menu callbacks also failed when undeferred.",
+      "solution": "1. Injected auto-deferral in execute() before routing. 2. Created unified respond() helper handling both replied/deferred and unacknowledged states. 3. Wrapped interaction.editReply in wrapInteractionSafe (interactionCreate.js) to automatically redirect to reply() when undeferred across the entire bot. 4. Registered button and select menu handlers in src/interactions/buttons/arcade.js and src/interactions/selects/arcadeSelect.js."
+    },
+    {
+      "id": "MINIGAMES_PLUGIN_MIGRATION",
+      "symptom": "Legacy /minigame command existed alongside new Arcade system, causing confusion and duplicate engines.",
+      "solution": "Migrated all 16 game engines and shared helpers to plugin/arcade/subcommands/ and plugin/arcade/helpers/, deleted plugin/minigames/ directory completely, and replaced /minigame with /arcade in /core help (src/core/helpView.js) and src/services/commandRegistry.js."
+    },
+    {
+      "id": "AUDIO_SYNC_AND_STUTTER_FREE_MUSIC",
+      "symptom": "Native intro speech and Lavalink music player collided on voice gateway, causing aborts and stuttering.",
+      "solution": "Implemented voice connection mutex in VoiceManager (acquireVoiceLock, releaseVoiceLock, handoverToMusic, yieldToMusic) and pre-buffering delay in MusicManager."
+    },
+    {
+      "id": "MEDIA_SEARCH_RELEVANCE",
+      "symptom": "n!movie and n!anime returned irrelevant TV shows (e.g. Counting Cars instead of Cars 2).",
+      "solution": "Integrated IMDb Suggestions API as primary provider for movies with exact title weighting and year proximity; added fuzzy/exact scoring in AniList/Kitsu/Jikan for anime."
+    },
+    {
+      "id": "MINECRAFT_CANVAS_SKIN_RENDERING",
+      "symptom": "Minecraft skin canvas failed with empty black squares when external providers had rate limits or downtime.",
+      "solution": "Built 4-tier provider fallback cascade (mc-heads.net -> minotar.net -> crafatar.com -> local offline Steve/Alex buffers)."
+    },
+    {
+      "id": "DISCORD_MESSAGE_AND_CONTAINER_CLEANUP",
+      "symptom": "Cleaning messages sometimes left empty ghost containers or failed with Unknown Message 10008.",
+      "solution": "Standardized safeDeleteMessage with defensive Discord error suppression (10008, 10015, 10062, 50027) and cleanGhostContainers filter."
+    }
   ],
-  "uncommittedFiles": [],
-  "nextAction": "Jalankan npm start atau deploy ke server produksi untuk memverifikasi seluruh halaman dashboard v2.5.0 secara live.",
-  "resumptionHint": "Seluruh 5 poin review visual dan interaktivitas dashboard telah selesai, terverifikasi oleh dashboard:build dan test:inline-scripts, serta telah di-commit dan push ke branch main."
+  "verification": {
+    "arcadeSystemTest": "8/8 passed (test/arcadeSystem.test.js)",
+    "operationalTestSuites": "61/61 passed (voiceSync, mediaSearch, minecraftCanvas, messageCleanup, operationalFixes, arcadeSystem)",
+    "requireGraph": "4704 method calls verified across core modules (npm run test:requires)",
+    "emDashCheck": "0 em-dash characters (node scripts/check-em-dash.js)",
+    "strictLocales": "508 keys in parity, 0 unsynced (npm run locales:check:strict)",
+    "inlineScripts": "38 valid JS scripts, 36 pages valid (npm run test:inline-scripts)",
+    "secretScan": "0 leaks found (node scripts/check-secrets.js)",
+    "driftVerification": "0 architectural violations (npm run verify:drift)",
+    "versionParity": "100% across 22 checks at v2.5.0 (node scripts/check-version-parity.js)"
+  }
 }

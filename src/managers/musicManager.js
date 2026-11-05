@@ -40,6 +40,9 @@ class MusicManager {
     this.skipVotes = new Map();
     this.sleepTimers = new Map();
     this.stay24_7States = new Map();
+    this.prebufferDelayMs = 300;
+    const VoiceManager = require("./voiceManager");
+    this.voiceConnectionGuard = VoiceManager.voiceConnectionGuard;
   }
 
   get poru() {
@@ -112,7 +115,8 @@ class MusicManager {
     }
 
     // Bangun daftar node bertingkat (Tier 1: Private, Tier 2: Sekunder, Tier 3: Public Fallback Pool)
-    const tieredNodes = lavalinkClusterManager.buildTieredNodeList(configuredNodes);
+    const tieredNodes =
+      lavalinkClusterManager.buildTieredNodeList(configuredNodes);
     const cookieConfig = this.youtubeCookieConfig;
     for (const node of tieredNodes) {
       node.cookieConfig = cookieConfig;
@@ -156,7 +160,8 @@ class MusicManager {
       const rawPenalties = Number(node.penalties) || 0;
       // Batasi penalti bawaan CPU publik (< 500) agar node sehat seperti Millohost tidak kalah oleh node mati,
       // namun tetap hormati penalti tinggi (>= 500) yang diberikan oleh trackError saat stream gagal.
-      let score = rawPenalties >= 500 ? rawPenalties : Math.min(150, rawPenalties);
+      let score =
+        rawPenalties >= 500 ? rawPenalties : Math.min(150, rawPenalties);
       const name = String(node.name || "");
       const caps = lavalinkClusterManager.getCapabilities(name);
 
@@ -168,7 +173,10 @@ class MusicManager {
       if (caps?.hasBrokenYoutube || /hyperion/i.test(name)) {
         score += 50000;
       }
-      if (/serenetia/i.test(name) || (!caps && lavalinkClusterManager.nodeCapabilities.size > 0)) {
+      if (
+        /serenetia/i.test(name) ||
+        (!caps && lavalinkClusterManager.nodeCapabilities.size > 0)
+      ) {
         score += 40000;
       }
 
@@ -222,19 +230,27 @@ class MusicManager {
       }
 
       const qStr = String(query || "");
-      let querySource = String(source || poru.options?.defaultPlatform || "ytsearch").toLowerCase();
+      let querySource = String(
+        source || poru.options?.defaultPlatform || "ytsearch",
+      ).toLowerCase();
       if (/^scsearch:/i.test(qStr)) querySource = "scsearch";
       else if (/^spsearch:|spotify\.com/i.test(qStr)) querySource = "spsearch";
       else if (/^ytmsearch:/i.test(qStr)) querySource = "ytmsearch";
-      else if (/^ytsearch:|youtube\.com|youtu\.be/i.test(qStr)) querySource = "ytsearch";
+      else if (/^ytsearch:|youtube\.com|youtu\.be/i.test(qStr))
+        querySource = "ytsearch";
       else if (/^https?:\/\//i.test(qStr)) querySource = "http";
 
       const connectedNodes = [...poru.nodes.values()]
         .filter((n) => Boolean(n.isConnected ?? n.connected))
         .sort((a, b) => scoreNode(a, querySource) - scoreNode(b, querySource));
 
-      if (preferredNode && Boolean(preferredNode.isConnected ?? preferredNode.connected)) {
-        const idx = connectedNodes.findIndex((n) => n.name === preferredNode.name);
+      if (
+        preferredNode &&
+        Boolean(preferredNode.isConnected ?? preferredNode.connected)
+      ) {
+        const idx = connectedNodes.findIndex(
+          (n) => n.name === preferredNode.name,
+        );
         if (idx > 0) {
           connectedNodes.splice(idx, 1);
           connectedNodes.unshift(preferredNode);
@@ -252,13 +268,18 @@ class MusicManager {
 
       for (const candidateNode of connectedNodes) {
         try {
-          const res = await origResolve({ query, source, requester }, candidateNode);
+          const res = await origResolve(
+            { query, source, requester },
+            candidateNode,
+          );
           lastRes = res;
           const hasTracks =
             res &&
             Array.isArray(res.tracks) &&
             res.tracks.length > 0 &&
-            !["error", "empty", "LOAD_FAILED", "NO_MATCHES"].includes(res.loadType);
+            !["error", "empty", "LOAD_FAILED", "NO_MATCHES"].includes(
+              res.loadType,
+            );
 
           if (hasTracks) {
             for (const t of res.tracks) {
@@ -279,6 +300,19 @@ class MusicManager {
     };
 
     const self = this;
+
+    const origCreateConnection = poru.createConnection.bind(poru);
+    poru.createConnection = function guardedCreateConnection(options) {
+      if (options && options.guildId) {
+        const gId = String(options.guildId);
+        const VoiceManager = require("./voiceManager");
+        if (VoiceManager.hasActiveConnection(gId)) {
+          VoiceManager.cleanTeardownConnection(gId);
+        }
+      }
+      return origCreateConnection(options);
+    };
+
     poru.on("playerCreate", (player) => {
       if (!player || player._nauraPatched) return;
       player._nauraPatched = true;
@@ -287,7 +321,10 @@ class MusicManager {
       // Poru lupa me-reset isPlaying = false dan mengaktifkan cooldown 10 detik palsu.
       const origEventHandler = player.eventHandler.bind(player);
       player.eventHandler = async function patchedEventHandler(data) {
-        if (data?.type === "TrackEndEvent" && ["loadFailed", "cleanup", "replaced"].includes(data.reason)) {
+        if (
+          data?.type === "TrackEndEvent" &&
+          ["loadFailed", "cleanup", "replaced"].includes(data.reason)
+        ) {
           this.lastPlayTimestamp = null;
           this.cooldown = null;
           if (data.reason === "loadFailed") {
@@ -300,22 +337,70 @@ class MusicManager {
         return origEventHandler(data);
       };
 
-      // Pastikan player berpindah ke node yang kompatibel bila track berasal dari node fallback
+      // Pastikan player berpindah ke node yang kompatibel bila track berasal dari node fallback,
+      // serta terapkan sinkronisasi Voice Gateway lock dan pre-buffering readiness guard
       const origPlay = player.play.bind(player);
       player.play = async function patchedPlay(...args) {
+        const VoiceManager = require("./voiceManager");
+        const gId = String(this.guildId);
+
+        // 1. Voice Gateway Lock: tunggu jika native voice (misal intro clip) masih aktif
+        if (VoiceManager.isVoiceLocked(gId)) {
+          logger.info(
+            `[MusicManager] Menunggu Voice Lock dilepas oleh "${VoiceManager.getVoiceLockOwner(gId)}" di guild ${gId}...`,
+          );
+          await VoiceManager.waitForVoiceLock(gId, 15000);
+        }
+
+        // 2. Bersihkan sisa sesi native voice jika masih ada yang tertinggal
+        if (VoiceManager.hasActiveConnection(gId)) {
+          VoiceManager.cleanTeardownConnection(gId);
+        }
+
+        // 3. Readiness guard: pastikan koneksi player benar-benar tersambung ke Discord Voice Gateway
+        if (!this.isConnected && typeof this.connect === "function") {
+          let waitTime = 0;
+          const maxWait = 2500;
+          while (!this.isConnected && waitTime < maxWait) {
+            await new Promise((r) => setTimeout(r, 100));
+            waitTime += 100;
+          }
+        }
+
+        // 4. Pre-buffering guard: saat memulai pemutaran lagu awal atau peralihan dari intro
+        const isInitialStart = !this.isPlaying && !this.isPaused;
+        if (isInitialStart) {
+          const delay =
+            typeof self.prebufferDelayMs === "number"
+              ? self.prebufferDelayMs
+              : 300;
+          this.isPrebuffering = true;
+          if (delay > 0) {
+            await new Promise((r) => setTimeout(r, delay));
+          }
+          this.isPrebuffering = false;
+        }
+
         const nextTrack = this.queue?.[0] || this.currentTrack;
         const targetNodeName = nextTrack?._resolvedNodeName;
         if (targetNodeName && this.node && this.node.name !== targetNodeName) {
-          const currentCaps = lavalinkClusterManager.getCapabilities(this.node.name);
+          const currentCaps = lavalinkClusterManager.getCapabilities(
+            this.node.name,
+          );
           const trackSource = String(
-            nextTrack?.info?.sourceName || nextTrack?.info?.originalSource || "",
+            nextTrack?.info?.sourceName ||
+              nextTrack?.info?.originalSource ||
+              "",
           ).toLowerCase();
           const needsNodeSwitch =
             nextTrack?._forceNodeSwitch ||
             currentCaps?.hasBrokenYoutube ||
             /hyperion/i.test(this.node.name) ||
-            (trackSource === "soundcloud" && !currentCaps?.hasLavaSrc && !/millohost/i.test(this.node.name)) ||
-            ((nextTrack?.isTTS || trackSource === "http") && currentCaps?.hasHttp === false);
+            (trackSource === "soundcloud" &&
+              !currentCaps?.hasLavaSrc &&
+              !/millohost/i.test(this.node.name)) ||
+            ((nextTrack?.isTTS || trackSource === "http") &&
+              currentCaps?.hasHttp === false);
 
           if (needsNodeSwitch) {
             await self.switchPlayerNode(this, targetNodeName).catch(() => {});
@@ -335,7 +420,8 @@ class MusicManager {
   async switchPlayerNode(player, targetNodeName) {
     if (!player || !this._poru || !targetNodeName) return false;
     const targetNode = this._poru.nodes.get(targetNodeName);
-    if (!targetNode || !Boolean(targetNode.isConnected ?? targetNode.connected)) return false;
+    if (!targetNode || !Boolean(targetNode.isConnected ?? targetNode.connected))
+      return false;
     if (player.node && player.node.name === targetNode.name) return true;
 
     const oldNode = player.node;
@@ -368,7 +454,9 @@ class MusicManager {
       );
       return true;
     } catch (err) {
-      logger.warn(`[MusicManager] Gagal mengalihkan node ke "${targetNodeName}": ${err.message}`);
+      logger.warn(
+        `[MusicManager] Gagal mengalihkan node ke "${targetNodeName}": ${err.message}`,
+      );
       return false;
     }
   }
@@ -443,7 +531,10 @@ class MusicManager {
       const payload = await cached.generatePayload(player.position || 0, true);
       await msg.edit(payload).catch(() => {});
     } catch (e) {
-      logger.debug("[musicManager:updatePanelEmbed] Operasi audio/voice gagal: " + (e?.message || e));
+      logger.debug(
+        "[musicManager:updatePanelEmbed] Operasi audio/voice gagal: " +
+          (e?.message || e),
+      );
     }
   }
 
@@ -482,8 +573,12 @@ class MusicManager {
     const history = this.trackHistories.get(guildId) || [];
     const info = track.info;
     history.unshift({
-      title: String(info.title || "").toLowerCase().trim(),
-      author: String(info.author || "").toLowerCase().trim(),
+      title: String(info.title || "")
+        .toLowerCase()
+        .trim(),
+      author: String(info.author || "")
+        .toLowerCase()
+        .trim(),
       uri: String(info.uri || ""),
       identifier: String(info.identifier || ""),
       timestamp: Date.now(),
@@ -504,7 +599,9 @@ class MusicManager {
     if (!history || history.length === 0) return false;
 
     const recent = history.slice(0, 5);
-    const newTitle = String(track.info.title || "").toLowerCase().trim();
+    const newTitle = String(track.info.title || "")
+      .toLowerCase()
+      .trim();
     const newUri = String(track.info.uri || "");
     const newId = String(track.info.identifier || "");
 
@@ -543,7 +640,9 @@ class MusicManager {
       guildId,
       voiceChannel: player.voiceChannel,
       textChannel: player.textChannel,
-      currentTrack: player.currentTrack ? serializeTrack(player.currentTrack) : null,
+      currentTrack: player.currentTrack
+        ? serializeTrack(player.currentTrack)
+        : null,
       position: player.position || 0,
       queue: (player.queue || []).map(serializeTrack),
       volume: player.volume || 100,
@@ -558,7 +657,10 @@ class MusicManager {
         await redisManager.setCache(`music:queue:${guildId}`, payload, 3600);
       }
     } catch (err) {
-      logger.warn("[musicManager:saveQueueState] Gagal persist antrean ke Redis: " + (err?.message || err));
+      logger.warn(
+        "[musicManager:saveQueueState] Gagal persist antrean ke Redis: " +
+          (err?.message || err),
+      );
     }
   }
 
@@ -583,7 +685,10 @@ class MusicManager {
         }
       }
     } catch (err) {
-      logger.debug("[musicManager:getSavedQueueState] Redis queue restore gagal: " + (err?.message || err));
+      logger.debug(
+        "[musicManager:getSavedQueueState] Redis queue restore gagal: " +
+          (err?.message || err),
+      );
     }
 
     return null;
@@ -654,7 +759,8 @@ class MusicManager {
    * @returns {object|null} Informasi timer yang terdaftar.
    */
   setSleepTimer(guildId, minutes, options = {}) {
-    let gid = typeof guildId === "object" && guildId !== null ? guildId.id : guildId;
+    let gid =
+      typeof guildId === "object" && guildId !== null ? guildId.id : guildId;
     if (!gid) return null;
     gid = String(gid);
 
@@ -774,7 +880,7 @@ class MusicManager {
       }, normalDurationMs);
       if (entry.timeoutId.unref) entry.timeoutId.unref();
     }
- 
+
     this.sleepTimers.set(gid, entry);
     return entry;
   }
@@ -785,7 +891,10 @@ class MusicManager {
    * @returns {boolean} True jika ada timer yang berhasil dibatalkan.
    */
   cancelSleepTimer(guildId) {
-    const gid = typeof guildId === "object" && guildId !== null ? guildId.id : String(guildId || "");
+    const gid =
+      typeof guildId === "object" && guildId !== null
+        ? guildId.id
+        : String(guildId || "");
     if (!gid || !this.sleepTimers.has(gid)) return false;
 
     const entry = this.sleepTimers.get(gid);
@@ -814,7 +923,10 @@ class MusicManager {
    * @returns {object|null} Status timer tidur atau null jika tidak aktif.
    */
   getSleepTimer(guildId) {
-    const gid = typeof guildId === "object" && guildId !== null ? guildId.id : String(guildId || "");
+    const gid =
+      typeof guildId === "object" && guildId !== null
+        ? guildId.id
+        : String(guildId || "");
     if (!gid || !this.sleepTimers.has(gid)) return null;
 
     const entry = this.sleepTimers.get(gid);
@@ -862,8 +974,96 @@ class MusicManager {
     }
     return val;
   }
-}
+  /**
+   * Mengambil voice lock eksklusif untuk guild tertentu.
+   * @param {string} guildId
+   * @param {string} [owner="music"]
+   * @param {number} [timeoutMs=15000]
+   * @returns {Promise<boolean>}
+   */
+  acquireVoiceLock(guildId, owner = "music", timeoutMs = 15000) {
+    const VoiceManager = require("./voiceManager");
+    return VoiceManager.acquireVoiceLock(guildId, owner, timeoutMs);
+  }
 
+  /**
+   * Melepaskan voice lock untuk guild tertentu.
+   * @param {string} guildId
+   * @param {string} [owner="music"]
+   * @returns {Promise<boolean>}
+   */
+  releaseVoiceLock(guildId, owner = "music") {
+    const VoiceManager = require("./voiceManager");
+    return VoiceManager.releaseVoiceLock(guildId, owner);
+  }
+
+  /**
+   * Cek status kunci voice gateway untuk guild tertentu.
+   * @param {string} guildId
+   * @returns {boolean}
+   */
+  isVoiceLocked(guildId) {
+    const VoiceManager = require("./voiceManager");
+    return VoiceManager.isVoiceLocked(guildId);
+  }
+
+  /**
+   * Menunggu hingga voice lock pada guild dilepaskan.
+   * @param {string} guildId
+   * @param {number} [timeoutMs=15000]
+   * @returns {Promise<boolean>}
+   */
+  waitForVoiceLock(guildId, timeoutMs = 15000) {
+    const VoiceManager = require("./voiceManager");
+    return VoiceManager.waitForVoiceLock(guildId, timeoutMs);
+  }
+
+  /**
+   * Mengambil pemilik voice lock saat ini.
+   * @param {string} guildId
+   * @returns {string|null}
+   */
+  getVoiceLockOwner(guildId) {
+    const VoiceManager = require("./voiceManager");
+    return VoiceManager.getVoiceLockOwner(guildId);
+  }
+
+  /**
+   * Mengatur durasi pre-buffering (ms) saat memulai pemutaran lagu awal.
+   * @param {number} ms
+   */
+  setPrebufferDelay(ms) {
+    this.prebufferDelayMs = Math.max(0, Number(ms) || 0);
+  }
+
+  /**
+   * Mengambil durasi pre-buffering aktif (ms).
+   * @returns {number}
+   */
+  getPrebufferDelay() {
+    return this.prebufferDelayMs;
+  }
+
+  /**
+   * Membuat koneksi voice Poru dengan perlindungan state lock dan pembersihan
+   * sesi voice native yang tertinggal.
+   * @param {object} options
+   * @returns {Promise<object>}
+   */
+  async createGuardedConnection(options) {
+    if (options && options.guildId) {
+      const gId = String(options.guildId);
+      const VoiceManager = require("./voiceManager");
+      if (VoiceManager.isVoiceLocked(gId)) {
+        await VoiceManager.waitForVoiceLock(gId, 15000);
+      }
+      if (VoiceManager.hasActiveConnection(gId)) {
+        VoiceManager.cleanTeardownConnection(gId);
+      }
+    }
+    return this.poru.createConnection(options);
+  }
+}
 
 /**
  * Pilih node Lavalink terbaik yang non-fallback.
@@ -878,6 +1078,52 @@ class MusicManager {
  */
 MusicManager.getPreferredNode = function (poru, options = {}) {
   return lavalinkClusterManager.getPreferredNode(poru, options);
+};
+
+const VoiceManager = require("./voiceManager");
+MusicManager.voiceConnectionGuard = VoiceManager.voiceConnectionGuard;
+
+MusicManager.acquireVoiceLock = function (
+  guildId,
+  owner = "music",
+  timeoutMs = 15000,
+) {
+  const VM = require("./voiceManager");
+  return VM.acquireVoiceLock(guildId, owner, timeoutMs);
+};
+
+MusicManager.releaseVoiceLock = function (guildId, owner = "music") {
+  const VM = require("./voiceManager");
+  return VM.releaseVoiceLock(guildId, owner);
+};
+
+MusicManager.isVoiceLocked = function (guildId) {
+  const VM = require("./voiceManager");
+  return VM.isVoiceLocked(guildId);
+};
+
+MusicManager.waitForVoiceLock = function (guildId, timeoutMs = 15000) {
+  const VM = require("./voiceManager");
+  return VM.waitForVoiceLock(guildId, timeoutMs);
+};
+
+MusicManager.getVoiceLockOwner = function (guildId) {
+  const VM = require("./voiceManager");
+  return VM.getVoiceLockOwner(guildId);
+};
+
+MusicManager.createGuardedConnection = async function (poru, options) {
+  if (options && options.guildId) {
+    const gId = String(options.guildId);
+    const VM = require("./voiceManager");
+    if (VM.isVoiceLocked(gId)) {
+      await VM.waitForVoiceLock(gId, 15000);
+    }
+    if (VM.hasActiveConnection(gId)) {
+      VM.cleanTeardownConnection(gId);
+    }
+  }
+  return poru.createConnection(options);
 };
 
 MusicManager.MusicManager = MusicManager;

@@ -238,6 +238,7 @@ function wrapInteractionSafe(interaction) {
 
   const originalReply = interaction.reply?.bind(interaction);
   const originalUpdate = interaction.update?.bind(interaction);
+  const originalEditReply = interaction.editReply?.bind(interaction);
 
   if (originalReply) {
     interaction.reply = async function (options) {
@@ -257,6 +258,15 @@ function wrapInteractionSafe(interaction) {
         return await this.editReply(options);
       }
       return await originalUpdate(options);
+    };
+  }
+
+  if (originalEditReply) {
+    interaction.editReply = async function (options) {
+      if (!this.deferred && !this.replied) {
+        return await this.reply(options);
+      }
+      return await originalEditReply(options);
     };
   }
 

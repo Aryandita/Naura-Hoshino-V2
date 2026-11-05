@@ -8,6 +8,7 @@ const {
   disableContainerV2,
 } = require("./NauraContainerBuilder");
 const telemetryMetrics = require("../services/telemetryMetrics");
+const { safeDeleteMessage } = require("./messageHelper");
 
 /**
  * @param {import('discord.js').ChatInputCommandInteraction} interaction
@@ -42,7 +43,13 @@ async function sendLoadingState(interaction, opts) {
  * @param {string} [opts.prevId]
  * @param {string} [opts.nextId]
  */
-function createPaginationCollector(message, ownerId, results, buildPayloadFn, opts = {}) {
+function createPaginationCollector(
+  message,
+  ownerId,
+  results,
+  buildPayloadFn,
+  opts = {},
+) {
   let currentIndex = 0;
   const timeout = opts.timeout || 120000;
   const prevId = opts.prevId || "page_prev";
@@ -72,8 +79,14 @@ function createPaginationCollector(message, ownerId, results, buildPayloadFn, op
 
   collector.on("end", (_collected, reason) => {
     if (reason === "time") {
-      const disabledPayload = disableContainerV2(buildPayloadFn(currentIndex));
-      message.edit(disabledPayload).catch(() => {});
+      if (opts.deleteOnTimeout) {
+        safeDeleteMessage(message).catch(() => {});
+      } else {
+        const disabledPayload = disableContainerV2(
+          buildPayloadFn(currentIndex),
+        );
+        message.edit(disabledPayload).catch(() => {});
+      }
     }
   });
 
@@ -90,28 +103,39 @@ function createPaginationCollector(message, ownerId, results, buildPayloadFn, op
  * @param {string} [opts.expression]
  */
 async function sendCommandError(interaction, commandName, error, opts = {}) {
-  const isCircuitOpen = error.name === "CircuitBreakerOpenError" || 
-                        error.constructor?.name === "CircuitBreakerOpenError";
-  const isRateLimit = error.message?.includes("429") || error.message?.includes("rate");
-  const isTimeout = error.message?.includes("timeout") || error.message?.includes("ETIMEDOUT");
+  const isCircuitOpen =
+    error.name === "CircuitBreakerOpenError" ||
+    error.constructor?.name === "CircuitBreakerOpenError";
+  const isRateLimit =
+    error.message?.includes("429") || error.message?.includes("rate");
+  const isTimeout =
+    error.message?.includes("timeout") || error.message?.includes("ETIMEDOUT");
 
   let title, description, expression;
 
   if (isCircuitOpen) {
     title = opts.circuitTitle || "Server Sedang Istirahat";
-    description = opts.circuitDesc || `${ui.getEmoji("naura_sleepy") || "😴"} Server database sedang terlalu sibuk. Coba lagi dalam 1-2 menit ya, Naura tungguin!`;
+    description =
+      opts.circuitDesc ||
+      `${ui.getEmoji("naura_sleepy") || "😴"} Server database sedang terlalu sibuk. Coba lagi dalam 1-2 menit ya, Naura tungguin!`;
     expression = "sleepy";
   } else if (isRateLimit) {
     title = opts.rateLimitTitle || "Terlalu Banyak Permintaan";
-    description = opts.rateLimitDesc || `${ui.getEmoji("naura_sleepy") || "😴"} Server membatasi akses karena terlalu banyak permintaan. Tunggu sebentar lalu coba lagi ya!`;
+    description =
+      opts.rateLimitDesc ||
+      `${ui.getEmoji("naura_sleepy") || "😴"} Server membatasi akses karena terlalu banyak permintaan. Tunggu sebentar lalu coba lagi ya!`;
     expression = "sleepy";
   } else if (isTimeout) {
     title = opts.timeoutTitle || "Koneksi Terputus";
-    description = opts.timeoutDesc || `${ui.getEmoji("naura_cry") || "😢"} Koneksi ke server terputus karena waktu habis. Jaringan mungkin sedang tidak stabil.\n\n${ui.getEmoji("sparkle") || "✨"} *Coba lagi beberapa saat lagi!*`;
+    description =
+      opts.timeoutDesc ||
+      `${ui.getEmoji("naura_cry") || "😢"} Koneksi ke server terputus karena waktu habis. Jaringan mungkin sedang tidak stabil.\n\n${ui.getEmoji("sparkle") || "✨"} *Coba lagi beberapa saat lagi!*`;
     expression = "cry";
   } else {
     title = opts.title || "Terjadi Kesalahan";
-    description = opts.description || `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, terjadi kesalahan saat memproses permintaan.\n\n${ui.getEmoji("sparkle") || "✨"} *Coba lagi nanti, ya!*`;
+    description =
+      opts.description ||
+      `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, terjadi kesalahan saat memproses permintaan.\n\n${ui.getEmoji("sparkle") || "✨"} *Coba lagi nanti, ya!*`;
     expression = opts.expression || "cry";
   }
 
@@ -134,13 +158,13 @@ async function sendCommandError(interaction, commandName, error, opts = {}) {
  * @returns {Promise<any>}
  */
 async function raceFetch(fetchFns) {
-  const promises = fetchFns.map(fn => 
-    fn().then(result => {
+  const promises = fetchFns.map((fn) =>
+    fn().then((result) => {
       if (!result || (Array.isArray(result) && result.length === 0)) {
         throw new Error("No results");
       }
       return result;
-    })
+    }),
   );
 
   try {
@@ -160,23 +184,24 @@ async function withRetry(fn, maxRetries = 3, baseDelayMs = 1000) {
     try {
       return await fn();
     } catch (error) {
-      const isRateLimit = error.status === 429 || 
-                          error.response?.status === 429 ||
-                          error.message?.includes("429");
-      
+      const isRateLimit =
+        error.status === 429 ||
+        error.response?.status === 429 ||
+        error.message?.includes("429");
+
       if (isRateLimit && attempt < maxRetries - 1) {
         const delay = Math.pow(2, attempt) * baseDelayMs;
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
-      
+
       if (attempt === maxRetries - 1) throw error;
     }
   }
 }
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 module.exports = {

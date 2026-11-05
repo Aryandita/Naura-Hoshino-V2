@@ -9,6 +9,7 @@
 const { MessageFlags } = require("discord.js");
 const messageCleaner = require("../../utils/messageCleaner");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
+const { safeDeleteMessage } = require("../../utils/messageHelper");
 const ui = require("../../config/ui");
 
 module.exports = {
@@ -38,7 +39,8 @@ module.exports = {
         ...buildContainerV2({
           authorName: "Naura Cleaner System",
           title: "Sedang Dibersihkan",
-          description: "Pesan ini sedang diproses untuk dihapus oleh pengguna lain.",
+          description:
+            "Pesan ini sedang diproses untuk dihapus oleh pengguna lain.",
           expression: "sleepy",
         }),
       });
@@ -48,11 +50,13 @@ module.exports = {
       // Batalkan timer auto-delete jika ada
       messageCleaner.cancelAutoDelete(message.id);
 
-      // Hapus pesan target dari channel
-      await message.delete().catch(() => {});
+      // Hapus pesan target dari channel secara total
+      await safeDeleteMessage(message);
 
       // Proses klaim hadiah kebersihan 3 SC
-      const claimResult = await messageCleaner.claimCleanupReward(interaction.user.id);
+      const claimResult = await messageCleaner.claimCleanupReward(
+        interaction.user.id,
+      );
 
       let title = "Pesan Berhasil Dibersihkan";
       let desc = "Pesan sudah dirapikan dari channel.";
@@ -86,7 +90,8 @@ module.exports = {
           title,
           description: desc,
           expression,
-          footerText: "Naura Hoshino Ecosystem • Lingkungan Bersih, Hati Nyaman ✨",
+          footerText:
+            "Naura Hoshino Ecosystem • Lingkungan Bersih, Hati Nyaman ✨",
         }),
       });
     } finally {

@@ -1,5 +1,6 @@
 "use strict";
 
+const path = require("node:path");
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -22,6 +23,13 @@ function n(num) {
 
 function t(lang, key, params = {}) {
   return languageManager.translateSync(lang, key, params);
+}
+
+async function respond(interaction, payload) {
+  if (interaction.deferred || interaction.replied) {
+    return interaction.editReply(payload);
+  }
+  return interaction.reply(payload);
 }
 
 // Semua game yang tersedia di arcade
@@ -50,6 +58,9 @@ const GAME_CHOICES = Object.entries(ALL_GAMES).map(([key, game]) => ({
 }));
 
 module.exports = {
+  ALL_GAMES,
+  respond,
+
   data: new SlashCommandBuilder()
     .setName("arcade")
     .setDescription("🎮 Naura Arcade - Main game dengan Medali Permainan (MP)")
@@ -98,7 +109,13 @@ module.exports = {
   async execute(interaction) {
     const user = interaction.user;
     const lang = (await require("../../src/models/UserProfile").findByPk(user.id, { attributes: ["language"] }))?.language || "id";
-    const subcommand = interaction.options.getSubcommand();
+    const subcommand = (interaction.options && typeof interaction.options.getSubcommand === "function")
+      ? interaction.options.getSubcommand()
+      : "hub";
+
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply();
+    }
 
     if (subcommand === "profile") {
       return this.showProfile(interaction, user, lang);
@@ -115,6 +132,7 @@ module.exports = {
     if (subcommand === "hub") {
       return this.showHub(interaction, user, lang);
     }
+    return this.showHub(interaction, user, lang);
   },
 
   async showHub(interaction, user, lang) {
@@ -181,7 +199,7 @@ module.exports = {
       footerText: "Naura Hoshino Ecosystem • Arcade System v2",
     });
 
-    await interaction.editReply(payload);
+    return respond(interaction, payload);
   },
 
   async showProfile(interaction, user, lang) {
@@ -233,7 +251,7 @@ module.exports = {
       footerText: "Naura Hoshino Ecosystem • Arcade System",
     });
 
-    await interaction.editReply(payload);
+    return respond(interaction, payload);
   },
 
   async claimDaily(interaction, user, lang) {
@@ -244,7 +262,7 @@ module.exports = {
         ALREADY_CLAIMED: t(lang, "arcade.daily.already_claimed"),
         INVALID_USER: t(lang, "arcade.daily.invalid_user"),
       };
-      return interaction.editReply({
+      return respond(interaction, {
         ...buildContainerV2({
           accentColorHex: ui.getColor("error") || "#EF4444",
           authorName: "Naura Arcade",
@@ -258,7 +276,7 @@ module.exports = {
 
     const emoji = ui.getEmoji("medali_permainan") || "🏅";
 
-    return interaction.editReply({
+    return respond(interaction, {
       ...buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",
         authorName: "Naura Arcade",
@@ -277,17 +295,21 @@ module.exports = {
   },
 
   async showLeaderboard(interaction, user, lang) {
-    const scope = interaction.options.getString("scope") || "guild";
+    const scope = (interaction.options && typeof interaction.options.getString === "function"
+      ? interaction.options.getString("scope")
+      : null) || "guild";
     const isGlobal = scope === "global";
 
-    await interaction.deferReply();
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply();
+    }
 
     const leaderboard = isGlobal
       ? await arcadeContract.getGlobalLeaderboard(10)
       : await arcadeContract.getLeaderboard(interaction.guildId, 10);
 
-    if (leaderboard.length === 0) {
-      return interaction.editReply({
+    if (!leaderboard || leaderboard.length === 0) {
+      return respond(interaction, {
         ...buildContainerV2({
           accentColorHex: ui.getColor("warning") || "#F59E0B",
           authorName: "Naura Arcade",
@@ -305,7 +327,7 @@ module.exports = {
 
     const emoji = ui.getEmoji("medali_permainan") || "🏅";
 
-    return interaction.editReply({
+    return respond(interaction, {
       ...buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
         authorName: "Naura Arcade",
@@ -316,17 +338,21 @@ module.exports = {
     });
   },
 
-  async playGame(interaction, user, lang) {
-    const gameType = interaction.options.getString("game");
+  async playGame(interaction, user, lang, chosenGame = null) {
+    const gameType = chosenGame ||
+      (interaction.options && typeof interaction.options.getString === "function"
+        ? interaction.options.getString("game")
+        : null);
+
     const gameInfo = ALL_GAMES[gameType];
 
     if (!gameInfo) {
-      return interaction.editReply({
+      return respond(interaction, {
         ...buildContainerV2({
           accentColorHex: ui.getColor("error") || "#EF4444",
           authorName: "Naura Arcade",
           title: "❌ Game Tidak Ditemukan",
-          description: `Game \`${gameType}\` tidak tersedia. Gunakan \`/arcade hub\` untuk melihat daftar game.`,
+          description: `Game \`${gameType || "tidak diketahui"}\` tidak tersedia. Gunakan \`/arcade hub\` untuk melihat daftar game.`,
           footerText: "Naura Hoshino Ecosystem • Arcade System",
         }),
       });
@@ -334,7 +360,7 @@ module.exports = {
 
     const preGame = await ArcadeEngine.preGame(user.id, gameType);
     if (!preGame.ok) {
-      return interaction.editReply({
+      return respond(interaction, {
         ...buildContainerV2({
           accentColorHex: ui.getColor("error") || "#EF4444",
           authorName: "Naura Arcade",
@@ -353,34 +379,27 @@ module.exports = {
       });
     }
 
-    // Launch the actual minigame engine directly from subcommand files
     try {
-      // Try to load the subcommand file directly
-      const subcommandPath = `../minigames/subcommands/${gameType}`;
+      const subcommandFile = path.join(__dirname, "subcommands", `${gameType}.js`);
       let subcommandModule;
-      
+
       try {
-        subcommandModule = require(subcommandPath);
+        subcommandModule = require(subcommandFile);
       } catch (e) {
-        // If not in subcommands folder, try root minigames folder
-        try {
-          subcommandModule = require(`../minigames/${gameType}`);
-        } catch (e2) {
-          // Game engine not found
-          return interaction.editReply({
-            ...buildContainerV2({
-              accentColorHex: ui.getColor("error") || "#EF4444",
-              authorName: "Naura Arcade",
-              title: "❌ Game Engine Tidak Ditemukan",
-              description: `Engine untuk **${gameInfo.label}** belum tersedia. Coba game lain!`,
-              footerText: "Naura Hoshino Ecosystem • Arcade System",
-            }),
-          });
-        }
+        logger.error(`[Arcade] Failed to require ${subcommandFile}:`, e.message);
+        return respond(interaction, {
+          ...buildContainerV2({
+            accentColorHex: ui.getColor("error") || "#EF4444",
+            authorName: "Naura Arcade",
+            title: "❌ Game Engine Tidak Ditemukan",
+            description: `Engine untuk **${gameInfo.label}** belum tersedia. Coba game lain!`,
+            footerText: "Naura Hoshino Ecosystem • Arcade System",
+          }),
+        });
       }
 
       if (!subcommandModule || typeof subcommandModule.execute !== "function") {
-        return interaction.editReply({
+        return respond(interaction, {
           ...buildContainerV2({
             accentColorHex: ui.getColor("error") || "#EF4444",
             authorName: "Naura Arcade",
@@ -391,11 +410,9 @@ module.exports = {
         });
       }
 
-      // Create a mock interaction that works with the subcommand execute function
-      // The subcommand expects (interaction, context) format
       const cacheManager = require("../../src/managers/cacheManager");
       const { getUserPremiumTier, getMinigameMultiplier } = require("../../src/premium/premiumHelper");
-      
+
       const profile = await cacheManager.getUserProfile(user.id);
       const survival = await cacheManager.getUserSurvival(user.id);
       const premiumTier = getUserPremiumTier(profile);
@@ -409,9 +426,9 @@ module.exports = {
         premiumTier,
         nsfMultiplier,
         nsfEmoji,
-        coinEmoji: `${nsfEmoji} MP`, // Use MP instead of NSF for display
+        coinEmoji: `${nsfEmoji} MP`,
         sendError: (msg) => {
-          return interaction.editReply({
+          return respond(interaction, {
             ...buildContainerV2({
               accentColorHex: ui.getColor("error") || "#EF4444",
               authorName: "Naura Arcade",
@@ -423,16 +440,10 @@ module.exports = {
         },
       };
 
-      // Execute the game
       await subcommandModule.execute(interaction, context);
-      
-      // Note: Post-game reward processing would happen here if we could capture the result
-      // For now, the game engines handle their own rewards internally
-      // In a full implementation, we'd wrap the execution to capture win/loss/draw
-      
     } catch (err) {
       logger.error(`[Arcade] Error launching game ${gameType}:`, err.message);
-      return interaction.editReply({
+      return respond(interaction, {
         ...buildContainerV2({
           accentColorHex: ui.getColor("error") || "#EF4444",
           authorName: "Naura Arcade",

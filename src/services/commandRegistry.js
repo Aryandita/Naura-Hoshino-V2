@@ -23,7 +23,7 @@ const PUBLIC_CATEGORIES = [
   "card",
   "ai",
   "leveling",
-  "minigames",
+  "arcade",
   "fun",
   "utility",
   "premium",
@@ -70,11 +70,11 @@ const CATEGORY_METADATA = {
     label: "Leveling & XP",
     description: "Peringkat server, leaderboard, dan kartu profil level",
   },
-  minigames: {
-    id: "minigames",
+  arcade: {
+    id: "arcade",
     emoji: "🎮",
-    label: "Minigame & Arcade",
-    description: "Permainan interaktif, tebak angka, tic-tac-toe, dan tantangan",
+    label: "Naura Arcade",
+    description: "Pusat game interaktif, medali permainan (MP), hadiah harian, dan tantangan",
   },
   fun: {
     id: "fun",
@@ -152,7 +152,7 @@ class CommandRegistry {
     const cat = String(rawCategory).toLowerCase().trim();
 
     // Handle common aliases
-    if (cat === "minigame") return "minigames";
+    if (cat === "minigame" || cat === "minigames") return "arcade";
     if (cat === "ticket") return "modmail";
     if (cat === "moderation") return "admin";
 

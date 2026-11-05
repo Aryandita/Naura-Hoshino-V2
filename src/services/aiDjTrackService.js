@@ -176,10 +176,11 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
       }
     }
 
-    // Kirim kartu Now Playing/DJ ke teks channel beserta lampiran audio agar
-    // Lavalink dapat memutar stream HTTP di koneksi voice yang sama tanpa konflik sesi.
+    // Kirim kartu Now Playing/DJ ke teks channel beserta lampiran audio.
+    // Intro diputar eksklusif via native voice (VoiceManager) dengan gateway mutex,
+    // tidak lagi dibuat sebagai track Lavalink HTTP agar tidak berebut gateway voice.
     let messageId = null;
-    let ttsTrack = null;
+    let ttsTrack = undefined;
     try {
       const { AttachmentBuilder } = require("discord.js");
       const ui = require("../config/ui");
@@ -206,25 +207,6 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
 
       const speakMsg = await channel.send(speakPayload);
       messageId = speakMsg?.id || null;
-
-      const attachmentUrl = speakMsg?.attachments?.first?.()?.url || null;
-      if (attachmentUrl && poru && typeof poru.resolve === "function") {
-        try {
-          const ttsRes = await poru.resolve({
-            query: attachmentUrl,
-            requester: user,
-          });
-          if (ttsRes && Array.isArray(ttsRes.tracks) && ttsRes.tracks.length > 0) {
-            ttsTrack = ttsRes.tracks[0];
-            ttsTrack.info.title = `🎙️ Naura DJ: ${String(genreKey || "pop").replace(/_/g, " ")} Session`;
-            ttsTrack.info.author = "Naura Hoshino";
-            ttsTrack.info.originalSource = "http";
-            ttsTrack.isTTS = true;
-          }
-        } catch (resolveErr) {
-          logger.debug(`[AiDjTrackService] Resolve HTTP intro via Lavalink dilewati: ${resolveErr.message}`);
-        }
-      }
     } catch (sendErr) {
       logger.debug(`[AiDjTrackService] Gagal mengirim kartu DJ: ${sendErr.message}`);
     }

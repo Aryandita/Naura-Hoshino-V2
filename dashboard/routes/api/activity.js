@@ -841,7 +841,7 @@ function register(router, client) {
             const userSurv = await cacheManager.getUserSurvival(activeUserId);
             const currentStam = Number(userSurv?.stamina ?? 100);
             const stamDelta = Math.max(0, Math.min(40, 100 - currentStam));
-            const deltas = { sukamajuCoins: 50 };
+            const deltas = { starFragments: 50, sukamajuCoins: 50 };
             if (stamDelta > 0) deltas.stamina = stamDelta;
             await cacheManager.incrementUserSurvival(activeUserId, deltas);
           } else {

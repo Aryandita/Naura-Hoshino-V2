@@ -346,6 +346,7 @@ test("Discord Activity API - Authenticated user blessing clamps stamina to maxim
 
   const origGetSurvival = cacheManager.getUserSurvival;
   const origIncSurvival = cacheManager.incrementUserSurvival;
+  const origMutateSurvival = cacheManager.mutateUserSurvivalJson;
 
   let capturedDeltas = null;
   cacheManager.getUserSurvival = async () => ({
@@ -357,6 +358,10 @@ test("Discord Activity API - Authenticated user blessing clamps stamina to maxim
   cacheManager.incrementUserSurvival = async (uid, deltas) => {
     capturedDeltas = deltas;
     return { ok: true };
+  };
+
+  cacheManager.mutateUserSurvivalJson = async (uid, field, mutator) => {
+    return mutator({});
   };
 
   try {
@@ -376,6 +381,7 @@ test("Discord Activity API - Authenticated user blessing clamps stamina to maxim
   } finally {
     cacheManager.getUserSurvival = origGetSurvival;
     cacheManager.incrementUserSurvival = origIncSurvival;
+    cacheManager.mutateUserSurvivalJson = origMutateSurvival;
   }
 });
 
@@ -425,6 +431,11 @@ test("Discord Activity API - Authenticated user resource gathering atomic mutati
     inventory: JSON.stringify([{ id: "stone", name: "Batu Andesit", amount: 5, type: "material" }]),
   });
 
+  const origMutateSurvival = cacheManager.mutateUserSurvivalJson;
+  cacheManager.mutateUserSurvivalJson = async (uid, field, mutator) => {
+    return mutator({});
+  };
+
   try {
     const { req, res, getStatus, getJson } = createMockReqRes({
       user: mockUser,
@@ -448,5 +459,6 @@ test("Discord Activity API - Authenticated user resource gathering atomic mutati
     cacheManager.incrementUserSurvival = origIncSurvival;
     cacheManager.getUserSurvival = origGetSurvival;
     cacheManager.getUserProfile = origGetProfile;
+    cacheManager.mutateUserSurvivalJson = origMutateSurvival;
   }
 });

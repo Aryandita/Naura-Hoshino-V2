@@ -8,6 +8,7 @@
  */
 
 const { logger } = require("../managers/logger");
+const { safeDeleteMessage } = require("./messageHelper");
 
 const DAILY_LIMIT_SC = 30; // Dikurangi dari 50 untuk rebalancing inflasi
 const REWARD_PER_CLEANUP = 3; // Dikurangi dari 5 untuk rebalancing inflasi
@@ -34,34 +35,43 @@ class MessageCleanerEngine {
   }
 
   /**
-   * Daftarkan timer auto-delete pada pesan Discord.
+   * Daftarkan timer auto-delete pada pesan atau interaksi Discord.
    *
-   * @param {Object} message - Objek Message Discord.js
+   * @param {Object} target - Objek Message atau Interaction Discord.js
    * @param {number} [timeoutSeconds=90] - Durasi hidup pesan dalam detik
    * @returns {() => void} Fungsi pembatal timer
    */
-  registerAutoDelete(message, timeoutSeconds = 90) {
-    if (!message || !message.id || typeof message.delete !== "function") {
+  registerAutoDelete(target, timeoutSeconds = 90) {
+    if (!target) return () => {};
+    const targetId = target.id || target.message?.id;
+    const canDelete =
+      typeof target.delete === "function" ||
+      typeof target.deleteReply === "function" ||
+      typeof target.message?.delete === "function";
+
+    if (!targetId || !canDelete) {
       return () => {};
     }
 
     // Batalkan timer sebelumnya jika ada untuk pesan yang sama
-    this.cancelAutoDelete(message.id);
+    this.cancelAutoDelete(targetId);
 
     const timeoutMs = Math.max(5000, timeoutSeconds * 1000);
     const timer = setTimeout(async () => {
-      this.activeTimers.delete(message.id);
+      this.activeTimers.delete(targetId);
       try {
-        await message.delete().catch(() => {});
+        await safeDeleteMessage(target);
       } catch (err) {
-        logger.debug(`[MessageCleaner] Gagal auto-delete pesan ${message.id}: ${err.message}`);
+        logger.debug(
+          `[MessageCleaner] Gagal auto-delete pesan ${targetId}: ${err?.message || err}`,
+        );
       }
     }, timeoutMs);
 
     if (timer.unref) timer.unref();
-    this.activeTimers.set(message.id, timer);
+    this.activeTimers.set(targetId, timer);
 
-    return () => this.cancelAutoDelete(message.id);
+    return () => this.cancelAutoDelete(targetId);
   }
 
   /**
@@ -108,7 +118,12 @@ class MessageCleanerEngine {
    */
   async claimCleanupReward(userId, incrementFn) {
     if (!userId) {
-      return { success: false, reward: 0, reason: "INVALID_USER", currentDaily: 0 };
+      return {
+        success: false,
+        reward: 0,
+        reason: "INVALID_USER",
+        currentDaily: 0,
+      };
     }
 
     const now = Date.now();
@@ -151,10 +166,17 @@ class MessageCleanerEngine {
         await incrementFn(userId, "sukamajuCoins", REWARD_PER_CLEANUP);
       } else {
         const cacheManager = require("../managers/cacheManager");
-        await cacheManager.incrementUserSurvival(userId, "sukamajuCoins", REWARD_PER_CLEANUP);
+        await cacheManager.incrementUserSurvival(
+          userId,
+          "sukamajuCoins",
+          REWARD_PER_CLEANUP,
+        );
       }
     } catch (err) {
-      logger.error(`[MessageCleaner] Gagal mutasi reward SC ke user ${userId}:`, err);
+      logger.error(
+        `[MessageCleaner] Gagal mutasi reward SC ke user ${userId}:`,
+        err,
+      );
     }
 
     return {

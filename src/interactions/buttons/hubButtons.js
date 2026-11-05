@@ -24,20 +24,13 @@ module.exports = [
       const isOwner = await validateHubOwner(interaction, ownerId, category);
       if (!isOwner) return;
 
-      // Aksi cepat kategori minigame
-      if (category === "minigame") {
-        if (action === "minesweeper") {
-          const ms = require("../../../plugin/minigames/minesweeper");
-          return ms.execute(interaction, client);
+      // Aksi cepat kategori arcade / minigame
+      if (category === "minigame" || category === "arcade") {
+        const arcade = require("../../../plugin/arcade/arcade");
+        if (action === "minesweeper" || action === "math") {
+          return arcade.playGame(interaction, interaction.user, interaction.localeLang || "id", action);
         }
-        if (action === "arcade") {
-          const arcade = require("../../../plugin/minigames/arcade");
-          return arcade.execute(interaction, client);
-        }
-        if (action === "math") {
-          const mg = require("../../../plugin/minigames/minigame");
-          return mg.launchSubgame(interaction, "math");
-        }
+        return arcade.showHub(interaction, interaction.user, interaction.localeLang || "id");
       }
 
       // Aksi cepat kategori fun
@@ -67,8 +60,8 @@ module.exports = [
           return interaction.showModal(modal);
         }
         if (action === "tod") {
-          const mg = require("../../../plugin/minigames/minigame");
-          return mg.launchSubgame(interaction, "tod");
+          const arcade = require("../../../plugin/arcade/arcade");
+          return arcade.playGame(interaction, interaction.user, interaction.localeLang || "id", "tod");
         }
       }
 

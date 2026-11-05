@@ -4,6 +4,7 @@ const { ComponentType, MessageFlags } = require("discord.js");
 const { buildErrorContainerV2 } = require("./NauraContainerBuilder");
 const { logger } = require("../managers/logger");
 const ui = require("../config/ui");
+const { safeDeleteMessage, isUnknownMessageError } = require("./messageHelper");
 
 /**
  * Registry kolektor pesan aktif global untuk mencegah kebocoran listener dan race condition.
@@ -23,7 +24,10 @@ function registerCollector(messageId, collector) {
     try {
       existing.stop("navigated");
     } catch (err) {
-      logger.debug("[InteractionPipeline] Gagal menghentikan collector lama: " + (err?.message || err));
+      logger.debug(
+        "[InteractionPipeline] Gagal menghentikan collector lama: " +
+          (err?.message || err),
+      );
     }
   }
   activeCollectors.set(messageId, collector);
@@ -41,7 +45,10 @@ function stopCollector(messageId, reason = "navigated") {
     try {
       collector.stop(reason);
     } catch (err) {
-      logger.debug("[InteractionPipeline] Gagal menghentikan collector: " + (err?.message || err));
+      logger.debug(
+        "[InteractionPipeline] Gagal menghentikan collector: " +
+          (err?.message || err),
+      );
     }
   }
   activeCollectors.delete(messageId);
@@ -64,7 +71,10 @@ function stopCollector(messageId, reason = "navigated") {
  * @returns {object|null}
  */
 function createManagedCollector(message, user, options = {}) {
-  if (!message || typeof message.createMessageComponentCollector !== "function") {
+  if (
+    !message ||
+    typeof message.createMessageComponentCollector !== "function"
+  ) {
     return null;
   }
 
@@ -76,6 +86,8 @@ function createManagedCollector(message, user, options = {}) {
     footerCategory = "core",
     denyMessage = "Hanya pemanggil command yang dapat berinteraksi dengan tombol ini.",
     autoDisableOnEnd = true,
+    deleteOnEnd = false,
+    deleteOnTimeout = false,
   } = options;
 
   const collectorConfig = { time };
@@ -98,7 +110,10 @@ function createManagedCollector(message, user, options = {}) {
       try {
         await i.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
       } catch (err) {
-        logger.debug("[InteractionPipeline] Gagal mengirim reply akses ditolak: " + (err?.message || err));
+        logger.debug(
+          "[InteractionPipeline] Gagal mengirim reply akses ditolak: " +
+            (err?.message || err),
+        );
       }
       return;
     }
@@ -108,7 +123,10 @@ function createManagedCollector(message, user, options = {}) {
       try {
         await onCollect(i, collector);
       } catch (err) {
-        logger.error("[InteractionPipeline:collect] Galat saat memproses interaksi: " + (err?.message || err));
+        logger.error(
+          "[InteractionPipeline:collect] Galat saat memproses interaksi: " +
+            (err?.message || err),
+        );
       }
     }
   });
@@ -116,11 +134,25 @@ function createManagedCollector(message, user, options = {}) {
   collector.on("end", async (collected, reason) => {
     activeCollectors.delete(message.id);
 
-    if (reason !== "navigated" && autoDisableOnEnd) {
+    if (deleteOnEnd || (reason === "time" && deleteOnTimeout)) {
+      try {
+        await safeDeleteMessage(message);
+      } catch (err) {
+        logger.debug(
+          "[InteractionPipeline] Gagal menghapus pesan pada collector end: " +
+            (err?.message || err),
+        );
+      }
+    } else if (reason !== "navigated" && autoDisableOnEnd) {
       try {
         await message.edit({ components: [] });
       } catch (err) {
-        logger.debug("[InteractionPipeline] Gagal menghapus komponen saat collector end: " + (err?.message || err));
+        if (!isUnknownMessageError(err)) {
+          logger.debug(
+            "[InteractionPipeline] Gagal menghapus komponen saat collector end: " +
+              (err?.message || err),
+          );
+        }
       }
     }
 
@@ -128,7 +160,10 @@ function createManagedCollector(message, user, options = {}) {
       try {
         await onEnd(collected, reason);
       } catch (err) {
-        logger.error("[InteractionPipeline:end] Galat saat membersihkan komponen: " + (err?.message || err));
+        logger.error(
+          "[InteractionPipeline:end] Galat saat membersihkan komponen: " +
+            (err?.message || err),
+        );
       }
     }
   });

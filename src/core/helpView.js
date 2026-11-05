@@ -34,7 +34,7 @@ const { buildContainerV2, buildErrorContainerV2 } = require("../utils/NauraConta
 /** Default category keys if registry unavailable */
 const HELP_CATEGORY_KEYS = [
   "core", "music", "survival", "card", "ai", "leveling",
-  "minigames", "fun", "utility", "premium", "naura", "admin", "modmail",
+  "arcade", "fun", "utility", "premium", "naura", "admin", "modmail",
 ];
 
 /** Pagination settings */
@@ -133,8 +133,8 @@ function buildQuickStartContent(isEn, userName, prefix) {
       ? "• ⭐ **/rank** : Check your visual XP card, level progress, and server standing."
       : "• ⭐ **/rank** : Cek kartu profil level, XP, dan progres keaktifanmu di server.",
     isEn
-      ? "• 🎮 **/minigame** : Open casual arcade games (TicTacToe, RPS, Trivia, Word Guess)."
-      : "• 🎮 **/minigame** : Buka pusat game santai (TicTacToe, RPS, Trivia, Tebak Kata).",
+      ? "• 🎮 **/arcade hub** : Open casual arcade games (Blackjack, TicTacToe, Trivia, Minesweeper)."
+      : "• 🎮 **/arcade hub** : Buka pusat game arcade (Blackjack, TicTacToe, Trivia, Minesweeper).",
     "",
     isEn
       ? `⌨️ **Prefix Support:** You can also type commands with the \`${prefix}\` prefix (e.g. \`${prefix}play\`, \`${prefix}help\`, \`${prefix}rank\`, \`${prefix}ping\`).`
@@ -253,7 +253,7 @@ const CATEGORY_DEFINITIONS = [
       : "Peringkat server, leaderboard, dan kartu level.",
   },
   {
-    id: "minigames",
+    id: "arcade",
     emojiKey: "help_game",
     fallback: "🎮",
     labelKey: "HELP_CAT_GAME_LABEL",
@@ -416,7 +416,7 @@ function buildCategoryBanners() {
     card: ui.getBanner("minigame") || "./assets/general/Minigame & Arcade Banner.jpeg",
     ai: ui.getBanner("about") || "./assets/core/banner_about.png",
     leveling: ui.getBanner("levelUp") || "./assets/core/levelbg.png",
-    minigames: ui.getBanner("minigame") || "./assets/general/Minigame & Arcade Banner.jpeg",
+    arcade: ui.getBanner("arcade") || ui.getBanner("minigame") || "./assets/general/Minigame & Arcade Banner.jpeg",
     fun: ui.getBanner("giveaway") || "./assets/general/Giveaway & Event Banner.jpeg",
     utility: ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
     premium: ui.getBanner("economy") || "./assets/general/Economy & Market Banner.jpeg",

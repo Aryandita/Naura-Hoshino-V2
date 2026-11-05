@@ -52,14 +52,14 @@ function writeDeployCache(data) {
 // memanggil execute() yang membaca getSubcommand() dan akan gagal tanpa
 // registrasi slash.
 const SLASH_DEPLOY_EXCLUDE = new Map([
-  // Terjangkau dari hub /fun, /tool, /ai, /minigame (13)
-  ["akinator", "hub:/minigame"],
+  // Terjangkau dari hub /fun, /tool, /ai, /arcade (13)
+  ["akinator", "hub:/arcade"],
   ["color", "hub:/tool"],
   ["diceroll", "hub:/fun"],
   ["fortune", "hub:/fun"],
-  ["hangman", "hub:/minigame"],
+  ["hangman", "hub:/arcade"],
   ["meme", "hub:/fun"],
-  ["minesweeper", "hub:/minigame"],
+  ["minesweeper", "hub:/arcade"],
   ["password", "hub:/tool"],
   ["qr", "hub:/tool"],
   ["quote", "hub:/fun"],

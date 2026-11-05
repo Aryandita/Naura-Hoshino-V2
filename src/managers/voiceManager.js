@@ -39,6 +39,211 @@ function ensureFfmpegPath() {
 class VoiceManager {
   static connections = new Map(); // guildId -> { guildId, channelId, connection, player, mode, keepaliveTimer }
   static KEEPALIVE_TIMEOUT_MS = 60000;
+  static voiceConnectionGuard = new Map(); // guildId -> { locked, owner, depth, acquiredAt, queue: [] }
+
+  /**
+   * Mengambil voice lock eksklusif untuk guild tertentu.
+   * @param {string} guildId
+   * @param {string} [owner="native"]
+   * @param {number} [timeoutMs=15000]
+   * @returns {Promise<boolean>}
+   */
+  static async acquireVoiceLock(guildId, owner = "native", timeoutMs = 15000) {
+    const gId = String(guildId);
+    let guard = this.voiceConnectionGuard.get(gId);
+    if (!guard) {
+      guard = {
+        locked: false,
+        owner: null,
+        depth: 0,
+        acquiredAt: 0,
+        queue: [],
+      };
+      this.voiceConnectionGuard.set(gId, guard);
+    }
+
+    if (!guard.locked) {
+      guard.locked = true;
+      guard.owner = owner;
+      guard.depth = 1;
+      guard.acquiredAt = Date.now();
+      logger.debug(
+        `[VoiceManager] Voice lock didapatkan untuk guild ${gId} oleh ${owner}.`,
+      );
+      return true;
+    }
+
+    if (guard.owner === owner) {
+      guard.depth += 1;
+      return true;
+    }
+
+    return new Promise((resolve) => {
+      let timer = null;
+      const waiter = {
+        owner,
+        resolve: () => {
+          if (timer) clearTimeout(timer);
+          guard.locked = true;
+          guard.owner = owner;
+          guard.depth = 1;
+          guard.acquiredAt = Date.now();
+          logger.debug(
+            `[VoiceManager] Voice lock dialihkan ke ${owner} untuk guild ${gId}.`,
+          );
+          resolve(true);
+        },
+      };
+
+      if (timeoutMs > 0) {
+        timer = setTimeout(() => {
+          const idx = guard.queue.indexOf(waiter);
+          if (idx !== -1) guard.queue.splice(idx, 1);
+          logger.warn(
+            `[VoiceManager] Timeout (${timeoutMs}ms) menunggu voice lock di guild ${gId} untuk ${owner}.`,
+          );
+          resolve(false);
+        }, timeoutMs);
+        if (timer.unref) timer.unref();
+      }
+
+      guard.queue.push(waiter);
+    });
+  }
+
+  /**
+   * Melepas voice lock untuk guild tertentu.
+   * @param {string} guildId
+   * @param {string} [owner="native"]
+   * @returns {Promise<boolean>}
+   */
+  static async releaseVoiceLock(guildId, owner = "native") {
+    const gId = String(guildId);
+    const guard = this.voiceConnectionGuard.get(gId);
+    if (!guard || !guard.locked) return true;
+
+    if (guard.depth > 1 && (guard.owner === owner || owner === "force")) {
+      guard.depth -= 1;
+      return true;
+    }
+
+    guard.depth = 0;
+    guard.locked = false;
+    guard.owner = null;
+    guard.acquiredAt = 0;
+
+    if (guard.queue.length > 0) {
+      const nextWaiter = guard.queue.shift();
+      setImmediate(() => {
+        nextWaiter.resolve();
+      });
+    } else {
+      this.voiceConnectionGuard.delete(gId);
+    }
+
+    logger.debug(`[VoiceManager] Voice lock dilepas untuk guild ${gId}.`);
+    return true;
+  }
+
+  /**
+   * Cek apakah voice gateway sedang terkunci untuk guild tertentu.
+   * @param {string} guildId
+   * @returns {boolean}
+   */
+  static isVoiceLocked(guildId) {
+    const gId = String(guildId);
+    const guard = this.voiceConnectionGuard.get(gId);
+    return Boolean(guard && guard.locked);
+  }
+
+  /**
+   * Mengambil nama pemegang voice lock saat ini.
+   * @param {string} guildId
+   * @returns {string|null}
+   */
+  static getVoiceLockOwner(guildId) {
+    const gId = String(guildId);
+    const guard = this.voiceConnectionGuard.get(gId);
+    return guard && guard.locked ? guard.owner : null;
+  }
+
+  /**
+   * Menunggu hingga voice lock pada guild dilepaskan.
+   * @param {string} guildId
+   * @param {number} [timeoutMs=15000]
+   * @returns {Promise<boolean>}
+   */
+  static async waitForVoiceLock(guildId, timeoutMs = 15000) {
+    const gId = String(guildId);
+    const guard = this.voiceConnectionGuard.get(gId);
+    if (!guard || !guard.locked) return true;
+
+    return new Promise((resolve) => {
+      let timer = null;
+      const waiter = {
+        owner: "waiter",
+        resolve: () => {
+          if (timer) clearTimeout(timer);
+          resolve(true);
+        },
+      };
+
+      if (timeoutMs > 0) {
+        timer = setTimeout(() => {
+          const idx = guard.queue.indexOf(waiter);
+          if (idx !== -1) guard.queue.splice(idx, 1);
+          resolve(false);
+        }, timeoutMs);
+        if (timer.unref) timer.unref();
+      }
+
+      guard.queue.push(waiter);
+    });
+  }
+
+  /**
+   * Pembersihan total dan pelepasan sesi koneksi native voice.
+   * Menghentikan audio player, melepaskan listener adapter gateway,
+   * dan menghancurkan koneksi Discord.
+   * @param {string} guildId
+   * @param {object} [session]
+   */
+  static cleanTeardownConnection(guildId, session) {
+    const gId = String(guildId);
+    const activeSession = session || this.connections.get(gId);
+    if (!activeSession) return;
+
+    if (activeSession.keepaliveTimer) {
+      clearTimeout(activeSession.keepaliveTimer);
+      activeSession.keepaliveTimer = null;
+    }
+
+    try {
+      if (activeSession.player) {
+        activeSession.player.stop(true);
+        activeSession.player.removeAllListeners();
+      }
+    } catch (e) {
+      logger.debug(
+        "[VoiceManager:cleanTeardownConnection] Player cleanup error: " +
+          (e?.message || e),
+      );
+    }
+
+    try {
+      if (activeSession.connection) {
+        activeSession.connection.removeAllListeners();
+        activeSession.connection.destroy();
+      }
+    } catch (e) {
+      logger.debug(
+        "[VoiceManager:cleanTeardownConnection] Connection cleanup error: " +
+          (e?.message || e),
+      );
+    } finally {
+      this.connections.delete(gId);
+    }
+  }
 
   static isAvailable() {
     return Boolean(getVoiceLib());
@@ -60,10 +265,13 @@ class VoiceManager {
   static async yieldToMusic(guildId) {
     const gId = String(guildId);
     const session = this.connections.get(gId);
-    if (!session) return;
+    if (!session && !this.isVoiceLocked(gId)) return;
 
-    logger.info(`[VoiceManager] Mengalah pada Lavalink Music di guild ${gId}. Menutup koneksi native voice.`);
-    this.disconnect(gId);
+    logger.info(
+      `[VoiceManager] Mengalah pada Lavalink Music di guild ${gId}. Menutup koneksi native voice.`,
+    );
+    this.cleanTeardownConnection(gId, session);
+    await this.releaseVoiceLock(gId, "force");
   }
 
   static acquireConnection({ voiceChannel, mode = "transient" }) {
@@ -126,7 +334,10 @@ class VoiceManager {
     });
 
     player.on("error", (err) => {
-      logger.error(`[VoiceManager] Audio Player Error di guild ${guildId}:`, err.message);
+      logger.error(
+        `[VoiceManager] Audio Player Error di guild ${guildId}:`,
+        err.message,
+      );
     });
 
     this.connections.set(guildId, session);
@@ -140,7 +351,9 @@ class VoiceManager {
     if (session.keepaliveTimer) clearTimeout(session.keepaliveTimer);
 
     session.keepaliveTimer = setTimeout(() => {
-      logger.info(`[VoiceManager] Keepalive timeout tercapai di guild ${guildId}. Melepaskan koneksi voice.`);
+      logger.info(
+        `[VoiceManager] Keepalive timeout tercapai di guild ${guildId}. Melepaskan koneksi voice.`,
+      );
       VoiceManager.disconnect(guildId);
     }, this.KEEPALIVE_TIMEOUT_MS);
 
@@ -157,20 +370,7 @@ class VoiceManager {
   }
 
   static disconnect(guildId) {
-    const gId = String(guildId);
-    const session = this.connections.get(gId);
-    if (!session) return;
-
-    if (session.keepaliveTimer) clearTimeout(session.keepaliveTimer);
-
-    try {
-      if (session.player) session.player.stop(true);
-      if (session.connection) session.connection.destroy();
-    } catch (e) {
-      logger.debug("[VoiceManager:disconnect] Cleanup error: " + (e?.message || e));
-    } finally {
-      this.connections.delete(gId);
-    }
+    this.cleanTeardownConnection(guildId);
   }
 
   static async speak(text, member) {
@@ -188,10 +388,14 @@ class VoiceManager {
     }
 
     try {
-      const session = this.acquireConnection({ voiceChannel, mode: "transient" });
+      const session = this.acquireConnection({
+        voiceChannel,
+        mode: "transient",
+      });
       if (!session) return { success: false, reason: "connection_failed" };
 
-      const safeText = text.length > 195 ? text.substring(0, 192) + "..." : text;
+      const safeText =
+        text.length > 195 ? text.substring(0, 192) + "..." : text;
       const audioUrl = googleTTS.getAudioUrl(safeText, {
         lang: "id",
         slow: false,
@@ -223,7 +427,10 @@ class VoiceManager {
       session.player.play(resource);
       return true;
     } catch (err) {
-      logger.error(`[VoiceManager] Gagal memutar stream audio di guild ${guildId}:`, err);
+      logger.error(
+        `[VoiceManager] Gagal memutar stream audio di guild ${guildId}:`,
+        err,
+      );
       return false;
     }
   }
@@ -241,9 +448,17 @@ class VoiceManager {
    * @param {Buffer} [params.audioBuffer] - Buffer audio (mp3) hasil TTS
    * @param {string} [params.filePath] - Alternatif: path file audio lokal
    * @param {number} [params.timeoutMs=20000] - Batas tunggu agar tidak menggantung
+   * @param {boolean} [params.lockAlreadyAcquired=false] - Tandai jika pemanggil sudah memegang lock
    * @returns {Promise<{success: boolean, reason?: string, durationMs?: number}>}
    */
-  static async playIntroClip({ guildId, voiceChannel, audioBuffer, filePath, timeoutMs = 20000 }) {
+  static async playIntroClip({
+    guildId,
+    voiceChannel,
+    audioBuffer,
+    filePath,
+    timeoutMs = 20000,
+    lockAlreadyAcquired = false,
+  }) {
     const voice = getVoiceLib();
     if (!voice) return { success: false, reason: "voice_lib_unavailable" };
     if (!voiceChannel || !voiceChannel.guild) {
@@ -254,6 +469,21 @@ class VoiceManager {
     }
 
     const gId = String(guildId || voiceChannel.guild.id);
+
+    const shouldManageLock = !lockAlreadyAcquired;
+    if (shouldManageLock) {
+      const locked = await this.acquireVoiceLock(
+        gId,
+        "native_intro",
+        timeoutMs,
+      );
+      if (!locked) {
+        logger.warn(
+          `[VoiceManager:playIntroClip] Gagal memperoleh voice lock di guild ${gId}.`,
+        );
+        return { success: false, reason: "voice_lock_busy" };
+      }
+    }
 
     logger.info(
       `[VoiceManager:playIntroClip] Memulai intro native di guild ${gId} (sumber: ${
@@ -292,9 +522,7 @@ class VoiceManager {
         return { success: false, reason: "connection_not_ready" };
       }
 
-      const source = audioBuffer
-        ? Readable.from(audioBuffer)
-        : filePath;
+      const source = audioBuffer ? Readable.from(audioBuffer) : filePath;
 
       const resource = voice.createAudioResource(source, {
         inlineVolume: false,
@@ -316,7 +544,9 @@ class VoiceManager {
 
         const onPlaying = () => {
           startedPlaying = true;
-          logger.info(`[VoiceManager:playIntroClip] Intro native sedang diputar di guild ${gId}.`);
+          logger.info(
+            `[VoiceManager:playIntroClip] Intro native sedang diputar di guild ${gId}.`,
+          );
         };
 
         const onError = (err) => {
@@ -354,11 +584,104 @@ class VoiceManager {
       );
       return { success: false, reason: "playback_error" };
     } finally {
-      // Selalu lepas koneksi native: Lavalink harus jadi pemilik voice channel
-      // tunggal saat lagu utama mulai diputar.
+      // Selalu lepas koneksi native dan unbind event listener gateway:
+      // Berikan settling delay agar Discord Gateway tuntas membersihkan sesi sebelumnya.
       try {
-        this.disconnect(gId);
+        this.cleanTeardownConnection(gId, session);
+        await new Promise((r) => setTimeout(r, 250));
       } catch (_) {}
+
+      if (shouldManageLock) {
+        try {
+          await this.releaseVoiceLock(gId, "native_intro");
+        } catch (_) {}
+      }
+    }
+  }
+
+  /**
+   * Putar klip intro audio secara aman dan berurutan sebelum beralih ke Poru/Lavalink.
+   * Mengakuisisi voice lock eksklusif, memutar klip secara native, membersihkan koneksi
+   * dan unbind event listener gateway, lalu melepaskan lock.
+   *
+   * @param {string|object} guildIdOrParams
+   * @param {string|object} [channelIdOrVoiceChannel]
+   * @param {string} [introAudioPath]
+   * @param {object} [options={}]
+   * @returns {Promise<{success: boolean, reason?: string, durationMs?: number}>}
+   */
+  static async playIntroClipSafe(
+    guildIdOrParams,
+    channelIdOrVoiceChannel,
+    introAudioPath,
+    options = {},
+  ) {
+    let guildId;
+    let voiceChannel = null;
+    let audioBuffer = null;
+    let filePath = null;
+    let timeoutMs = 20000;
+    let client = null;
+
+    if (typeof guildIdOrParams === "object" && guildIdOrParams !== null) {
+      guildId = guildIdOrParams.guildId;
+      voiceChannel = guildIdOrParams.voiceChannel;
+      audioBuffer = guildIdOrParams.audioBuffer;
+      filePath = guildIdOrParams.filePath || guildIdOrParams.introAudioPath;
+      timeoutMs = guildIdOrParams.timeoutMs || 20000;
+      client = guildIdOrParams.client;
+    } else {
+      guildId = String(guildIdOrParams);
+      filePath = introAudioPath;
+      if (
+        typeof channelIdOrVoiceChannel === "object" &&
+        channelIdOrVoiceChannel !== null
+      ) {
+        voiceChannel = channelIdOrVoiceChannel;
+      }
+      if (options.audioBuffer) audioBuffer = options.audioBuffer;
+      if (options.filePath) filePath = options.filePath;
+      if (options.timeoutMs) timeoutMs = options.timeoutMs;
+      if (options.client) client = options.client;
+    }
+
+    const gId = String(guildId || voiceChannel?.guild?.id || "");
+    if (!gId) {
+      return { success: false, reason: "invalid_guild_id" };
+    }
+
+    if (!voiceChannel && channelIdOrVoiceChannel && client) {
+      const channelId =
+        typeof channelIdOrVoiceChannel === "string"
+          ? channelIdOrVoiceChannel
+          : channelIdOrVoiceChannel?.id;
+      if (channelId && client.channels?.cache) {
+        voiceChannel = client.channels.cache.get(channelId);
+      }
+    }
+
+    const lockAcquired = await this.acquireVoiceLock(
+      gId,
+      "native_intro",
+      timeoutMs,
+    );
+    if (!lockAcquired) {
+      return { success: false, reason: "voice_lock_busy" };
+    }
+
+    try {
+      return await this.playIntroClip({
+        guildId: gId,
+        voiceChannel,
+        audioBuffer,
+        filePath,
+        timeoutMs,
+        lockAlreadyAcquired: true,
+      });
+    } finally {
+      this.cleanTeardownConnection(gId);
+      await new Promise((r) => setTimeout(r, 250));
+      await this.releaseVoiceLock(gId, "native_intro");
     }
   }
 
@@ -373,7 +696,10 @@ class VoiceManager {
     if (this.isMusicActive(guildId, member.client)) return false;
 
     try {
-      const session = this.acquireConnection({ voiceChannel, mode: "transient" });
+      const session = this.acquireConnection({
+        voiceChannel,
+        mode: "transient",
+      });
       if (!session) return false;
 
       const resource = voice.createAudioResource(filePath);

@@ -26,24 +26,14 @@ module.exports = [
       const isOwner = await validateHubOwner(interaction, ownerId, category);
       if (!isOwner) return;
 
-      // Pilihan dropdown kategori minigame
-      if (category === "minigame") {
-        if (selectedValue === "minesweeper") {
-          return require("../../../plugin/minigames/minesweeper").execute(interaction, client);
+      // Pilihan dropdown kategori arcade / minigame
+      if (category === "minigame" || category === "arcade") {
+        const arcade = require("../../../plugin/arcade/arcade");
+        const lang = interaction.localeLang || "id";
+        if (selectedValue === "arcade" || selectedValue === "hub") {
+          return arcade.showHub(interaction, interaction.user, lang);
         }
-        if (selectedValue === "arcade") {
-          return require("../../../plugin/minigames/arcade").execute(interaction, client);
-        }
-        if (selectedValue === "akinator") {
-          return require("../../../plugin/minigames/akinator").execute(interaction, client);
-        }
-        if (selectedValue === "hangman") {
-          return require("../../../plugin/minigames/hangman").execute(interaction, client);
-        }
-
-        // Subgame internal: math, trivia, rps, tictactoe, memory, tebakkata, tod, leaderboard
-        const mg = require("../../../plugin/minigames/minigame");
-        return mg.launchSubgame(interaction, selectedValue);
+        return arcade.playGame(interaction, interaction.user, lang, selectedValue);
       }
 
       // Pilihan dropdown kategori fun
@@ -92,8 +82,8 @@ module.exports = [
           return interaction.showModal(modal);
         }
         if (selectedValue === "tod") {
-          const mg = require("../../../plugin/minigames/minigame");
-          return mg.launchSubgame(interaction, "tod");
+          const arcade = require("../../../plugin/arcade/arcade");
+          return arcade.playGame(interaction, interaction.user, interaction.localeLang || "id", "tod");
         }
       }
 
