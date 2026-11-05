@@ -118,6 +118,7 @@ module.exports = (containerOrClient) => {
           objectSrc: ["'none'"],
           frameAncestors: ["'self'"],
           scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+          scriptSrcAttr: ["'unsafe-inline'"],
           styleSrc: [
             "'self'",
             "'unsafe-inline'",
@@ -130,19 +131,29 @@ module.exports = (containerOrClient) => {
             "https://fonts.gstatic.com",
             "https://cdnjs.cloudflare.com",
           ],
-          imgSrc: ["'self'", "data:", "blob:", "https:"],
-          mediaSrc: ["'self'", "data:", "blob:", "https:"],
+          imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+          mediaSrc: ["'self'", "data:", "blob:", "https:", "http:"],
           workerSrc: ["'self'", "blob:"],
-          connectSrc: ["'self'", "https:", "ws:", "wss:"],
+          connectSrc: ["'self'", "https:", "http:", "ws:", "wss:"],
           frameSrc: ["'self'"],
+          upgradeInsecureRequests: null,
         },
       },
+      strictTransportSecurity: false,
       frameguard: { action: "sameorigin" },
       crossOriginResourcePolicy: false,
       crossOriginEmbedderPolicy: false,
       crossOriginOpenerPolicy: false,
     }),
   );
+
+  // Bersihkan cache HSTS browser jika diakses via HTTP (misal IP:Port Pterodactyl)
+  webApp.use((req, res, next) => {
+    if (!req.secure) {
+      res.setHeader("Strict-Transport-Security", "max-age=0");
+    }
+    next();
+  });
 
   // --- CORS ---
   // `cors()` tanpa argumen memantulkan origin mana pun. Sekarang hanya domain
@@ -284,7 +295,7 @@ module.exports = (containerOrClient) => {
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: isProduction,
+      secure: "auto",
       maxAge: 1000 * 60 * 60 * 24,
     },
   });
@@ -596,6 +607,9 @@ module.exports = (containerOrClient) => {
    *
    * @returns {string|null} Path absolut berkas, atau null bila tidak ada.
    */
+  const srcCssFile = path.join(__dirname, "src/css/stellar.css");
+  const srcNavFile = path.join(__dirname, "src/js/sharedNav.js");
+
   const pickPage = (name) => {
     const distFile = path.join(distPages, name);
     const srcFile = path.join(srcPages, name);
@@ -605,9 +619,15 @@ module.exports = (containerOrClient) => {
 
     if (hasDist && hasSrc) {
       try {
-        // src lebih baru berarti hasil build belum menyusul. Sajikan src
-        // supaya perubahan langsung terlihat tanpa perlu build ulang.
-        if (fs.statSync(srcFile).mtimeMs > fs.statSync(distFile).mtimeMs) {
+        const distMtime = fs.statSync(distFile).mtimeMs;
+        const srcMtime = Math.max(
+          fs.statSync(srcFile).mtimeMs,
+          fs.existsSync(srcCssFile) ? fs.statSync(srcCssFile).mtimeMs : 0,
+          fs.existsSync(srcNavFile) ? fs.statSync(srcNavFile).mtimeMs : 0,
+        );
+        // src, CSS, atau sharedNav lebih baru berarti hasil build belum menyusul.
+        // Sajikan src supaya perubahan langsung terlihat tanpa perlu build ulang.
+        if (srcMtime > distMtime) {
           return srcFile;
         }
       } catch (_) {

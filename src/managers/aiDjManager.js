@@ -253,7 +253,10 @@ class AiDjManager {
   generateDjScript(trackInfo, requesterName, listenerNames = [], lang = "id", options = {}) {
     const title = trackInfo.title || (lang === "en" ? "your favorite song" : "lagu favorit kalian");
     const author = trackInfo.author || (lang === "en" ? "an awesome musician" : "musisi hebat");
-    const rawName = typeof requesterName === "string" ? requesterName.trim() : "";
+    const rawName =
+      typeof requesterName === "string"
+        ? requesterName.replace(/_+/g, " ").replace(/\s+/g, " ").trim()
+        : "";
     const PRONOUNS = new Set(["kamu", "dia", "anda", "you", "sobat mabar", "sobat naura", "teammate"]);
     const isPronoun = PRONOUNS.has(rawName.toLowerCase()) || Boolean(options.isPronoun);
 

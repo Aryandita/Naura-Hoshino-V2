@@ -138,7 +138,12 @@ function checkVersionParity() {
 
       for (const file of pageFiles) {
         const content = fs.readFileSync(path.join(pagesDir, file), "utf8");
-        if (content.includes("v2.3.0") || content.includes("v2.2.0") || content.includes("v2.1 3D")) {
+        if (
+          content.includes("v2.4.0") ||
+          content.includes("v2.3.0") ||
+          content.includes("v2.2.0") ||
+          content.includes("v2.1 3D")
+        ) {
           outdatedCount++;
           failedPages.push(file);
         }

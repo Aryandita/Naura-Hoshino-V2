@@ -135,10 +135,242 @@ class MusicManager {
 
     // Inisialisasi Poru Native Mode (Lavalink v4 / LavaSrc)
     this._poru = new Poru(this.client, this.buildNodes(), options);
+    this._enhancePoruClusterRouting(this._poru);
     this.loadPoruEvents();
 
     lavalinkClusterManager.setPoru(this._poru);
     return this._poru;
+  }
+
+  /**
+   * Memperkuat Poru dengan pemilihan node cerdas, multi-node resolve fallback,
+   * dan perbaikan bug state isPlaying pada TrackEndEvent (loadFailed).
+   * @param {object} poru
+   */
+  _enhancePoruClusterRouting(poru) {
+    if (!poru || poru._nauraEnhanced) return;
+    poru._nauraEnhanced = true;
+
+    const scoreNode = (node, querySource = "") => {
+      if (!node || !Boolean(node.isConnected ?? node.connected)) return 1e9;
+      const rawPenalties = Number(node.penalties) || 0;
+      // Batasi penalti bawaan CPU publik (< 500) agar node sehat seperti Millohost tidak kalah oleh node mati,
+      // namun tetap hormati penalti tinggi (>= 500) yang diberikan oleh trackError saat stream gagal.
+      let score = rawPenalties >= 500 ? rawPenalties : Math.min(150, rawPenalties);
+      const name = String(node.name || "");
+      const caps = lavalinkClusterManager.getCapabilities(name);
+
+      if (lavalinkClusterManager.isNodeQuarantined(name)) {
+        score += 100000;
+      }
+
+      // Hyperion (youtube-plugin 1.18.1) & Serenetia (REST HTML error) dideprioritaskan ke urutan paling bawah
+      if (caps?.hasBrokenYoutube || /hyperion/i.test(name)) {
+        score += 50000;
+      }
+      if (/serenetia/i.test(name) || (!caps && lavalinkClusterManager.nodeCapabilities.size > 0)) {
+        score += 40000;
+      }
+
+      // Prioritaskan node berdasarkan kapabilitas sumber yang diminta
+      if (querySource === "scsearch" || querySource === "spsearch") {
+        if (caps?.hasYtSosor || /millohost/i.test(name)) {
+          score -= 8000;
+        } else if (caps?.hasLavaSrc) {
+          score -= 3000;
+        } else if (caps && !caps.hasSoundCloud) {
+          score += 20000;
+        }
+      } else if (querySource === "http") {
+        if (caps && caps.hasHttp === false) {
+          score += 50000;
+        } else if (caps?.hasHttp || /millohost|glaceyt$/i.test(name)) {
+          score -= 2000;
+        }
+      } else {
+        // Default (YouTube / general player): prioritaskan node dengan HTTP + YouTube + SoundCloud sehat (GlaceYT & Millohost)
+        if (caps?.hasYtSosor || /millohost/i.test(name)) {
+          score -= 1200;
+        } else if (/^glaceyt$/i.test(name)) {
+          score -= 1000;
+        } else if (caps?.hasLavaSrc) {
+          score -= 300;
+        }
+        if ((caps && caps.hasHttp === false) || /glaceyt-2/i.test(name)) {
+          score += 500;
+        }
+      }
+
+      const tier = lavalinkClusterManager.nodeTiers?.get(name) || 3;
+      score += tier * 50;
+      return score;
+    };
+
+    Object.defineProperty(poru, "leastUsedNodes", {
+      get() {
+        return [...this.nodes.values()]
+          .filter((node) => Boolean(node.isConnected ?? node.connected))
+          .sort((a, b) => scoreNode(a) - scoreNode(b));
+      },
+      configurable: true,
+    });
+
+    const origResolve = poru.resolve.bind(poru);
+    poru.resolve = async ({ query, source, requester }, preferredNode) => {
+      if (!poru.isActivated) {
+        throw new Error("You have to init poru in your ready event");
+      }
+
+      const qStr = String(query || "");
+      let querySource = String(source || poru.options?.defaultPlatform || "ytsearch").toLowerCase();
+      if (/^scsearch:/i.test(qStr)) querySource = "scsearch";
+      else if (/^spsearch:|spotify\.com/i.test(qStr)) querySource = "spsearch";
+      else if (/^ytmsearch:/i.test(qStr)) querySource = "ytmsearch";
+      else if (/^ytsearch:|youtube\.com|youtu\.be/i.test(qStr)) querySource = "ytsearch";
+      else if (/^https?:\/\//i.test(qStr)) querySource = "http";
+
+      const connectedNodes = [...poru.nodes.values()]
+        .filter((n) => Boolean(n.isConnected ?? n.connected))
+        .sort((a, b) => scoreNode(a, querySource) - scoreNode(b, querySource));
+
+      if (preferredNode && Boolean(preferredNode.isConnected ?? preferredNode.connected)) {
+        const idx = connectedNodes.findIndex((n) => n.name === preferredNode.name);
+        if (idx > 0) {
+          connectedNodes.splice(idx, 1);
+          connectedNodes.unshift(preferredNode);
+        } else if (idx === -1) {
+          connectedNodes.unshift(preferredNode);
+        }
+      }
+
+      if (connectedNodes.length === 0) {
+        return origResolve({ query, source, requester }, preferredNode);
+      }
+
+      let lastRes = null;
+      let lastErr = null;
+
+      for (const candidateNode of connectedNodes) {
+        try {
+          const res = await origResolve({ query, source, requester }, candidateNode);
+          lastRes = res;
+          const hasTracks =
+            res &&
+            Array.isArray(res.tracks) &&
+            res.tracks.length > 0 &&
+            !["error", "empty", "LOAD_FAILED", "NO_MATCHES"].includes(res.loadType);
+
+          if (hasTracks) {
+            for (const t of res.tracks) {
+              if (t && typeof t === "object") {
+                t._resolvedNodeName = candidateNode.name;
+              }
+            }
+            return res;
+          }
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+
+      if (lastRes) return lastRes;
+      if (lastErr) throw lastErr;
+      return { loadType: "empty", tracks: [], playlistInfo: {} };
+    };
+
+    const self = this;
+    poru.on("playerCreate", (player) => {
+      if (!player || player._nauraPatched) return;
+      player._nauraPatched = true;
+
+      // Perbaiki bug Poru: saat TrackEndEvent dengan reason "loadFailed" atau "replaced",
+      // Poru lupa me-reset isPlaying = false dan mengaktifkan cooldown 10 detik palsu.
+      const origEventHandler = player.eventHandler.bind(player);
+      player.eventHandler = async function patchedEventHandler(data) {
+        if (data?.type === "TrackEndEvent" && ["loadFailed", "cleanup", "replaced"].includes(data.reason)) {
+          this.lastPlayTimestamp = null;
+          this.cooldown = null;
+          if (data.reason === "loadFailed") {
+            this.isPlaying = false;
+            if (this.isRecoveringTrack) {
+              return;
+            }
+          }
+        }
+        return origEventHandler(data);
+      };
+
+      // Pastikan player berpindah ke node yang kompatibel bila track berasal dari node fallback
+      const origPlay = player.play.bind(player);
+      player.play = async function patchedPlay(...args) {
+        const nextTrack = this.queue?.[0] || this.currentTrack;
+        const targetNodeName = nextTrack?._resolvedNodeName;
+        if (targetNodeName && this.node && this.node.name !== targetNodeName) {
+          const currentCaps = lavalinkClusterManager.getCapabilities(this.node.name);
+          const trackSource = String(
+            nextTrack?.info?.sourceName || nextTrack?.info?.originalSource || "",
+          ).toLowerCase();
+          const needsNodeSwitch =
+            nextTrack?._forceNodeSwitch ||
+            currentCaps?.hasBrokenYoutube ||
+            /hyperion/i.test(this.node.name) ||
+            (trackSource === "soundcloud" && !currentCaps?.hasLavaSrc && !/millohost/i.test(this.node.name)) ||
+            ((nextTrack?.isTTS || trackSource === "http") && currentCaps?.hasHttp === false);
+
+          if (needsNodeSwitch) {
+            await self.switchPlayerNode(this, targetNodeName).catch(() => {});
+          }
+        }
+        return origPlay(...args);
+      };
+    });
+  }
+
+  /**
+   * Memindahkan koneksi voice Lavalink player ke node target tanpa memutus sesi Discord.
+   * @param {object} player
+   * @param {string} targetNodeName
+   * @returns {Promise<boolean>}
+   */
+  async switchPlayerNode(player, targetNodeName) {
+    if (!player || !this._poru || !targetNodeName) return false;
+    const targetNode = this._poru.nodes.get(targetNodeName);
+    if (!targetNode || !Boolean(targetNode.isConnected ?? targetNode.connected)) return false;
+    if (player.node && player.node.name === targetNode.name) return true;
+
+    const oldNode = player.node;
+    try {
+      if (oldNode?.rest?.destroyPlayer) {
+        await oldNode.rest.destroyPlayer(player.guildId).catch(() => {});
+      }
+      player.node = targetNode;
+
+      const voiceData = player.connection?.voice;
+      if (voiceData?.token && voiceData?.sessionId && voiceData?.endpoint) {
+        await targetNode.rest.updatePlayer({
+          guildId: player.guildId,
+          data: {
+            voice: voiceData,
+            volume: typeof player.volume === "number" ? player.volume : 65,
+          },
+        });
+      } else if (typeof player.connect === "function") {
+        player.connect({
+          guildId: player.guildId,
+          voiceChannel: player.voiceChannel,
+          deaf: true,
+          mute: player.mute || false,
+        });
+      }
+
+      logger.info(
+        `[MusicManager] Player guild ${player.guildId} dialihkan dari node "${oldNode?.name || "unknown"}" ke "${targetNode.name}".`,
+      );
+      return true;
+    } catch (err) {
+      logger.warn(`[MusicManager] Gagal mengalihkan node ke "${targetNodeName}": ${err.message}`);
+      return false;
+    }
   }
 
   initialize() {

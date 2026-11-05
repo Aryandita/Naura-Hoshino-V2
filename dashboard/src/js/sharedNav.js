@@ -1654,7 +1654,7 @@
     if (!document.getElementById('naura-session-presenter-script')) {
         const presenterScript = document.createElement('script');
         presenterScript.id = 'naura-session-presenter-script';
-        presenterScript.src = '/src/js/sessionPresenter.js?v=2.4.0';
+        presenterScript.src = '/src/js/sessionPresenter.js?v=2.5.0';
         presenterScript.async = false;
         document.body.appendChild(presenterScript);
     }
@@ -1663,7 +1663,7 @@
     if (!document.getElementById('naura-auth-script')) {
         const authScript = document.createElement('script');
         authScript.id = 'naura-auth-script';
-        authScript.src = '/src/js/authManager.js?v=2.4.0';
+        authScript.src = '/src/js/authManager.js?v=2.5.0';
         authScript.async = false;
         document.body.appendChild(authScript);
     }

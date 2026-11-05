@@ -82,7 +82,10 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
     let addressedName;
     if (isVipOrOwner) {
       // Owner dan Pengguna Premium: sebutkan display name atau nama kustom dari dashboard
-      addressedName = customName || user?.displayName || user?.globalName || user?.username || "Sobat VIP";
+      const rawTargetName =
+        customName || user?.displayName || user?.globalName || user?.username || "Sobat VIP";
+      addressedName =
+        String(rawTargetName).replace(/_+/g, " ").replace(/\s+/g, " ").trim() || "Sobat VIP";
     } else if (typeof aiDjManager.getPersonaPronoun === "function") {
       // Pengguna Umum: gunakan kata ganti selaras dinamis dengan persona Naura (tanpa mengeja username mentah)
       addressedName = aiDjManager.getPersonaPronoun(personaKey, lang);
@@ -173,23 +176,55 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
       }
     }
 
-    // Kirim kartu Now Playing/DJ ke teks channel (tanpa lampiran audio:
-    // audio diputar native, bukan lewat attachment Discord).
+    // Kirim kartu Now Playing/DJ ke teks channel beserta lampiran audio agar
+    // Lavalink dapat memutar stream HTTP di koneksi voice yang sama tanpa konflik sesi.
     let messageId = null;
+    let ttsTrack = null;
     try {
+      const { AttachmentBuilder } = require("discord.js");
       const ui = require("../config/ui");
       const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
+
+      const safeScript = String(script || "")
+        .replace(/_+/g, " ")
+        .replace(/([*~`])/g, "\\$1")
+        .trim();
 
       const speakPayload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
         title: "🎙️ Hoshino FM",
-        description: `> _"${script}"_`,
+        description: `> _"${safeScript}"_`,
         expression: "singing",
         footerText: ui.getFooter("music"),
       });
 
+      if (audioBuffer) {
+        speakPayload.files = [
+          new AttachmentBuilder(audioBuffer, { name: "naura_dj_intro.mp3" }),
+        ];
+      }
+
       const speakMsg = await channel.send(speakPayload);
       messageId = speakMsg?.id || null;
+
+      const attachmentUrl = speakMsg?.attachments?.first?.()?.url || null;
+      if (attachmentUrl && poru && typeof poru.resolve === "function") {
+        try {
+          const ttsRes = await poru.resolve({
+            query: attachmentUrl,
+            requester: user,
+          });
+          if (ttsRes && Array.isArray(ttsRes.tracks) && ttsRes.tracks.length > 0) {
+            ttsTrack = ttsRes.tracks[0];
+            ttsTrack.info.title = `🎙️ Naura DJ: ${String(genreKey || "pop").replace(/_/g, " ")} Session`;
+            ttsTrack.info.author = "Naura Hoshino";
+            ttsTrack.info.originalSource = "http";
+            ttsTrack.isTTS = true;
+          }
+        } catch (resolveErr) {
+          logger.debug(`[AiDjTrackService] Resolve HTTP intro via Lavalink dilewati: ${resolveErr.message}`);
+        }
+      }
     } catch (sendErr) {
       logger.debug(`[AiDjTrackService] Gagal mengirim kartu DJ: ${sendErr.message}`);
     }
@@ -197,6 +232,7 @@ async function prepareDjIntroTrack({ poru, channel, user, trackInfo, guildId, mu
     return {
       audioBuffer,
       localFilePath: localIntroPath,
+      ttsTrack,
       script,
       classification,
       messageId,

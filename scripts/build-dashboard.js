@@ -82,42 +82,42 @@ function main() {
     } catch (err) {
       console.warn(`[BUILD] Peringatan: Build dashboard gagal (${err.message}).`);
       console.warn("[BUILD] Melanjutkan startup bot (dashboard akan fallback ke src/pages)...");
+      return;
     }
-    return;
-  }
-
-  // 1. Siapkan area build bersih (node_modules junction dipertahankan).
-  fs.mkdirSync(buildRoot, { recursive: true });
-  for (const dir of COPY_DIRS) resetInside(buildRoot, dir);
-  resetInside(buildRoot, "dist");
-  for (const file of COPY_FILES) {
-    const srcFile = path.join(dashboardDir, file);
-    if (fs.existsSync(srcFile)) {
-      fs.copyFileSync(srcFile, path.join(buildRoot, file));
+  } else {
+    // 1. Siapkan area build bersih (node_modules junction dipertahankan).
+    fs.mkdirSync(buildRoot, { recursive: true });
+    for (const dir of COPY_DIRS) resetInside(buildRoot, dir);
+    resetInside(buildRoot, "dist");
+    for (const file of COPY_FILES) {
+      const srcFile = path.join(dashboardDir, file);
+      if (fs.existsSync(srcFile)) {
+        fs.copyFileSync(srcFile, path.join(buildRoot, file));
+      }
     }
-  }
-  for (const dir of COPY_DIRS) {
-    const srcDir = path.join(dashboardDir, dir);
-    if (fs.existsSync(srcDir)) {
-      fs.cpSync(srcDir, path.join(buildRoot, dir), {
-        recursive: true,
-      });
+    for (const dir of COPY_DIRS) {
+      const srcDir = path.join(dashboardDir, dir);
+      if (fs.existsSync(srcDir)) {
+        fs.cpSync(srcDir, path.join(buildRoot, dir), {
+          recursive: true,
+        });
+      }
     }
+    ensureNodeModulesLink();
+
+    // 2. Build di path tanpa spasi.
+    console.log(`[BUILD] Build dari: ${buildRoot}`);
+    execSync("npx vite build --config vite.config.mjs", {
+      cwd: buildRoot,
+      stdio: "inherit",
+    });
+
+    // 3. Salin hasil build kembali ke lokasi dashboard/dist asli.
+    resetInside(dashboardDir, "dist");
+    fs.cpSync(path.join(buildRoot, "dist"), path.join(dashboardDir, "dist"), {
+      recursive: true,
+    });
   }
-  ensureNodeModulesLink();
-
-  // 2. Build di path tanpa spasi.
-  console.log(`[BUILD] Build dari: ${buildRoot}`);
-  execSync("npx vite build --config vite.config.mjs", {
-    cwd: buildRoot,
-    stdio: "inherit",
-  });
-
-  // 3. Salin hasil build kembali ke lokasi dashboard/dist asli.
-  resetInside(dashboardDir, "dist");
-  fs.cpSync(path.join(buildRoot, "dist"), path.join(dashboardDir, "dist"), {
-    recursive: true,
-  });
 
   // 4. Pastikan dist/index.html tersedia untuk root routing di preview dan server statis
   const distSrcIndex = path.join(

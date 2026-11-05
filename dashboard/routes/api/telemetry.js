@@ -303,8 +303,8 @@ function register(router, client) {
           },
           plugins: pluginStats,
           architecture: {
-            engineVersion: env.ENGINE_VERSION || "v2.4.0",
-            botVersion: env.BOT_VERSION || "v2.4.0",
+            engineVersion: env.ENGINE_VERSION || "v2.5.0",
+            botVersion: env.BOT_VERSION || "v2.5.0",
             nodeVersion: process.version,
             redisConnected: !!(
               redisManager.client && redisManager.client.isReady

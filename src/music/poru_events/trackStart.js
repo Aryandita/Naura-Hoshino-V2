@@ -148,7 +148,7 @@ module.exports = {
 
       try {
         const ttsMsgId = activeTrack.ttsMessageId || (activeTrack.info && activeTrack.info.ttsMessageId);
-        if (ttsMsgId) {
+        if (ttsMsgId && !activeTrack.isTTS && activeTrack.deleteTtsMsg === true) {
            const channel = manager.client.channels.cache.get(player.textChannel);
            if (channel) {
               channel.messages.fetch(ttsMsgId)

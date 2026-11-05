@@ -168,19 +168,22 @@ class NodeSelector {
    * @returns {Promise<NodeCapabilities|null>} Capabilities or null on failure
    */
   async probeNodeCapabilities(node) {
-    if (!node || !node.host) return null;
+    const host = node?.host || node?.options?.host;
+    if (!node || !host) return null;
 
     return new Promise((resolve) => {
       try {
-        const protocol = node.secure ? https : http;
-        const port = node.port || (node.secure ? 443 : 2333);
+        const isSecure = Boolean(node.secure ?? node.options?.secure);
+        const protocol = isSecure ? https : http;
+        const port = node.port || node.options?.port || (isSecure ? 443 : 2333);
+        const password = node.password || node.options?.password || "youshallnotpass";
         const options = {
-          hostname: node.host,
+          hostname: host,
           port,
           path: "/v4/info",
           method: "GET",
           headers: {
-            Authorization: node.password || "youshallnotpass",
+            Authorization: password,
             "User-Agent": "Naura-Hoshino-Audio/3.1",
           },
           timeout: 4000,
@@ -193,19 +196,35 @@ class NodeSelector {
             try {
               if (res.statusCode >= 200 && res.statusCode < 300) {
                 const info = JSON.parse(body);
-                const plugins = Array.isArray(info.plugins)
-                  ? info.plugins.map((p) => (p.name || "").toLowerCase())
+                const rawPlugins = Array.isArray(info.plugins) ? info.plugins : [];
+                const plugins = rawPlugins.map((p) => (p.name || "").toLowerCase());
+                const sourceManagers = Array.isArray(info.sourceManagers)
+                  ? info.sourceManagers.map((s) => String(s).toLowerCase())
                   : [];
+                const ytPluginObj = rawPlugins.find((p) =>
+                  String(p.name || "").toLowerCase().includes("youtube"),
+                );
+                const ytPluginVersion = ytPluginObj?.version || null;
+                const hasBrokenYoutube = ytPluginVersion === "1.18.1";
+                const hasYtSosor = plugins.some((p) => p.includes("yt-sosor"));
                 const hasLavaSrc = plugins.some((p) => p.includes("lavasrc"));
                 const hasYoutube =
-                  plugins.some((p) => p.includes("youtube")) ||
-                  (Array.isArray(info.sourceManagers) && info.sourceManagers.includes("youtube"));
+                  plugins.some((p) => p.includes("youtube") || p.includes("yt-sosor")) ||
+                  sourceManagers.includes("youtube");
+                const hasHttp = sourceManagers.includes("http");
+                const hasSoundCloud = sourceManagers.includes("soundcloud");
 
                 const caps = {
                   version: info.version?.semver || "4.x",
                   hasLavaSrc,
                   hasYoutube,
-                  hasSpotify: hasLavaSrc,
+                  hasYtSosor,
+                  hasBrokenYoutube,
+                  ytPluginVersion,
+                  hasHttp,
+                  hasSoundCloud,
+                  hasSpotify: hasLavaSrc || sourceManagers.includes("spotify"),
+                  sourceManagers,
                   plugins,
                   filters: Array.isArray(info.filters) ? info.filters : [],
                 };
@@ -262,15 +281,18 @@ class NodeSelector {
 
     const { excludeNode = null, requireLavaSrc = false, region = null } = options;
 
-    // Collect connected, non-quarantined nodes
+    // Collect connected, non-quarantined nodes (support both Poru n.isConnected and mock n.connected)
     const connected = [...poru.nodes.values()].filter(
-      (n) => n.connected && n.name !== excludeNode && !this.circuitBreaker.isNodeQuarantined(n.name),
+      (n) =>
+        Boolean(n.isConnected ?? n.connected) &&
+        n.name !== excludeNode &&
+        !this.circuitBreaker.isNodeQuarantined(n.name),
     );
 
     if (connected.length === 0) {
       // Emergency fallback: any connected node regardless of quarantine
       const emergency = [...poru.nodes.values()].filter(
-        (n) => n.connected && n.name !== excludeNode,
+        (n) => Boolean(n.isConnected ?? n.connected) && n.name !== excludeNode,
       );
       return emergency[0]?.name;
     }
@@ -290,10 +312,18 @@ class NodeSelector {
     // Sort helper: prioritize by capability, latency, region match, then penalties
     const sortByLatencyAndPenalty = (list) => {
       list.sort((a, b) => {
+        const capsA = this.nodeCapabilities.get(a.name);
+        const capsB = this.nodeCapabilities.get(b.name);
+
+        // Deprioritize nodes with known broken youtube-plugin (e.g. 1.18.1)
+        const brokenA = capsA?.hasBrokenYoutube ? 1 : 0;
+        const brokenB = capsB?.hasBrokenYoutube ? 1 : 0;
+        if (brokenA !== brokenB) return brokenA - brokenB;
+
         // Prioritize LavaSrc if required
         if (requireLavaSrc) {
-          const capA = this.nodeCapabilities.get(a.name)?.hasLavaSrc ? 1 : 0;
-          const capB = this.nodeCapabilities.get(b.name)?.hasLavaSrc ? 1 : 0;
+          const capA = capsA?.hasLavaSrc ? 1 : 0;
+          const capB = capsB?.hasLavaSrc ? 1 : 0;
           if (capA !== capB) return capB - capA;
         }
 

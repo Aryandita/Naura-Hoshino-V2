@@ -163,27 +163,36 @@ if (isPterodactyl) {
   }
 }
 
-// ── 2. Bangun Frontend Dashboard bila belum ada atau jika sumber 3D lebih baru ──
-const runtimeFixFile = path.join(
-  projectRoot,
-  "dashboard",
-  "src",
-  "components",
-  "NauraViewer",
-  "animations",
-  "core",
-  "nauraRuntimeFix.js",
-);
-let needsRebuild = !fs.existsSync(distPath);
-if (!needsRebuild && fs.existsSync(runtimeFixFile)) {
+// ── 2. Bangun Frontend Dashboard bila belum ada atau jika sumber lebih baru ──
+const watchFilesForRebuild = [
+  path.join(projectRoot, "package.json"),
+  path.join(projectRoot, "dashboard", "src", "css", "stellar.css"),
+  path.join(projectRoot, "dashboard", "src", "js", "sharedNav.js"),
+  path.join(projectRoot, "dashboard", "src", "pages", "index.html"),
+  path.join(
+    projectRoot,
+    "dashboard",
+    "src",
+    "components",
+    "NauraViewer",
+    "animations",
+    "core",
+    "nauraRuntimeFix.js",
+  ),
+];
+const distIndexFile = path.join(distPath, "src", "pages", "index.html");
+let needsRebuild = !fs.existsSync(distPath) || !fs.existsSync(distIndexFile);
+if (!needsRebuild) {
   try {
-    const distStat = fs.statSync(distPath);
-    const fixStat = fs.statSync(runtimeFixFile);
-    if (fixStat.mtimeMs > distStat.mtimeMs) {
-      needsRebuild = true;
-      console.log(
-        "[STARTUP] nauraRuntimeFix.js lebih baru daripada dashboard/dist. Membangun ulang frontend...",
-      );
+    const distStat = fs.statSync(distIndexFile);
+    for (const watched of watchFilesForRebuild) {
+      if (fs.existsSync(watched) && fs.statSync(watched).mtimeMs > distStat.mtimeMs) {
+        needsRebuild = true;
+        console.log(
+          `[STARTUP] ${path.basename(watched)} lebih baru daripada dashboard/dist. Membangun ulang frontend...`,
+        );
+        break;
+      }
     }
   } catch (_) {}
 }

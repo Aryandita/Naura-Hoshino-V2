@@ -300,20 +300,24 @@ class LavalinkClusterManager {
    * @returns {Promise<number>}
    */
   async measureNodeLatency(node) {
-    if (!node || !node.host) return 999;
+    const host = node?.host || node?.options?.host;
+    if (!node || !host) return 999;
 
-    const protocol = node.secure ? https : http;
+    const isSecure = Boolean(node.secure ?? node.options?.secure);
+    const protocol = isSecure ? https : http;
+    const port = node.port || node.options?.port || (isSecure ? 443 : 2333);
+    const password = node.password || node.options?.password || "youshallnotpass";
     const startTime = Date.now();
 
     return new Promise((resolve) => {
       const req = protocol.request(
         {
-          hostname: node.host,
-          port: node.port || (node.secure ? 443 : 2333),
+          hostname: host,
+          port,
           path: "/version",
           method: "GET",
           headers: {
-            Authorization: node.password || "youshallnotpass",
+            Authorization: password,
           },
           timeout: 3000,
         },
@@ -352,7 +356,7 @@ class LavalinkClusterManager {
     if (!poru || !poru.nodes) return results;
 
     const probePromises = [...poru.nodes.values()].map(async (node) => {
-      if (!node.connected) return;
+      if (!Boolean(node.isConnected ?? node.connected)) return;
 
       const lat = await this.measureNodeLatency(node);
       results.set(node.name, lat);
@@ -417,7 +421,7 @@ class LavalinkClusterManager {
     let migratedCount = 0;
     if (!poru || !poru.nodes) return { anomalies, migratedCount };
 
-    const nodes = [...poru.nodes.values()].filter((n) => n.connected);
+    const nodes = [...poru.nodes.values()].filter((n) => Boolean(n.isConnected ?? n.connected));
 
     for (const node of nodes) {
       const dropRate = this.calculatePacketDropRate(node);
@@ -599,14 +603,14 @@ class LavalinkClusterManager {
    */
   getFederationStatus(poru) {
     const nodes = poru && poru.nodes ? [...poru.nodes.values()] : [];
-    const totalConnected = nodes.filter((n) => n.connected).length;
+    const totalConnected = nodes.filter((n) => Boolean(n.isConnected ?? n.connected)).length;
     const registeredHiFi = [];
 
     for (const [name, meta] of this.nodeSelector.hiFiNodes.entries()) {
       const liveNode = nodes.find((n) => n.name === name);
       registeredHiFi.push({
         name,
-        connected: liveNode ? liveNode.connected : false,
+        connected: liveNode ? Boolean(liveNode.isConnected ?? liveNode.connected) : false,
         region: meta.region,
         maxBitrate: meta.maxBitrate,
         codec: meta.codec,
@@ -667,7 +671,7 @@ class LavalinkClusterManager {
       }
     }
     const nodes = poru && poru.nodes ? [...poru.nodes.values()] : [];
-    const totalConnected = nodes.filter((n) => n.connected).length;
+    const totalConnected = nodes.filter((n) => Boolean(n.isConnected ?? n.connected)).length;
     return {
       totalNodes: nodes.length,
       connectedNodes: totalConnected,

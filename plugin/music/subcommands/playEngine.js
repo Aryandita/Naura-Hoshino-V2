@@ -350,17 +350,13 @@ module.exports = {
       return sendReply(dupPayload, true);
     }
 
-    // Intro native hanya aman untuk lagu pertama. Kalau Lavalink sudah aktif,
-    // player itu pemilik voice channel dan intro tidak boleh merebut koneksi.
-    const canPlayNativeIntro =
+    // Siapkan intro DJ (TTS) untuk lagu pertama
+    const canPlayDjIntro =
       !player ||
-      (!player.isPlaying && !player.isPaused && !player.isConnected);
+      (!player.isPlaying && !player.isPaused && player.queue.length === 0);
 
-    // Siapkan intro DJ (TTS) untuk diputar lewat voice native Discord.
-    // Intro TIDAK masuk antrean Lavalink: itu jalur lama yang gagal senyap
-    // dan membebani node audio.
     let djIntro = null;
-    if (isDjActive && canPlayNativeIntro) {
+    if (isDjActive && canPlayDjIntro) {
       djIntro = await aiDjTrackService.prepareDjIntroTrack({
         poru,
         channel,
@@ -372,14 +368,13 @@ module.exports = {
       });
     }
 
-    // Putar intro secara native, lalu serahkan voice channel ke Lavalink.
-    if (djIntro && (djIntro.audioBuffer || djIntro.localFilePath)) {
+    // Jika Lavalink berhasil me-resolve stream HTTP intro (ttsTrack), putar langsung
+    // lewat koneksi Lavalink yang sama (tanpa bentrok sesi @discordjs/voice).
+    // Fallback ke VoiceManager native hanya bila ttsTrack tidak tersedia.
+    if (djIntro && !djIntro.ttsTrack && (djIntro.audioBuffer || djIntro.localFilePath)) {
       const VoiceManager = require("../../../src/managers/voiceManager");
       const { logger } = require("../../../src/managers/logger");
 
-      // memberVoice bisa berupa objek VoiceChannel ATAU string id, tergantung
-      // pemanggil. playIntroClip memerlukan objek channel karena butuh
-      // guild.voiceAdapterCreator, jadi normalisasi dulu di sini.
       const resolveVoiceChannel = () => {
         if (memberVoice && typeof memberVoice === "object" && memberVoice.guild) {
           return memberVoice;
@@ -402,6 +397,7 @@ module.exports = {
           voiceChannel,
           audioBuffer: djIntro.audioBuffer,
           filePath: djIntro.localFilePath,
+          timeoutMs: 6000,
         });
 
         if (!introResult.success) {
@@ -416,8 +412,7 @@ module.exports = {
       }
     }
 
-    // Intro selesai (atau dilewati): pastikan koneksi native sudah lepas
-    // sebelum Poru mengambil alih voice channel yang sama.
+    // Pastikan koneksi native sudah lepas sebelum Poru mengambil alih voice channel yang sama.
     const VoiceManagerCleanup = require("../../../src/managers/voiceManager");
     if (VoiceManagerCleanup.hasActiveConnection(guild.id)) {
       VoiceManagerCleanup.disconnect(guild.id);
@@ -428,9 +423,12 @@ module.exports = {
     const isFirstTrack =
       !player.isPlaying && !player.isPaused && player.queue.length === 0;
 
-    // Lagu utama tidak perlu memicu pengumuman DJ lagi: intro sudah diputar.
+    // Lagu utama tidak perlu memicu pengumuman DJ lagi: intro sudah disiapkan.
     track.info.skipDj = true;
 
+    if (djIntro && djIntro.ttsTrack && isFirstTrack) {
+      player.queue.add(djIntro.ttsTrack);
+    }
     player.queue.add(track);
     if (!player.isPlaying && !player.isPaused) player.play();
 

@@ -249,6 +249,13 @@ function beginPlaybackTransition(
   { fadeInMs = 3000, fadeOutMs = 4000 } = {},
 ) {
   if (!player || typeof player.setVolume !== "function") return;
+  if (track && track.isTTS) {
+    try {
+      const ttsVol = Math.min(100, Math.max(75, Number(baseVolume) || 65));
+      player.setVolume(ttsVol);
+    } catch (_) {}
+    return;
+  }
   const startVolume = Math.max(5, Math.floor(baseVolume * 0.15));
   smoothFade(player, startVolume, baseVolume, fadeInMs);
 

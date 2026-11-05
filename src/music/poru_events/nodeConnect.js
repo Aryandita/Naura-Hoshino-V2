@@ -13,7 +13,7 @@ module.exports = {
     lavalinkClusterManager.recordNodeSuccess(node.name);
     lavalinkClusterManager.probeNodeCapabilities(node).catch(() => {});
 
-    setTimeout(async () => {
+    const restoreTimer = setTimeout(async () => {
       try {
         const allSettings = await GuildSettings.findAll().catch(() => []);
         for (const guildData of allSettings) {
@@ -36,5 +36,6 @@ module.exports = {
         logger.error("Gagal memulihkan mode 24/7.", e);
       }
     }, 5000);
+    if (restoreTimer.unref) restoreTimer.unref();
   },
 };
