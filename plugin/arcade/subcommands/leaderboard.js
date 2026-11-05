@@ -8,7 +8,7 @@ module.exports = {
   name: "leaderboard",
   async execute(interaction, context) {
     const { sendError } = context;
-    const category = interaction.options.getString("kategori");
+    const category = (interaction.options?.getString?.("kategori")) || "math";
 
     const isMath = category === "math";
     const isTrivia = category === "trivia";

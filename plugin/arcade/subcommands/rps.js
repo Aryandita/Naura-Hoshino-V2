@@ -9,16 +9,16 @@ module.exports = {
   name: "rps",
   async execute(interaction, context) {
     const { user, profile, survival, coinEmoji, nsfEmoji, sendError } = context;
-    const taruhan = interaction.options.getInteger("taruhan") || 0;
-    const opponent = interaction.options.getUser("lawan");
+    const taruhan = (interaction.options?.getInteger?.("taruhan")) || 0;
+    const opponent = interaction.options?.getUser?.("lawan") || null;
     const curSurv = await cacheManager.getUserSurvival(user.id);
     const curNsf = curSurv
       ? Number(curSurv.starFragments || 0)
       : Number(survival.starFragments || 0);
 
-    if (taruhan <= 0 || curNsf < taruhan) {
+    if (taruhan > 0 && curNsf < taruhan) {
       return sendError(
-        `Taruhan tidak valid atau saldo Sukamaju Koin (SC) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+        `Saldo Star Fragments (NSF) tidak cukup untuk taruhan **${taruhan.toLocaleString()}**! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
       );
     }
 
@@ -72,31 +72,39 @@ module.exports = {
       let result = "";
       let color = "#FFD700";
 
+      const ArcadeEngine = require("../../../src/survival/engines/arcadeEngine");
       if (userChoice === botChoice) {
-        result = `SERI! Kalian berdua memilih **${userChoice}**.\nTaruhan SC dikembalikan.`;
+        await ArcadeEngine.postGame(user.id, "rps", "draw");
+        result = `SERI! Kalian berdua memilih **${userChoice}**.\n🏅 **Hadiah Arcade:** +5 MP (Seri)`;
         color = "#FFFF00";
       } else if (
         (userChoice === "batu" && botChoice === "gunting") ||
         (userChoice === "gunting" && botChoice === "kertas") ||
         (userChoice === "kertas" && botChoice === "batu")
       ) {
-        const winNsf = profile.isPremium ? taruhan * 2 : taruhan;
+        await ArcadeEngine.postGame(user.id, "rps", "win");
         profile.minigame_rpsWin += 1;
         await profile.save({ fields: ["minigame_rpsWin"] });
-        await cacheManager.incrementUserSurvival(
-          user.id,
-          "starFragments",
-          winNsf,
-        );
-        result = `MENANG! Bot memilih **${botChoice}**.\nKamu memenangkan **${(taruhan * 2).toLocaleString()}** ${coinEmoji}!`;
+        if (taruhan > 0) {
+          const winNsf = profile.isPremium ? taruhan * 2 : taruhan;
+          await cacheManager.incrementUserSurvival(
+            user.id,
+            "starFragments",
+            winNsf,
+          );
+        }
+        result = `MENANG! Bot memilih **${botChoice}**.\n🏅 **Hadiah Arcade:** +25 MP${taruhan > 0 ? ` | Menang taruhan **+${(taruhan * 2).toLocaleString()}** ${coinEmoji}` : ""}`;
         color = "#00FF00";
       } else {
-        await cacheManager.debitUserSurvival(
-          user.id,
-          "starFragments",
-          taruhan,
-        );
-        result = `KALAH! Bot memilih **${botChoice}**.\nKamu kehilangan **${taruhan.toLocaleString()}** ${coinEmoji}.`;
+        await ArcadeEngine.postGame(user.id, "rps", "loss");
+        if (taruhan > 0) {
+          await cacheManager.debitUserSurvival(
+            user.id,
+            "starFragments",
+            taruhan,
+          );
+        }
+        result = `KALAH! Bot memilih **${botChoice}**.\n${taruhan > 0 ? `Kehilangan taruhan **-${taruhan.toLocaleString()}** ${coinEmoji}. ` : ""}Coba lagi untuk menang MP!`;
         color = "#FF0000";
       }
 

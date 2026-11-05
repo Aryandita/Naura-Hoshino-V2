@@ -9,16 +9,16 @@ module.exports = {
   name: "tictactoe",
   async execute(interaction, context) {
     const { user, profile, survival, coinEmoji, nsfEmoji, sendError } = context;
-    const taruhan = interaction.options.getInteger("taruhan") || 0;
-    const opponent = interaction.options.getUser("lawan");
+    const taruhan = (interaction.options?.getInteger?.("taruhan")) || 0;
+    const opponent = interaction.options?.getUser?.("lawan") || null;
     const curSurv = await cacheManager.getUserSurvival(user.id);
     const curNsf = curSurv
       ? Number(curSurv.starFragments || 0)
       : Number(survival.starFragments || 0);
 
-    if (taruhan <= 0 || curNsf < taruhan) {
+    if (taruhan > 0 && curNsf < taruhan) {
       return sendError(
-        `Taruhan tidak valid atau saldo Sukamaju Koin (SC) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+        `Saldo Star Fragments (NSF) tidak cukup untuk taruhan **${taruhan.toLocaleString()}**! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
       );
     }
 
@@ -106,33 +106,43 @@ module.exports = {
       }
 
       if (status) {
+        const ArcadeEngine = require("../../../src/survival/engines/arcadeEngine");
         let msg = "";
         if (status === "X") {
-          const winNsf = profile.isPremium ? taruhan * 2 : taruhan;
+          await ArcadeEngine.postGame(user.id, "tictactoe", "win");
           profile.minigame_tttWin += 1;
           await profile.save({ fields: ["minigame_tttWin"] });
-          await cacheManager.incrementUserSurvival(
-            user.id,
-            "starFragments",
-            winNsf,
-          );
-          msg = `${ui.getEmoji("trophy") || "🏆"} **KAMU MENANG!** Kamu mendapatkan **${(taruhan * 2).toLocaleString()}** ${coinEmoji}.`;
+          if (taruhan > 0) {
+            const winNsf = profile.isPremium ? taruhan * 2 : taruhan;
+            await cacheManager.incrementUserSurvival(
+              user.id,
+              "starFragments",
+              winNsf,
+            );
+          }
+          msg = `${ui.getEmoji("trophy") || "🏆"} **KAMU MENANG!** 🏅 +25 MP${taruhan > 0 ? ` | Menang taruhan **+${(taruhan * 2).toLocaleString()}** ${coinEmoji}` : ""}`;
         } else if (status === "O") {
-          await cacheManager.debitUserSurvival(
-            user.id,
-            "starFragments",
-            taruhan,
-          );
-          msg = `${ui.getEmoji("skull") || "💀"} **KAMU KALAH!** Bot AI memenangkan taruhan **${taruhan.toLocaleString()}** ${coinEmoji}.`;
+          await ArcadeEngine.postGame(user.id, "tictactoe", "loss");
+          if (taruhan > 0) {
+            await cacheManager.debitUserSurvival(
+              user.id,
+              "starFragments",
+              taruhan,
+            );
+          }
+          msg = `${ui.getEmoji("skull") || "💀"} **KAMU KALAH!** Bot AI memenangkan ronde ini.${taruhan > 0 ? ` Kehilangan taruhan **${taruhan.toLocaleString()}** ${coinEmoji}.` : ""}`;
         } else {
-          msg = `${ui.getEmoji("handshake") || "🤝"} **SERI!** Permainan imbang, taruhan SC dikembalikan.`;
+          await ArcadeEngine.postGame(user.id, "tictactoe", "draw");
+          msg = `${ui.getEmoji("handshake") || "🤝"} **SERI!** Permainan imbang, 🏅 +5 MP${taruhan > 0 ? ", modal taruhan dikembalikan." : "."}`;
         }
         await i.update(renderTtt(msg, true));
         collector.stop();
       } else {
         await i.update(
           renderTtt(
-            `Taruhan: **${taruhan.toLocaleString()}** ${coinEmoji}\nGiliran berikutnya! Kamu ❌ vs AI ⭕.`,
+            taruhan > 0
+              ? `Taruhan: **${taruhan.toLocaleString()}** ${coinEmoji}\nGiliran berikutnya! Kamu ❌ vs AI ⭕.`
+              : `🎮 Giliran berikutnya! Kamu ❌ vs AI ⭕.`,
           ),
         );
         collector.resetTimer();
@@ -141,11 +151,13 @@ module.exports = {
 
     collector.on("end", async () => {
       if (checkWin(board) === null) {
-        await cacheManager.debitUserSurvival(
-          user.id,
-          "starFragments",
-          taruhan,
-        );
+        if (taruhan > 0) {
+          await cacheManager.debitUserSurvival(
+            user.id,
+            "starFragments",
+            taruhan,
+          );
+        }
         await interaction
           .editReply(
             renderTtt(

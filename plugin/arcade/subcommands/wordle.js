@@ -9,16 +9,19 @@ module.exports = {
   name: "wordle",
   async execute(interaction, context) {
     const { user, profile, survival, coinEmoji, nsfEmoji, sendError } = context;
-    const taruhan = interaction.options.getInteger("taruhan");
+    const taruhan = (interaction.options?.getInteger?.("taruhan")) || 0;
     const curSurv = await cacheManager.getUserSurvival(user.id);
     const curNsf = curSurv
       ? Number(curSurv.starFragments || 0)
       : Number(survival.starFragments || 0);
 
-    if (taruhan <= 0 || curNsf < taruhan) {
-      return sendError(
-        `Taruhan tidak valid atau saldo Sukamaju Koin (SC) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
-      );
+    if (taruhan > 0) {
+      if (curNsf < taruhan) {
+        return sendError(
+          `Saldo Star Fragments (NSF) tidak cukup untuk taruhan **${taruhan.toLocaleString()}**! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+        );
+      }
+      await cacheManager.debitUserSurvival(user.id, "starFragments", taruhan);
     }
 
     const targetWord =
@@ -27,12 +30,18 @@ module.exports = {
     const maxAttempts = 6;
     const gridHistory = [];
 
-    await cacheManager.debitUserSurvival(user.id, "starFragments", taruhan);
+    const desc = [
+      `Aku telah memikirkan **Kata 5 Huruf** (Bahasa Indonesia).`,
+      `Ketik tebakanmu di chat ini!`,
+      "",
+      `**Kesempatan:** ${maxAttempts - attempts}`,
+      taruhan > 0 ? `**Taruhan:** ${taruhan.toLocaleString()} ${coinEmoji} (Menang = 3x Lipat)` : `**Mode:** Arcade Game (Hadiah +25 MP)`,
+    ].join("\n");
 
     const payload = buildContainerV2({
       accentColorHex: "#2b2d31",
       title: "🟩 🟨 ⬛ Naura Wordle (ID)",
-      description: `Aku telah memikirkan **Kata 5 Huruf** (Bahasa Indonesia).\nKetik tebakanmu di chat ini!\n\n**Kesempatan:** ${maxAttempts - attempts}\n**Taruhan:** ${taruhan.toLocaleString()} ${coinEmoji} (Menang = 3x Lipat)`,
+      description: desc,
       footerText: "Ketik 5 huruf sekarang...",
     });
 
@@ -71,20 +80,28 @@ module.exports = {
       gridHistory.push(`\`${guess}\` | ${resultRow}`);
 
       if (guess === targetWord) {
-        const winMultiplier = profile.isPremium ? 6 : 3;
-        const winNsf = taruhan * winMultiplier;
+        const ArcadeEngine = require("../../../src/survival/engines/arcadeEngine");
+        await ArcadeEngine.postGame(user.id, "wordle", "win");
+
+        let rewardDesc = "🏅 **Hadiah Arcade:** +25 MP";
         profile.minigame_wordleWin += 1;
         await profile.save({ fields: ["minigame_wordleWin"] });
-        await cacheManager.incrementUserSurvival(
-          user.id,
-          "starFragments",
-          winNsf,
-        );
+
+        if (taruhan > 0) {
+          const winMultiplier = profile.isPremium ? 6 : 3;
+          const winNsf = taruhan * winMultiplier;
+          await cacheManager.incrementUserSurvival(
+            user.id,
+            "starFragments",
+            winNsf,
+          );
+          rewardDesc += ` | Menang taruhan **+${winNsf.toLocaleString()}** ${coinEmoji}!`;
+        }
 
         const winPayload = buildContainerV2({
           accentColorHex: "#22c55e",
           title: `${ui.getEmoji("celebrate") || "🎉"} TEPAT SEKALI!`,
-          description: `Target Kata: **${targetWord}**\n\n${gridHistory.join("\n")}\n\nKamu memenangkan **${winNsf.toLocaleString()}** ${coinEmoji}!`,
+          description: `Target Kata: **${targetWord}**\n\n${gridHistory.join("\n")}\n\n${rewardDesc}`,
           footerText: ui.getFooter("core"),
         });
 
@@ -94,10 +111,13 @@ module.exports = {
       }
 
       if (attempts >= maxAttempts) {
+        const ArcadeEngine = require("../../../src/survival/engines/arcadeEngine");
+        await ArcadeEngine.postGame(user.id, "wordle", "loss");
+
         const losePayload = buildContainerV2({
           accentColorHex: "#ef4444",
           title: `${ui.getEmoji("skull") || "💀"} KESEMPATAN HABIS!`,
-          description: `Target Kata yang benar adalah: **${targetWord}**\n\n${gridHistory.join("\n")}\n\nKamu kehilangan taruhanmu.`,
+          description: `Target Kata yang benar adalah: **${targetWord}**\n\n${gridHistory.join("\n")}\n\n${taruhan > 0 ? "Kamu kehilangan taruhanmu." : "Coba lagi di ronde berikutnya!"}`,
           footerText: ui.getFooter("core"),
         });
 

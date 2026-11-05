@@ -13,7 +13,7 @@ module.exports = {
   name: "trivia",
   async execute(interaction, context) {
     const { user, profile, nsfMultiplier, coinEmoji } = context;
-    const diff = interaction.options.getString("kesulitan") || "pemula";
+    const diff = (interaction.options?.getString?.("kesulitan")) || "pemula";
     const conf = rewards[diff] || rewards.pemula;
     let qData;
 

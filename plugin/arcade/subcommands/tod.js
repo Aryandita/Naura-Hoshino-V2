@@ -9,7 +9,7 @@ const geminiClient = require("../../../src/ai/geminiClient");
 module.exports = {
   name: "tod",
   async execute(interaction) {
-    const opponent = interaction.options.getUser("teman");
+    const opponent = interaction.options?.getUser?.("teman") || null;
     const initiator = interaction.user;
     let currentPlayer = initiator;
 

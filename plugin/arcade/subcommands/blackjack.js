@@ -16,34 +16,36 @@ module.exports = {
   name: "blackjack",
   async execute(interaction, context) {
     const { user, survival, coinEmoji, nsfEmoji, sendError } = context;
-    const taruhan = interaction.options.getInteger("taruhan") || 0;
+    const taruhan = (interaction.options?.getInteger?.("taruhan")) || 0;
 
-    if (taruhan < 10) {
-      return sendError("Minimal taruhan untuk Blackjack adalah **10 NSF**!");
-    }
-    if (taruhan > 50000) {
-      return sendError("Maksimal taruhan untuk Blackjack adalah **50.000 NSF**!");
-    }
+    if (taruhan > 0) {
+      if (taruhan < 10) {
+        return sendError("Minimal taruhan untuk Blackjack adalah **10 NSF**!");
+      }
+      if (taruhan > 50000) {
+        return sendError("Maksimal taruhan untuk Blackjack adalah **50.000 NSF**!");
+      }
 
-    const curSurv = await cacheManager.getUserSurvival(user.id);
-    const curNsf = curSurv
-      ? Number(curSurv.starFragments || 0)
-      : Number(survival.starFragments || 0);
+      const curSurv = await cacheManager.getUserSurvival(user.id);
+      const curNsf = curSurv
+        ? Number(curSurv.starFragments || 0)
+        : Number(survival.starFragments || 0);
 
-    if (curNsf < taruhan) {
-      return sendError(
-        `Saldo Star Fragments (NSF) tidak mencukupi untuk taruhan **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+      if (curNsf < taruhan) {
+        return sendError(
+          `Saldo Star Fragments (NSF) tidak mencukupi untuk taruhan **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
+        );
+      }
+
+      // Upfront atomic debit
+      const debitRes = await cacheManager.debitUserSurvival(
+        user.id,
+        "starFragments",
+        taruhan,
       );
-    }
-
-    // Upfront atomic debit
-    const debitRes = await cacheManager.debitUserSurvival(
-      user.id,
-      "starFragments",
-      taruhan,
-    );
-    if (!debitRes || !debitRes.ok) {
-      return sendError("Gagal memotong saldo taruhan di muka. Silakan coba lagi.");
+      if (!debitRes || !debitRes.ok) {
+        return sendError("Gagal memotong saldo taruhan di muka. Silakan coba lagi.");
+      }
     }
 
     // Initialize deck & deal

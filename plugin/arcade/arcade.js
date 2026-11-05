@@ -270,7 +270,7 @@ module.exports = {
           description: messages[result.reason] || t(lang, "arcade.daily.error"),
           footerText: "Naura Hoshino Ecosystem • Arcade System",
         }),
-        flags: MessageFlags.Ephemeral,
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     }
 
@@ -443,12 +443,17 @@ module.exports = {
       await subcommandModule.execute(interaction, context);
     } catch (err) {
       logger.error(`[Arcade] Error launching game ${gameType}:`, err.message);
+      try {
+        await arcadeContract.rewardDraw(user.id);
+      } catch (refundErr) {
+        logger.error("[Arcade] Failed to refund fee:", refundErr.message);
+      }
       return respond(interaction, {
         ...buildContainerV2({
           accentColorHex: ui.getColor("error") || "#EF4444",
           authorName: "Naura Arcade",
           title: "❌ Gagal Memulai Game",
-          description: `Terjadi kesalahan saat memulai **${gameInfo.label}**. Fee 5 MP telah dipotong.`,
+          description: `Terjadi kesalahan saat memulai **${gameInfo.label}**. Biaya 5 MP telah dikembalikan ke saldo kamu.`,
           footerText: "Naura Hoshino Ecosystem • Arcade System",
         }),
       });

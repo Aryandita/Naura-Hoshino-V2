@@ -227,25 +227,61 @@ async function handleSlashCommand(interaction, client) {
 }
 
 /**
- * Memasang wrapper defensif pada interaction.reply dan interaction.update
- * agar otomatis dialihkan ke editReply/followUp bila sudah di-defer atau terbalas,
- * mencegah galat fatal DiscordjsError InteractionAlreadyReplied di seluruh bot.
+ * Memasang wrapper defensif pada interaction.reply, interaction.update, interaction.editReply,
+ * dan interaction.followUp agar:
+ * 1. Otomatis dialihkan bila sudah di-defer atau terbalas (mencegah InteractionAlreadyReplied).
+ * 2. Memastikan MessageFlags.IsComponentsV2 tidak hilang saat payload memiliki kontainer V2.
+ * 3. Menyediakan options resolver cadangan yang aman untuk interaksi non-slash (button, select, modal).
  * @param {import('discord.js').Interaction} interaction
  * @returns {import('discord.js').Interaction}
  */
 function wrapInteractionSafe(interaction) {
   if (!interaction) return interaction;
 
+  // Polyfill options resolver cadangan agar pemanggilan get* tidak melempar TypeError
+  if (!interaction.options) {
+    interaction.options = {
+      getString: () => null,
+      getInteger: () => null,
+      getNumber: () => null,
+      getBoolean: () => null,
+      getUser: () => null,
+      getMember: () => null,
+      getChannel: () => null,
+      getRole: () => null,
+      getMentionable: () => null,
+      getAttachment: () => null,
+      getSubcommand: () => null,
+      getSubcommandGroup: () => null,
+    };
+  }
+
+  function ensureComponentsV2Flags(options) {
+    if (!options || typeof options !== "object") return options;
+    const comps = options.components;
+    if (Array.isArray(comps) && comps.length > 0) {
+      const hasV2 = comps.some(
+        (c) => c && (c.type === 17 || c.data?.type === 17 || (c.type !== 1 && c.data?.type !== 1)),
+      );
+      if (hasV2) {
+        options.flags = (options.flags || 0) | MessageFlags.IsComponentsV2;
+      }
+    }
+    return options;
+  }
+
   const originalReply = interaction.reply?.bind(interaction);
   const originalUpdate = interaction.update?.bind(interaction);
   const originalEditReply = interaction.editReply?.bind(interaction);
+  const originalFollowUp = interaction.followUp?.bind(interaction);
 
   if (originalReply) {
     interaction.reply = async function (options) {
-      if (this.deferred && !this.replied) {
+      options = ensureComponentsV2Flags(options);
+      if (this.deferred && !this.replied && typeof this.editReply === "function") {
         return await this.editReply(options);
       }
-      if (this.replied) {
+      if (this.replied && typeof this.followUp === "function") {
         return await this.followUp(options);
       }
       return await originalReply(options);
@@ -254,7 +290,8 @@ function wrapInteractionSafe(interaction) {
 
   if (originalUpdate) {
     interaction.update = async function (options) {
-      if (this.deferred || this.replied) {
+      options = ensureComponentsV2Flags(options);
+      if ((this.deferred || this.replied) && typeof this.editReply === "function") {
         return await this.editReply(options);
       }
       return await originalUpdate(options);
@@ -263,10 +300,18 @@ function wrapInteractionSafe(interaction) {
 
   if (originalEditReply) {
     interaction.editReply = async function (options) {
-      if (!this.deferred && !this.replied) {
+      options = ensureComponentsV2Flags(options);
+      if (!this.deferred && !this.replied && typeof this.reply === "function") {
         return await this.reply(options);
       }
       return await originalEditReply(options);
+    };
+  }
+
+  if (originalFollowUp) {
+    interaction.followUp = async function (options) {
+      options = ensureComponentsV2Flags(options);
+      return await originalFollowUp(options);
     };
   }
 

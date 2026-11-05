@@ -10,8 +10,8 @@ module.exports = {
   name: "typerace",
   async execute(interaction, context) {
     const { user, profile, survival, coinEmoji, nsfEmoji, sendError } = context;
-    const kesulitan = interaction.options.getString("kesulitan") || "medium";
-    const taruhan = interaction.options.getInteger("taruhan") || 0;
+    const kesulitan = (interaction.options?.getString?.("kesulitan")) || "medium";
+    const taruhan = (interaction.options?.getInteger?.("taruhan")) || 0;
 
     const curSurv = await cacheManager.getUserSurvival(user.id);
     const curNsf = curSurv

@@ -3,7 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { MessageFlags } = require("discord.js");
-const { attachAutoAcknowledgeGuard } = require("./interactionCreate");
+const { attachAutoAcknowledgeGuard, wrapInteractionSafe } = require("./interactionCreate");
 
 test("Auto-Acknowledge Guard - harus mengabaikan interaction yang null atau tidak memiliki deferReply", () => {
   const cleanup1 = attachAutoAcknowledgeGuard(null);
@@ -119,4 +119,48 @@ test("Auto-Acknowledge Guard - tidak memanggil deferReply bila interaction sudah
       resolve();
     }, 90);
   });
+});
+
+test("wrapInteractionSafe - polyfill interaction.options saat undefined", () => {
+  const buttonInteraction = {
+    customId: "arcade_daily",
+    user: { id: "123" },
+  };
+
+  wrapInteractionSafe(buttonInteraction);
+
+  assert.ok(buttonInteraction.options);
+  assert.equal(typeof buttonInteraction.options.getString, "function");
+  assert.equal(buttonInteraction.options.getString("kesulitan"), null);
+  assert.equal(buttonInteraction.options.getInteger("taruhan"), null);
+  assert.equal(buttonInteraction.options.getUser("lawan"), null);
+});
+
+test("wrapInteractionSafe - memastikan flag IsComponentsV2 otomatis disematkan pada Container V2", async () => {
+  let passedReplyOpts = null;
+  const mockInteraction = {
+    reply: async (opts) => {
+      passedReplyOpts = opts;
+    },
+  };
+
+  wrapInteractionSafe(mockInteraction);
+
+  // Simulasi payload container V2 yang salah ditimpa hanya dengan flags: Ephemeral
+  await mockInteraction.reply({
+    flags: MessageFlags.Ephemeral,
+    components: [{ type: 17, components: [] }],
+  });
+
+  assert.ok(passedReplyOpts);
+  assert.equal(
+    passedReplyOpts.flags & MessageFlags.IsComponentsV2,
+    MessageFlags.IsComponentsV2,
+    "Flag IsComponentsV2 harus aktif saat components bertipe 17",
+  );
+  assert.equal(
+    passedReplyOpts.flags & MessageFlags.Ephemeral,
+    MessageFlags.Ephemeral,
+    "Flag Ephemeral tetap dipertahankan",
+  );
 });

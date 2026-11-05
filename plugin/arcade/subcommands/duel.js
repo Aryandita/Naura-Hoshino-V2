@@ -10,10 +10,10 @@ module.exports = {
   name: "duel",
   async execute(interaction, context) {
     const { user, survival, coinEmoji, nsfEmoji, sendError } = context;
-    const opponent = interaction.options.getUser("lawan");
-    const taruhan = interaction.options.getInteger("taruhan") || 0;
+    const opponent = interaction.options?.getUser?.("lawan") || null;
+    const taruhan = (interaction.options?.getInteger?.("taruhan")) || 0;
 
-    if (!opponent) return sendError("Harap tentukan pemain yang ingin kamu tantang duel!");
+    if (!opponent) return sendError("Harap tentukan pemain yang ingin kamu tantang duel! Contoh: `/arcade play game:duel lawan:@user`");
     if (opponent.bot) return sendError("Kamu tidak bisa menantang mesin/bot!");
     if (opponent.id === user.id) return sendError("Kamu tidak bisa menantang dirimu sendiri!");
 

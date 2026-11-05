@@ -9,7 +9,7 @@ module.exports = {
   name: "tebakkata",
   async execute(interaction, context) {
     const { user, nsfMultiplier, coinEmoji } = context;
-    const diff = interaction.options.getString("kesulitan") || "mudah";
+    const diff = (interaction.options?.getString?.("kesulitan")) || "mudah";
     const words = anagramDB[diff] || anagramDB.mudah;
     const targetWord = words[Math.floor(Math.random() * words.length)];
 
