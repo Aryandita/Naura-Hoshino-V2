@@ -3103,3 +3103,44 @@ select option:hover, select option:checked {
   color: #f87171 !important;
   transform: scale(1.1) !important;
 }
+
+/* -- AI Tiering Status Badges -- */
+.ai-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--r-full, 9999px);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  letter-spacing: 0.02em;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.ai-tier-badge--free {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.15);
+}
+
+.ai-tier-badge--vip {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.18) 0%, rgba(192, 132, 252, 0.22) 100%);
+  color: #f472b6;
+  border: 1px solid rgba(244, 114, 182, 0.45);
+  box-shadow: 0 0 16px rgba(244, 114, 182, 0.3), inset 0 0 8px rgba(244, 114, 182, 0.15);
+  animation: vipPulseGlow 3s infinite ease-in-out;
+}
+
+@keyframes vipPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(244, 114, 182, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(244, 114, 182, 0.55);
+    border-color: rgba(244, 114, 182, 0.7);
+  }
+}
+

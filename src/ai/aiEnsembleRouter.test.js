@@ -15,15 +15,18 @@ test("AiEnsembleRouter - Task Types & Routing Map", () => {
   assert.deepEqual(router.routingMap[TASK_TYPES.GENERAL_CHAT], [
     "gemini",
     "groq",
+    "openrouter",
     "ollama",
   ]);
   assert.deepEqual(router.routingMap[TASK_TYPES.TACTICAL_REASONING], [
     "groq",
     "gemini",
+    "openrouter",
     "ollama",
   ]);
   assert.deepEqual(router.routingMap[TASK_TYPES.VISION_MULTIMODAL], [
     "gemini",
+    "openrouter",
   ]);
 });
 
@@ -92,6 +95,7 @@ test("AiEnsembleRouter - Seamless Failover Logic", async () => {
   const result = await router.generate({
     taskType: TASK_TYPES.TACTICAL_REASONING,
     prompt: "Siapa yang bersalah dalam perkara ini?",
+    isPremium: true,
   });
 
   assert.equal(result.provider, "gemini", "Harus berhasil failover ke gemini");
@@ -114,6 +118,7 @@ test("AiEnsembleRouter - Graceful Degradation Saat Semua Provider Gagal", async 
   const result = await router.generate({
     taskType: TASK_TYPES.VISION_MULTIMODAL,
     prompt: "Jelaskan gambar ini",
+    isPremium: true,
   });
 
   assert.ok(result, "Harus mengembalikan balasan fallback");

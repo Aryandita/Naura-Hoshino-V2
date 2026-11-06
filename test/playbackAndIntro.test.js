@@ -218,17 +218,20 @@ test("R2: Pembuatan dan penyimpanan audio intro lokal serta pemutaran mendahului
     assert.ok(fs.existsSync(localSavedPath), "File intro harus benar-benar ada di disk lokal");
     assert.ok(localSavedPath.includes(path.join("assets", "audio", "dj", "intro")), "File harus disimpan di assets/audio/dj/intro");
 
-    // 2. Verifikasi intro diputar lewat voice native, bukan sebagai track Lavalink.
-    //    Audio harus tersedia sebagai buffer/path agar VoiceManager bisa memutarnya
-    //    langsung tanpa membebani node Lavalink.
+    // 2. Verifikasi intro diselesaikan sebagai track Lavalink HTTP stream
+    //    agar Lavalink memutar intro langsung di koneksi voice yang sama tanpa konflik sesi.
     assert.ok(
       Buffer.isBuffer(introResult.audioBuffer),
-      "Intro harus menyediakan audioBuffer untuk voice native",
+      "Intro harus menyediakan audioBuffer untuk fallback voice",
+    );
+    assert.ok(
+      introResult.ttsTrack,
+      "Intro harus diselesaikan sebagai track Lavalink HTTP stream",
     );
     assert.equal(
-      introResult.ttsTrack,
-      undefined,
-      "Intro tidak boleh lagi dibuat sebagai track Lavalink",
+      introResult.ttsTrack.isTTS,
+      true,
+      "Track intro harus bertanda isTTS",
     );
 
     // 3. Lagu utama masuk antrean sendirian (intro sudah diputar native sebelumnya)

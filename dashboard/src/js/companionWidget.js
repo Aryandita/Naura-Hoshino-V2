@@ -326,9 +326,15 @@
             <div class="naura-card-sub" id="nauraCardStatus">
               <span style="color:#34d399;">●</span> Live AI Companion
             </div>
+            <div class="naura-card-tier-slot" id="nauraCardTierSlot" style="margin-top:3px;">
+              <span class="ai-tier-badge ai-tier-badge--free" style="font-size:9px;padding:2px 7px;">🟢 OpenRouter Engine (Free Tier)</span>
+            </div>
           </div>
         </div>
         <div class="naura-card-actions">
+          <a href="/src/pages/chat.html" class="naura-btn-icon" title="Buka AI Chat Terminal" target="_self">
+            <i class="fa-solid fa-comments"></i>
+          </a>
           <a href="/lounge" class="naura-btn-icon" title="Buka Panggung 3D Lounge" target="_self">
             <i class="fa-solid fa-cube"></i>
           </a>
@@ -543,10 +549,42 @@
     }
   }
 
+  function updateCompanionAiTier(customSession = null) {
+    const tierSlot = document.getElementById('nauraCardTierSlot');
+    if (!tierSlot) return;
+
+    let session = customSession;
+    if (!session) {
+      try {
+        const stored = sessionStorage.getItem('naura_auth_session');
+        if (stored) session = JSON.parse(stored);
+      } catch (_) {}
+    }
+
+    const isVip = Boolean(
+      session && (
+        session.isOwner ||
+        session.isPremium ||
+        ['tier1', 'tier2', 'tier3', 'vip', 'premium', 'owner', 'administrator', 'booster'].includes(
+          String(session.premiumTier || session.premium_tier || session.role || session.roleTag || '').toLowerCase()
+        )
+      )
+    );
+
+    if (isVip) {
+      tierSlot.innerHTML = '<span class="ai-tier-badge ai-tier-badge--vip" style="font-size:9px;padding:2px 7px;">💎 Ultra Fast Groq / Gemini (VIP Premium)</span>';
+      tierSlot.setAttribute('title', 'Jalur prioritas VIP: Respons kilat Gemini 2.5 Flash & Groq');
+    } else {
+      tierSlot.innerHTML = '<span class="ai-tier-badge ai-tier-badge--free" style="font-size:9px;padding:2px 7px;">🟢 OpenRouter Engine (Free Tier)</span>';
+      tierSlot.setAttribute('title', 'Jalur standard: Didukung OpenRouter Cascade LLaMA 3.3 70B');
+    }
+  }
+
   function toggleCard() {
     isOpen = !isOpen;
     if (isOpen) {
       updatePageContext();
+      updateCompanionAiTier();
       adjustCardPlacement();
       card.classList.add('is-open');
       chatInput.focus();
@@ -652,6 +690,10 @@
   // Pulihkan posisi saat inisialisasi
   restorePosition();
   updatePageContext();
+  updateCompanionAiTier();
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'naura_auth_session') updateCompanionAiTier();
+  });
 
   btnClose.addEventListener('click', () => {
     isOpen = false;
@@ -757,6 +799,12 @@
         setMascotMood(data.mood || 'Happy', data.status || 'Aktif Menemani ✨');
         appendMsg('bot', data.reply, voiceEnabled);
         chatHistory.push({ role: 'model', content: data.reply });
+        if (data.tier) {
+          updateCompanionAiTier({
+            premiumTier: data.tier,
+            isPremium: data.tier === 'vip' || data.tier === 'premium'
+          });
+        }
         if (window.soundManager && typeof window.soundManager.playPop === 'function') {
           window.soundManager.playPop();
         }

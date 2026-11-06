@@ -11,6 +11,7 @@ const redisManager = require("../managers/redisManager");
 const { logger } = require("../managers/logger");
 const { getMarketOverview } = require("../survival/engines/commodityMarketEngine");
 const designTokens = require("../config/tokens/designTokens");
+const { defaultEventNarrator, WorldEventNarrator } = require("../services/worldEventNarrator");
 
 /**
  * Rekam aktivitas pesan chat harian ke buffer Redis.
@@ -312,48 +313,75 @@ async function publishMorningChronicle(client) {
 }
 
 /**
- * Generate cinematic narration for world events (from pending_plugin/worldEventNarrator)
- * @param {object} eventData - { type, participants, outcome, location }
- * @param {string} narrativeStyle - "epic", "mysterious", "cheerful", "dramatic"
- * @returns {{ narration: string, title: string, promptPrepared: string, readyForAiActivation: boolean }}
+ * Generate cinematic narration for world events (powered by WorldEventNarrator & OpenRouter)
+ * @param {object} eventData - { type, participants, outcome, location, userId, tier }
+ * @param {string} [narrativeStyle="epic"] - "epic", "mysterious", "cheerful", "dramatic", "poetic"
+ * @returns {{ narration: string, title: string, promptPrepared: string, readyForAiActivation: boolean, then?: Function }}
  */
 function generateCinematicNarration(eventData = {}, narrativeStyle = "epic") {
   try {
     const eventType = eventData.type || "generic";
     const participants = eventData.participants || [];
     const location = eventData.location || "Naura Wilds";
-    const participantList = participants.length > 0 ? participants.slice(0, 3).join(", ") : "para petualang";
+    const outcome = eventData.outcome || "unknown";
 
-    let promptTemplate = `Ubah log peristiwa menjadi narasi sinematik RPG.\n`;
-    promptTemplate += `Gaya: ${narrativeStyle}. Event: ${eventType}. Lokasi: ${location}.\n`;
-    promptTemplate += `Partisipan: ${participantList}. Buat 2-3 paragraf narasi dalam bahasa Indonesia.`;
+    const baseNarration = defaultEventNarrator._generateSimulatedNarration(
+      eventType,
+      participants,
+      outcome,
+      narrativeStyle,
+      location
+    );
 
-    const narratives = {
-      boss_defeat: {
-        epic: { title: `Kemenangan Gemilang di ${location}`, text: `Di bawah langit kelam ${location}, ${participantList} berdiri tegak menghadapi sang tiran. Sejarah akan mencatat hari ini sebagai awal era baru.` },
-        dramatic: { title: `Pertarungan Terakhir di ${location}`, text: `Darah dan keringat membasahi tanah ${location}. Dengan serangan terakhir yang menentukan, kegelapan pun sirna.` },
-      },
-      festival: {
-        cheerful: { title: `Kegembiraan Melanda ${location}`, text: `Sorak sorai terdengar di seluruh penjuru ${location}! ${participantList} memimpin perayaan dengan tarian dan nyanyian.` },
-      },
-      generic: {
-        epic: { title: `Catatan dari ${location}`, text: `Di ${location}, sebuah peristiwa penting telah tercatat. ${participantList} terlibat dalam kejadian yang mengubah sejarah.` },
-      },
-    };
+    const participantList = participants.length > 0
+      ? participants.slice(0, 3).join(", ")
+      : "para petualang";
 
-    const typeNarratives = narratives[eventType] || narratives.generic;
-    const styleNarrative = typeNarratives[narrativeStyle] || Object.values(typeNarratives)[0];
+    const promptTemplate = `Ubah log peristiwa menjadi narasi sinematik RPG.\nGaya: ${narrativeStyle}. Event: ${eventType}. Lokasi: ${location}.\nPartisipan: ${participantList}. Buat 2-3 paragraf narasi dalam bahasa Indonesia.`;
 
-    return {
-      narration: styleNarrative?.text || `Peristiwa terjadi di ${location}.`,
-      title: styleNarrative?.title || "Peristiwa Dunia",
+    const baseResult = {
+      narration: (baseNarration && baseNarration.text) || `Peristiwa terjadi di ${location}.`,
+      title: (baseNarration && baseNarration.title) || "Peristiwa Dunia",
       promptPrepared: promptTemplate,
       readyForAiActivation: true,
     };
+
+    // Thenable to allow `await generateCinematicNarration(...)` to fetch AI-generated narration
+    baseResult.then = (resolve) => {
+      defaultEventNarrator
+        .narrateWorldEvent(eventData, narrativeStyle)
+        .then((aiRes) => {
+          resolve({
+            narration: aiRes.narration || aiRes.text || baseResult.narration,
+            title: aiRes.title || baseResult.title,
+            promptPrepared: aiRes.promptPrepared || baseResult.promptPrepared,
+            readyForAiActivation: true,
+            isAiGenerated: aiRes.isAiGenerated,
+          });
+        })
+        .catch(() => resolve(baseResult));
+    };
+
+    return baseResult;
   } catch (error) {
     logger.error("[ServerChronicle:CinematicNarration] Error:", error);
-    return { narration: "Sebuah peristiwa telah terjadi...", title: "Peristiwa Dunia", promptPrepared: "", readyForAiActivation: false };
+    return {
+      narration: "Sebuah peristiwa telah terjadi...",
+      title: "Peristiwa Dunia",
+      promptPrepared: "",
+      readyForAiActivation: false,
+    };
   }
+}
+
+/**
+ * Async version of generateCinematicNarration
+ * @param {object} eventData
+ * @param {string} [narrativeStyle="epic"]
+ * @returns {Promise<{ narration: string, title: string, promptPrepared: string, readyForAiActivation: boolean, isAiGenerated?: boolean }>}
+ */
+async function generateCinematicNarrationAsync(eventData = {}, narrativeStyle = "epic") {
+  return Promise.resolve(generateCinematicNarration(eventData, narrativeStyle));
 }
 
 module.exports = {
@@ -362,4 +390,6 @@ module.exports = {
   synthesizeChronicle,
   publishMorningChronicle,
   generateCinematicNarration,
+  generateCinematicNarrationAsync,
+  WorldEventNarrator,
 };

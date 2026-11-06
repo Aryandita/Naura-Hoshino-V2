@@ -534,8 +534,8 @@
         },
         {
           id: "ai",
-          name: "AI Ensemble (Gemini + Groq)",
-          desc: "Circuit Breaker CLOSED · Rate OK",
+          name: "AI Ensemble (OpenRouter Free / Gemini+Groq VIP)",
+          desc: "Dynamic Tiering · Free Cascade & VIP Fast-Track",
           icon: '<i class="fa-solid fa-brain" style="color:#c084fc;"></i>',
           iconBg: "var(--violet-dim)",
           iconBorder: "var(--border-violet)",
@@ -549,7 +549,7 @@
             'operational','operational','operational','operational','operational',
             'operational','operational','operational'
           ],
-          incidentDesc: "T-14h: HTTP 429 Rate Limit Terlampaui (Circuit Breaker OPEN, beralih ke Groq). Saat ini pulih."
+          incidentDesc: "Dynamic Tiering aktif: Jalur standard diarahkan ke OpenRouter Free Cascade (LLaMA 3.3 70B, DeepSeek V3, Qwen 2.5), member VIP dialokasikan ke Google Gemini 2.5 Flash & Groq LLaMA 3.3 70B."
         }
       ];
 
@@ -586,6 +586,12 @@
                 ${svc.status === 'offline' ? '<span style="font-size:10px;font-family:var(--font-mono);color:#ef4444;font-weight:700;animation:glow-pulse 1s infinite;">[OUTAGE]</span>' : ''}
               </div>
               <div style="font-size:11px;color:var(--text-muted);">${svc.desc}</div>
+              ${svc.id === 'ai' ? `
+                <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+                  <span class="ai-tier-badge ai-tier-badge--free" style="font-size:10px;padding:2px 8px;">🟢 OpenRouter Engine (Free Tier)</span>
+                  <span class="ai-tier-badge ai-tier-badge--vip" style="font-size:10px;padding:2px 8px;">💎 Ultra Fast Groq / Gemini (VIP Premium)</span>
+                </div>
+              ` : ''}
               <div class="uptime-bar" id="bar_${svc.id}" style="margin-top:7px;${tickResolution === 90 ? 'gap:2px;' : 'gap:3px;'}"></div>
             </div>
             <div style="text-align:right;flex-shrink:0;">

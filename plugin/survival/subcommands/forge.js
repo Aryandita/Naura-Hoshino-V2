@@ -117,6 +117,10 @@ module.exports = {
             .setStyle(ButtonStyle.Primary)
             .setEmoji("🔨"),
           new ButtonBuilder()
+            .setCustomId("forge_ai_advisor")
+            .setLabel("💡 Rekomendasi Resep AI")
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
             .setCustomId("forge_salvage_all")
             .setLabel("Bongkar Semua Alat Rusak (0%)")
             .setStyle(ButtonStyle.Danger)
@@ -145,6 +149,55 @@ module.exports = {
     });
 
     collector.on("collect", async (i) => {
+      if (i.customId === "forge_ai_advisor") {
+        await i.deferUpdate().catch(() => {});
+        const { defaultCraftingAdvisor } = require("../../../src/services/smartCraftingAdvisor");
+        const inventoryItems = safeParseInventory(profile.inventory);
+        const inventoryMap = {};
+        for (const item of inventoryItems) {
+          if (!item) continue;
+          const name = item.name || item.id;
+          inventoryMap[name] = (inventoryMap[name] || 0) + (item.amount || 1);
+        }
+
+        const advisorRes = await defaultCraftingAdvisor.generateCraftingSuggestions(
+          user.id,
+          inventoryMap,
+          { level: profile.level || 1, tier: profile.premium_tier || "free" }
+        );
+
+        let snippet = "";
+        if (advisorRes && advisorRes.suggestions && advisorRes.suggestions.length > 0) {
+          const sugLines = advisorRes.suggestions
+            .map((s, idx) => {
+              const matStr =
+                typeof s.materials === "object" && s.materials !== null
+                  ? Object.entries(s.materials)
+                      .map(([k, v]) => `${k} x${v}`)
+                      .join(", ")
+                  : String(s.materials || "-");
+              return `**${idx + 1}. ${s.name}** [${s.rarity || "Common"}]\n   - Bahan: \`${matStr}\`\n   - Khasiat: *${s.benefit || "-"}*`;
+            })
+            .join("\n");
+
+          snippet = [
+            `💡 **Rekomendasi Resep Pandai Besi (AI Advisor):**`,
+            sugLines,
+            "",
+            `💬 *${advisorRes.explanation}*`,
+            advisorRes.trendBonus ? `🔥 *Sedang populer di kalangan petualang server!*` : "",
+          ]
+            .filter(Boolean)
+            .join("\n");
+        } else {
+          snippet = `💡 **Rekomendasi Resep AI:** ${advisorRes.explanation || "Belum ada rekomendasi yang sesuai dengan material di tas Anda."}`;
+        }
+
+        currentPayload = buildPayload(snippet);
+        await i.editReply(currentPayload).catch(() => {});
+        return;
+      }
+
       if (i.customId === "forge_open_craft") {
         await i.deferUpdate().catch(() => {});
         collector.stop("navigated");

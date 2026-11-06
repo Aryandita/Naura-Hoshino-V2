@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.5.1] - 2026-11-06
+
+### 🚀 Added
+- **AI Tiering Routing & OpenRouter Free Tier Cascade**:
+  - Tiered routing engine in `src/ai/aiEnsembleRouter.js` and `src/ai/aiRouterManager.js` separating standard free users and VIP premium members.
+  - OpenRouter Free Tier model cascade prioritizing `meta-llama/llama-3.3-70b-instruct:free`, with automated failover to `deepseek/deepseek-chat:free`, `qwen/qwen-2.5-72b-instruct:free`, and `mistralai/mistral-small-24b-instruct-2501:free`.
+  - VIP Premium fast-track routing utilizing Google Gemini 2.5 Flash and Groq LLaMA 3.3 70B with sub-second response times.
+  - Vision Multimodal Option A Guard restricting heavy image analysis to VIP members with graceful fallback guidance.
+- **In-Game Minecraft Server Verification Bridge (`/naura link`)**:
+  - Bi-directional verification system linking Discord accounts to Minecraft Java/Bedrock player identities.
+  - Dedicated Skript script `assets/minecraft/naura_link.sk` exposing the in-game command `/naura link <kode>`.
+  - Webhook backend endpoint `POST /api/minecraft/verify` in `dashboard/routes/api.js` validating 6-digit codes with 15-minute TTL, granting +500 Star Fragments bonus rewards, and dispatching Discord confirmation DMs.
+  - Administrator command `/minecraft admin-verify` for manual server verification.
+  - Comprehensive deployment guide in `docs/MINECRAFT_SETUP.md` covering Paper, Purpur, Spigot, firewall configuration, and reverse proxy setup.
+- **Spotify Live Lyrics Restoration & Dual Engine Integration**:
+  - Complete visual overhaul of `src/music/LyricsManager.js` featuring Spotify design tokens (accent `#1DB954`, dynamic timeline progress bar, and bold active line highlighting).
+  - Interactive Discord Components V2 control rows for pause, resume, synchronization, and full-text paged view.
+  - Dual engine architecture integrating LRCLIB for real-time synchronized karaoke lyrics and official Musixmatch API for comprehensive plain lyrics coverage.
+
+### 🛡️ Bug Fixes & Stabilities
+- **DiscordAPIError 50035 Resolution on `/minecraft`**:
+  - Resolved invalid form body errors on `/minecraft ping`, `/minecraft player`, and `/minecraft stats` by bundling `bannerAttachmentName` references and physical `AttachmentBuilder` buffers atomically inside `buildSuccessContainerV2`.
+  - Added defensive guards for canvas worker timeouts and missing buffer fallbacks.
+- **Audio Gateway Conflict Elimination (Native Voice vs Lavalink Poru)**:
+  - Implemented `voiceConnectionGuard` mutex in `src/managers/voiceManager.js` and `src/managers/musicManager.js` to coordinate gateway access between `@discordjs/voice` and Poru.
+  - Enhanced `src/services/aiDjTrackService.js` to resolve AI DJ voice intros as internal HTTP streams through Lavalink whenever a player is active, preventing session collisions and voice dropouts.
+
+---
+
 ## [2.5.0] - 2026-11-04
 
 ### 🚀 Added

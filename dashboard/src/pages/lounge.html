@@ -506,6 +506,17 @@
                   </button>
                 </div>
 
+                <!-- AI Engine Tier Status Bar -->
+                <div class="ai-tier-bar" style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:rgba(0,0,0,0.25);border-radius:var(--r-md);border:1px solid var(--border-subtle);margin-bottom:8px;">
+                  <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                    <i class="fa-solid fa-microchip" style="color:var(--accent-cyan);"></i>
+                    <span>AI Engine Status:</span>
+                  </div>
+                  <div id="loungeAiTierBadgeContainer">
+                    <span class="ai-tier-badge ai-tier-badge--free" id="loungeAiTierBadge">🟢 OpenRouter Engine (Free Tier)</span>
+                  </div>
+                </div>
+
                 <!-- Chat Stream -->
                 <div class="chat-stream" id="loungeChatStream">
                   <div class="chat-bubble-bot">
@@ -965,6 +976,13 @@
 
             // Putar Suara TTS
             await speakText(data.reply);
+
+            if (data.tier) {
+              updateLoungeAiTier({
+                premiumTier: data.tier,
+                isPremium: data.tier === "vip" || data.tier === "premium",
+              });
+            }
           }
         } catch (_) {
           const errDiv = document.createElement("div");
@@ -1037,15 +1055,53 @@
         }
       });
 
+      function updateLoungeAiTier(customSession = null) {
+        const badgeElem = document.getElementById("loungeAiTierBadge");
+        if (!badgeElem) return;
+
+        let session = customSession;
+        if (!session) {
+          try {
+            const stored = sessionStorage.getItem("naura_auth_session");
+            if (stored) session = JSON.parse(stored);
+          } catch (_) {}
+        }
+
+        const isVip = Boolean(
+          session && (
+            session.isOwner ||
+            session.isPremium ||
+            ["tier1", "tier2", "tier3", "vip", "premium", "owner", "administrator", "booster"].includes(
+              String(session.premiumTier || session.premium_tier || session.role || session.roleTag || "").toLowerCase()
+            )
+          )
+        );
+
+        if (isVip) {
+          badgeElem.className = "ai-tier-badge ai-tier-badge--vip";
+          badgeElem.innerHTML = "💎 Ultra Fast Groq / Gemini (VIP Premium)";
+          badgeElem.setAttribute("title", "Jalur prioritas VIP: Respons kilat Gemini 2.5 Flash & Groq");
+        } else {
+          badgeElem.className = "ai-tier-badge ai-tier-badge--free";
+          badgeElem.innerHTML = "🟢 OpenRouter Engine (Free Tier)";
+          badgeElem.setAttribute("title", "Jalur standard: Didukung OpenRouter Cascade LLaMA 3.3 70B");
+        }
+      }
+
       // Init on load
       document.addEventListener("DOMContentLoaded", () => {
         initLounge3D();
         initAudioWave();
+        updateLoungeAiTier();
       });
       if (document.readyState === "complete" || document.readyState === "interactive") {
         initLounge3D();
         initAudioWave();
+        updateLoungeAiTier();
       }
+      window.addEventListener("storage", (e) => {
+        if (e.key === "naura_auth_session") updateLoungeAiTier();
+      });
     </script>
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">

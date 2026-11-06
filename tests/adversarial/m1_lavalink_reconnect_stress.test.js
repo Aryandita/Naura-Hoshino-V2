@@ -209,6 +209,12 @@ describe("Milestone M1 Empirical Challenge: Lavalink Cluster & Reconnection Spam
         defaultPlatform: "scsearch",
         clientName: "Naura-Hoshino-Music-System/3.1",
       });
+      const createdNodes = new Set();
+      const origSet = poru.nodes.set.bind(poru.nodes);
+      poru.nodes.set = (name, node) => {
+        createdNodes.add(node);
+        return origSet(name, node);
+      };
 
       const connectedNodes = new Set();
       poru.on("nodeConnect", (node) => {
@@ -232,15 +238,19 @@ describe("Milestone M1 Empirical Challenge: Lavalink Cluster & Reconnection Spam
         poru.removeAllListeners();
         mockClient.removeAllListeners();
 
-        for (const node of poru.nodes.values()) {
+        for (const node of createdNodes) {
           try {
-            node.reconnectTries = 0;
+            node.reconnectTries = -1;
+            node.reconnect = async () => {};
             if (node.reconnectAttempt) {
               clearTimeout(node.reconnectAttempt);
               node.reconnectAttempt = null;
             }
             if (node.ws) {
               node.ws.on("error", () => {});
+              if (node.ws._socket && typeof node.ws._socket.destroy === "function") {
+                node.ws._socket.destroy();
+              }
               node.ws.terminate();
               node.ws = null;
             }
@@ -290,8 +300,25 @@ describe("Milestone M1 Empirical Challenge: Lavalink Cluster & Reconnection Spam
         library: "discord.js",
         defaultPlatform: "scsearch",
       });
+      const createdNodes = new Set();
+      const origSet = poru.nodes.set.bind(poru.nodes);
+      poru.nodes.set = (name, node) => {
+        createdNodes.add(node);
+        node.reconnect = async () => {};
+        node.reconnectTries = -1;
+        return origSet(name, node);
+      };
 
       poru.on("nodeError", (node, err) => {
+        if (node) {
+          createdNodes.add(node);
+          node.reconnect = async () => {};
+          node.reconnectTries = -1;
+          if (node.reconnectAttempt) {
+            clearTimeout(node.reconnectAttempt);
+            node.reconnectAttempt = null;
+          }
+        }
         capturedErrors.push({
           name: node?.options?.name,
           message: err?.message || String(err),
@@ -305,15 +332,19 @@ describe("Milestone M1 Empirical Challenge: Lavalink Cluster & Reconnection Spam
         poru.removeAllListeners();
         mockClient.removeAllListeners();
 
-        for (const node of poru.nodes.values()) {
+        for (const node of createdNodes) {
           try {
-            node.reconnectTries = 0;
+            node.reconnectTries = -1;
+            node.reconnect = async () => {};
             if (node.reconnectAttempt) {
               clearTimeout(node.reconnectAttempt);
               node.reconnectAttempt = null;
             }
             if (node.ws) {
               node.ws.on("error", () => {});
+              if (node.ws._socket && typeof node.ws._socket.destroy === "function") {
+                node.ws._socket.destroy();
+              }
               node.ws.terminate();
               node.ws = null;
             }
@@ -337,17 +368,25 @@ describe("Milestone M1 Empirical Challenge: Lavalink Cluster & Reconnection Spam
   after(() => {
     http.globalAgent.destroy();
     https.globalAgent.destroy();
-    for (const handle of process._getActiveHandles()) {
-      if (
-        handle &&
-        typeof handle.destroy === "function" &&
-        handle !== process.stdout &&
-        handle !== process.stderr
-      ) {
-        try {
-          handle.destroy();
-        } catch (_) {}
+    try {
+      if (process.stdin && typeof process.stdin.unref === "function") {
+        process.stdin.unref();
       }
+      if (typeof process._getActiveHandles === "function") {
+        const handles = process._getActiveHandles();
+        for (const handle of handles) {
+          if (
+            handle &&
+            typeof handle.unref === "function" &&
+            handle !== process.stdout &&
+            handle !== process.stderr
+          ) {
+            handle.unref();
+          }
+        }
+      }
+    } catch {
+      // Ignore in teardown
     }
   });
 });

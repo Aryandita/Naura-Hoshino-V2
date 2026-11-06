@@ -4,6 +4,7 @@ const redisManager = require("../managers/redisManager");
 const cacheManager = require("../managers/cacheManager");
 const { logger } = require("../managers/logger");
 const worldEventEngine = require("../survival/engines/worldEventEngine");
+const { DynamicMerchantTrader } = require("./dynamicMerchantTrader");
 
 const COMMODITIES = {
   GOLDEN_WOOD: {
@@ -529,11 +530,11 @@ class TradeEngine {
   }
 
   /**
-   * Generate dynamic merchant personality dialogue (from pending_plugin/dynamicMerchantTrader)
+   * Generate dynamic merchant personality dialogue (powered by DynamicMerchantTrader & OpenRouter)
    * @param {string} merchantType - "general", "weapon", "food", "rare"
    * @param {string} tradeAction - "buy", "sell", "bargain", "inquire"
-   * @param {object} contextData - { playerName, reputation, transactionCount }
-   * @returns {{ dialogue: string, promptPrepared: string, readyForAiActivation: boolean }}
+   * @param {object} contextData - { playerName, reputation, transactionCount, userId, itemName, basePrice, tier }
+   * @returns {{ dialogue: string, merchantName: string, promptPrepared: string, readyForAiActivation: boolean, then?: Function }}
    */
   generateMerchantDialogue(merchantType, tradeAction, contextData = {}) {
     try {
@@ -559,12 +560,42 @@ class TradeEngine {
         inquire: `Barang itu? Kualitas terbaik dari supplier terpercaya!`,
       };
 
-      return {
+      const trader = new DynamicMerchantTrader(`trader_${merchantType}`, {
+        name: merchant.name,
+        specialty: merchantType,
+        greetingStyle: merchant.style,
+      });
+
+      const baseResult = {
         dialogue: dialogues[tradeAction] || "Ada yang bisa saya bantu?",
         merchantName: merchant.name,
         promptPrepared: promptTemplate,
         readyForAiActivation: true,
       };
+
+      // Thenable to allow `await tradeEngine.generateMerchantDialogue(...)` to trigger OpenRouter AI dialogue
+      baseResult.then = (resolve) => {
+        trader
+          .generateTradeInteraction(
+            contextData.userId || "guest",
+            tradeAction,
+            { name: contextData.itemName || "barang", basePrice: contextData.basePrice || 100 },
+            { reputation, tier: contextData.tier }
+          )
+          .then((aiRes) => {
+            resolve({
+              dialogue: aiRes.dialogue || aiRes.simulatedDialogue || baseResult.dialogue,
+              merchantName: merchant.name,
+              promptPrepared: aiRes.promptPrepared || baseResult.promptPrepared,
+              readyForAiActivation: true,
+              adjustedPrice: aiRes.adjustedPrice,
+              isAiGenerated: aiRes.isAiGenerated,
+            });
+          })
+          .catch(() => resolve(baseResult));
+      };
+
+      return baseResult;
     } catch (error) {
       logger.error("[TradeEngine:MerchantDialogue] Error:", error);
       return {
@@ -574,6 +605,17 @@ class TradeEngine {
         readyForAiActivation: false,
       };
     }
+  }
+
+  /**
+   * Async generator for merchant dialogue via DynamicMerchantTrader
+   * @param {string} merchantType
+   * @param {string} tradeAction
+   * @param {object} contextData
+   * @returns {Promise<{ dialogue: string, merchantName: string, promptPrepared: string, readyForAiActivation: boolean, adjustedPrice?: number, isAiGenerated?: boolean }>}
+   */
+  async generateMerchantDialogueAsync(merchantType, tradeAction, contextData = {}) {
+    return Promise.resolve(this.generateMerchantDialogue(merchantType, tradeAction, contextData));
   }
 }
 

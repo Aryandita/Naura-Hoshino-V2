@@ -69,6 +69,7 @@ export default defineConfig({
             admin: resolve(__dirname, "src/pages/admin.html"),
             treasury: resolve(__dirname, "src/pages/treasury.html"),
             player: resolve(__dirname, "src/pages/player.html"),
+            chat: resolve(__dirname, "src/pages/chat.html"),
           },
     },
     // Chunk terpisah agar model Three.js tidak disertakan di halaman yang tidak perlu

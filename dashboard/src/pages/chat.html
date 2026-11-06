@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neural Chat & AI Companion | Naura OS</title>
+    <meta name="description" content="Naura Hoshino AI Neural Chat Terminal with multi-tier routing (OpenRouter Free Cascade & VIP Ultra Fast Gemini/Groq)." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .chat-page-layout {
+        display: flex;
+        flex-direction: column;
+        height: calc(100dvh - 110px);
+        min-height: 580px;
+        max-width: 1080px;
+        margin: 0 auto;
+        gap: 16px;
+      }
+
+      .chat-terminal-card {
+        flex: 1;
+        background: radial-gradient(circle at top right, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.85) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-2xl);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), 0 0 30px rgba(244, 114, 182, 0.08);
+      }
+
+      .chat-terminal-header {
+        padding: 16px 20px;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .chat-terminal-identity {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .chat-avatar-frame {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 2px solid var(--primary);
+        box-shadow: 0 0 14px var(--primary-glow);
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #0f172a;
+      }
+
+      .chat-avatar-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .chat-identity-title {
+        font-family: var(--font-heading);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .chat-identity-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 2px;
+      }
+
+      .chat-stream-box {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        scroll-behavior: smooth;
+      }
+
+      .chat-message-row {
+        display: flex;
+        flex-direction: column;
+        max-width: 82%;
+        font-size: 13px;
+        line-height: 1.6;
+        animation: chatMsgFadeIn 0.25s ease-out;
+      }
+
+      .chat-message-row.is-bot {
+        align-self: flex-start;
+      }
+
+      .chat-message-row.is-user {
+        align-self: flex-end;
+      }
+
+      @keyframes chatMsgFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .chat-message-bubble {
+        padding: 12px 18px;
+        border-radius: 18px;
+        word-wrap: break-word;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      }
+
+      .chat-message-row.is-bot .chat-message-bubble {
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid rgba(244, 114, 182, 0.25);
+        color: var(--text-primary);
+        border-bottom-left-radius: 4px;
+      }
+
+      .chat-message-row.is-user .chat-message-bubble {
+        background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
+      }
+
+      .chat-message-meta {
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-top: 4px;
+        padding: 0 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .chat-chips-bar {
+        padding: 8px 16px;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        border-top: 1px solid var(--border-subtle);
+        background: rgba(11, 17, 32, 0.65);
+        scrollbar-width: none;
+      }
+
+      .chat-chips-bar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .chat-prompt-chip {
+        padding: 5px 12px;
+        border-radius: var(--r-full);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all var(--t-fast);
+      }
+
+      .chat-prompt-chip:hover {
+        background: var(--primary-dim);
+        border-color: var(--primary);
+        color: var(--text-primary);
+        transform: translateY(-1px);
+      }
+
+      .chat-input-deck {
+        padding: 14px 18px;
+        border-top: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(11, 17, 32, 0.9);
+      }
+
+      .chat-input-field {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-lg);
+        padding: 12px 16px;
+        font-size: 13px;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color var(--t-fast), box-shadow var(--t-fast);
+      }
+
+      .chat-input-field:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 12px var(--primary-dim);
+      }
+
+      .chat-send-btn {
+        padding: 12px 20px;
+        border-radius: var(--r-lg);
+        background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+        border: none;
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform var(--t-fast), box-shadow var(--t-fast);
+        flex-shrink: 0;
+      }
+
+      .chat-send-btn:hover {
+        transform: scale(1.03);
+        box-shadow: 0 0 16px var(--primary-glow);
+      }
+
+      .chat-send-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- Navigation Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon">
+            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.src='/assets/core/avatar.png'" />
+          </div>
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">Naura Hoshino</div>
+            <div class="sidebar-brand-sub">v2.5.0 · Online</div>
+          </div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <nav class="sidebar-nav" role="navigation">
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/src/pages/chat.html" class="nav-item active">
+              <span class="nav-icon"><i class="fa-solid fa-robot" style="color:var(--primary);"></i></span>
+              <span>AI Chat Terminal</span>
+              <span class="nav-badge" style="background:rgba(244,114,182,0.2);color:var(--primary);">AI</span>
+            </a>
+            <a href="/lounge" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>3D AI Lounge</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
+
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-volume-high"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-americas"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map-location-dot"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-id-card"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic"></i></span>
+              <span>Embed Builder</span>
+            </a>
+          </div>
+        </nav>
+
+        <div class="sidebar-user-panel">
+          <div class="sidebar-user-card">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest Sensei</div>
+              <div class="sidebar-user-role">Member Naura OS</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div>
+              <div class="page-title">Neural AI Chat Terminal</div>
+              <div class="breadcrumb">
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span><span>AI Chat</span>
+              </div>
+            </div>
+          </div>
+          <div class="header-right">
+            <!-- DYNAMIC AI TIER BADGE IN TOP HEADER -->
+            <div id="aiTierBadgeContainer">
+              <span class="ai-tier-badge ai-tier-badge--free" id="aiTierBadge">
+                🟢 OpenRouter Engine (Free Tier)
+              </span>
+            </div>
+            <a href="/" class="btn btn-ghost btn-sm">
+              <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="chat-page-layout">
+            <div class="chat-terminal-card">
+              <!-- Chat Card Header -->
+              <div class="chat-terminal-header">
+                <div class="chat-terminal-identity">
+                  <div class="chat-avatar-frame">
+                    <img src="/assets/Naura_Expression/Happy.png" id="chatMascotAvatar" alt="Naura" onerror="this.src='/assets/core/avatar.png'" />
+                  </div>
+                  <div>
+                    <div class="chat-identity-title">
+                      Naura Hoshino AI
+                      <span class="badge badge-green" style="font-size:10px;padding:1px 6px;">● Online</span>
+                    </div>
+                    <div class="chat-identity-sub" id="chatEngineStatus">
+                      Siap mendampingi aktivitas server dan petualanganmu 🌸✨
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chat Header Tier Slot -->
+                <div id="chatHeaderTierSlot">
+                  <span class="ai-tier-badge ai-tier-badge--free">
+                    🟢 OpenRouter Engine (Free Tier)
+                  </span>
+                </div>
+              </div>
+
+              <!-- Chat Message Stream -->
+              <div class="chat-stream-box" id="chatStreamBox">
+                <div class="chat-message-row is-bot">
+                  <div class="chat-message-bubble">
+                    Halo Sensei! Aku Naura Hoshino, asisten cerdas dan pendamping petualanganmu. Tanyakan apa saja seputar server, ekonomi, musik, strategi survival, atau obrolan santai! 🌸✨
+                  </div>
+                  <div class="chat-message-meta">
+                    <i class="fa-solid fa-robot"></i> Naura AI · Baru saja
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Prompt Action Chips -->
+              <div class="chat-chips-bar" id="chatChipsBar">
+                <button type="button" class="chat-prompt-chip" data-prompt="👋 Halo Naura!">👋 Sapa Naura</button>
+                <button type="button" class="chat-prompt-chip" data-prompt="⚡ Cek status bot dan sistem telemetri">⚡ Status Sistem</button>
+                <button type="button" class="chat-prompt-chip" data-prompt="📈 Bagaimana strategi cuan ekonomi dan bursa saham NC?">📈 Strategi Cuan</button>
+                <button type="button" class="chat-prompt-chip" data-prompt="🌲 Rekomendasikan lokasi berburu dan foraging di Naura Wilds">🌲 Foraging Wilds</button>
+                <button type="button" class="chat-prompt-chip" data-prompt="🎵 Rekomendasikan playlist santai Lavalink hari ini">🎵 Musik Santai</button>
+                <button type="button" class="chat-prompt-chip" data-prompt="🎲 Lempar dadu hoki hari ini dong!">🎲 Dadu Hoki</button>
+                <a href="/lounge" class="chat-prompt-chip" style="text-decoration:none;">🎭 Buka 3D Lounge</a>
+              </div>
+
+              <!-- Input Area -->
+              <div class="chat-input-deck">
+                <input
+                  type="text"
+                  id="chatInput"
+                  class="chat-input-field"
+                  placeholder="Tanyakan apa saja kepada Naura..."
+                  autocomplete="off"
+                />
+                <button type="button" id="btnSendChat" class="chat-send-btn">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  <span>Kirim</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Bar -->
+    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item" data-group="dashboard">
+          <span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span>
+          <span class="mn-label">Dashboard</span>
+        </a>
+        <a href="/src/pages/chat.html" class="mobile-nav-item active" data-group="chat">
+          <span class="mn-icon"><i class="fa-solid fa-robot"></i></span>
+          <span class="mn-label">AI Chat</span>
+        </a>
+        <a href="/world" class="mobile-nav-item" data-group="map">
+          <span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span>
+          <span class="mn-label">Map</span>
+        </a>
+        <a href="/music" class="mobile-nav-item" data-group="system">
+          <span class="mn-icon"><i class="fa-solid fa-microchip"></i></span>
+          <span class="mn-label">System</span>
+        </a>
+        <a href="/settings" class="mobile-nav-item" data-group="settings">
+          <span class="mn-icon"><i class="fa-solid fa-gears"></i></span>
+          <span class="mn-label">Settings</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Navigation Script -->
+    <script src="/src/js/sharedNav.js"></script>
+
+    <!-- Chat Page Script -->
+    <script type="module" src="/src/js/chatPage.js"></script>
+  </body>
+</html>

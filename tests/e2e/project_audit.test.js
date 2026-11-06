@@ -178,36 +178,36 @@ describe("Tier 1: Feature Coverage - Environment & Secrets", () => {
 });
 
 describe("Tier 1: Feature Coverage - SSOT Version Governance", () => {
-  it("TC-T1.VER.1: package.json specifies version '2.4.0' as canonical Single Source of Truth", () => {
+  it("TC-T1.VER.1: package.json specifies version '2.5.0' as canonical Single Source of Truth", () => {
     const pkgPath = path.join(ROOT_DIR, "package.json");
     assert.ok(fs.existsSync(pkgPath), "package.json must exist");
 
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-    assert.equal(pkg.version, "2.4.0", "package.json version must strictly be 2.4.0");
+    assert.equal(pkg.version, "2.5.0", "package.json version must strictly be 2.5.0");
   });
 
   it("TC-T1.VER.2: src/config/version.js derives BOT_VERSION and ENGINE_VERSION matching package.json", () => {
-    assert.equal(BOT_VERSION, "2.4.0", "BOT_VERSION must be 2.4.0");
-    assert.equal(ENGINE_VERSION, "2.4.0", "ENGINE_VERSION must be 2.4.0");
-    assert.equal(getAppVersion(), "2.4.0", "getAppVersion() must return 2.4.0");
-    assert.equal(getEngineVersion(), "2.4.0", "getEngineVersion() must return 2.4.0");
+    assert.equal(BOT_VERSION, "2.5.0", "BOT_VERSION must be 2.5.0");
+    assert.equal(ENGINE_VERSION, "2.5.0", "ENGINE_VERSION must be 2.5.0");
+    assert.equal(getAppVersion(), "2.5.0", "getAppVersion() must return 2.5.0");
+    assert.equal(getEngineVersion(), "2.5.0", "getEngineVersion() must return 2.5.0");
   });
 
-  it("TC-T1.VER.3: getFormattedFooter provides official footers containing 'v2.4.0' across official categories", () => {
+  it("TC-T1.VER.3: getFormattedFooter provides official footers containing 'v2.5.0' across official categories", () => {
     const categories = ["core", "utility", "survival", "music", "ai", "admin", "premium"];
 
     for (const cat of categories) {
       const footer = getFormattedFooter(cat);
       assert.ok(footer, `Footer for category "${cat}" must not be empty`);
       assert.ok(
-        footer.includes("v2.4.0"),
-        `Footer for category "${cat}" must include version "v2.4.0"`,
+        footer.includes("v2.5.0"),
+        `Footer for category "${cat}" must include version "v2.5.0"`,
       );
     }
 
-    assert.ok(FOOTERS.core.includes("v2.4.0"));
-    assert.ok(FOOTERS.utility.includes("v2.4.0"));
-    assert.ok(FOOTERS.music.includes("v2.4.0"));
+    assert.ok(FOOTERS.core.includes("v2.5.0"));
+    assert.ok(FOOTERS.utility.includes("v2.5.0"));
+    assert.ok(FOOTERS.music.includes("v2.5.0"));
   });
 
   it("TC-T1.VER.4: SSOT version strictly follows semantic versioning schema X.Y.Z where X=2", () => {
@@ -221,15 +221,15 @@ describe("Tier 1: Feature Coverage - SSOT Version Governance", () => {
 
   it("TC-T1.VER.5: Version consistency tracks target alignment across project metadata", () => {
     const pkg = require("../../package.json");
-    assert.equal(pkg.version, "2.4.0");
+    assert.equal(pkg.version, "2.5.0");
 
     // In-transit progressive check for package-lock.json
     const lockPath = path.join(ROOT_DIR, "package-lock.json");
     if (fs.existsSync(lockPath)) {
       const lock = JSON.parse(fs.readFileSync(lockPath, "utf8"));
       assert.ok(
-        lock.version === "2.4.0" || lock.version === "2.3.0",
-        `package-lock.json version (${lock.version}) must be 2.4.0 or transitional 2.3.0`,
+        lock.version === "2.5.0" || lock.version === "2.4.0",
+        `package-lock.json version (${lock.version}) must be 2.5.0 or transitional 2.4.0`,
       );
     }
 
@@ -240,8 +240,8 @@ describe("Tier 1: Feature Coverage - SSOT Version Governance", () => {
       const match = gradleContent.match(/versionName\s*=\s*"([^"]+)"/);
       assert.ok(match, "versionName must be defined in build.gradle.kts");
       assert.ok(
-        match[1] === "2.4.0" || match[1] === "2.3.0",
-        `Android versionName (${match[1]}) must be 2.4.0 or transitional 2.3.0`,
+        match[1] === "2.5.0" || match[1] === "2.4.0",
+        `Android versionName (${match[1]}) must be 2.5.0 or transitional 2.4.0`,
       );
     }
   });
