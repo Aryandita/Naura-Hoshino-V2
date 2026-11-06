@@ -194,7 +194,7 @@ const env = {
 
   // OPENROUTER (Free Tier Gateway & Multi-Model Cascade)
   OPENROUTER_API_KEY: cleanEnv(process.env.OPENROUTER_API_KEY),
-  OPENROUTER_MODEL: cleanEnv(process.env.OPENROUTER_MODEL) || "meta-llama/llama-3.3-70b-instruct:free",
+  OPENROUTER_MODEL: cleanEnv(process.env.OPENROUTER_MODEL) || "openrouter/free",
   OPENROUTER_BASE_URL: cleanEnv(process.env.OPENROUTER_BASE_URL) || "https://openrouter.ai/api/v1",
 
   // VERBA API

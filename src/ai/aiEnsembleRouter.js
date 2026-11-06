@@ -675,11 +675,12 @@ class AiEnsembleRouter {
       prompt || (Array.isArray(parts) ? parts.map((p) => p.text || "").join(" ") : "") || "";
     messages.push({ role: "user", content: currentContent });
 
-    const primaryModel = env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct:free";
+    const primaryModel = env.OPENROUTER_MODEL || "openrouter/free";
     const fallbackModels = [
-      "deepseek/deepseek-chat:free",
-      "qwen/qwen-2.5-72b-instruct:free",
-      "mistralai/mistral-small-24b-instruct-2501:free",
+      "openrouter/free",
+      "google/gemma-4-31b-it:free",
+      "google/gemma-4-26b-a4b-it:free",
+      "nvidia/nemotron-3.5-lightning:free",
     ].filter((m) => m !== primaryModel);
 
     const candidateModels = [primaryModel, ...fallbackModels];
@@ -705,7 +706,7 @@ class AiEnsembleRouter {
             model: targetModel,
             messages,
             temperature: config.temperature ?? 0.7,
-            max_tokens: config.maxOutputTokens ?? 1024,
+            max_tokens: Math.max(config.maxOutputTokens ?? 1024, 256),
           }),
         });
 
@@ -723,7 +724,12 @@ class AiEnsembleRouter {
         const rawJson = await res.json();
         const normalized = normalizeAiResponse("openrouter", rawJson);
 
-        if (!normalized.content || normalized.content.trim().length === 0) {
+        let finalText = normalized.content ? normalized.content.trim() : "";
+        if (!finalText && normalized.reasoning && normalized.reasoning.trim().length > 0) {
+          finalText = normalized.reasoning.trim();
+        }
+
+        if (!finalText) {
           logger.warn(
             `[AiEnsembleRouter] Model OpenRouter ${targetModel} mengembalikan konten kosong. Mencoba model berikutnya...`,
           );
@@ -731,7 +737,7 @@ class AiEnsembleRouter {
         }
 
         return {
-          text: normalized.content.trim(),
+          text: finalText,
           provider: "openrouter",
           model: targetModel,
           usage: normalized.tokenUsage,

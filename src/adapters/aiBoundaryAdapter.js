@@ -74,6 +74,8 @@ function normalizeAiResponse(provider, rawResponse) {
         }
         if (typeof choice.message?.reasoning_content === "string") {
           reasoning = choice.message.reasoning_content;
+        } else if (typeof choice.message?.reasoning === "string") {
+          reasoning = choice.message.reasoning;
         }
         if (Array.isArray(choice.message?.tool_calls)) {
           for (const call of choice.message.tool_calls) {
