@@ -83,6 +83,44 @@ class AIRouterManager {
     const attachment = message.attachments.first();
 
     if (attachment) {
+      // Opsi A: Analisis gambar / Vision Multimodal adalah fitur eksklusif member Premium
+      if (!isOwner && !isPremiumUser) {
+        const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+        const rowUpgrade = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setLabel("✨ Upgrade VIP")
+            .setStyle(ButtonStyle.Link)
+            .setURL("https://saweria.co/aryandita")
+            .setEmoji("⭐"),
+          new ButtonBuilder()
+            .setLabel("🗳️ Vote Top.gg (12j VIP)")
+            .setStyle(ButtonStyle.Link)
+            .setURL("https://top.gg/bot/1483665745727721543/vote")
+            .setEmoji("🎁"),
+        );
+
+        const vipCard = buildContainerV2({
+          accentColorHex: "#F59E0B",
+          authorName: "NAURA VISION • FITUR PREMIUM",
+          title: "🔒 Fitur Analisis Gambar Khusus Member VIP",
+          description: [
+            "Halo! Kemampuan melihat dan menganalisis foto/gambar secara instan merupakan **fitur eksklusif untuk Member Premium & VIP**.",
+            "",
+            "> 🌟 **Keuntungan Member VIP:**",
+            "> • 👁️ Analisis gambar dan dokumen multimodal",
+            "> • ⚡ Jalur cepat prioritas (Groq ~300 token/detik)",
+            "> • 🎙️ Akses Duplex Voice Agent di Voice Channel",
+            "> • ♾️ Kuota chat harian tanpa batas",
+            "",
+            "Kamu juga bisa mendapatkan **VIP Gratis selama 12 jam** hanya dengan melakukan voting di Top.gg!",
+          ].join("\n"),
+          buttonsRow: [rowUpgrade],
+          footerText: ui.getFooter("core"),
+        });
+
+        return message.reply(vipCard).catch(() => {});
+      }
+
       try {
         if (!gemini.isAvailable())
           throw new SystemError("GEMINI_API tidak dikonfigurasi.");
@@ -227,7 +265,7 @@ class AIRouterManager {
         await updateGeminiHistory(message.author.id, "model", replyText);
       } catch (verbaError) {
         logger.warn(
-          `[Verba AI] ${verbaError.message} -> Mengalihkan ke Gemini Engine`,
+          `[Verba AI] ${verbaError.message} -> Mengalihkan ke AI Ensemble Router`,
         );
 
         const userRole = isOwner
@@ -236,22 +274,26 @@ class AIRouterManager {
             ? "Premium User"
             : "User";
         logger.info(
-          `[AI Router] Beralih ke Gemini (Fallback) untuk ${userRole} (${message.author.username})`,
+          `[AI Router] Pemanggilan AI Ensemble untuk ${userRole} (${message.author.username})`,
         );
 
         const promptText = `${persona}${previousBotMessage}\n\nPesan dari ${userRole} (${message.author.username}): ${userMessage || "(Menyapa)"}`;
 
         try {
-          if (!gemini.isAvailable())
-            throw new SystemError("GEMINI_API tidak dikonfigurasi.");
-
+          const aiEnsembleRouter = require("./aiEnsembleRouter");
           const history = await getGeminiHistory(message.author.id);
           const { tools } = require("./functionDispatcher");
 
           const opts = {
-            parts: [{ text: promptText }],
+            taskType: forceGeminiForTools
+              ? aiEnsembleRouter.TASK_TYPES.CODE_LOGIC
+              : aiEnsembleRouter.TASK_TYPES.GENERAL_CHAT,
+            prompt: promptText,
             history,
             message,
+            userId: message.author.id,
+            userTier: isOwner ? "owner" : isPremiumUser ? "premium" : "free",
+            isPremium: Boolean(isOwner || isPremiumUser),
           };
 
           if (forceGeminiForTools) {
@@ -259,7 +301,8 @@ class AIRouterManager {
             usedTools = true;
           }
 
-          replyText = await gemini.generate(opts);
+          const ensembleRes = await aiEnsembleRouter.routeTask(opts);
+          replyText = ensembleRes.text;
 
           if (usedTools && !isOwner && !isPremiumUser) {
             const redisManager = require("../managers/redisManager");
@@ -275,32 +318,12 @@ class AIRouterManager {
 
           await updateGeminiHistory(message.author.id, "user", promptText);
           await updateGeminiHistory(message.author.id, "model", replyText);
-        } catch (geminiError) {
-          logger.error("[GEMINI FALLBACK ERROR]", geminiError);
-
-          try {
-            logger.info(
-              `[AI Router] Beralih ke Ollama untuk ${userRole} (${message.author.username})`,
-            );
-
-            const { Ollama } = require("ollama");
-            const ollamaClient = new Ollama({ host: env.OLLAMA_BASE_URL });
-
-            const ollamaResponse = await ollamaClient.chat({
-              model: env.OLLAMA_MODEL,
-              messages: [{ role: "user", content: promptText }],
-            });
-            replyText = ollamaResponse.message.content;
-
-            await updateGeminiHistory(message.author.id, "user", promptText);
-            await updateGeminiHistory(message.author.id, "model", replyText);
-          } catch (ollamaError) {
-            logger.error("[OLLAMA FALLBACK ERROR]", ollamaError);
-            return ui.sendError(
-              message,
-              "Aduh, semua jalur berpikir Naura sedang tersendat. Naura benar-benar ingin menjawabmu, coba sapa Naura lagi sebentar lagi ya.",
-            );
-          }
+        } catch (ensembleError) {
+          logger.error("[AI ENSEMBLE ROUTER ERROR]", ensembleError);
+          return ui.sendError(
+            message,
+            "Aduh, semua jalur berpikir Naura sedang tersendat. Naura benar-benar ingin menjawabmu, coba sapa Naura lagi sebentar lagi ya.",
+          );
         }
       }
     }

@@ -51,3 +51,4 @@ describe("Spotify Live Lyrics Engine & Timeline Suite", () => {
     assert.strictEqual(manager.formatDur(360000), "6:00");
   });
 });
+

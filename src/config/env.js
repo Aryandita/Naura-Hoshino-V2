@@ -192,6 +192,11 @@ const env = {
   GROQ_API_KEY: cleanEnv(process.env.GROQ_API_KEY),
   GROQ_MODEL: cleanEnv(process.env.GROQ_MODEL) || "llama-3.3-70b-versatile",
 
+  // OPENROUTER (Free Tier Gateway & Multi-Model Cascade)
+  OPENROUTER_API_KEY: cleanEnv(process.env.OPENROUTER_API_KEY),
+  OPENROUTER_MODEL: cleanEnv(process.env.OPENROUTER_MODEL) || "meta-llama/llama-3.3-70b-instruct:free",
+  OPENROUTER_BASE_URL: cleanEnv(process.env.OPENROUTER_BASE_URL) || "https://openrouter.ai/api/v1",
+
   // VERBA API
   VERBA_API_KEY: cleanEnv(process.env.VERBA_API_KEY),
   VERBA_SLUG_OWNER: cleanEnv(process.env.VERBA_SLUG_OWNER),

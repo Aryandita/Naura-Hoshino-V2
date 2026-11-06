@@ -20,3 +20,4 @@ Folder ini memuat berkas Skript resmi untuk mengintegrasikan server Minecraft de
    ```bash
    sk reload naura_link.sk
    ```
+

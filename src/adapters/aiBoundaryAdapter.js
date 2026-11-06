@@ -63,7 +63,8 @@ function normalizeAiResponse(provider, rawResponse) {
     }
 
     case "groq":
-    case "openai": {
+    case "openai":
+    case "openrouter": {
       // OpenAI / Groq SDK format
       const choice = rawResponse.choices?.[0];
       if (choice) {

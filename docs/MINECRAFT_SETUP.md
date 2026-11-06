@@ -208,3 +208,4 @@ Jika pemain mengalami kendala teknis dalam server Minecraft, Naura menyediakan d
   * Solusi: Server Anda belum terpasang add-on HTTP seperti SkQuery. Anda bisa memasang plugin SkQuery atau memakai skrip berbasis `skript-reflect` pada Bagian 7.
 * **Pertanyaan: Request gagal dengan pesan connection refused.**
   * Solusi: Periksa kembali apakah bot Naura Hoshino sedang menyala dan apakah port dashboard bot terbuka serta dapat diakses dari IP server Minecraft Anda.
+

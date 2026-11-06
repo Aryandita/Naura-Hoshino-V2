@@ -68,20 +68,37 @@ const TASK_TYPES = Object.freeze({
 });
 
 /**
- * Peta routing default: setiap task type memiliki urutan prioritas provider.
- * Provider pertama adalah preferensi utama, berikutnya adalah failover.
+ * Peta routing prioritas Premium/VIP: Gemini & Groq berada di prioritas terdepan
+ * dengan OpenRouter dan Ollama sebagai failover berlapis.
  * @type {Object<string, string[]>}
  */
 const DEFAULT_ROUTING_MAP = {
-  [TASK_TYPES.GENERAL_CHAT]: ["gemini", "groq", "ollama"],
-  [TASK_TYPES.GENERAL_CONVERSATION]: ["gemini", "groq", "ollama"],
-  [TASK_TYPES.FAST_RESPONSE]: ["gemini", "groq", "ollama"],
-  [TASK_TYPES.TACTICAL_REASONING]: ["groq", "gemini", "ollama"],
-  [TASK_TYPES.TRIBUNAL_VERDICT]: ["groq", "gemini", "ollama"],
-  [TASK_TYPES.ROLEPLAY_STORY]: ["groq", "gemini", "ollama"],
-  [TASK_TYPES.CODE_LOGIC]: ["groq", "gemini", "ollama"],
-  [TASK_TYPES.VISION_MULTIMODAL]: ["gemini"],
-  [TASK_TYPES.OFFLINE_FALLBACK]: ["ollama", "groq", "gemini"],
+  [TASK_TYPES.GENERAL_CHAT]: ["gemini", "groq", "openrouter", "ollama"],
+  [TASK_TYPES.GENERAL_CONVERSATION]: ["gemini", "groq", "openrouter", "ollama"],
+  [TASK_TYPES.FAST_RESPONSE]: ["groq", "gemini", "openrouter", "ollama"],
+  [TASK_TYPES.TACTICAL_REASONING]: ["groq", "gemini", "openrouter", "ollama"],
+  [TASK_TYPES.TRIBUNAL_VERDICT]: ["groq", "gemini", "openrouter", "ollama"],
+  [TASK_TYPES.ROLEPLAY_STORY]: ["gemini", "groq", "openrouter", "ollama"],
+  [TASK_TYPES.CODE_LOGIC]: ["groq", "gemini", "openrouter", "ollama"],
+  [TASK_TYPES.VISION_MULTIMODAL]: ["gemini", "openrouter"],
+  [TASK_TYPES.OFFLINE_FALLBACK]: ["ollama", "groq", "gemini", "openrouter"],
+};
+
+/**
+ * Peta routing Free Tier: Mengutamakan OpenRouter (model gratis & hemat)
+ * dengan Ollama sebagai fallback offline.
+ * @type {Object<string, string[]>}
+ */
+const DEFAULT_FREE_ROUTING_MAP = {
+  [TASK_TYPES.GENERAL_CHAT]: ["openrouter", "ollama"],
+  [TASK_TYPES.GENERAL_CONVERSATION]: ["openrouter", "ollama"],
+  [TASK_TYPES.FAST_RESPONSE]: ["openrouter", "ollama"],
+  [TASK_TYPES.TACTICAL_REASONING]: ["openrouter", "ollama"],
+  [TASK_TYPES.TRIBUNAL_VERDICT]: ["openrouter", "ollama"],
+  [TASK_TYPES.ROLEPLAY_STORY]: ["openrouter", "ollama"],
+  [TASK_TYPES.CODE_LOGIC]: ["openrouter", "ollama"],
+  [TASK_TYPES.VISION_MULTIMODAL]: [],
+  [TASK_TYPES.OFFLINE_FALLBACK]: ["ollama", "openrouter"],
 };
 
 /**
@@ -261,9 +278,11 @@ class CircuitBreaker {
 class AiEnsembleRouter {
   constructor() {
     this.routingMap = { ...DEFAULT_ROUTING_MAP };
+    this.freeRoutingMap = { ...DEFAULT_FREE_ROUTING_MAP };
     this.breakers = {
       gemini: new CircuitBreaker("gemini"),
       groq: new CircuitBreaker("groq"),
+      openrouter: new CircuitBreaker("openrouter"),
       ollama: new CircuitBreaker("ollama"),
     };
   }
@@ -283,6 +302,8 @@ class AiEnsembleRouter {
         return Boolean(env.GEMINI_API);
       case "groq":
         return Boolean(env.GROQ_API_KEY);
+      case "openrouter":
+        return Boolean(env.OPENROUTER_API_KEY);
       case "ollama":
         return Boolean(env.OLLAMA_ENABLED && env.OLLAMA_BASE_URL);
       default:
@@ -341,6 +362,9 @@ class AiEnsembleRouter {
     systemInstruction,
     config = {},
     message = null,
+    userId = null,
+    userTier = null,
+    isPremium = null,
   } = {}) {
     // Normalisasi input prompt & parts
     const safeParts =
@@ -351,8 +375,40 @@ class AiEnsembleRouter {
     const safePrompt =
       prompt || safeParts.map((p) => p.text || "").join(" ").trim();
 
-    // Dapatkan daftar kandidat provider sesuai prioritas taskType
-    const candidates = this.routingMap[taskType] || this.routingMap[TASK_TYPES.GENERAL_CHAT];
+    // Resolusi status VIP/Premium untuk jalur routing
+    let isVip = false;
+    if (userTier && typeof userTier === "string") {
+      isVip = ["tier1", "tier2", "tier3", "friends", "vip", "owner", "premium"].includes(
+        userTier.toLowerCase(),
+      );
+    } else if (typeof isPremium === "boolean") {
+      isVip = isPremium;
+    } else if (userId) {
+      const quota = await this.checkUserQuota(userId);
+      isVip = quota.tier !== "free" && quota.tier !== "none";
+    }
+
+    // Guard: Fitur Vision Multimodal eksklusif untuk member Premium (Opsi A)
+    if (taskType === TASK_TYPES.VISION_MULTIMODAL && !isVip) {
+      return {
+        text: "PREMIUM_VISION_REQUIRED",
+        provider: "system",
+        model: null,
+        isPremiumRestricted: true,
+        latencyMs: 0,
+        taskType,
+        toString() {
+          return this.text;
+        },
+      };
+    }
+
+    // Dapatkan daftar kandidat provider sesuai prioritas tier dan taskType
+    const candidateMap = isVip ? this.routingMap : this.freeRoutingMap;
+    const candidates =
+      candidateMap[taskType] ||
+      candidateMap[TASK_TYPES.GENERAL_CHAT] ||
+      ["openrouter", "ollama"];
 
     let lastError = null;
 
@@ -380,6 +436,14 @@ class AiEnsembleRouter {
           });
         } else if (provider === "groq") {
           result = await this._callGroq({
+            prompt: safePrompt,
+            parts: safeParts,
+            history,
+            systemInstruction,
+            config,
+          });
+        } else if (provider === "openrouter") {
+          result = await this._callOpenRouter({
             prompt: safePrompt,
             parts: safeParts,
             history,
@@ -581,6 +645,112 @@ class AiEnsembleRouter {
       model: successfulModel || candidateModels[0],
       usage: normalized.tokenUsage,
     };
+  }
+
+  /**
+   * Eksekusi panggilan ke OpenRouter API dengan cascade model otomatis
+   * @private
+   */
+  async _callOpenRouter({ prompt, parts, history = [], systemInstruction, config = {} }) {
+    if (!env.OPENROUTER_API_KEY) throw new SystemError("OPENROUTER_API_KEY tidak dikonfigurasi.");
+
+    const messages = [];
+
+    if (systemInstruction) {
+      messages.push({ role: "system", content: systemInstruction });
+    }
+
+    for (const h of history) {
+      const role = h.role === "model" ? "assistant" : "user";
+      const content =
+        typeof h.content === "string"
+          ? h.content
+          : Array.isArray(h.parts)
+            ? h.parts.map((p) => p.text || "").join(" ")
+            : "";
+      if (content) messages.push({ role, content });
+    }
+
+    const currentContent =
+      prompt || (Array.isArray(parts) ? parts.map((p) => p.text || "").join(" ") : "") || "";
+    messages.push({ role: "user", content: currentContent });
+
+    const primaryModel = env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct:free";
+    const fallbackModels = [
+      "deepseek/deepseek-chat:free",
+      "qwen/qwen-2.5-72b-instruct:free",
+      "mistralai/mistral-small-24b-instruct-2501:free",
+    ].filter((m) => m !== primaryModel);
+
+    const candidateModels = [primaryModel, ...fallbackModels];
+    let lastErr = null;
+    let lastStatus = 0;
+
+    for (const targetModel of candidateModels) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      try {
+        const baseUrl = env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1";
+        const res = await fetch(`${baseUrl}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+            "HTTP-Referer": "https://github.com/Aryandita/Naura-Hoshino-V2",
+            "X-Title": "Naura Hoshino V2",
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: targetModel,
+            messages,
+            temperature: config.temperature ?? 0.7,
+            max_tokens: config.maxOutputTokens ?? 1024,
+          }),
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          lastStatus = res.status;
+          const errText = await res.text().catch(() => "");
+          logger.warn(
+            `[AiEnsembleRouter] Model OpenRouter ${targetModel} gagal (HTTP ${res.status}): ${errText.slice(0, 100)}. Mencoba model berikutnya...`,
+          );
+          continue;
+        }
+
+        const rawJson = await res.json();
+        const normalized = normalizeAiResponse("openrouter", rawJson);
+
+        if (!normalized.content || normalized.content.trim().length === 0) {
+          logger.warn(
+            `[AiEnsembleRouter] Model OpenRouter ${targetModel} mengembalikan konten kosong. Mencoba model berikutnya...`,
+          );
+          continue;
+        }
+
+        return {
+          text: normalized.content.trim(),
+          provider: "openrouter",
+          model: targetModel,
+          usage: normalized.tokenUsage,
+          reasoning: normalized.reasoning,
+        };
+      } catch (err) {
+        clearTimeout(timeoutId);
+        lastErr = err;
+        logger.warn(
+          `[AiEnsembleRouter] Error jaringan model OpenRouter ${targetModel}: ${err.message}. Mencoba model berikutnya...`,
+        );
+      }
+    }
+
+    throw new ExternalAPIError(
+      `Seluruh model cascade OpenRouter gagal (HTTP ${lastStatus}): ${lastErr?.message || "Semua model tidak merespons"}`,
+      { provider: "openrouter", models: candidateModels },
+      lastErr,
+    );
   }
 
   /**
