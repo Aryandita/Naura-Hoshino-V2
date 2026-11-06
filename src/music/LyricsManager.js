@@ -10,6 +10,7 @@ const { logger } = require("../managers/logger");
 const axios = require("axios");
 const lyricsFinder = require("lyrics-finder");
 const ui = require("../config/ui");
+const env = require("../config/env");
 const geminiClient = require("../ai/geminiClient");
 
 class LyricsManager {
@@ -56,21 +57,40 @@ class LyricsManager {
 
     let result = null;
 
+    // 1. Coba Musixmatch resmi jika API key tersedia di environment
+    if (env.MUSIXMATCH_API_KEY) {
+      try {
+        const mmUrl = `https://api.musixmatch.com/ws/1.1/matcher.lyrics.get?apikey=${encodeURIComponent(env.MUSIXMATCH_API_KEY)}&q_track=${encodeURIComponent(cleanTitle)}&q_artist=${encodeURIComponent(cleanArtist)}`;
+        const mmRes = await axios.get(mmUrl, { timeout: 4000 }).catch(() => null);
+        const mmBody = mmRes?.data?.message?.body?.lyrics?.lyrics_body;
+        if (mmBody && typeof mmBody === "string") {
+          const cleanedMm = mmBody.split("******* This Lyrics is NOT for Commercial use *******")[0].trim();
+          if (cleanedMm) {
+            result = { type: "plain", provider: "musixmatch", data: cleanedMm };
+          }
+        }
+      } catch (e) {
+        logger.debug("[LyricsManager:fetchLyricsData] Musixmatch error: " + (e?.message || e));
+      }
+    }
+
+    // 2. Coba LRCLIB (Prioritas utama untuk lirik tersinkronisasi / Live Karaoke)
     try {
-      // Utama: LRCLIB untuk lirik sinkron (Live Karaoke)
       const lrclibUrl = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}&duration=${Math.round(track.info.length / 1000)}`;
       const response = await axios
         .get(lrclibUrl, { timeout: 4000 })
         .catch(() => null);
 
       if (response && response.data) {
-        if (response.data.syncedLyrics)
+        if (response.data.syncedLyrics) {
           result = {
             type: "synced",
+            provider: "lrclib",
             data: this.parseLRC(response.data.syncedLyrics),
           };
-        else if (response.data.plainLyrics)
-          result = { type: "plain", data: response.data.plainLyrics };
+        } else if (!result && response.data.plainLyrics) {
+          result = { type: "plain", provider: "lrclib", data: response.data.plainLyrics };
+        }
       }
     } catch (error) {
       logger.debug("[LyricsManager:fetchLyricsData] Operasi audio/voice gagal: " + (error?.message || error));
@@ -131,6 +151,28 @@ class LyricsManager {
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   }
 
+  // Progress bar ala timeline Spotify
+  renderProgressBar(currentMs, totalMs, barLength = 14) {
+    const cur = typeof currentMs === "number" && isFinite(currentMs) ? Math.max(0, currentMs) : 0;
+    const tot = typeof totalMs === "number" && isFinite(totalMs) && totalMs > 0 ? totalMs : 0;
+
+    if (tot === 0) {
+      return `${this.formatDur(cur)} ━━━━🟢━━━━ 0:00`;
+    }
+
+    const progress = Math.min(Math.max(cur / tot, 0), 1);
+    const activeIndex = Math.min(Math.floor(progress * barLength), barLength - 1);
+    let bar = "";
+    for (let i = 0; i < barLength; i++) {
+      if (i === activeIndex) {
+        bar += "🟢";
+      } else {
+        bar += "━";
+      }
+    }
+    return `${this.formatDur(cur)} ${bar} ${this.formatDur(tot)}`;
+  }
+
   async sendLyrics(interaction, manager, player, track, isEphemeral = false) {
     if (!interaction.deferred && !interaction.replied) {
       const options = isEphemeral ? { flags: MessageFlags.Ephemeral } : {};
@@ -188,11 +230,11 @@ class LyricsManager {
       let current = 0;
       const divider = `-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
-      // Header informasi lagu
+      // Header informasi lagu ala Spotify
       const headerInfo =
         `> ${ui.getEmoji("musicArtist") || "👤"} **Artis:** \`${track.info.author}\`\n` +
         `> ⏳ **Durasi:** \`${this.formatDur(track.info.length)}\`\n` +
-        `> 💿 **Album/Sumber:** \`${track.info.originalSource || "YouTube"}\`\n${divider}\n\n`;
+        `> 💿 **Sumber:** \`${track.info.originalSource || "Spotify"}\`\n${divider}\n\n`;
 
       const buildPagePayload = (pageIndex) => {
         const pageText = pages[pageIndex];
@@ -215,13 +257,13 @@ class LyricsManager {
         );
 
         return buildContainerV2({
-          accentColorHex: ui.getColor("accent") || "#FF69B4",
-          authorName: `Lirik: ${track.info.title}`,
+          accentColorHex: "#1DB954",
+          authorName: `Spotify Lyrics: ${track.info.title}`,
           iconURL: interaction.client.user.displayAvatarURL(),
           title: `📄 Halaman ${pageIndex + 1} / ${pages.length}`,
           description,
-          buttonsRow: pages.length > 1 ? rowButtons : null,
-          footerText: ui.getFooter("music"),
+          buttonsRow: pages.length > 1 ? [rowButtons] : null,
+          footerText: `Lirik Lagu Penuh • Didukung oleh Spotify & Musixmatch Engine`,
         });
       };
 
@@ -272,7 +314,7 @@ class LyricsManager {
   }
 
   // ==========================================
-  // 🎤 MODE LIVE KARAOKE (SYNCED LYRICS)
+  // 🟢 MODE SPOTIFY LIVE LYRICS (SYNCED KARAOKE)
   // ==========================================
   async startLiveLyrics(
     interaction,
@@ -292,16 +334,44 @@ class LyricsManager {
       }
 
       const divider = `-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
-      const standbyInfo =
-        `### 🎤 Live Karaoke: [${track.info.title}](${track.info.uri})\n${divider}\n\n` +
-        `*Menunggu lirik dimulai...*\n\n-# Lirik akan tampil secara sinkron sesuai waktu lagu.`;
+      const buildControls = () =>
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("lyrics_live_sync")
+            .setLabel("Sinkron Ulang")
+            .setEmoji("🔄")
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId("lyrics_live_full")
+            .setLabel("Lirik Lengkap")
+            .setEmoji("📄")
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId("lyrics_live_stop")
+            .setLabel("Tutup")
+            .setEmoji("⏹️")
+            .setStyle(ButtonStyle.Danger),
+        );
+
+      const timeline = this.renderProgressBar(player.position || 0, track.info.length);
+      const standbyDescription = [
+        `### 🟢 Spotify Live Lyrics: [${track.info.title}](${track.info.uri})`,
+        `> 👤 **Artis:** \`${track.info.author}\` • 💿 **Sumber:** \`${track.info.originalSource || "Spotify"}\``,
+        `> ⏱️ \`${timeline}\``,
+        divider,
+        "",
+        "*Menunggu vokal dimulai...*",
+        "",
+        "-# Lirik akan otomatis bergerak secara sinkron mengikuti audio lagu.",
+      ].join("\n");
 
       const payload = buildContainerV2({
-        accentColorHex: ui.getColor("accent") || "#FF69B4",
-        authorName: "Naura Live Karaoke System",
+        accentColorHex: "#1DB954",
+        authorName: "SPOTIFY LIVE LYRICS ENGINE",
         iconURL: interaction.client.user.displayAvatarURL(),
-        description: standbyInfo,
-        footerText: `Disinkronkan untuk ${interaction.user.username} • Naura Hoshino Music System`,
+        description: standbyDescription,
+        buttonsRow: [buildControls()],
+        footerText: `Disinkronkan secara real-time • Spotify & Musixmatch Engine`,
       });
 
       const msg = isEdit
@@ -317,6 +387,50 @@ class LyricsManager {
 
       // 3. Simpan ID agar otomatis terhapus saat lagu selesai
       player.lyricsMessageId = targetMsg?.id || null;
+
+      // 4. Pasang collector interaktif tombol Spotify (15 menit)
+      if (targetMsg && typeof targetMsg.createMessageComponentCollector === "function") {
+        const collector = targetMsg.createMessageComponentCollector({
+          time: 15 * 60 * 1000,
+        });
+
+        collector.on("collect", async (btn) => {
+          if (btn.user.id !== interaction.user.id) {
+            return btn.reply({
+              content: "❌ Hanya pengguna yang meminta lirik yang dapat mengontrol tampilan ini.",
+              flags: MessageFlags.Ephemeral,
+            });
+          }
+
+          if (btn.customId === "lyrics_live_stop") {
+            this.clearLyrics(player.guildId);
+            collector.stop("user_closed");
+            return btn.update(
+              buildContainerV2({
+                accentColorHex: "#6B7280",
+                authorName: "SPOTIFY LIVE LYRICS",
+                iconURL: interaction.client.user.displayAvatarURL(),
+                title: "⏹️ Sesi Lirik Ditutup",
+                description: `Tampilan Spotify Live Lyrics untuk lagu **${track.info.title}** telah dihentikan.`,
+                footerText: ui.getFooter("music"),
+              }),
+            ).catch(() => {});
+          }
+
+          if (btn.customId === "lyrics_live_full") {
+            this.clearLyrics(player.guildId);
+            collector.stop("switched_to_paged");
+            await btn.deferUpdate().catch(() => {});
+            const fullPlain = timedLyrics.map((l) => l.text).join("\n");
+            return this.sendPagedLyrics(interaction, player, track, fullPlain);
+          }
+
+          if (btn.customId === "lyrics_live_sync") {
+            await btn.deferUpdate().catch(() => {});
+            return update();
+          }
+        });
+      }
 
       const update = async () => {
         // Cek apakah lirik masih diizinkan berjalan
@@ -344,38 +458,46 @@ class LyricsManager {
         if (index !== -1) {
           const linesText = [];
 
-          const startIndex = Math.max(0, index - 3);
+          // 1. Baris sebelumnya (redup)
+          const startIndex = Math.max(0, index - 2);
           for (let i = startIndex; i < index; i++) {
             if (timedLyrics[i].text.trim() !== "") {
-              linesText.push(`*${timedLyrics[i].text}*`);
+              linesText.push(`> *${timedLyrics[i].text}*`);
             }
           }
 
+          // 2. Baris aktif (Spotify style: teks besar, bold, penanda hijau)
           if (timedLyrics[index].text.trim() !== "") {
-            linesText.push(
-              `### ${ui.getEmoji("dot") || "▶️"} **${timedLyrics[index].text}**`,
-            );
+            linesText.push(`## 🟢 **${timedLyrics[index].text}**`);
           } else {
-            linesText.push(`### ${ui.getEmoji("dot") || "▶️"} 🎵`);
+            linesText.push(`## 🟢 🎵 *(Instrumental)*`);
           }
 
-          const endIndex = Math.min(timedLyrics.length - 1, index + 3);
+          // 3. Baris berikutnya (teks normal)
+          const endIndex = Math.min(timedLyrics.length - 1, index + 2);
           for (let i = index + 1; i <= endIndex; i++) {
             if (timedLyrics[i].text.trim() !== "") {
-              linesText.push(`*${timedLyrics[i].text}*`);
+              linesText.push(`${timedLyrics[i].text}`);
             }
           }
 
-          const lyricsDescription =
-            `### 🎤 Live Karaoke: [${track.info.title}](${track.info.uri})\n${divider}\n\n` +
-            linesText.join("\n");
+          const currentTimeline = this.renderProgressBar(currentPos, track.info.length);
+          const lyricsDescription = [
+            `### 🟢 Spotify Live Lyrics: [${track.info.title}](${track.info.uri})`,
+            `> 👤 **Artis:** \`${track.info.author}\` • 💿 **Sumber:** \`${track.info.originalSource || "Spotify"}\``,
+            `> ⏱️ \`${currentTimeline}\``,
+            divider,
+            "",
+            ...linesText,
+          ].join("\n");
 
           const updatedPayload = buildContainerV2({
-            accentColorHex: ui.getColor("accent") || "#FF69B4",
-            authorName: "Naura Live Karaoke System",
+            accentColorHex: "#1DB954",
+            authorName: "SPOTIFY LIVE LYRICS ENGINE",
             iconURL: interaction.client.user.displayAvatarURL(),
             description: lyricsDescription,
-            footerText: `Disinkronkan untuk ${interaction.user.username} • Naura Hoshino Music System`,
+            buttonsRow: [buildControls()],
+            footerText: `Disinkronkan secara real-time • Spotify & Musixmatch Engine`,
           });
 
           if (targetMsg && typeof targetMsg.edit === "function") {
@@ -389,12 +511,25 @@ class LyricsManager {
           const timeout = setTimeout(update, Math.max(nextTime, 500));
           this.lyricsCache.set(player.guildId, { timeout });
         } else {
+          const currentTimeline = this.renderProgressBar(currentPos, track.info.length);
+          const currentStandby = [
+            `### 🟢 Spotify Live Lyrics: [${track.info.title}](${track.info.uri})`,
+            `> 👤 **Artis:** \`${track.info.author}\` • 💿 **Sumber:** \`${track.info.originalSource || "Spotify"}\``,
+            `> ⏱️ \`${currentTimeline}\``,
+            divider,
+            "",
+            "*Menunggu vokal dimulai...*",
+            "",
+            "-# Lirik akan otomatis bergerak secara sinkron mengikuti audio lagu.",
+          ].join("\n");
+
           const standbyPayload = buildContainerV2({
-            accentColorHex: ui.getColor("accent") || "#FF69B4",
-            authorName: "Naura Live Karaoke System",
+            accentColorHex: "#1DB954",
+            authorName: "SPOTIFY LIVE LYRICS ENGINE",
             iconURL: interaction.client.user.displayAvatarURL(),
-            description: standbyInfo,
-            footerText: `Disinkronkan untuk ${interaction.user.username} • Naura Hoshino Music System`,
+            description: currentStandby,
+            buttonsRow: [buildControls()],
+            footerText: `Disinkronkan secara real-time • Spotify & Musixmatch Engine`,
           });
           if (targetMsg && typeof targetMsg.edit === "function") {
             await targetMsg.edit(standbyPayload).catch(() => {});

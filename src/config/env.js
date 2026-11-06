@@ -226,6 +226,7 @@ const env = {
   // bawaan npm; isi hanya kalau host menyediakan binary FFmpeg sendiri.
   FFMPEG_PATH: cleanEnv(process.env.FFMPEG_PATH),
   OMDB_API_KEY: cleanEnv(process.env.OMDB_API_KEY),
+  MUSIXMATCH_API_KEY: cleanEnv(process.env.MUSIXMATCH_API_KEY),
   YOUTUBE_COOKIE_PATH:
     cleanEnv(process.env.YOUTUBE_COOKIE_PATH) || "cookies.txt",
 

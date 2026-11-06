@@ -36,3 +36,4 @@ command /naura [<text>] [<text>]:
         else:
             send "&b=== Naura Hoshino Minecraft Integration ===" to player
             send "&e/naura link <kode> &7- Verifikasi tautan akun dari Discord /minecraft link" to player
+

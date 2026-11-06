@@ -20,6 +20,32 @@ class LyricsService {
         .replace(/[()[\]{}]/g, " ")
         .trim();
 
+      // Coba Musixmatch resmi jika API key tersedia di environment
+      if (env.MUSIXMATCH_API_KEY) {
+        try {
+          const mmUrl = `https://api.musixmatch.com/ws/1.1/matcher.lyrics.get?apikey=${encodeURIComponent(env.MUSIXMATCH_API_KEY)}&q_track=${encodeURIComponent(cleanQuery)}&q_artist=${encodeURIComponent(artist)}`;
+          const mmRes = await globalThis.fetch(mmUrl, { signal: AbortSignal.timeout(4000) });
+          if (mmRes.ok) {
+            const mmJson = await mmRes.json();
+            const mmBody = mmJson.message?.body?.lyrics?.lyrics_body;
+            if (mmBody && typeof mmBody === "string") {
+              const cleanedMm = mmBody.split("******* This Lyrics is NOT for Commercial use *******")[0].trim();
+              if (cleanedMm) {
+                return {
+                  title: cleanQuery,
+                  artist: artist || "Artis Musixmatch",
+                  lyrics: cleanedMm,
+                  pages: this.paginateLyrics(cleanedMm),
+                  provider: "musixmatch",
+                };
+              }
+            }
+          }
+        } catch (mmErr) {
+          logger.debug("[LyricsService] Musixmatch lookup failed, falling back to LRCLIB: " + mmErr.message);
+        }
+      }
+
       const searchUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(cleanQuery)}`;
       const res = await globalThis.fetch(searchUrl, {
         headers: { "User-Agent": `NauraHoshinoBot/${env.BOT_VERSION}` },
