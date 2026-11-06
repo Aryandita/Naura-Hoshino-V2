@@ -1,6 +1,7 @@
 const { logger } = require("../../managers/logger");
 const cacheManager = require("../../managers/cacheManager");
 const { clearTransitionTimers } = require("./autoplayUtils");
+const { is247Active } = require("../standby247");
 
 const MAX_RETRY_ATTEMPTS = 8;
 const BASE_BACKOFF_MS = 2000;
@@ -17,7 +18,7 @@ module.exports = {
     if (!player) return;
 
     const code = payload?.code || "Unknown";
-    const is247 = player.is247 || false;
+    const is247 = is247Active(manager, player);
     
     logger.warn(`[SocketClosed] Guild ${player.guildId} disconnected (Code: ${code}, 24/7: ${is247})`);
 
@@ -33,11 +34,16 @@ module.exports = {
     player.socketRetryCount = (player.socketRetryCount || 0) + 1;
     
     if (player.socketRetryCount > MAX_RETRY_ATTEMPTS) {
-      logger.error(`[SocketClosed] Max retries (${MAX_RETRY_ATTEMPTS}) exceeded for guild ${player.guildId}. Destroying player.`);
-      player.socketRetryCount = 0;
-      cleanupPlayer();
-      player.destroy();
-      return;
+      if (is247) {
+        // 24/7 tidak boleh menyerah: tetap mencoba dengan backoff maksimum (60 detik).
+        player.socketRetryCount = MAX_RETRY_ATTEMPTS;
+      } else {
+        logger.error(`[SocketClosed] Max retries (${MAX_RETRY_ATTEMPTS}) exceeded for guild ${player.guildId}. Destroying player.`);
+        player.socketRetryCount = 0;
+        cleanupPlayer();
+        player.destroy();
+        return;
+      }
     }
 
     const backoffMs = calculateBackoff(player.socketRetryCount);
@@ -57,37 +63,45 @@ module.exports = {
           return;
         }
 
-        setTimeout(async () => {
-          const guild = manager.client.guilds.cache.get(player.guildId);
-          if (!guild) {
-            logger.warn(`[SocketClosed] Guild ${player.guildId} not found in cache. Skipping reconnect.`);
-            return;
-          }
+        const scheduleReconnect = (delayMs) => {
+          const retryTimer = setTimeout(async () => {
+            const guild = manager.client.guilds.cache.get(player.guildId);
+            const voiceChannel = guild?.channels.cache.get(voiceChannelId);
+            const existing = manager.poru.players?.get(player.guildId);
 
-          const voiceChannel = guild.channels.cache.get(voiceChannelId);
-          if (!voiceChannel) {
-            logger.warn(`[SocketClosed] Voice channel ${voiceChannelId} not found. Skipping reconnect.`);
-            return;
-          }
+            if (existing && !existing.destroyed && existing !== player) return;
 
-          try {
-            logger.info(`[SocketClosed] Reconnect attempt #${player.socketRetryCount} for guild ${player.guildId}...`);
-            
-            const newPlayer = manager.poru.createConnection({
-              guildId: player.guildId,
-              voiceChannel: voiceChannelId,
-              textChannel: textChannelId,
-              deaf: true,
-            });
-            
-            newPlayer.is247 = is247;
-            newPlayer.socketRetryCount = player.socketRetryCount;
-            
-            logger.info(`[SocketClosed] Successfully reconnected to guild ${player.guildId}`);
-          } catch (reconnectErr) {
-            logger.error(`[SocketClosed] Reconnect failed for guild ${player.guildId}:`, reconnectErr.message);
-          }
-        }, backoffMs);
+            if (!guild || !voiceChannel) {
+              logger.warn(`[SocketClosed] Guild/voice channel ${voiceChannelId} belum tersedia. Mencoba lagi.`);
+              player.socketRetryCount = Math.min(player.socketRetryCount + 1, MAX_RETRY_ATTEMPTS);
+              scheduleReconnect(calculateBackoff(player.socketRetryCount));
+              return;
+            }
+
+            try {
+              logger.info(`[SocketClosed] Reconnect attempt #${player.socketRetryCount} for guild ${player.guildId}...`);
+
+              const newPlayer = manager.poru.createConnection({
+                guildId: player.guildId,
+                voiceChannel: voiceChannelId,
+                textChannel: textChannelId,
+                deaf: true,
+              });
+
+              newPlayer.is247 = is247;
+              newPlayer.socketRetryCount = player.socketRetryCount;
+
+              logger.info(`[SocketClosed] Successfully reconnected to guild ${player.guildId}`);
+            } catch (reconnectErr) {
+              logger.error(`[SocketClosed] Reconnect failed for guild ${player.guildId}:`, reconnectErr.message);
+              player.socketRetryCount = Math.min(player.socketRetryCount + 1, MAX_RETRY_ATTEMPTS);
+              scheduleReconnect(calculateBackoff(player.socketRetryCount));
+            }
+          }, delayMs);
+          if (retryTimer.unref) retryTimer.unref();
+        };
+
+        scheduleReconnect(backoffMs);
       } else {
         cleanupPlayer();
         player.destroy();

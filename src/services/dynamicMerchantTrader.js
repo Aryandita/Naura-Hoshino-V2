@@ -43,12 +43,20 @@ class DynamicMerchantTrader {
       const playerReputation = typeof playerProfile.reputation === "number" && !isNaN(playerProfile.reputation) && isFinite(playerProfile.reputation)
         ? playerProfile.reputation
         : (Number(playerProfile.reputation) || 0);
-      const itemName = (itemData && itemData.name) || "barang";
+      const rawItemName = (itemData && itemData.name) || "barang";
+      const itemName = String(rawItemName)
+        .replace(/[\r\n`]/g, " ")
+        .trim()
+        .slice(0, 80) || "barang";
+      const cleanAction = String(tradeAction || "inquire")
+        .replace(/[\r\n`]/g, " ")
+        .trim()
+        .slice(0, 32);
 
       let promptTemplate = `Kamu adalah ${this.name}, pedagang spesialis ${this.specialty} di Naura Wilds.\n`;
       promptTemplate += `Gaya bicara: ${this.greetingStyle}. Multiplier harga dasar: ${this.priceMultiplier}x.\n`;
       promptTemplate += `Pemain memiliki reputasi: ${playerReputation}. Total transaksi sebelumnya: ${totalTransactions}.\n`;
-      promptTemplate += `Aksi saat ini: "${tradeAction}" untuk item "${itemName}".\n`;
+      promptTemplate += `Aksi saat ini: "${cleanAction}" untuk item "${itemName}".\n`;
       promptTemplate += `Berikan respons singkat (maksimal 2 kalimat) dalam bahasa Indonesia tanpa tanda petik pembuka/penutup.`;
 
       const rawBasePrice = itemData && itemData.basePrice !== undefined ? itemData.basePrice : 100;

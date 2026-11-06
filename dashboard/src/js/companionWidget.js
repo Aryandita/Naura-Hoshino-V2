@@ -721,18 +721,22 @@
   function appendMsg(sender, text, isVoicePlaying = false) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `naura-msg is-${sender}`;
-    let waveHtml = '';
+    const bubbleDiv = document.createElement('div');
+    bubbleDiv.className = 'naura-bubble';
+    bubbleDiv.textContent = String(text ?? '');
+    msgDiv.appendChild(bubbleDiv);
+
     if (sender === 'bot' && isVoicePlaying) {
-      waveHtml = `
-        <div class="naura-wave-indicator">
-          <span>Suara</span>
-          <span class="naura-wave-dot"></span>
-          <span class="naura-wave-dot"></span>
-          <span class="naura-wave-dot"></span>
-        </div>
+      const waveDiv = document.createElement('div');
+      waveDiv.className = 'naura-wave-indicator';
+      waveDiv.innerHTML = `
+        <span>Suara</span>
+        <span class="naura-wave-dot"></span>
+        <span class="naura-wave-dot"></span>
+        <span class="naura-wave-dot"></span>
       `;
+      msgDiv.appendChild(waveDiv);
     }
-    msgDiv.innerHTML = `<div class="naura-bubble">${text}</div>${waveHtml}`;
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
   }

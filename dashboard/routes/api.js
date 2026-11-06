@@ -396,18 +396,50 @@ module.exports = function (client) {
   // ------------------------------------------------------------------
   const handleMinecraftVerify = async (req, res) => {
     try {
+      const RateLimiter = require("../../src/utils/rateLimiter");
+      const clientIp = String(req.ip || req.socket?.remoteAddress || "unknown");
+      const rateCheck = await RateLimiter.consume(
+        `ip_${clientIp}`,
+        "mc_verify_webhook",
+        10,
+        60,
+      );
+      if (!rateCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: "Terlalu banyak percobaan verifikasi. Coba lagi dalam 1 menit.",
+        });
+      }
+
+      const configuredSecret = String(env.MINECRAFT_WEBHOOK_SECRET || "").trim();
+      if (configuredSecret) {
+        const crypto = require("crypto");
+        const providedSecret = String(
+          req.headers["x-naura-secret"] || req.body?.secret || "",
+        ).trim();
+        const a = Buffer.from(configuredSecret);
+        const b = Buffer.from(providedSecret);
+        if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+          return res.status(401).json({
+            success: false,
+            error: "Autentikasi webhook Minecraft tidak valid.",
+          });
+        }
+      }
+
       const code = String(req.body?.code || req.query?.code || "").trim();
       const inGameUsername = String(
         req.body?.username || req.query?.username || "",
       ).trim();
 
-      if (!code) {
+      if (!/^\d{6}$/.test(code)) {
         return res.status(400).json({
           success: false,
           error: "Kode verifikasi 6 digit wajib disertakan.",
         });
       }
 
+      // Tolak jika username in-game yang dikirim tidak cocok dengan akun yang didaftarkan
       const MinecraftBridgeService = require("../../src/services/minecraftBridge");
       const verified = await MinecraftBridgeService.verifyAccount(code);
 
@@ -418,8 +450,12 @@ module.exports = function (client) {
         });
       }
 
-      // Sinkronisasi ign jika ada
-      if (inGameUsername && verified.mcUsername !== inGameUsername) {
+      // Sinkronisasi penulisan huruf (casing) hanya jika nama identik secara case-insensitive
+      if (
+        inGameUsername &&
+        verified.mcUsername.toLowerCase() === inGameUsername.toLowerCase() &&
+        verified.mcUsername !== inGameUsername
+      ) {
         verified.mcUsername = inGameUsername;
         await verified.save({ fields: ["mcUsername"] });
       }
@@ -428,6 +464,8 @@ module.exports = function (client) {
       await cacheManager.updateUserProfile(verified.userId, {
         minecraft_ign: verified.mcUsername,
       });
+
+      const rewardGranted = verified.bonusGranted !== false ? 500 : 0;
 
       // Kirim DM konfirmasi ke user Discord bila memungkinkan
       try {
@@ -438,11 +476,15 @@ module.exports = function (client) {
           const {
             buildSuccessContainerV2,
           } = require("../../src/utils/NauraContainerBuilder");
+          const bonusLine =
+            rewardGranted > 0
+              ? `> 🌟 **Bonus:** +${rewardGranted} Star Fragments telah ditambahkan ke akunmu!\n`
+              : "";
           const dmPayload = buildSuccessContainerV2({
             title: "Akun Minecraft Berhasil Diverifikasi!",
             description:
               `Selamat! Akun Minecraft **${verified.mcUsername}** telah resmi diverifikasi.\n\n` +
-              `> 🌟 **Bonus:** +500 Star Fragments telah ditambahkan ke akunmu!\n` +
+              bonusLine +
               `> 🎮 Gunakan \`/minecraft sync\` di server Discord untuk mengklaim reward waktu bermain berkala.`,
             footerText: "Naura Minecraft Bridge",
           });
@@ -455,7 +497,7 @@ module.exports = function (client) {
         message: "Akun Minecraft berhasil diverifikasi!",
         userId: verified.userId,
         mcUsername: verified.mcUsername,
-        rewardStarFragments: 500,
+        rewardStarFragments: rewardGranted,
       });
     } catch (err) {
       logger.error("[API MINECRAFT VERIFY] Error:", err.message);

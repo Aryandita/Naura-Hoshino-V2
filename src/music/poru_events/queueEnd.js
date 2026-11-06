@@ -2,6 +2,7 @@ const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const LyricsManager = require("../LyricsManager");
+const { is247Active } = require("../standby247");
 const geminiClient = require("../../ai/geminiClient");
 const {
   rankAutoplayCandidates,
@@ -266,7 +267,7 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
       }
     }
 
-    if (player.is247) {
+    if (is247Active(manager, player)) {
       player.isIdle247 = true;
       const MusicUIManager = require("../MusicUIManager");
       await MusicUIManager.renderIdle247Panel(manager, player);

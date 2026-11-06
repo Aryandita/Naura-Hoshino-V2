@@ -53,8 +53,13 @@ class SmartCraftingAdvisor {
         );
       }
 
+      const sanitizedMaterials = availableMaterials
+        .slice(0, 30)
+        .map((m) => String(m).replace(/[\r\n`]/g, " ").trim().slice(0, 60))
+        .filter(Boolean);
+
       let promptTemplate = `Berikan saran crafting untuk pemain RPG dengan detail berikut:\n`;
-      promptTemplate += `Level pemain: ${playerLevel}. Material tersedia: ${availableMaterials.join(", ") || "tidak ada"}.\n`;
+      promptTemplate += `Level pemain: ${playerLevel}. Material tersedia: ${sanitizedMaterials.join(", ") || "tidak ada"}.\n`;
       promptTemplate += `Resep terbuka: ${unlockedRecipes.length}. Inventory size: ${totalItems} item.\n`;
       promptTemplate += `Sarankan 3 resep optimal dalam format JSON array murni tanpa markdown fences: [{ "name": "...", "materials": "...", "rarity": "...", "benefit": "..." }].`;
 

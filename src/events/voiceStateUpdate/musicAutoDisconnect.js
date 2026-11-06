@@ -1,5 +1,11 @@
 const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
+const {
+  is247Active,
+  parkPlayer,
+  greetReturningListener,
+  PARK_DELAY_MS,
+} = require("../../music/standby247");
 
 module.exports = {
   name: "musicAutoDisconnect",
@@ -20,7 +26,32 @@ module.exports = {
       const nonBotMembers = voiceChan.members.filter((m) => !m.user.bot);
       const timerKey = `${guild.id}:${voiceChan.id}`;
 
+      const manager = client.musicManager;
+      const activePlayer = manager?.poru?.players?.get(guild.id);
+
       if (nonBotMembers.size === 0) {
+        // Mode 24/7: tidak pernah keluar. Hentikan lagu setelah jeda singkat dan
+        // tetap siaga tanpa stream aktif.
+        if (is247Active(manager, activePlayer)) {
+          if (
+            !client.aloneDisconnectTimers.has(timerKey) &&
+            !activePlayer.aloneParked247
+          ) {
+            const parkTimer = setTimeout(() => {
+              client.aloneDisconnectTimers.delete(timerKey);
+              const stillAlone = voiceChan.members.every((m) => m.user.bot);
+              if (stillAlone && is247Active(manager, activePlayer)) {
+                parkPlayer(manager, activePlayer).catch((err) =>
+                  logger.warn(`[Standby247] Gagal memarkir player: ${err?.message || err}`),
+                );
+              }
+            }, PARK_DELAY_MS);
+            if (parkTimer.unref) parkTimer.unref();
+            client.aloneDisconnectTimers.set(timerKey, parkTimer);
+          }
+          return;
+        }
+
         // Bot sendirian di voice channel! Pasang timer 3 menit
         if (!client.aloneDisconnectTimers.has(timerKey)) {
           logger.info(
@@ -34,6 +65,12 @@ module.exports = {
                 const aloneMembers = currentChan.members.filter(
                   (m) => !m.user.bot,
                 );
+                const guardPlayer = client.musicManager?.poru?.players?.get(guild.id);
+                if (aloneMembers.size === 0 && is247Active(client.musicManager, guardPlayer)) {
+                  // 24/7 diaktifkan saat timer berjalan: jangan keluar.
+                  parkPlayer(client.musicManager, guardPlayer).catch(() => {});
+                  return;
+                }
                 if (aloneMembers.size === 0) {
                   logger.info(
                     `[MUSIC ALONE] 3 menit berlalu, memutus koneksi music player di ${guild.name}...`,
@@ -79,6 +116,13 @@ module.exports = {
           );
           clearTimeout(client.aloneDisconnectTimers.get(timerKey));
           client.aloneDisconnectTimers.delete(timerKey);
+        }
+
+        // Pendengar kembali ke player 24/7 yang sedang diparkir: sapa dan tunggu lagu baru.
+        if (activePlayer?.aloneParked247 && is247Active(manager, activePlayer)) {
+          greetReturningListener(manager, activePlayer).catch((err) =>
+            logger.warn(`[Standby247] Gagal menyapa: ${err?.message || err}`),
+          );
         }
       }
     };

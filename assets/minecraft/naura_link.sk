@@ -6,6 +6,8 @@
 options:
     # URL Dashboard Bot Naura Hoshino (Sesuaikan dengan IP:Port atau Domain bot Anda)
     api_url: "http://localhost:3000/api/minecraft/verify"
+    # Secret opsional (sama dengan MINECRAFT_WEBHOOK_SECRET di .env bot)
+    webhook_secret: ""
 
 command /naura [<text>] [<text>]:
     permission: naura.use
@@ -23,7 +25,7 @@ command /naura [<text>] [<text>]:
             send "&e[Naura] Menghubungi sistem Naura Hoshino..." to player
             
             # Kirim request HTTP POST ke Webhook Dashboard Naura
-            send a post request to "{@api_url}" with the body "{""code"": ""%{_code}%"", ""username"": ""%{_name}%"", ""uuid"": ""%{_uuid}%""}" and headers "Content-Type: application/json"
+            send a post request to "{@api_url}" with the body "{""code"": ""%{_code}%"", ""username"": ""%{_name}%"", ""uuid"": ""%{_uuid}%"", ""secret"": ""{@webhook_secret}""}" and headers "Content-Type: application/json" and "X-Naura-Secret: {@webhook_secret}"
             
             # Respons diproses
             set {_response} to last http response

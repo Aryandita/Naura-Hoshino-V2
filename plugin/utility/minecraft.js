@@ -429,6 +429,29 @@ module.exports = {
       return interaction.editReply(syncPayload);
     } else if (subcommand === "verify") {
       const code = interaction.options.getString("code");
+      const env = require("../../src/config/env");
+      const isOwner = Array.isArray(env.OWNER_IDS) && env.OWNER_IDS.includes(interaction.user.id);
+      const isAdmin =
+        isOwner ||
+        Boolean(
+          interaction.member?.permissions?.has?.(PermissionFlagsBits.ManageGuild) ||
+            interaction.member?.permissions?.has?.(PermissionFlagsBits.Administrator),
+        );
+
+      if (!isAdmin) {
+        const errPayload = buildErrorContainerV2({
+          interaction,
+          title: "Verifikasi Harus Dilakukan di Dalam Game",
+          description:
+            `${ui.getEmoji("naura_akward") || "😅"} Untuk membuktikan kepemilikan akun Minecraft, kode verifikasi harus dimasukkan dari dalam server Minecraft.\n\n` +
+            `> ${ui.getEmoji("sparkle") || "💡"} *Masuk ke server Minecraft lalu ketik perintah:* \`/naura link ${code}\``,
+          expression: "akward",
+          withBanner: true,
+          footerText: ui.getFooter("utility"),
+        });
+        return interaction.editReply(errPayload);
+      }
+
       const MinecraftBridgeService = require("../../src/services/minecraftBridge");
       const verified = await MinecraftBridgeService.verifyAccount(code);
 
@@ -448,13 +471,19 @@ module.exports = {
         minecraft_ign: verified.mcUsername,
       });
 
+      const bonusNote =
+        verified.bonusGranted !== false
+          ? `> ${ui.getEmoji("star") || "🌟"} **Bonus Penautan:** \`+500 Star Fragments\`\n`
+          : "";
+
       const verifyPayload = buildSuccessContainerV2({
         interaction,
         accentColorHex: ui.getColor("success") || "#22c55e",
         authorName: `${ui.getEmoji("about") || "🔗"} Verifikasi Identitas Minecraft`,
         title: "Akun Minecraft Berhasil Diverifikasi!",
-        description: `Akun Minecraft **${verified.mcUsername}** telah resmi diverifikasi untuk <@${verified.userId}>!\n\n` +
-          `> ${ui.getEmoji("star") || "🌟"} **Bonus Penautan:** \`+500 Star Fragments\`\n` +
+        description:
+          `Akun Minecraft **${verified.mcUsername}** telah resmi diverifikasi untuk <@${verified.userId}>!\n\n` +
+          bonusNote +
           `> ${ui.getEmoji("sparkle") || "✨"} Kamu sekarang dapat mengklaim hadiah waktu bermain secara berkala dengan \`/minecraft sync\`!`,
         footerText: "Naura Minecraft Network Sync",
       });

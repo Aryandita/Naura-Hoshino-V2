@@ -56,10 +56,26 @@ class WorldEventNarrator {
 
       logger.info(`[WorldNarrator:${this.narratorId}] Narrating event for guild ${guildId || "global"}`);
 
-      const eventType = eventData.type || "generic";
-      const participants = Array.isArray(eventData.participants) ? eventData.participants : [];
-      const outcome = eventData.outcome || "unknown";
-      const location = eventData.location || "Naura Wilds";
+      const eventType =
+        String(eventData.type || "generic")
+          .replace(/[\r\n`]/g, " ")
+          .trim()
+          .slice(0, 48) || "generic";
+      const participants = Array.isArray(eventData.participants)
+        ? eventData.participants.map((p) =>
+            String(p).replace(/[\r\n`]/g, " ").trim().slice(0, 48),
+          )
+        : [];
+      const outcome =
+        String(eventData.outcome || "unknown")
+          .replace(/[\r\n`]/g, " ")
+          .trim()
+          .slice(0, 48) || "unknown";
+      const location =
+        String(eventData.location || "Naura Wilds")
+          .replace(/[\r\n`]/g, " ")
+          .trim()
+          .slice(0, 64) || "Naura Wilds";
       const selectedStyle = this.narrativeStyles[narrativeStyle] || this.narrativeStyles.epic;
 
       const participantList = participants.length > 0

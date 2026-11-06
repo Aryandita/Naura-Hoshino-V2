@@ -28,6 +28,21 @@ describe("Minecraft Link & Verification Suite", () => {
     assert.strictEqual(verified.mcUsername, testUsername);
     assert.strictEqual(verified.isVerified, true);
     assert.strictEqual(verified.verificationCode, null);
+    assert.strictEqual(verified.bonusGranted, true, "Bonus pertama kali harus diberikan");
+
+    // 3b. Re-link dan re-verify tidak boleh memberikan bonus +500 berulang kali (Anti-Farm C1)
+    const secondCode = await MinecraftBridgeService.generateLinkCode(testUserId, testUsername);
+    const reVerified = await MinecraftBridgeService.verifyAccount(secondCode);
+    assert.ok(reVerified, "Re-verifikasi tetap berhasil memperbarui tautan");
+    assert.strictEqual(
+      reVerified.bonusGranted,
+      false,
+      "Bonus +500 tidak boleh diberikan dua kali untuk akun yang sama",
+    );
+
+    // 3c. Kode non-numerik / panjang salah langsung ditolak
+    assert.strictEqual(await MinecraftBridgeService.verifyAccount("abc123"), null);
+    assert.strictEqual(await MinecraftBridgeService.verifyAccount("12345"), null);
 
     // 4. Admin Verify
     const adminUser = "mc_admin_user_" + Date.now();

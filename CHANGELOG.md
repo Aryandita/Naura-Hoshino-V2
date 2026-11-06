@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.5.1] - 2026-11-06
+## [2.5.0] - 2026-11-06
 
 ### 🚀 Added
 - **AI Tiering Routing & OpenRouter Free Tier Cascade**:
@@ -18,13 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **In-Game Minecraft Server Verification Bridge (`/naura link`)**:
   - Bi-directional verification system linking Discord accounts to Minecraft Java/Bedrock player identities.
   - Dedicated Skript script `assets/minecraft/naura_link.sk` exposing the in-game command `/naura link <kode>`.
-  - Webhook backend endpoint `POST /api/minecraft/verify` in `dashboard/routes/api.js` validating 6-digit codes with 15-minute TTL, granting +500 Star Fragments bonus rewards, and dispatching Discord confirmation DMs.
+  - Webhook backend endpoint `POST /api/minecraft/verify` in `dashboard/routes/api.js` validating 6-digit cryptographic codes with 15-minute TTL, optional `MINECRAFT_WEBHOOK_SECRET`, one-time +500 Star Fragments bonus rewards, and Discord confirmation DMs.
   - Administrator command `/minecraft admin-verify` for manual server verification.
   - Comprehensive deployment guide in `docs/MINECRAFT_SETUP.md` covering Paper, Purpur, Spigot, firewall configuration, and reverse proxy setup.
 - **Spotify Live Lyrics Restoration & Dual Engine Integration**:
   - Complete visual overhaul of `src/music/LyricsManager.js` featuring Spotify design tokens (accent `#1DB954`, dynamic timeline progress bar, and bold active line highlighting).
-  - Interactive Discord Components V2 control rows for pause, resume, synchronization, and full-text paged view.
+  - Interactive Discord Components V2 control rows (`lyrics_live_sync`, `lyrics_live_full`, `lyrics_live_stop`).
   - Dual engine architecture integrating LRCLIB for real-time synchronized karaoke lyrics and official Musixmatch API for comprehensive plain lyrics coverage.
+- **24/7 Zero-Resource Standby & Returning Listener Greeting (`src/music/standby247.js`)**:
+  - Unifies `is247`, `is24_7`, and `isStay24_7` checks across `musicAutoDisconnect`, `queueEnd`, and `socketClosed`.
+  - Prevents 3-minute idle disconnects when 24/7 mode is enabled; instead parks the player in 0kbps passive mode after 30s alone and plays `standby.mp3` greeting via Lavalink when a listener returns.
 
 ### 🛡️ Bug Fixes & Stabilities
 - **DiscordAPIError 50035 Resolution on `/minecraft`**:
@@ -34,11 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented `voiceConnectionGuard` mutex in `src/managers/voiceManager.js` and `src/managers/musicManager.js` to coordinate gateway access between `@discordjs/voice` and Poru.
   - Enhanced `src/services/aiDjTrackService.js` to resolve AI DJ voice intros as internal HTTP streams through Lavalink whenever a player is active, preventing session collisions and voice dropouts.
 
----
-
-## [2.5.0] - 2026-11-04
-
-### 🚀 Added
+### 🚀 Core 2.5.0 Foundation (2026-11-04)
 - **Layered 3-Pillar Design System**:
   - Pilar 1: THEME_NAURA (Senja Ruang Ekskul) - Nuansa Cherry Blossom, hangat, dan ramah untuk persona inti Discord & profil.
   - Pilar 2: THEME_SURVIVAL (Jurnal Ekspedisi Dunia Adisha) - Nuansa petualangan Adisha, moss green, parchment, dan RPG lore.
