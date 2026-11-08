@@ -10,12 +10,8 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const { spawn } = require("child_process");
 const { ExternalAPIError } = require("../errors/DomainError");
-let _ffmpegCache = null;
-function getFfmpeg() {
-  if (!_ffmpegCache) _ffmpegCache = require("fluent-ffmpeg");
-  return _ffmpegCache;
-}
 let _ffmpegStaticCache = null;
 function getFfmpegStatic() {
   if (_ffmpegStaticCache === null)
@@ -40,7 +36,10 @@ function resolveFfmpegPath() {
       try {
         fs.chmodSync(getFfmpegStatic(), 0o755);
       } catch (err) {
-        logger.debug("[downloaderCompress:resolveFfmpegPath] Operasi berkas/proses sistem gagal: " + (err?.message || err));
+        logger.debug(
+          "[downloaderCompress:resolveFfmpegPath] Operasi berkas/proses sistem gagal: " +
+            (err?.message || err),
+        );
       }
     }
     return getFfmpegStatic();
@@ -60,10 +59,64 @@ function resolveFfmpegPath() {
 }
 
 const activeFfmpegPath = resolveFfmpegPath();
-try {
-  if (activeFfmpegPath) getFfmpeg().setFfmpegPath(activeFfmpegPath);
-} catch (err) {
-  logger.debug("[downloaderCompress] Operasi berkas/proses sistem gagal: " + (err?.message || err));
+
+/**
+ * Jalankan ffmpeg dengan argumen langsung dan kumpulkan stderr.
+ * @returns {Promise<string>}
+ */
+function runFfmpeg(args, onProgress) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(activeFfmpegPath, args);
+    let stderr = "";
+    proc.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+      if (onProgress) onProgress(stderr);
+    });
+    proc.on("error", (err) => reject(err));
+    proc.on("close", (code) => {
+      if (code === 0) resolve(stderr.trim());
+      else
+        reject(
+          new Error(
+            `ffmpeg exit ${code}: ${stderr.split("\n").slice(-3).join(" ")}`,
+          ),
+        );
+    });
+  });
+}
+
+/**
+ * Baca durasi video/input via ffprobe parsial stderr ffmpeg (-i).
+ * @returns {Promise<number>} durasi detik
+ */
+function getInputDuration(inputPath) {
+  return new Promise((resolveDur) => {
+    const proc = spawn(activeFfmpegPath, ["-i", inputPath]);
+    let out = "";
+    proc.stderr.on("data", (chunk) => {
+      out += chunk.toString();
+    });
+    proc.on("close", () => {
+      const match = out.match(/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/i);
+      if (match) {
+        const total =
+          parseInt(match[1], 10) * 3600 +
+          parseInt(match[2], 10) * 60 +
+          parseFloat(match[3]);
+        if (total > 0) return resolveDur(total);
+      }
+      try {
+        const stats = fs.statSync(inputPath);
+        const estimated = Math.max(
+          10,
+          Math.min(300, stats.size / (1024 * 1024 * 0.8)),
+        );
+        return resolveDur(estimated);
+      } catch {
+        return resolveDur(60);
+      }
+    });
+  });
 }
 
 /** Batas unggah Discord untuk server terkait, disisakan 5 persen. */
@@ -107,48 +160,7 @@ const compressWithFFmpeg = (
     );
     const passlogPrefix = path.join(os.tmpdir(), `naura_pass_${timestamp}`);
 
-    const { execFile } = require("child_process");
-
-    const getDuration = () =>
-      new Promise((resolveDur) => {
-        getFfmpeg().ffprobe(inputPath, (err, metadata) => {
-          if (!err && metadata?.format?.duration) {
-            const dur = parseFloat(metadata.format.duration);
-            if (dur > 0) return resolveDur(dur);
-          }
-
-          execFile(
-            currentPath,
-            ["-i", inputPath],
-            (execErr, stdout, stderr) => {
-              const out = (stderr || "") + (stdout || "");
-              const durMatch = out.match(
-                /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/i,
-              );
-              if (durMatch) {
-                const hours = parseInt(durMatch[1], 10);
-                const mins = parseInt(durMatch[2], 10);
-                const secs = parseFloat(durMatch[3]);
-                const totalSecs = hours * 3600 + mins * 60 + secs;
-                if (totalSecs > 0) return resolveDur(totalSecs);
-              }
-
-              try {
-                const stats = fs.statSync(inputPath);
-                const estimated = Math.max(
-                  10,
-                  Math.min(300, stats.size / (1024 * 1024 * 0.8)),
-                );
-                return resolveDur(estimated);
-              } catch {
-                return resolveDur(60);
-              }
-            },
-          );
-        });
-      });
-
-    getDuration().then((duration) => {
+    getInputDuration(inputPath).then((duration) => {
       const totalBitrate = Math.floor((targetSizeMB * 8192 * 0.97) / duration);
       const audioBitrate = duration > 300 ? 96 : 128;
       const videoBitrate = Math.max(totalBitrate - audioBitrate, 150);
@@ -175,65 +187,82 @@ const compressWithFFmpeg = (
             if (fs.existsSync(`${passlogPrefix}${ext}`))
               fs.unlinkSync(`${passlogPrefix}${ext}`);
           } catch (err) {
-            logger.debug("[downloaderCompress:finishPasslog] Operasi berkas/proses sistem gagal: " + (err?.message || err));
+            logger.debug(
+              "[downloaderCompress:finishPasslog] Operasi berkas/proses sistem gagal: " +
+                (err?.message || err),
+            );
           }
         }
       };
 
-      const runPassTwo = () => {
-        getFfmpeg()(inputPath)
-          .videoCodec("libx264")
-          .audioCodec("aac")
-          .outputOptions([
-            `-b:v ${videoBitrate}k`,
-            `-b:a ${audioBitrate}k`,
-            "-pass 2",
-            `-passlogfile ${passlogPrefix}`,
-            "-preset fast",
-            "-movflags +faststart",
+      const runPassTwo = async () => {
+        try {
+          await runFfmpeg([
+            "-i",
+            inputPath,
+            "-c:v",
+            "libx264",
+            "-c:a",
+            "aac",
+            "-b:v",
+            `${videoBitrate}k`,
+            "-b:a",
+            `${audioBitrate}k`,
+            "-pass",
+            "2",
+            "-passlogfile",
+            passlogPrefix,
+            "-preset",
+            "fast",
+            "-movflags",
+            "+faststart",
             "-y",
             ...vfOptions,
-          ])
-          .output(outputPath)
-          .on("progress", (progress) => {
-            if (progress.percent) {
-              logger.info(
-                `[Downloader] Kompresi lintasan 2: ${progress.percent.toFixed(1)}%`,
-              );
-            }
-          })
-          .on("end", () => {
-            logger.info(`[Downloader] Two-pass selesai: ${outputPath}`);
-            finishPasslog();
-            resolve(outputPath);
-          })
-          .on("error", (ffmpegErr) =>
-            reject(new ExternalAPIError(`FFmpeg lintasan 2 error: ${ffmpegErr.message}`)),
-          )
-          .run();
+            outputPath,
+          ]);
+          logger.info(`[Downloader] Two-pass selesai: ${outputPath}`);
+          finishPasslog();
+          resolve(outputPath);
+        } catch (ffmpegErr) {
+          reject(
+            new ExternalAPIError(
+              `FFmpeg lintasan 2 error: ${ffmpegErr.message}`,
+            ),
+          );
+        }
       };
 
-      getFfmpeg()(inputPath)
-        .videoCodec("libx264")
-        .outputOptions([
-          `-b:v ${videoBitrate}k`,
-          "-pass 1",
-          `-passlogfile ${passlogPrefix}`,
-          "-preset fast",
-          "-an",
-          "-f null",
-          "-y",
-          ...vfOptions,
-        ])
-        .output(NULL_DEVICE)
-        .on("end", () => {
+      runFfmpeg([
+        "-i",
+        inputPath,
+        "-c:v",
+        "libx264",
+        "-b:v",
+        `${videoBitrate}k`,
+        "-pass",
+        "1",
+        "-passlogfile",
+        passlogPrefix,
+        "-preset",
+        "fast",
+        "-an",
+        "-f",
+        "null",
+        "-y",
+        ...vfOptions,
+        NULL_DEVICE,
+      ])
+        .then(() => {
           logger.info("[Downloader] Lintasan 1 selesai, lanjut lintasan 2...");
           runPassTwo();
         })
-        .on("error", (ffmpegErr) =>
-          reject(new ExternalAPIError(`FFmpeg lintasan 1 error: ${ffmpegErr.message}`)),
-        )
-        .run();
+        .catch((ffmpegErr) =>
+          reject(
+            new ExternalAPIError(
+              `FFmpeg lintasan 1 error: ${ffmpegErr.message}`,
+            ),
+          ),
+        );
     });
   });
 };

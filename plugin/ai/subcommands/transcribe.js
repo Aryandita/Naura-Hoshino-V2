@@ -21,6 +21,7 @@
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+const { spawn } = require("child_process");
 const axios = require("axios");
 
 const ui = require("../../../src/config/ui");
@@ -114,19 +115,27 @@ function failCard(title, description) {
  * @returns {Promise<string>} Path to converted WAV file
  */
 async function toWav(sourcePath, targetPath) {
-  const ffmpegStatic = require("ffmpeg-static");
-  const ffmpeg = require("fluent-ffmpeg");
-  ffmpeg.setFfmpegPath(ffmpegStatic);
+  const cmd =
+    require("../../../src/config/env").FFMPEG_PATH || require("ffmpeg-static");
 
   await new Promise((resolve, reject) => {
-    ffmpeg(sourcePath)
-      .audioChannels(1)
-      .audioFrequency(16000)
-      .format("wav")
-      .output(targetPath)
-      .on("end", resolve)
-      .on("error", reject)
-      .run();
+    const proc = spawn(cmd, [
+      "-i",
+      sourcePath,
+      "-ac",
+      "1",
+      "-ar",
+      "16000",
+      "-f",
+      "wav",
+      "-y",
+      targetPath,
+    ]);
+    proc.on("error", reject);
+    proc.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`ffmpeg gagal mengonversi audio (exit ${code})`));
+    });
   });
 
   return targetPath;
@@ -155,7 +164,9 @@ function removeQuietly(filePath) {
   try {
     fs.unlinkSync(filePath);
   } catch (err) {
-    logger.debug(`[transcribe:removeQuietly] File operation failed: ${err?.message || err}`);
+    logger.debug(
+      `[transcribe:removeQuietly] File operation failed: ${err?.message || err}`,
+    );
   }
 }
 
@@ -214,7 +225,10 @@ module.exports = async function transcribe(interaction) {
     // Load Whisper model
     const whisper = await getWhisperPipeline();
     if (!whisper) {
-      throw new DomainError("MODEL_LOAD_FAILED", "Model Whisper gagal dimuat ke memori.");
+      throw new DomainError(
+        "MODEL_LOAD_FAILED",
+        "Model Whisper gagal dimuat ke memori.",
+      );
     }
 
     // Download file to temp directory
