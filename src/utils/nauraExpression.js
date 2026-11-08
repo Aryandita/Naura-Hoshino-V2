@@ -66,6 +66,27 @@ const EXPRESSIONS = [
   "Thinking",
 ];
 
+/**
+ * Art batch snake_case menggantikan berkas TitleCase lama untuk lampiran bot.
+ * Dashboard tetap merujuk berkas lama secara langsung, jadi keduanya hidup
+ * berdampingan di directory yang sama.
+ */
+const ART_FILES = {
+  Akward: "naura_akward",
+  Angry: "naura_angry",
+  Annoy: "naura_annoy",
+  "Blow kiss": "naura_blow_kiss",
+  Cheers: "naura_cheers",
+  Chirping: "naura_chirping",
+  Confused: "naura_confused",
+  Eat: "naura_eat",
+  Hmph: "naura_hmph",
+  Impressed: "naura_impressed",
+  Read: "naura_read",
+  Shy: "naura_shy",
+  Sleepy: "naura_sleepy",
+};
+
 /** Emoji kustom Discord untuk tiap ekspresi. */
 const EMOJIS = {
   Akward: "<:Akward:1533824815725805668>",
@@ -247,15 +268,25 @@ function findFile(name) {
   if (PATH_CACHE.has(name)) return PATH_CACHE.get(name);
 
   let found = null;
-  for (const ext of EXTENSIONS) {
-    const candidate = path.join(EXPRESSION_DIR, `${name}${ext}`);
-    try {
-      if (fs.existsSync(candidate)) {
-        found = candidate;
-        break;
+  const artName = ART_FILES[name];
+  if (artName) {
+    const artPath = path.join(EXPRESSION_DIR, `${artName}.png`);
+    if (fs.existsSync(artPath)) found = artPath;
+  }
+  if (!found) {
+    for (const ext of EXTENSIONS) {
+      const candidate = path.join(EXPRESSION_DIR, `${name}${ext}`);
+      try {
+        if (fs.existsSync(candidate)) {
+          found = candidate;
+          break;
+        }
+      } catch (error) {
+        logger.debug(
+          "[nauraExpression:findFile] Galat pada rutinitas aplikasi: " +
+            (error?.message || error),
+        );
       }
-    } catch (error) {
-      logger.debug("[nauraExpression:findFile] Galat pada rutinitas aplikasi: " + (error?.message || error));
     }
   }
 

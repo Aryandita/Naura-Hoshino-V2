@@ -133,6 +133,59 @@ describe("NauraContainerBuilder & UI Localization V2", () => {
     );
   });
 
+  it("buildContainerV2 memakai art baru sebagai thumbnail ekspresi bila tidak ada iconURL", () => {
+    const payload = buildContainerV2({
+      title: "Ekspresi Sukses",
+      description: "Deskripsi",
+      expression: "success",
+    });
+
+    const header = payload.components[0].components[0];
+    assert.ok(header.accessory);
+    assert.strictEqual(
+      header.accessory.media.url,
+      "attachment://naura_cheers.png",
+    );
+    assert.ok(payload.files.some((f) => f.name === "naura_cheers.png"));
+  });
+
+  it("buildContainerV2 mengabaikan ekspresi bila iconURL potret sudah ada", () => {
+    const payload = buildContainerV2({
+      title: "Pertemuan NPC",
+      description: "Deskripsi",
+      expression: "success",
+      iconURL: "attachment://npc_portrait.png",
+      files: [{ name: "npc_portrait.png" }],
+    });
+
+    const header = payload.components[0].components[0];
+    assert.strictEqual(
+      header.accessory.media.url,
+      "attachment://npc_portrait.png",
+    );
+    assert.ok(!payload.files.some((f) => f.name === "naura_cheers.png"));
+    assert.ok(!header.components[0].content.includes("<:Cheers:"));
+  });
+
+  it("buildContainerV2 tidak menambah gallery ekspresi bila iconURL sudah ada", () => {
+    const payload = buildContainerV2({
+      title: "Pertemuan NPC",
+      description: "Deskripsi",
+      expression: "success",
+      expressionAs: "gallery",
+      iconURL: "attachment://npc_portrait.png",
+      files: [{ name: "npc_portrait.png" }],
+    });
+
+    assert.ok(!JSON.stringify(payload).includes("naura_cheers.png"));
+  });
+
+  it("nauraExpression.getPath memilih art baru dan jatuh ke berkas lama bila belum ada", () => {
+    const nauraExpression = require("./nauraExpression");
+    assert.ok(nauraExpression.getPath("Cheers").endsWith("naura_cheers.png"));
+    assert.ok(nauraExpression.getPath("Happy").endsWith("Happy.png"));
+  });
+
   it("buildContainerV2 mendeduplikasi custom_id yang sama pada baris tombol", () => {
     const duplicateRow1 = {
       type: 1,

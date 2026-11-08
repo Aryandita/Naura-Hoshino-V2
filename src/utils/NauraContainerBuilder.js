@@ -340,7 +340,9 @@ function buildContainerV2(arg1 = {}, arg2) {
   // dan menyisakan ruang untuk header, field, serta footer.
   const bodyDescription = truncateText(description, MAX_DESCRIPTION_LENGTH);
 
-  if (expression && expressionAs !== "none") {
+  // Potret NPC/iconURL menempati slot thumbnail yang sama dengan ekspresi,
+  // jadi gambar existing menang mutlak dan blok ekspresi dilewati seluruhnya.
+  if (expression && expressionAs !== "none" && !iconURL) {
     const useImage =
       expressionImage === "auto"
         ? nauraExpression.shouldAttachImage(expression)
