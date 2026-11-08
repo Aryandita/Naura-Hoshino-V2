@@ -22,6 +22,7 @@ const {
 const emojisBase = require("./ui/emojis_base");
 const emojisGame = require("./ui/emojis_game");
 const emojisMedia = require("./ui/emojis_media");
+const customEmojis = require("./ui/customEmojis");
 const helpers = require("./ui/helpers");
 const { logger } = require("../managers/logger");
 const { LRUCache } = require("./uiCache");
@@ -73,7 +74,7 @@ module.exports = {
     const { BOT_VERSION } = require("./version");
     const ver = env.BOT_VERSION || BOT_VERSION;
     let result;
-    
+
     if (lang) {
       const languageManager = require("../managers/languageManager");
       const key = `container.footers.${category}`;
@@ -81,7 +82,7 @@ module.exports = {
         result = languageManager.translateSync(lang, key, { version: ver });
       }
     }
-    
+
     if (result === undefined) {
       const template = this.footers[category] || this.footers.core;
       if (typeof template === "string") {
@@ -90,7 +91,7 @@ module.exports = {
         result = template;
       }
     }
-    
+
     footerCache.set(cacheKey, result);
     return result;
   },
@@ -144,7 +145,15 @@ module.exports = {
   getEmoji(name) {
     const cached = emojiCache.get(name);
     if (cached !== undefined) return cached;
-    
+
+    // ID Discord baru (customEmojis.js) menang atas peta legacy;
+    // placeholder otomatis jatuh ke fallback Unicode.
+    const custom = customEmojis.getCustomEmoji(name);
+    if (custom && customEmojis.isCustomEmojiConfigured(custom)) {
+      emojiCache.set(name, custom);
+      return custom;
+    }
+
     const result = this.emojis[name] || null;
     emojiCache.set(name, result);
     return result;
@@ -165,7 +174,7 @@ module.exports = {
   getColor(name) {
     const cached = colorCache.get(name);
     if (cached !== undefined) return cached;
-    
+
     const result = this.colors[name] || this.colors.primary;
     colorCache.set(name, result);
     return result;

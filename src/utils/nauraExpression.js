@@ -335,7 +335,17 @@ function exists(nameOrMood) {
  * embed.setTitle(`${naura.getEmoji('success')} Berhasil!`);
  */
 function getEmoji(nameOrMood) {
-  return EMOJIS[resolveExpression(nameOrMood)] || null;
+  const expression = resolveExpression(nameOrMood);
+  // ID baru menang atas ID lama untuk ekspresi yang punya art batch baru.
+  const artKey = ART_FILES[expression];
+  if (artKey) {
+    const custom = require("../config/ui/customEmojis");
+    const resolved = custom.getCustomEmoji(artKey);
+    if (resolved && custom.isCustomEmojiConfigured(resolved)) {
+      return resolved;
+    }
+  }
+  return EMOJIS[expression] || null;
 }
 
 /**
