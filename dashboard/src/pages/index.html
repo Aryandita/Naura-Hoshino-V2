@@ -1,26 +1,16 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Naura Hoshino, Dashboard</title>
-    <meta name="description" content="Discord bot dashboard and control panel for Naura Hoshino, real-time analytics, music, economy, and AI companion." />
+    <title>Naura Hoshino · Dashboard</title>
+    <meta name="description" content="Dashboard kontrol Naura Hoshino v2.5.0 - Monitoring real-time, musik, ekonomi, AI companion, dan Naura Wilds RPG." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
-    <script>
-      (function() {
-        if (window.location.search.includes('desktop=1')) return;
-        var ua = navigator.userAgent;
-        var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-        if (isMobile || window.innerWidth < 768) {
-          window.location.replace('/mobile');
-        }
-      })();
-    </script>
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script type="importmap">
@@ -32,482 +22,175 @@
         }
       }
     </script>
-    <style>
-      /* Hero 3D canvas container - Anti-Slop Cap at 1 primary anchor */
-      .hero-3d-wrapper {
-        width: 100%;
-        height: 100%;
-        min-height: 400px;
-        border-radius: var(--r-xl);
-        overflow: hidden;
-        position: relative;
-        background: #070a14;
-        border: 1px solid rgba(244,114,182,0.3);
-        box-shadow: 0 16px 40px rgba(0,0,0,0.5);
-      }
-
-      .hero-3d-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(7,10,20,0.85) 0%, transparent 40%);
-        pointer-events: none;
-        z-index: 2;
-      }
-
-      /* Hero Layout Grid - Stretch both columns to equal height */
-      .hero-grid-layout {
-        display: grid;
-        grid-template-columns: 1fr 340px;
-        gap: 20px;
-        margin-bottom: 24px;
-        align-items: stretch;
-      }
-      @media (max-width: 900px) {
-        .hero-grid-layout {
-          grid-template-columns: 1fr;
-        }
-        .hero-3d-wrapper {
-          width: 100%;
-          min-height: 380px;
-          margin: 0 auto;
-        }
-      }
-
-      /* Synchronized Two-Column Dashboard Row Grid */
-      .dashboard-two-col {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 20px;
-        margin-bottom: 20px;
-        align-items: stretch;
-      }
-      @media (max-width: 900px) {
-        .dashboard-two-col {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      /* Telemetry chart container */
-      .chart-wrapper {
-        position: relative;
-        flex: 1;
-        min-height: 200px;
-        width: 100%;
-      }
-
-      /* Music mini player - Harmonized compact widget */
-      .mini-player {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--r-md);
-        transition: all var(--t-base);
-      }
-
-      .mini-player:hover {
-        border-color: var(--border-primary);
-      }
-
-      .mini-player-artwork {
-        width: 38px;
-        height: 38px;
-        border-radius: var(--r-md);
-        background: var(--primary-dim);
-        border: 1px solid var(--border-primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        flex-shrink: 0;
-      }
-
-      .mini-player-controls {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-left: auto;
-        flex-shrink: 0;
-      }
-
-      .mini-ctrl-btn {
-        width: 30px;
-        height: 30px;
-        border-radius: var(--r-md);
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-subtle);
-        color: var(--text-secondary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all var(--t-fast);
-        font-size: 11px;
-      }
-
-      .mini-ctrl-btn:hover {
-        background: var(--primary-dim);
-        border-color: var(--border-primary);
-        color: var(--primary);
-      }
-
-      .mini-ctrl-btn.play {
-        width: 32px;
-        height: 32px;
-        background: var(--primary-dim);
-        border-color: var(--border-primary);
-        color: var(--primary);
-      }
-
-      .mini-ctrl-btn.play:hover {
-        background: rgba(244,114,182,0.25);
-      }
-
-      /* Survival vitals bar - Even distribution & high legibility */
-      .vitals-group {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .vital-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .vital-icon {
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        flex-shrink: 0;
-      }
-
-      .vital-label {
-        font-size: 11px;
-        color: var(--text-muted);
-        width: 66px;
-        flex-shrink: 0;
-        font-family: var(--font-mono);
-      }
-
-      .vital-bar-track {
-        flex: 1;
-        height: 6px;
-        background: var(--bg-elevated);
-        border-radius: var(--r-full);
-        overflow: hidden;
-      }
-
-      .vital-bar-fill {
-        height: 100%;
-        border-radius: var(--r-full);
-        transition: width 0.8s ease;
-      }
-
-      .vital-value {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text-secondary);
-        width: 36px;
-        text-align: right;
-        flex-shrink: 0;
-      }
-
-      /* Guild selector card */
-      .guild-card {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 14px;
-        border-radius: var(--r-md);
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
-        cursor: pointer;
-        transition: all var(--t-base);
-      }
-
-      .guild-card:hover {
-        background: var(--bg-surface-hv);
-        border-color: var(--border-primary);
-        transform: translateX(4px);
-      }
-
-      .guild-card.selected {
-        background: var(--primary-dim);
-        border-color: var(--border-primary);
-      }
-
-      /* Quick Actions Matrix & Navigation Styles */
-      .quick-actions-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-      }
-      @media (max-width: 640px) {
-        .quick-actions-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-      .quick-action {
-        display: flex !important;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 14px;
-        border-radius: var(--r-xl);
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
-        text-decoration: none !important;
-        color: var(--text-primary) !important;
-        position: relative;
-        overflow: hidden;
-        box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08));
-        transition: transform var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)) 350ms,
-                    background var(--t-base, 200ms ease),
-                    border-color var(--t-base, 200ms ease),
-                    box-shadow var(--t-base, 200ms ease);
-        cursor: pointer;
-      }
-      .quick-action:hover {
-        background: var(--bg-surface-hv);
-        border-color: var(--border-primary);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.35), var(--glass-specular);
-        text-decoration: none !important;
-      }
-      .quick-action-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: var(--r-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 15px;
-        flex-shrink: 0;
-        transition: transform var(--t-base, 200ms ease);
-      }
-      .quick-action:hover .quick-action-icon {
-        transform: scale(1.08);
-      }
-      .quick-action-content {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-        flex: 1;
-      }
-      .quick-action-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-primary);
-        font-family: var(--font-heading);
-        line-height: 1.3;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .quick-action-desc {
-        font-size: 11px;
-        color: var(--text-muted);
-        line-height: 1.3;
-        margin-top: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-family: var(--font-body);
-      }
-      .quick-action::after {
-        content: '\f054';
-        font-family: 'Font Awesome 6 Free';
-        font-weight: 900;
-        font-size: 10px;
-        color: var(--text-muted);
-        margin-left: auto;
-        opacity: 0.35;
-        transform: translateX(-2px);
-        transition: opacity var(--t-base, 200ms ease), transform var(--t-base, 200ms ease), color var(--t-base, 200ms ease);
-        flex-shrink: 0;
-      }
-      .quick-action:hover::after {
-        opacity: 1;
-        transform: translateX(0);
-        color: var(--primary);
-      }
-    </style>
   </head>
   <body>
     <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
-    <!-- ── App Shell ── -->
+
+    <!-- App Shell -->
     <div class="app-shell">
-      <!-- Mobile Sidebar Overlay -->
-      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <!-- Sidebar Backdrop -->
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-      <!-- ════════════════════════════════════════════
-           SIDEBAR
-      ════════════════════════════════════════════ -->
-      <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
-
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar" aria-label="Navigasi utama" role="navigation">
         <!-- Brand -->
-        <div class="sidebar-brand">
-          <div class="sidebar-logo-icon">
-            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" />
+        <div class="sidebar-header">
+          <div class="header-brand">
+            <div class="header-brand-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-10 10c0 6.5 10 14 10 14s10-7.5 10-14a10 10 0 0 0-10-10z"/><path d="M12 6v4"/><path d="M12 14h.01"/></svg>
+            </div>
+            <span class="header-brand-text">Naura Hoshino</span>
           </div>
-          <div class="sidebar-brand-text">
-            <div class="sidebar-brand-name">Naura Hoshino</div>
-            <div class="sidebar-brand-sub">v2.5.0 · Online</div>
-          </div>
-          <button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Ciutkan Sidebar (Ctrl+B)" aria-label="Toggle Compact Sidebar">
-            <i class="fa-solid fa-angles-left"></i>
-          </button>
-          <button type="button" class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
-            <i class="fa-solid fa-xmark"></i>
+          <button type="button" class="btn btn-icon-only btn-ghost" id="sidebarCollapseBtn" aria-label="Toggle sidebar compact" title="Ciutkan Sidebar (Ctrl+B)">
+            <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
           </button>
         </div>
 
+        <!-- Pillar Indicator -->
+        <div class="pillar-indicator" id="pillarIndicator">
+          <span class="pillar-indicator-label">Studio Kontrol OSIS</span>
+        </div>
+
         <!-- Navigation -->
-        <nav class="sidebar-nav" role="navigation">
+        <nav class="sidebar-nav" role="navigation" aria-label="Menu utama">
 
           <!-- Overview -->
-          <div class="nav-group">
-            <div class="nav-group-label">Overview</div>
-            <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
-              <span>Dashboard</span>
+          <div class="nav-section">
+            <span class="nav-section-title">Overview</span>
+            <a href="/" class="nav-item active" aria-current="page">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-item-label">Dashboard</span>
             </a>
             <a href="/lounge" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary);"></i></span>
-              <span>3D AI Lounge</span>
-              <span class="nav-badge" style="background:rgba(244,114,182,0.2);color:var(--primary);border:1px solid rgba(244,114,182,0.3);">3D · 31</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--ui-primary);"></i></span>
+              <span class="nav-item-label">3D AI Lounge</span>
+              <span class="nav-item-badge">31 Anim</span>
             </a>
             <a href="/status" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
-              <span>Live Status</span>
-              <span class="nav-badge">Live</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
+              <span class="nav-item-label">Live Status</span>
+              <span class="nav-item-badge">Live</span>
             </a>
             <a href="/feed" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
-              <span>Activity Feed</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-rss"></i></span>
+              <span class="nav-item-label">Activity Feed</span>
             </a>
           </div>
 
           <!-- Community -->
-          <div class="nav-group">
-            <div class="nav-group-label">Community</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Community</span>
             <a href="/leaderboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
-              <span>Leaderboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label">Leaderboard</span>
             </a>
             <a href="/economy" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
-              <span>Economy</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-coins"></i></span>
+              <span class="nav-item-label">Economy</span>
             </a>
             <a href="/clan" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-users-rays"></i></span>
-              <span>Sindikat & Klan</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-users-rays"></i></span>
+              <span class="nav-item-label">Sindikat & Klan</span>
             </a>
             <a href="/marketplace" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-shop"></i></span>
-              <span>Pasar Galaksi</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-shop"></i></span>
+              <span class="nav-item-label">Pasar Galaksi</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
-              <span>Guild Topology</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-item-label">Guild Topology</span>
             </a>
           </div>
 
           <!-- Media & Audio -->
-          <div class="nav-group">
-            <div class="nav-group-label">Media & Audio</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Media & Audio</span>
             <a href="/music" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
-              <span>Music Hub</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+              <span class="nav-item-label">Music Hub</span>
             </a>
             <a href="/soundboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
-              <span>Soundboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
+              <span class="nav-item-label">Soundboard</span>
             </a>
             <a href="/jam" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
-              <span>Jam Session</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-guitar"></i></span>
+              <span class="nav-item-label">Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
-              <span>Karaoke</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-item-label">Karaoke</span>
             </a>
           </div>
 
           <!-- Naura Wilds RPG -->
-          <div class="nav-group">
-            <div class="nav-group-label">Naura Wilds RPG</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Naura Wilds RPG</span>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
-              <span>World Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-item-label">World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
-              <span>Survival Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-map"></i></span>
+              <span class="nav-item-label">Survival Map</span>
             </a>
             <a href="/inventory" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-backpack"></i></span>
-              <span>Tas & Ransel</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-backpack"></i></span>
+              <span class="nav-item-label">Tas & Ransel</span>
             </a>
             <a href="/arcade" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
-              <span>Retro Arcade</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
+              <span class="nav-item-label">Retro Arcade</span>
             </a>
             <a href="/activity" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-bolt"></i></span>
-              <span>Activity Hub</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+              <span class="nav-item-label">Activity Hub</span>
             </a>
           </div>
 
           <!-- Configuration -->
-          <div class="nav-group">
-            <div class="nav-group-label">Configuration</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Configuration</span>
             <a href="/settings" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
-              <span>Settings</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+              <span class="nav-item-label">Settings</span>
             </a>
             <a href="/welcomer" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
-              <span>Welcomer Card</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-palette"></i></span>
+              <span class="nav-item-label">Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-              <span>Embed Builder</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-item-label">Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
-              <span>Automations</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
+              <span class="nav-item-label">Automations</span>
             </a>
             <a href="/tickets" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
-              <span>Tickets</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-ticket"></i></span>
+              <span class="nav-item-label">Tickets</span>
             </a>
             <a href="/admin" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
-              <span>Admin God Mode</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <span class="nav-item-label">Admin God Mode</span>
             </a>
           </div>
 
           <!-- More -->
-          <div class="nav-group">
-            <div class="nav-group-label">More</div>
-            <a href="/profile" class="nav-item">
-              <span class="nav-icon" style="color:var(--primary)"><i class="fa-solid fa-id-card"></i></span>
-              <span style="color:var(--primary)">Profil Petualang</span>
+          <div class="nav-section">
+            <span class="nav-section-title">More</span>
+            <a href="/profile" class="nav-item" style="color: var(--ui-primary);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--ui-primary);"><i class="fa-solid fa-id-card"></i></span>
+              <span class="nav-item-label" style="color: var(--ui-primary);">Profil Petualang</span>
             </a>
-            <a href="/achievements" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-amber)"><i class="fa-solid fa-trophy"></i></span>
-              <span style="color:var(--accent-amber)">Ruang Trofi</span>
+            <a href="/achievements" class="nav-item" style="color: var(--color-warning);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-warning);"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label" style="color: var(--color-warning);">Ruang Trofi</span>
             </a>
-            <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            <a href="/portfolio" class="nav-item" style="color: var(--color-success);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-success);"><i class="fa-solid fa-id-badge"></i></span>
+              <span class="nav-item-label" style="color: var(--color-success);">Creator Portfolio</span>
             </a>
           </div>
 
@@ -515,189 +198,191 @@
 
         <!-- User Footer -->
         <div class="sidebar-footer">
-          <div class="sidebar-user" id="sidebarUser" onclick="window.location.href='/profile'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" id="sidebarAvatar"
+          <div class="sidebar-user" id="sidebarUser" role="button" tabindex="0" aria-label="Buka profil" onclick="window.location.href='/profile'">
+            <img src="/assets/core/avatar.png" alt="" class="sidebar-user-avatar" id="sidebarAvatar"
               onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
             <div class="sidebar-user-info">
               <div class="sidebar-user-name" id="sidebarUserName">Guest</div>
               <div class="sidebar-user-role" id="sidebarUserRole">Klik untuk login</div>
             </div>
-            <a href="/login?redirect=/profile" title="Login Akun" style="color:var(--text-muted);font-size:13px;text-decoration:none;" id="sidebarLoginBtn">
-              <i class="fa-brands fa-discord"></i>
+            <a href="/login?redirect=/profile" title="Login Akun" class="sidebar-login-link" id="sidebarLoginBtn" aria-label="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
             </a>
           </div>
         </div>
-
       </aside>
 
-      <!-- ════════════════════════════════════════════
-           MAIN CONTENT AREA
-      ════════════════════════════════════════════ -->
-      <div class="main-content">
-
-        <!-- Top Header -->
-        <header class="top-header">
+      <!-- Main Content -->
+      <main class="main-content" role="main">
+        <!-- Header -->
+        <header class="app-header" role="banner">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
-              <i class="fa-solid fa-bars"></i>
+            <button type="button" class="btn btn-icon-only btn-ghost" id="hamburgerBtn" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="sidebar">
+              <i class="fa-solid fa-bars" aria-hidden="true"></i>
             </button>
             <div>
-              <div class="page-title" id="pageTitle">System Overview</div>
-              <div class="breadcrumb">
+              <h1 class="page-title" id="pageTitle">System Overview</h1>
+              <nav class="breadcrumb" aria-label="Breadcrumb">
                 <span>Naura OS</span>
-                <span class="breadcrumb-sep">/</span>
+                <span class="breadcrumb-sep" aria-hidden="true">/</span>
                 <span>Dashboard</span>
-              </div>
+              </nav>
             </div>
           </div>
 
           <div class="header-right">
+            <!-- Theme Toggle -->
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="themeToggle" data-tooltip="Ganti Tema (T)" aria-label="Ganti Tema">
+              <i class="fa-solid fa-palette" aria-hidden="true"></i>
+            </button>
 
-
+            <!-- Density Toggle -->
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="densityToggle" data-tooltip="Ganti Densitas" aria-label="Ganti Densitas">
+              <i class="fa-solid fa-grip-lines" aria-hidden="true"></i>
+            </button>
 
             <!-- Wallet -->
-            <div class="wallet-badge" id="headerWallet" title="Naura Coins">
-              <i class="fa-solid fa-coins"></i>
+            <div class="wallet-badge" id="headerWallet" title="Naura Coins" role="status" aria-live="polite">
+              <i class="fa-solid fa-coins" aria-hidden="true"></i>
               <span id="walletAmount">0</span>
             </div>
 
             <!-- Auth / Login -->
-            <a href="/auth/discord" class="btn btn-discord btn-sm" id="headerAuthBtn" title="Login dengan Discord">
-              <i class="fa-brands fa-discord"></i>
+            <a href="/auth/discord" class="btn btn-primary btn-sm" id="headerAuthBtn" title="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
               <span id="headerAuthLabel">Login</span>
             </a>
 
             <!-- User avatar -->
-            <img src="/assets/core/avatar.png" alt="User" class="header-avatar" id="headerAvatar"
-              onclick="window.location.href='/'"
+            <img src="/assets/core/avatar.png" alt="" class="header-avatar" id="headerAvatar"
               onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
           </div>
         </header>
 
-        <!-- ═══════════════════════════════
-             PAGE CONTENT
-        ═══════════════════════════════ -->
-        <main class="page-content" id="mainContent">
+        <!-- Page Content -->
+        <div class="page" id="mainContent">
 
-          <!-- ── Welcome Row ── -->
-          <div class="page-header-bar animate-in">
+          <!-- Welcome Row -->
+          <div class="page-header-bar animate-slide-up">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
-                  <i class="fa-solid fa-gauge-high" style="color:var(--primary);"></i>
+                <span class="page-heading-icon" style="background: var(--ui-primary-glow); border: 1px solid var(--hairline-brand);">
+                  <i class="fa-solid fa-gauge-high" style="color: var(--ui-primary);"></i>
                 </span>
-                Selamat datang, <span id="welcomeUser" class="gradient-text-primary">Guest</span>
+                Selamat datang, <span id="welcomeUser" class="text-accent">Guest</span>
               </h1>
-              <p class="page-sub">Sistem monitoring terpusat · Telemetry real-time · Naura Hoshino v2.5.0</p>
+              <p class="page-sub">Sistem monitoring terpusat &middot; Telemetri real-time &middot; Naura Hoshino v2.5.0</p>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
               <div style="text-align:right;">
-                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-heading);">Engine Version</div>
-                <div id="displayQuickEngineVersion" style="font-family:var(--font-mono);font-size:13px;color:var(--text-primary);font-weight:700;">v2.5.0</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; font-family: var(--font-heading);">Engine Version</div>
+                <div id="displayQuickEngineVersion" style="font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-primary); font-weight:700;">v2.5.0</div>
               </div>
-              <div style="width:36px;height:36px;border-radius:50%;background:var(--primary-dim);border:1px solid var(--border-primary);display:flex;align-items:center;justify-content:center;animation:dot-pulse 2s infinite;">
-                <span style="width:10px;height:10px;border-radius:50%;background:var(--primary);display:block;box-shadow:0 0 10px var(--primary-glow);"></span>
+              <div style="width:36px; height:36px; border-radius: var(--radius-full); background: var(--ui-primary-glow); border: 1px solid var(--hairline-brand); display:flex; align-items:center; justify-content:center;">
+                <span style="width:10px; height:10px; border-radius: var(--radius-full); background: var(--ui-primary); box-shadow: 0 0 10px var(--ui-primary-glow); animation: badge-pulse 2s var(--ease-in-out) infinite;"></span>
               </div>
             </div>
           </div>
 
-          <!-- ── Hero Row: 3D + Operations Matrix ── -->
-          <div class="hero-grid-layout animate-in delay-1">
+          <!-- Hero Row: 3D + Operations Matrix -->
+          <div class="hero-grid-layout animate-slide-up stagger-1">
 
-            <!-- Left: System Command Center & Operations Matrix -->
-            <div style="display:flex;flex-direction:column;gap:20px;">
+            <!-- Left: System Command Center -->
+            <div style="display:flex; flex-direction:column; gap: var(--space-5);">
 
               <!-- Flagship Command Card -->
-              <div class="card card-solid card-p" style="position:relative;">
-                <div>
-                  <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--primary);margin-bottom:8px;font-family:var(--font-heading);display:flex;align-items:center;gap:6px;">
-                    <span style="width:6px;height:6px;border-radius:50%;background:var(--primary);display:inline-block;"></span>
-                    KONSOL KENDALI SISTEM · NAURA HOSHINO V2
+              <article class="card">
+                <div class="card-header">
+                  <div class="card-title" style="display:flex; align-items:center; gap: var(--space-2);">
+                    <span style="width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--ui-primary);"></span>
+                    <span style="font-family: var(--font-heading); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ui-primary);">KONSOL KENDALI SISTEM</span>
                   </div>
-                  <h2 style="font-family:var(--font-heading);font-size:26px;font-weight:700;color:var(--text-primary);margin-bottom:8px;line-height:1.25;">
+                </div>
+                <div class="card-body">
+                  <h2 style="font-family: var(--font-heading); font-size: clamp(1.25rem, 2.5vw + 0.5rem, 1.75rem); font-weight: 700; color: var(--ink); margin-bottom: var(--space-2); line-height: 1.25;">
                     Flagship Companion & Telemetri Real-Time
                   </h2>
-                  <p style="font-size:13px;color:var(--text-secondary);line-height:1.7;max-width:560px;margin-bottom:16px;">
+                  <p style="font-size: var(--text-body); color: var(--text-secondary); line-height: 1.7; max-width: 560px; margin-bottom: var(--space-4);">
                     Platform pengawasan bot terpadu: monitoring gateway Discord, manajemen audio Poru v5 & Lavalink, sistem moneter polyglot database, serta avatar 3D humanoid terkalibrasi v6.
                   </p>
 
                   <!-- Architecture Tags -->
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;">
-                    <span class="badge" style="background:var(--bg-surface);border:1px solid var(--border-subtle);color:var(--text-secondary);font-size:10px;padding:3px 8px;font-family:var(--font-mono);">
-                      <i class="fa-solid fa-music" style="color:var(--primary);margin-right:4px;"></i> Lavalink v4
+                  <div class="flex-center" style="flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4);">
+                    <span class="badge badge-primary" style="font-size: var(--text-xs); padding: var(--space-1) var(--space-2);">
+                      <i class="fa-solid fa-music" aria-hidden="true" style="font-size: 0.85em;"></i> Lavalink v4
                     </span>
-                    <span class="badge" style="background:var(--bg-surface);border:1px solid var(--border-subtle);color:var(--text-secondary);font-size:10px;padding:3px 8px;font-family:var(--font-mono);">
-                      <i class="fa-solid fa-database" style="color:var(--accent-green);margin-right:4px;"></i> Supabase & Redis
+                    <span class="badge badge-success" style="font-size: var(--text-xs); padding: var(--space-1) var(--space-2);">
+                      <i class="fa-solid fa-database" aria-hidden="true" style="font-size: 0.85em;"></i> Supabase & Redis
                     </span>
-                    <span class="badge" style="background:var(--bg-surface);border:1px solid var(--border-subtle);color:var(--text-secondary);font-size:10px;padding:3px 8px;font-family:var(--font-mono);">
-                      <i class="fa-solid fa-earth-asia" style="color:var(--accent-cyan);margin-right:4px;"></i> Naura Wilds RPG
+                    <span class="badge badge-info" style="font-size: var(--text-xs); padding: var(--space-1) var(--space-2);">
+                      <i class="fa-solid fa-earth-asia" aria-hidden="true" style="font-size: 0.85em;"></i> Naura Wilds RPG
                     </span>
-                    <span class="badge" style="background:var(--bg-surface);border:1px solid var(--border-subtle);color:var(--text-secondary);font-size:10px;padding:3px 8px;font-family:var(--font-mono);">
-                      <i class="fa-solid fa-brain" style="color:var(--accent-violet);margin-right:4px;"></i> Gemini 2.5 Flash
+                    <span class="badge badge-warning" style="font-size: var(--text-xs); padding: var(--space-1) var(--space-2);">
+                      <i class="fa-solid fa-brain" aria-hidden="true" style="font-size: 0.85em;"></i> Gemini 2.5 Flash
                     </span>
                   </div>
 
                   <!-- Direct Actions -->
-                  <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <a href="/lounge" class="btn btn-primary btn-sm" style="box-shadow: 0 0 15px rgba(244,114,182,0.35);">
-                      <i class="fa-solid fa-cube"></i> 3D AI Lounge (31 Animasi)
+                  <div style="display:flex; gap: var(--space-2); flex-wrap: wrap;">
+                    <a href="/lounge" class="btn btn-primary btn-sm" style="box-shadow: 0 0 15px var(--ui-primary-glow);">
+                      <i class="fa-solid fa-cube" aria-hidden="true"></i> 3D AI Lounge
                     </a>
                     <a href="/portfolio" class="btn btn-ghost btn-sm">
-                      <i class="fa-solid fa-id-badge"></i> Member Portfolio
+                      <i class="fa-solid fa-id-badge" aria-hidden="true"></i> Portfolio
                     </a>
                     <a href="/world" class="btn btn-ghost btn-sm">
-                      <i class="fa-solid fa-earth-asia"></i> Naura Wilds
+                      <i class="fa-solid fa-earth-asia" aria-hidden="true"></i> Naura Wilds
                     </a>
                     <a href="/music" class="btn btn-ghost btn-sm">
-                      <i class="fa-solid fa-music"></i> Music Studio
+                      <i class="fa-solid fa-music" aria-hidden="true"></i> Music Studio
                     </a>
                   </div>
                 </div>
-              </div>
+              </article>
 
-              <!-- Pusat Operasional (Spacious 2x3 Flagship Matrix) -->
-              <div>
-                <div class="section-title" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
-                  <span style="display:flex;align-items:center;gap:8px;">
-                    <i class="fa-solid fa-shapes" style="color:var(--primary);font-size:12px;"></i>
-                    Pusat Operasional
-                  </span>
-                  <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);font-weight:500;">6 Modul Unggulan</span>
-                </div>
+              <!-- Operations Matrix (6 Featured Modules) -->
+              <section>
+                <header style="display:flex; align-items:center; justify-content:space-between; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2);">
+                  <div style="display:flex; align-items:center; gap: var(--space-2);">
+                    <i class="fa-solid fa-shapes" style="color: var(--ui-primary); font-size: var(--text-sm);"></i>
+                    <span style="font-family: var(--font-heading); font-size: var(--text-h3); font-weight: 600; color: var(--ink);">Pusat Operasional</span>
+                  </div>
+                  <span style="font-size: var(--text-xs); color: var(--text-faint); font-family: var(--font-mono); font-weight: 500;">6 Modul Unggulan</span>
+                </header>
                 <div class="quick-actions-grid">
-                  <a href="/lounge" class="quick-action" style="border-color: rgba(244,114,182,0.35); background: linear-gradient(135deg, rgba(244,114,182,0.1) 0%, rgba(139,92,246,0.06) 100%);">
-                    <div class="quick-action-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);">
-                      <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  <a href="/lounge" class="quick-action" style="border-color: var(--hairline-brand); background: linear-gradient(135deg, var(--ui-primary-glow) 0%, rgba(139, 92, 246, 0.06) 100%);">
+                    <div class="quick-action-icon" style="background: var(--ui-primary-glow); border: 1px solid var(--hairline-brand); color: var(--ui-primary);">
+                      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
                     </div>
                     <div class="quick-action-content">
-                      <span class="quick-action-label" style="display:flex;align-items:center;gap:6px;">
+                      <span class="quick-action-label" style="display:flex; align-items:center; gap: var(--space-2);">
                         3D AI Lounge
-                        <span class="badge badge-primary" style="font-size:8px;padding:1px 5px;">31 ANIM</span>
+                        <span class="badge badge-primary" style="font-size: var(--text-xs); padding: 2px var(--space-2);">31 Anim</span>
                       </span>
-                      <span class="quick-action-desc">Mascot Studio &amp; Pose Viewer</span>
+                      <span class="quick-action-desc">Mascot Studio & Pose Viewer</span>
                     </div>
                   </a>
                   <a href="/music" class="quick-action">
-                    <div class="quick-action-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);">
-                      <i class="fa-solid fa-music"></i>
+                    <div class="quick-action-icon" style="background: var(--ui-primary-glow); border: 1px solid var(--hairline-brand); color: var(--ui-primary);">
+                      <i class="fa-solid fa-music" aria-hidden="true"></i>
                     </div>
                     <div class="quick-action-content">
                       <span class="quick-action-label">Music Studio</span>
-                      <span class="quick-action-desc">Audio Player &amp; Lavalink</span>
+                      <span class="quick-action-desc">Audio Player & Lavalink</span>
                     </div>
                   </a>
                   <a href="/economy" class="quick-action">
-                    <div class="quick-action-icon" style="background:var(--amber-dim);border:1px solid var(--border-amber);color:var(--accent-amber);">
-                      <i class="fa-solid fa-coins"></i>
+                    <div class="quick-action-icon" style="background: var(--amber-dim); border: 1px solid var(--hairline-brand); color: var(--color-warning);">
+                      <i class="fa-solid fa-coins" aria-hidden="true"></i>
                     </div>
                     <div class="quick-action-content">
                       <span class="quick-action-label">Ekonomi Server</span>
-                      <span class="quick-action-desc">Saldo NC &amp; Bank Vault</span>
+                      <span class="quick-action-desc">Saldo NC & Bank Vault</span>
                     </div>
                   </a>
                   <a href="/world" class="quick-action">
-                    <div class="quick-action-icon" style="background:var(--cyan-dim);border:1px solid var(--border-cyan);color:var(--accent-cyan);">
-                      <i class="fa-solid fa-earth-asia"></i>
+                    <div class="quick-action-icon" style="background: var(--cyan-dim); border: 1px solid var(--hairline-brand); color: var(--accent-cyan);">
+                      <i class="fa-solid fa-earth-asia" aria-hidden="true"></i>
                     </div>
                     <div class="quick-action-content">
                       <span class="quick-action-label">Naura Wilds</span>
@@ -705,17 +390,17 @@
                     </div>
                   </a>
                   <a href="/portfolio" class="quick-action">
-                    <div class="quick-action-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:var(--accent-green);">
-                      <i class="fa-solid fa-id-badge"></i>
+                    <div class="quick-action-icon" style="background: var(--green-dim); border: 1px solid var(--hairline-brand); color: var(--color-success);">
+                      <i class="fa-solid fa-id-badge" aria-hidden="true"></i>
                     </div>
                     <div class="quick-action-content">
                       <span class="quick-action-label">Creator Portfolio</span>
-                      <span class="quick-action-desc">Karya &amp; Profil Interaktif</span>
+                      <span class="quick-action-desc">Karya & Profil Interaktif</span>
                     </div>
                   </a>
                   <a href="/settings" class="quick-action">
-                    <div class="quick-action-icon" style="background:var(--violet-dim);border:1px solid var(--border-violet);color:var(--accent-violet);">
-                      <i class="fa-solid fa-gears"></i>
+                    <div class="quick-action-icon" style="background: var(--violet-dim); border: 1px solid var(--hairline-brand); color: var(--color-maintenance);">
+                      <i class="fa-solid fa-gears" aria-hidden="true"></i>
                     </div>
                     <div class="quick-action-content">
                       <span class="quick-action-label">Pengaturan Bot</span>
@@ -723,60 +408,64 @@
                     </div>
                   </a>
                 </div>
-              </div>
+              </section>
 
             </div>
 
-            <!-- Right: 3D Stage (Capped Glassmorphism Anchor) -->
-            <div style="height:100%;">
-              <div class="hero-3d-wrapper" id="naura3d-canvas-wrapper">
+            <!-- Right: 3D Stage -->
+            <div style="height:100%; display:flex; flex-direction:column;">
+              <div class="hero-3d-wrapper" id="naura3d-canvas-wrapper" style="flex: 1; min-height: 400px;">
                 <div class="hero-3d-overlay"></div>
 
                 <!-- Status Badge -->
-                <div id="naura3d-motion-status" style="position:absolute;top:12px;left:12px;z-index:10;display:flex;align-items:center;gap:6px;padding:4px 9px;border-radius:var(--r-full);background:rgba(6,8,16,0.9);backdrop-filter:blur(8px);border:1px solid var(--border-primary);font-size:10px;color:var(--text-secondary);pointer-events:none;font-family:var(--font-mono);">
-                  <span style="width:6px;height:6px;border-radius:50%;background:var(--accent-green);display:block;"></span>
+                <div id="naura3d-motion-status" style="position:absolute; top: var(--space-3); left: var(--space-3); z-index: 10; display:flex; align-items:center; gap: var(--space-2); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); background: rgba(6,8,16,0.9); backdrop-filter: var(--blur-md); border: 1px solid var(--hairline-brand); font-size: var(--text-xs); color: var(--text-secondary); pointer-events:none; font-family: var(--font-mono);">
+                  <span style="width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--color-success); display:block; box-shadow: 0 0 8px var(--color-success);"></span>
                   <span id="naura3d-status-text">🌸 Idle</span>
-                  <span id="naura3d-format-badge" class="badge badge-primary" style="margin-left:2px;font-size:8px;padding:1px 5px;">NEW VRM</span>
+                  <span id="naura3d-format-badge" class="badge badge-primary" style="font-size: var(--text-xs); padding: 2px var(--space-2);">GLB</span>
                 </div>
 
-                <!-- Model selector -->
-                <!-- Path model WAJIB URL-encoded: nama file aslinya "naura NEW.vrm"
-                     memuat SPASI. Tanpa %20 browser salah menafsirkan path dan
-                     model tidak pernah termuat. -->
-                <div id="naura3d-model-selector" style="position:absolute;top:12px;right:12px;z-index:10;display:flex;gap:3px;background:rgba(6,8,16,0.9);backdrop-filter:blur(8px);padding:3px;border-radius:var(--r-md);border:1px solid var(--border-subtle);">
-                  <button type="button" id="btn-model-new" data-model="/models/naura%20NEW.vrm" style="padding:3px 7px;border-radius:calc(var(--r-md) - 2px);font-size:9px;font-weight:700;background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);cursor:pointer;font-family:var(--font-mono);">⭐ NEW</button>
-                  <button type="button" id="btn-model-vrm" data-model="/models/naura.vrm" style="padding:3px 7px;border-radius:calc(var(--r-md) - 2px);font-size:9px;font-weight:600;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);">VRM</button>
-                  <button type="button" id="btn-model-glb" data-model="/models/naura%20NEW.glb" style="padding:3px 7px;border-radius:calc(var(--r-md) - 2px);font-size:9px;font-weight:600;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);">GLB</button>
+                <!-- Model Selector -->
+                <div id="naura3d-model-selector" style="position:absolute; top: var(--space-3); right: var(--space-3); z-index: 10; display:flex; gap: var(--space-1); background: rgba(6,8,16,0.9); backdrop-filter: var(--blur-md); padding: var(--space-1); border-radius: var(--radius-md); border: 1px solid var(--hairline);">
+                  <button type="button" id="btn-model-new" data-model="/models/naura%20NEW.vrm" class="btn btn-sm btn-ghost" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs); font-family: var(--font-mono);">⭐ NEW</button>
+                  <button type="button" id="btn-model-vrm" data-model="/models/naura.vrm" class="btn btn-sm btn-ghost" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs); font-family: var(--font-mono);">VRM</button>
+                  <button type="button" id="btn-model-glb" data-model="/models/naura_animated.glb" class="btn btn-sm btn-primary" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs); font-family: var(--font-mono);">GLB</button>
                 </div>
 
                 <!-- Canvas -->
-                <canvas id="naura-hero-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
+                <canvas id="naura-hero-3d-canvas" style="width:100%; height:100%; display:block;"></canvas>
 
                 <!-- Loading -->
-                <div id="naura3d-loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(6,8,16,0.92);z-index:5;">
-                  <div class="loading-spinner" style="width:32px;height:32px;border-width:2px;"></div>
-                  <span id="naura3d-loading-text" style="font-size:11px;color:var(--primary);font-family:var(--font-mono);">Memuat Model 3D VRM...</span>
+                <div id="naura3d-loading" class="flex-col-center" style="position:absolute; inset: 0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: var(--space-3); background: rgba(6,8,16,0.92); z-index: 5;">
+                  <div class="loading-spinner animate-spin" style="width: 40px; height: 40px; border-width: 3px; border-color: var(--hairline); border-top-color: var(--ui-primary); border-radius: var(--radius-full);"></div>
+                  <span id="naura3d-loading-text" style="font-size: var(--text-sm); color: var(--ui-primary); font-family: var(--font-mono);">Memuat Model 3D VRM&hellip;</span>
                 </div>
 
-                <!-- Error fallback -->
-                <div id="naura3d-error" style="position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(6,8,16,0.9);z-index:4;">
-                  <div style="font-size:36px;">🌸</div>
-                  <span style="font-size:11px;color:var(--text-muted);">Model 3D Sedang Offline</span>
+                <!-- Error Fallback -->
+                <div id="naura3d-error" class="flex-col-center" style="position:absolute; inset: 0; display:none; flex-direction:column; align-items:center; justify-content:center; gap: var(--space-2); background: rgba(6,8,16,0.9); z-index: 4;">
+                  <div style="font-size: 48px;">🌸</div>
+                  <span style="font-size: var(--text-sm); color: var(--text-muted);">Model 3D Sedang Offline</span>
+                  <a href="/lounge" class="btn btn-primary btn-sm" style="margin-top: var(--space-2);">Buka Studio 3D Lengkap</a>
                 </div>
 
-                <!-- Animation controls -->
-                <div id="naura3d-anim-controls" style="position:absolute;bottom:12px;left:10px;right:10px;z-index:10;display:flex;align-items:center;gap:4px;padding:6px 8px;border-radius:var(--r-lg);background:rgba(6,8,16,0.9);backdrop-filter:blur(10px);border:1px solid var(--border-subtle);overflow-x:auto;scrollbar-width:none;">
-                  <button type="button" data-anim="Idle" data-label="🌸 Idle" class="naura3d-anim-btn" style="flex-shrink:0;padding:4px 8px;border-radius:var(--r-md);font-size:9px;font-weight:700;background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);cursor:pointer;font-family:var(--font-mono);">🌸 Idle</button>
-                  <button type="button" data-anim="Wave" data-label="👋 Sapa" class="naura3d-anim-btn" style="flex-shrink:0;padding:4px 8px;border-radius:var(--r-md);font-size:9px;font-weight:600;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);">👋 Sapa</button>
-                  <button type="button" data-anim="Thinking" data-label="🤔 Pikir" class="naura3d-anim-btn" style="flex-shrink:0;padding:4px 8px;border-radius:var(--r-md);font-size:9px;font-weight:600;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);">🤔 Pikir</button>
-                  <button type="button" data-anim="Cheers" data-label="🎉 Ceria" class="naura3d-anim-btn" style="flex-shrink:0;padding:4px 8px;border-radius:var(--r-md);font-size:9px;font-weight:600;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);">🎉 Ceria</button>
-                  <button type="button" data-anim="Shy" data-label="😳 Malu" class="naura3d-anim-btn" style="flex-shrink:0;padding:4px 8px;border-radius:var(--r-md);font-size:9px;font-weight:600;background:transparent;border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);">😳 Malu</button>
-                  <div style="margin-left:auto;display:flex;gap:4px;flex-shrink:0;border-left:1px solid var(--border-subtle);padding-left:6px;">
-                    <button id="naura3d-btn-halo" title="Toggle Halo" style="padding:4px 6px;border-radius:var(--r-md);font-size:9px;background:var(--amber-dim);border:1px solid var(--border-amber);color:var(--accent-amber);cursor:pointer;">✨</button>
-                    <button id="naura3d-btn-reset" title="Reset Camera" style="padding:4px 6px;border-radius:var(--r-md);font-size:9px;background:var(--cyan-dim);border:1px solid var(--border-cyan);color:var(--accent-cyan);cursor:pointer;">↺</button>
-                    <button id="naura3d-btn-snapshot" title="Foto" style="padding:4px 6px;border-radius:var(--r-md);font-size:9px;background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);cursor:pointer;">📷</button>
-                    <a href="/lounge" title="Buka 3D AI Lounge Studio (31 Animasi Lengkap)" style="padding:4px 8px;border-radius:var(--r-md);font-size:9px;font-weight:700;background:var(--primary);color:#070a14;text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);box-shadow:0 0 10px rgba(244,114,182,0.4);transition:transform var(--t-fast);">
-                      <i class="fa-solid fa-expand"></i> Studio 3D
+                <!-- Animation Controls -->
+                <div id="naura3d-anim-controls" style="position:absolute; bottom: var(--space-3); left: var(--space-3); right: var(--space-3); z-index: 10; display:flex; align-items:center; gap: var(--space-1); padding: var(--space-2) var(--space-3); border-radius: var(--radius-lg); background: rgba(6,8,16,0.9); backdrop-filter: var(--blur-lg); border: 1px solid var(--hairline); overflow-x:auto; scrollbar-width:none;">
+                  <button type="button" data-anim="Idle" data-label="🌸 Idle" class="naura3d-anim-btn btn btn-sm btn-primary" style="flex-shrink:0; font-size: var(--text-xs); font-family: var(--font-mono);">🌸 Idle</button>
+                  <button type="button" data-anim="Wave" data-label="👋 Sapa" class="naura3d-anim-btn btn btn-sm btn-ghost" style="flex-shrink:0; font-size: var(--text-xs); font-family: var(--font-mono);">👋 Sapa</button>
+                  <button type="button" data-anim="Thinking" data-label="🤔 Pikir" class="naura3d-anim-btn btn btn-sm btn-ghost" style="flex-shrink:0; font-size: var(--text-xs); font-family: var(--font-mono);">🤔 Pikir</button>
+                  <button type="button" data-anim="Cheers" data-label="🎉 Ceria" class="naura3d-anim-btn btn btn-sm btn-ghost" style="flex-shrink:0; font-size: var(--text-xs); font-family: var(--font-mono);">🎉 Ceria</button>
+                  <button type="button" data-anim="Shy" data-label="😳 Malu" class="naura3d-anim-btn btn btn-sm btn-ghost" style="flex-shrink:0; font-size: var(--text-xs); font-family: var(--font-mono);">😳 Malu</button>
+                  <div style="margin-left:auto; display:flex; gap: var(--space-1); flex-shrink:0; border-left: 1px solid var(--hairline); padding-left: var(--space-3);">
+                    <button id="naura3d-btn-halo" title="Toggle Halo" class="btn btn-icon-only btn-ghost" style="padding: var(--space-1);">
+                      <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+                    </button>
+                    <button id="naura3d-btn-reset" title="Reset Camera" class="btn btn-icon-only btn-ghost" style="padding: var(--space-1);">
+                      <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                    </button>
+                    <button id="naura3d-btn-snapshot" title="Ambil Foto" class="btn btn-icon-only btn-ghost" style="padding: var(--space-1);">
+                      <i class="fa-solid fa-camera" aria-hidden="true"></i>
+                    </button>
+                    <a href="/lounge" title="Buka 3D AI Lounge Studio (31 Animasi Lengkap)" class="btn btn-sm btn-primary" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs); font-family: var(--font-mono); font-weight: 700; box-shadow: 0 0 10px var(--ui-primary-glow);">
+                      <i class="fa-solid fa-expand" aria-hidden="true"></i> Studio 3D
                     </a>
                   </div>
                 </div>
@@ -785,1059 +474,454 @@
 
           </div>
 
-          <!-- ── Telemetry Cards ── -->
-          <div class="section-title animate-in delay-2" style="margin-bottom:12px;">Telemetri Sistem Real-Time</div>
-          <div class="bento-grid animate-in delay-2" id="telemetryGrid">
+          <!-- Telemetry Cards -->
+          <section aria-labelledby="telemetryTitle" class="animate-slide-up stagger-2">
+            <header style="margin-bottom: var(--space-3);">
+              <h2 id="telemetryTitle" style="font-family: var(--font-heading); font-size: var(--text-h3); font-weight: 600; color: var(--ink); display:flex; align-items:center; gap: var(--space-2);">
+                <i class="fa-solid fa-chart-line" style="color: var(--accent-cyan);"></i>
+                Telemetri Sistem Real-Time
+              </h2>
+            </header>
+            <div class="bento-grid" id="telemetryGrid" role="region" aria-label="Kartu telemetri sistem">
 
-            <div class="bento-col-3 metric-card cat-primary" id="cardTelemetryPing">
-              <div class="metric-top">
-                <span class="metric-label">Network Latency</span>
-                <span class="metric-badge" style="color:var(--primary);border-color:var(--border-primary);">Gateway RTT</span>
-              </div>
-              <div class="metric-value">
-                <span id="statPing">0</span><span style="font-size:14px;color:var(--text-muted);margin-left:4px;font-weight:500;">ms</span>
-              </div>
-              <div class="metric-sub">
-                <i class="fa-solid fa-gauge-high" style="color:var(--accent-green);font-size:10px;"></i>
-                Discord Gateway Latensi
-              </div>
-            </div>
-
-            <div class="bento-col-3 metric-card cat-green" id="cardTelemetryUptime">
-              <div class="metric-top">
-                <span class="metric-label">System Uptime</span>
-                <span class="metric-badge" style="color:var(--accent-green);border-color:rgba(52,211,153,0.3);">Process</span>
-              </div>
-              <div class="metric-value">
-                <span id="statUptime">0j 0m</span>
-              </div>
-              <div class="metric-sub">
-                <i class="fa-solid fa-clock" style="color:var(--accent-green);font-size:10px;"></i>
-                Waktu aktif bot berkelanjutan
-              </div>
-            </div>
-
-            <div class="bento-col-3 metric-card cat-cyan" id="cardTelemetryUsers">
-              <div class="metric-top">
-                <span class="metric-label">Total Pengguna</span>
-                <span class="metric-badge" style="color:var(--accent-cyan);border-color:var(--border-cyan);">Database</span>
-              </div>
-              <div class="metric-value">
-                <span id="statUsers">0</span>
-              </div>
-              <div class="metric-sub">
-                <i class="fa-solid fa-users" style="color:var(--accent-cyan);font-size:10px;"></i>
-                Profil pengguna terdaftar
-              </div>
-            </div>
-
-            <div class="bento-col-3 metric-card cat-violet" id="cardTelemetryGuilds">
-              <div class="metric-top">
-                <span class="metric-label">Server Aktif</span>
-                <span class="metric-badge" style="color:var(--accent-violet);border-color:var(--border-violet);">Cluster #0</span>
-              </div>
-              <div class="metric-value">
-                <span id="statServers">0</span>
-              </div>
-              <div class="metric-sub">
-                <i class="fa-solid fa-network-wired" style="color:var(--accent-violet);font-size:10px;"></i>
-                Guild terhubung live
-              </div>
-            </div>
-
-          </div>
-
-          <!-- ── Charts Row ── -->
-          <div class="bento-grid animate-in delay-3">
-
-            <!-- Telemetry Line Chart -->
-            <div class="bento-col-8 card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
-              <div class="card-header" style="margin-bottom:14px;">
-                <div class="card-title" style="color:var(--accent-cyan);">
-                  <i class="fa-solid fa-chart-line"></i> Telemetri Real-Time
-                </div>
-                <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">Live Ping & RAM</span>
-              </div>
-              <div class="chart-wrapper">
-                <canvas id="telemetryChart"></canvas>
-              </div>
-            </div>
-
-            <!-- Command Distribution Doughnut -->
-            <div class="bento-col-4 card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
-              <div class="card-header" style="margin-bottom:14px;">
-                <div class="card-title" style="color:var(--primary);">
-                  <i class="fa-solid fa-chart-pie"></i> Distribusi Perintah
-                </div>
-                <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);" id="homeTotalModulesBadge">12 Modul</span>
-              </div>
-              <div style="flex:1;position:relative;min-height:160px;display:flex;align-items:center;justify-content:center;">
-                <canvas id="homeCommandChart"></canvas>
-              </div>
-              <div id="commandChartLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;justify-content:center;">
-                <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);">
-                  <span style="width:8px;height:8px;border-radius:50%;background:var(--primary);display:inline-block;"></span>Music (24%)
-                </span>
-                <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);">
-                  <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-cyan);display:inline-block;"></span>AI (20%)
-                </span>
-                <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);">
-                  <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-amber);display:inline-block;"></span>RPG (18%)
-                </span>
-                <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);">
-                  <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-violet);display:inline-block;"></span>Admin (15%)
-                </span>
-                <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);">
-                  <span style="width:8px;height:8px;border-radius:50%;background:#60a5fa;display:inline-block;"></span>Utility (23%)
-                </span>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- ── Row 1: Hall of Fame (Left) + Now Playing & Vitals (Right) ── -->
-          <div class="bento-grid animate-in delay-4">
-
-            <!-- Left: Top 5 Hall of Fame -->
-            <div class="bento-col-8 card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
-              <div class="card-header" style="margin-bottom:14px;">
-                <div class="card-title" style="color:var(--accent-amber);">
-                  <i class="fa-solid fa-trophy"></i> Top 5 Hall of Fame
-                </div>
-                <button onclick="window.location.href='/leaderboard'" class="btn btn-ghost btn-sm">
-                  Lihat Semua <i class="fa-solid fa-arrow-right"></i>
-                </button>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;flex:1;justify-content:center;" id="homeTopLeaderboard">
-                <div style="text-align:center;color:var(--text-muted);padding:36px 0;">
-                  <i class="fa-solid fa-spinner fa-spin" style="font-size:22px;margin-bottom:8px;display:block;color:var(--accent-amber);"></i>
-                  <span style="font-size:12px;">Memuat Top 5 Hall of Fame...</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right: Mini Music Player + Survival Vitals (Synchronized with Hall of Fame Height) -->
-            <div class="bento-col-4" style="display:flex;flex-direction:column;gap:16px;height:100%;">
-
-              <!-- Mini Music Player -->
-              <div class="card card-solid card-p-sm" style="display:flex;flex-direction:column;">
-                <div class="card-header" style="margin-bottom:12px;">
-                  <div class="card-title" style="color:var(--primary);">
-                    <i class="fa-solid fa-music"></i> Now Playing
+              <article class="stat-card" id="cardTelemetryPing">
+                <div class="stat-top">
+                  <div class="stat-meta">
+                    <span class="stat-label">Network Latency</span>
+                    <span class="stat-trend neutral" id="pingTrend">
+                      <i class="fa-solid fa-gauge-high" aria-hidden="true" style="font-size: 0.85em; color: var(--color-success);"></i>
+                      <span>Gateway RTT</span>
+                    </span>
                   </div>
-                  <a href="/music" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 8px;">Open <i class="fa-solid fa-arrow-right" style="font-size:9px;"></i></a>
+                  <div class="stat-icon" aria-hidden="true">
+                    <i class="fa-solid fa-signal"></i>
+                  </div>
                 </div>
-                <div class="mini-player" id="miniPlayerBar">
-                  <div class="mini-player-artwork">🎵</div>
-                  <div style="flex:1;min-width:0;">
-                    <div id="nowPlayingTitle" style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Idle, Tidak Ada Lagu</div>
-                    <div id="nowPlayingArtist" style="font-size:11px;color:var(--text-muted);">Queue kosong</div>
-                    <div style="margin-top:6px;">
-                      <div class="progress-track" style="height:4px;background:var(--bg-elevated);border-radius:var(--r-full);overflow:hidden;">
-                        <div class="progress-fill" id="nowPlayingProgress" style="width:0%;height:100%;background:var(--primary);border-radius:var(--r-full);"></div>
+                <div class="stat-value">
+                  <span id="statPing" class="tabular-nums">0</span><span style="font-size: var(--text-body); color: var(--text-muted); margin-left: var(--space-1); font-weight: 500;">ms</span>
+                </div>
+                <div class="stat-delta">Discord Gateway Latensi</div>
+              </article>
+
+              <article class="stat-card" id="cardTelemetryUptime">
+                <div class="stat-top">
+                  <div class="stat-meta">
+                    <span class="stat-label">System Uptime</span>
+                    <span class="stat-trend positive" id="uptimeTrend">
+                      <i class="fa-solid fa-clock" aria-hidden="true" style="font-size: 0.85em; color: var(--color-success);"></i>
+                      <span>Process</span>
+                    </span>
+                  </div>
+                  <div class="stat-icon stat-icon--green" aria-hidden="true">
+                    <i class="fa-solid fa-infinity"></i>
+                  </div>
+                </div>
+                <div class="stat-value">
+                  <span id="statUptime" class="tabular-nums">0j 0m</span>
+                </div>
+                <div class="stat-delta">Waktu aktif bot berkelanjutan</div>
+              </article>
+
+              <article class="stat-card" id="cardTelemetryUsers">
+                <div class="stat-top">
+                  <div class="stat-meta">
+                    <span class="stat-label">Total Pengguna</span>
+                    <span class="stat-trend positive" id="usersTrend">
+                      <i class="fa-solid fa-users" aria-hidden="true" style="font-size: 0.85em; color: var(--accent-cyan);"></i>
+                      <span>Database</span>
+                    </span>
+                  </div>
+                  <div class="stat-icon stat-icon--cyan" aria-hidden="true">
+                    <i class="fa-solid fa-user-plus"></i>
+                  </div>
+                </div>
+                <div class="stat-value">
+                  <span id="statUsers" class="tabular-nums">0</span>
+                </div>
+                <div class="stat-delta">Profil pengguna terdaftar</div>
+              </article>
+
+              <article class="stat-card" id="cardTelemetryGuilds">
+                <div class="stat-top">
+                  <div class="stat-meta">
+                    <span class="stat-label">Server Aktif</span>
+                    <span class="stat-trend positive" id="guildsTrend">
+                      <i class="fa-solid fa-network-wired" aria-hidden="true" style="font-size: 0.85em; color: var(--color-maintenance);"></i>
+                      <span>Cluster #0</span>
+                    </span>
+                  </div>
+                  <div class="stat-icon stat-icon--violet" aria-hidden="true">
+                    <i class="fa-solid fa-server"></i>
+                  </div>
+                </div>
+                <div class="stat-value">
+                  <span id="statServers" class="tabular-nums">0</span>
+                </div>
+                <div class="stat-delta">Guild terhubung live</div>
+              </article>
+
+            </div>
+          </section>
+
+          <!-- Charts Row -->
+          <section aria-labelledby="chartsTitle" class="animate-slide-up stagger-3" style="margin-top: var(--space-6);">
+            <header style="margin-bottom: var(--space-3);">
+              <h2 id="chartsTitle" style="font-family: var(--font-heading); font-size: var(--text-h3); font-weight: 600; color: var(--ink); display:flex; align-items:center; gap: var(--space-2);">
+                <i class="fa-solid fa-chart-area" style="color: var(--accent-cyan);"></i>
+                Visualisasi Data
+              </h2>
+            </header>
+            <div class="bento-grid">
+
+              <!-- Telemetry Line Chart -->
+              <article class="card bento-col-6" style="display:flex; flex-direction:column; height: 100%; min-height: 320px;">
+                <div class="card-header">
+                  <div class="card-title" style="color: var(--accent-cyan);">
+                    <i class="fa-solid fa-chart-line" aria-hidden="true"></i> Telemetri Real-Time
+                  </div>
+                  <span style="font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono);">Live Ping & RAM</span>
+                </div>
+                <div class="card-body" style="flex: 1; position: relative; min-height: 220px;">
+                  <div class="chart-wrapper" style="width: 100%; height: 100%;">
+                    <canvas id="telemetryChart" aria-label="Grafik telemetri real-time ping dan penggunaan memori"></canvas>
+                  </div>
+                </div>
+              </article>
+
+              <!-- Command Distribution Doughnut -->
+              <article class="card bento-col-6" style="display:flex; flex-direction:column; height: 100%; min-height: 320px;">
+                <div class="card-header">
+                  <div class="card-title" style="color: var(--ui-primary);">
+                    <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Distribusi Perintah
+                  </div>
+                  <span style="font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono);" id="homeTotalModulesBadge">12 Modul</span>
+                </div>
+                <div class="card-body" style="flex: 1; position: relative; min-height: 180px; display:flex; align-items:center; justify-content:center;">
+                  <canvas id="homeCommandChart" aria-label="Diagram distribusi kategori perintah bot"></canvas>
+                </div>
+                <div class="card-footer" style="border-top: none; padding-top: var(--space-3); margin-top: var(--space-3);">
+                  <div id="commandChartLegend" style="display:flex; flex-wrap:wrap; gap: var(--space-2); justify-content:center;">
+                    <span class="badge badge-primary" style="font-size: var(--text-xs);"><i class="fa-solid fa-music" aria-hidden="true" style="font-size: 0.75em;"></i> Music 24%</span>
+                    <span class="badge badge-info" style="font-size: var(--text-xs);"><i class="fa-solid fa-brain" aria-hidden="true" style="font-size: 0.75em;"></i> AI 20%</span>
+                    <span class="badge badge-warning" style="font-size: var(--text-xs);"><i class="fa-solid fa-gamepad" aria-hidden="true" style="font-size: 0.75em;"></i> RPG 18%</span>
+                    <span class="badge badge-neutral" style="font-size: var(--text-xs);"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true" style="font-size: 0.75em;"></i> Admin 15%</span>
+                    <span class="badge badge-success" style="font-size: var(--text-xs);"><i class="fa-solid fa-tools" aria-hidden="true" style="font-size: 0.75em;"></i> Utility 23%</span>
+                  </div>
+                </div>
+              </article>
+
+            </div>
+          </section>
+
+          <!-- Row 1: Hall of Fame + Mini Player & Vitals -->
+          <section aria-labelledby="row1Title" class="animate-slide-up stagger-4" style="margin-top: var(--space-6);">
+            <header style="margin-bottom: var(--space-3);">
+              <h2 id="row1Title" style="font-family: var(--font-heading); font-size: var(--text-h3); font-weight: 600; color: var(--ink); display:flex; align-items:center; gap: var(--space-2);">
+                <i class="fa-solid fa-trophy" style="color: var(--color-warning);"></i>
+                Komunitas & Status Hidup
+              </h2>
+            </header>
+            <div class="bento-grid">
+
+              <!-- Left: Top 5 Hall of Fame -->
+              <article class="card" style="display:flex; flex-direction:column; height: 100%; grid-column: span 8;">
+                <div class="card-header">
+                  <div class="card-title" style="color: var(--color-warning);">
+                    <i class="fa-solid fa-trophy" aria-hidden="true"></i> Top 5 Hall of Fame
+                  </div>
+                  <a href="/leaderboard" class="btn btn-ghost btn-sm">
+                    Lihat Semua <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                  </a>
+                </div>
+                <div class="card-body" style="flex: 1; display:flex; flex-direction:column; justify-content:center;">
+                  <div id="homeTopLeaderboard">
+                    <div class="empty-state" style="padding: var(--space-8);">
+                      <div class="empty-state-icon">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-warning);"></i>
+                      </div>
+                      <h3 class="empty-state-title">Memuat Hall of Fame&hellip;</h3>
+                      <p class="empty-state-body">Mengambil data teratas dari database.</p>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <!-- Right: Mini Music Player + Survival Vitals -->
+              <div class="bento-col-4" style="display:flex; flex-direction:column; gap: var(--space-4); height: 100%;">
+
+                <!-- Mini Music Player -->
+                <article class="card" style="display:flex; flex-direction:column;">
+                  <div class="card-header">
+                    <div class="card-title" style="color: var(--ui-primary);">
+                      <i class="fa-solid fa-music" aria-hidden="true"></i> Now Playing
+                    </div>
+                    <a href="/music" class="btn btn-ghost btn-sm" style="font-size: var(--text-xs); padding: var(--space-1) var(--space-2);">Buka <i class="fa-solid fa-arrow-right" aria-hidden="true" style="font-size: 0.75em;"></i></a>
+                  </div>
+                  <div class="card-body" style="padding-top: 0;">
+                    <div class="mini-player" id="miniPlayerBar">
+                      <div class="mini-player-artwork" aria-hidden="true">🎵</div>
+                      <div style="flex: 1; min-width: 0;">
+                        <div id="nowPlayingTitle" style="font-size: var(--text-sm); font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Idle, Tidak Ada Lagu</div>
+                        <div id="nowPlayingArtist" style="font-size: var(--text-xs); color: var(--text-muted);">Queue kosong</div>
+                        <div style="margin-top: var(--space-2);">
+                          <div class="progress-bar" style="height: 4px;">
+                            <div class="progress-fill" id="nowPlayingProgress" style="width: 0%;"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="mini-player-controls">
+                        <button type="button" class="mini-ctrl-btn" title="Sebelumnya" id="btnMusicPrev" aria-label="Lagu sebelumnya">
+                          <i class="fa-solid fa-backward-step" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="mini-ctrl-btn play" title="Putar/Jeda" id="btnMusicPlay" aria-label="Putar atau jeda">
+                          <i class="fa-solid fa-play" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="mini-ctrl-btn" title="Berikutnya" id="btnMusicNext" aria-label="Lagu berikutnya">
+                          <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
-                  <div class="mini-player-controls">
-                    <button class="mini-ctrl-btn" title="Previous" id="btnMusicPrev"><i class="fa-solid fa-backward-step"></i></button>
-                    <button class="mini-ctrl-btn play" title="Play/Pause" id="btnMusicPlay"><i class="fa-solid fa-play"></i></button>
-                    <button class="mini-ctrl-btn" title="Next" id="btnMusicNext"><i class="fa-solid fa-forward-step"></i></button>
-                  </div>
-                </div>
-              </div>
+                </article>
 
-              <!-- Survival Vitals -->
-              <div class="card card-solid card-p-sm" style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
-                <div class="card-header" style="margin-bottom:12px;">
-                  <div class="card-title" style="color:var(--accent-green);">
-                    <i class="fa-solid fa-heart-pulse"></i> Survival Vitals
-                  </div>
-                  <a href="/world" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 8px;">Wilds <i class="fa-solid fa-arrow-right" style="font-size:9px;"></i></a>
-                </div>
-                <div class="vitals-group" id="survivalVitals" style="flex:1;display:flex;flex-direction:column;justify-content:space-around;">
-                  <div class="vital-row">
-                    <div class="vital-icon">❤️</div>
-                    <div class="vital-label">HP</div>
-                    <div class="vital-bar-track">
-                      <div class="vital-bar-fill" style="width:100%;background:linear-gradient(90deg,#34d399,#6ee7b7);" id="vitalHp"></div>
+                <!-- Survival Vitals -->
+                <article class="card" style="flex: 1; display:flex; flex-direction:column; justify-content:space-between;">
+                  <div class="card-header">
+                    <div class="card-title" style="color: var(--color-success);">
+                      <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i> Survival Vitals
                     </div>
-                    <div class="vital-value" id="vitalHpVal">100%</div>
+                    <a href="/world" class="btn btn-ghost btn-sm" style="font-size: var(--text-xs); padding: var(--space-1) var(--space-2);">Wilds <i class="fa-solid fa-arrow-right" aria-hidden="true" style="font-size: 0.75em;"></i></a>
                   </div>
-                  <div class="vital-row">
-                    <div class="vital-icon">💧</div>
-                    <div class="vital-label">Hydration</div>
-                    <div class="vital-bar-track">
-                      <div class="vital-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--accent-cyan),#67e8f9);" id="vitalHydration"></div>
+                  <div class="card-body" style="flex: 1; padding-top: 0;">
+                    <div class="vitals-group" id="survivalVitals" style="display:flex; flex-direction:column; justify-content:space-around; height: 100%;">
+                      <div class="vital-row">
+                        <div class="vital-icon" aria-hidden="true">❤️</div>
+                        <div class="vital-label">HP</div>
+                        <div class="vital-bar-track" style="flex: 1;">
+                          <div class="vital-bar-fill" id="vitalHp" style="width: 100%; background: linear-gradient(90deg, var(--color-success), #6ee7b7);"></div>
+                        </div>
+                        <div class="vital-value" id="vitalHpVal">100%</div>
+                      </div>
+                      <div class="vital-row">
+                        <div class="vital-icon" aria-hidden="true">💧</div>
+                        <div class="vital-label">Hydration</div>
+                        <div class="vital-bar-track" style="flex: 1;">
+                          <div class="vital-bar-fill" id="vitalHydration" style="width: 100%; background: linear-gradient(90deg, var(--accent-cyan), #67e8f9);"></div>
+                        </div>
+                        <div class="vital-value" id="vitalHydrationVal">100%</div>
+                      </div>
+                      <div class="vital-row">
+                        <div class="vital-icon" aria-hidden="true">🍖</div>
+                        <div class="vital-label">Satiation</div>
+                        <div class="vital-bar-track" style="flex: 1;">
+                          <div class="vital-bar-fill" id="vitalSatiation" style="width: 100%; background: linear-gradient(90deg, var(--color-warning), #fcd34d);"></div>
+                        </div>
+                        <div class="vital-value" id="vitalSatiationVal">100%</div>
+                      </div>
+                      <div class="vital-row">
+                        <div class="vital-icon" aria-hidden="true">⚡</div>
+                        <div class="vital-label">Energy</div>
+                        <div class="vital-bar-track" style="flex: 1;">
+                          <div class="vital-bar-fill" id="vitalEnergy" style="width: 100%; background: linear-gradient(90deg, var(--color-maintenance), #c4b5fd);"></div>
+                        </div>
+                        <div class="vital-value" id="vitalEnergyVal">100%</div>
+                      </div>
                     </div>
-                    <div class="vital-value" id="vitalHydrationVal">100%</div>
                   </div>
-                  <div class="vital-row">
-                    <div class="vital-icon">🍖</div>
-                    <div class="vital-label">Satiation</div>
-                    <div class="vital-bar-track">
-                      <div class="vital-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--accent-amber),#fcd34d);" id="vitalSatiation"></div>
-                    </div>
-                    <div class="vital-value" id="vitalSatiationVal">100%</div>
-                  </div>
-                  <div class="vital-row">
-                    <div class="vital-icon">⚡</div>
-                    <div class="vital-label">Energy</div>
-                    <div class="vital-bar-track">
-                      <div class="vital-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--accent-violet),#c4b5fd);" id="vitalEnergy"></div>
-                    </div>
-                    <div class="vital-value" id="vitalEnergyVal">100%</div>
-                  </div>
-                </div>
+                </article>
+
               </div>
 
             </div>
-          </div>
+          </section>
 
-          <!-- ── Row 2: Live Activity Feed (Left) + System Architecture (Right) ── -->
-          <div class="bento-grid animate-in delay-4" style="margin-bottom:24px;">
+          <!-- Row 2: Activity Feed + System Architecture -->
+          <section aria-labelledby="row2Title" class="animate-slide-up" style="margin-top: var(--space-6);">
+            <header style="margin-bottom: var(--space-3);">
+              <h2 id="row2Title" style="font-family: var(--font-heading); font-size: var(--text-h3); font-weight: 600; color: var(--ink); display:flex; align-items:center; gap: var(--space-2);">
+                <i class="fa-solid fa-rss" style="color: var(--accent-cyan);"></i>
+                Aktivitas & Arsitektur
+              </h2>
+            </header>
+            <div class="bento-grid">
 
-            <!-- Left: Live Activity Feed -->
-            <div class="bento-col-8 card card-solid card-p" style="display:flex;flex-direction:column;height:100%;">
-              <div class="card-header" style="margin-bottom:14px;">
-                <div class="card-title" style="color:var(--accent-cyan);">
-                  <i class="fa-solid fa-bolt"></i> Live Activity Feed
+              <!-- Live Activity Feed -->
+              <article class="card" style="display:flex; flex-direction:column; height: 100%; grid-column: span 8;">
+                <div class="card-header">
+                  <div class="card-title" style="color: var(--accent-cyan);">
+                    <i class="fa-solid fa-bolt" aria-hidden="true"></i> Live Activity Feed
+                  </div>
+                  <a href="/feed" class="btn btn-ghost btn-sm">Lihat Semua <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 </div>
-                <a href="/feed" class="btn btn-ghost btn-sm">
-                  Lihat Semua <i class="fa-solid fa-arrow-right"></i>
-                </a>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;flex:1;" id="homeFeedList">
-                <!-- Feed items injected dynamically via API / Socket -->
-              </div>
+                <div class="card-body" style="flex: 1; overflow-y: auto; padding-top: 0; max-height: 360px;">
+                  <div id="activityFeed" style="display:flex; flex-direction:column; gap: var(--space-2);">
+                    <div class="feed-item animate-fade-in">
+                      <div class="feed-avatar" style="background: var(--ui-primary-glow); color: var(--ui-primary);" aria-hidden="true">
+                        <i class="fa-solid fa-robot"></i>
+                      </div>
+                      <div class="feed-content">
+                        <div class="feed-header">
+                          <span class="feed-title">Sistem</span>
+                          <time class="feed-time" datetime="">Baru saja</time>
+                        </div>
+                        <div class="feed-body">Dashboard Naura OS v2.5.0 dimuat. Selamat datang di Studio Kontrol OSIS.</div>
+                      </div>
+                    </div>
+                    <div class="feed-item animate-fade-in stagger-1">
+                      <div class="feed-avatar" style="background: var(--green-dim); color: var(--color-success);" aria-hidden="true">
+                        <i class="fa-solid fa-database"></i>
+                      </div>
+                      <div class="feed-content">
+                        <div class="feed-header">
+                          <span class="feed-title">Database</span>
+                          <time class="feed-time" datetime="">Baru saja</time>
+                        </div>
+                        <div class="feed-body">Koneksi Supabase & Redis stabil. Cache write-behind 5s aktif.</div>
+                      </div>
+                    </div>
+                    <div class="feed-item animate-fade-in stagger-2">
+                      <div class="feed-avatar" style="background: var(--amber-dim); color: var(--color-warning);" aria-hidden="true">
+                        <i class="fa-solid fa-music"></i>
+                      </div>
+                      <div class="feed-content">
+                        <div class="feed-header">
+                          <span class="feed-title">Lavalink</span>
+                          <time class="feed-time" datetime="">Baru saja</time>
+                        </div>
+                        <div class="feed-body">Node Lavalink v4 siap. Poru cluster 3-tier failover aktif.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <!-- System Architecture -->
+              <article class="card" style="display:flex; flex-direction:column; height: 100%; grid-column: span 4;">
+                <div class="card-header">
+                  <div class="card-title" style="color: var(--color-maintenance);">
+                    <i class="fa-solid fa-sitemap" aria-hidden="true"></i> Arsitektur Sistem
+                  </div>
+                </div>
+                <div class="card-body" style="flex: 1; overflow-y: auto; padding-top: 0;">
+                  <div style="display:flex; flex-direction:column; gap: var(--space-3);">
+                    <div class="card animate-slide-up stagger-1" style="padding: var(--space-3);">
+                      <div style="display:flex; align-items:center; gap: var(--space-3);">
+                        <div style="width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--ui-primary-glow); border: 1px solid var(--hairline-brand); display:flex; align-items:center; justify-content:center; color: var(--ui-primary); font-size: 1.1rem;">
+                          <i class="fa-solid fa-network-wired" aria-hidden="true"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                          <div style="font-weight: 600; color: var(--ink); font-size: var(--text-sm);">Discord Gateway</div>
+                          <div style="font-size: var(--text-xs); color: var(--text-muted);">Shard Cluster #0 &middot; <span id="archShardStatus" class="badge badge-success">Online</span></div>
+                        </div>
+                        <div style="text-align: right;">
+                          <div class="uptime-bar" style="height: 8px; width: 80px;">
+                            <div class="uptime-tick operational" style="flex: 1;"></div>
+                            <div class="uptime-tick operational" style="flex: 1;"></div>
+                            <div class="uptime-tick operational" style="flex: 1;"></div>
+                            <div class="uptime-tick operational" style="flex: 1;"></div>
+                            <div class="uptime-tick operational" style="flex: 1;"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card animate-slide-up stagger-2" style="padding: var(--space-3);">
+                      <div style="display:flex; align-items:center; gap: var(--space-3);">
+                        <div style="width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--green-dim); border: 1px solid rgba(52,211,153,0.3); display:flex; align-items:center; justify-content:center; color: var(--color-success); font-size: 1.1rem;">
+                          <i class="fa-solid fa-database" aria-hidden="true"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                          <div style="font-weight: 600; color: var(--ink); font-size: var(--text-sm);">Polyglot Database</div>
+                          <div style="font-size: var(--text-xs); color: var(--text-muted);">PostgreSQL + MongoDB + Redis &middot; <span id="archDbStatus" class="badge badge-success">Connected</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card animate-slide-up stagger-3" style="padding: var(--space-3);">
+                      <div style="display:flex; align-items:center; gap: var(--space-3);">
+                        <div style="width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--cyan-dim); border: 1px solid rgba(34,211,238,0.3); display:flex; align-items:center; justify-content:center; color: var(--accent-cyan); font-size: 1.1rem;">
+                          <i class="fa-solid fa-music" aria-hidden="true"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                          <div style="font-weight: 600; color: var(--ink); font-size: var(--text-sm);">Audio Cluster</div>
+                          <div style="font-size: var(--text-xs); color: var(--text-muted);">Poru v5 + Lavalink v4 &middot; <span id="archAudioStatus" class="badge badge-success">3 Node</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card animate-slide-up stagger-4" style="padding: var(--space-3);">
+                      <div style="display:flex; align-items:center; gap: var(--space-3);">
+                        <div style="width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.3); display:flex; align-items:center; justify-content:center; color: var(--color-warning); font-size: 1.1rem;">
+                          <i class="fa-solid fa-brain" aria-hidden="true"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                          <div style="font-weight: 600; color: var(--ink); font-size: var(--text-sm);">AI Ensemble</div>
+                          <div style="font-size: var(--text-xs); color: var(--text-muted);">Gemini 2.5 Flash → Groq → Ollama &middot; <span id="archAiStatus" class="badge badge-success">Active</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card animate-slide-up stagger-5" style="padding: var(--space-3);">
+                      <div style="display:flex; align-items:center; gap: var(--space-3);">
+                        <div style="width: 44px; height: 44px; border-radius: var(--radius-lg); background: rgba(134,239,172,0.1); border: 1px solid rgba(52,211,153,0.3); display:flex; align-items:center; justify-content:center; color: var(--color-success); font-size: 1.1rem;">
+                          <i class="fa-solid fa-tree" aria-hidden="true"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                          <div style="font-weight: 600; color: var(--ink); font-size: var(--text-sm);">Naura Wilds RPG</div>
+                          <div style="font-size: var(--text-xs); color: var(--text-muted);">Adisha World &middot; <span id="archWildsStatus" class="badge badge-success">Live</span></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card animate-slide-up stagger-6" style="padding: var(--space-3);">
+                      <div style="display:flex; align-items:center; gap: var(--space-3);">
+                        <div style="width: 44px; height: 44px; border-radius: var(--radius-lg); background: var(--violet-dim); border: 1px solid rgba(167,139,250,0.3); display:flex; align-items:center; justify-content:center; color: var(--color-maintenance); font-size: 1.1rem;">
+                          <i class="fa-solid fa-cloud" aria-hidden="true"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                          <div style="font-weight: 600; color: var(--ink); font-size: var(--text-sm);">Pterodactyl Hosting</div>
+                          <div style="font-size: var(--text-xs); color: var(--text-muted);">Auto-scaling &middot; <span id="archPteroStatus" class="badge badge-success">Healthy</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
             </div>
+          </section>
 
-            <!-- Right: System Architecture -->
-            <div class="bento-col-4 card card-solid card-p-sm" style="display:flex;flex-direction:column;height:100%;">
-              <div class="card-header" style="margin-bottom:14px;">
-                <div class="card-title">
-                  <i class="fa-solid fa-server"></i> Architecture
-                </div>
-                <span class="badge badge-green" id="archClusterBadge" style="font-size:9px;font-family:var(--font-mono);">Cluster #0 Live</span>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;flex:1;justify-content:space-between;" id="architectureInfo">
-                <div class="status-item">
-                  <span style="font-size:12px;color:var(--text-secondary);">Database</span>
-                  <span class="badge badge-green" id="archDbBadge">PostgreSQL</span>
-                </div>
-                <div class="status-item">
-                  <span style="font-size:12px;color:var(--text-secondary);">Cache</span>
-                  <span class="badge badge-cyan">Redis</span>
-                </div>
-                <div class="status-item">
-                  <span style="font-size:12px;color:var(--text-secondary);">Audio</span>
-                  <span class="badge badge-primary">Lavalink v4</span>
-                </div>
-                <div class="status-item">
-                  <span style="font-size:12px;color:var(--text-secondary);">AI Engine</span>
-                  <span class="badge badge-violet">Gemini 2.5 Flash</span>
-                </div>
-                <div class="status-item">
-                  <span style="font-size:12px;color:var(--text-secondary);">Shard</span>
-                  <span class="badge badge-muted" id="archShardBadge">#0 Online</span>
-                </div>
-                <div class="status-item" style="background:var(--bg-elevated);border-color:var(--border-subtle);">
-                  <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-                    <i class="fa-brands fa-node-js" style="color:var(--accent-green);"></i> Runtime
-                  </span>
-                  <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-secondary);">Node.js v24</span>
-                </div>
-              </div>
-            </div>
+        </div>
+      </main>
 
-          </div>
-
-          <!-- ── DB Fallback Banner (hidden by default) ── -->
-          <div id="dbFallbackBanner" style="display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9000;padding:10px 20px;border-radius:var(--r-full);background:rgba(245,158,11,0.15);border:1px solid var(--border-amber);color:var(--accent-amber);font-size:12px;font-weight:700;backdrop-filter:var(--blur-md);align-items:center;gap:8px;">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>DALAM MODE FALLBACK (SQLITE)</span>
-          </div>
-
-        </main>
-      </div><!-- end main-content -->
-    </div><!-- end app-shell -->
-
-    <!-- ── Mobile Bottom Navigation ── -->
-    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
-      <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
-      </div>
-    </nav>
-
-    <!-- Shared Nav JS -->
-    <script src="/src/js/sharedNav.js"></script>
-
-    <script>
-      // ── Telemetry Chart ─────────────────────────────────────────────
-      (function initTelemetryChart() {
-        const ctx = document.getElementById('telemetryChart');
-        if (!ctx || typeof Chart === 'undefined') return;
-        const labels = Array.from({ length: 20 }, (_, i) => `${i * 3}s`);
-        const pingData = labels.map(() => 28);
-        const ramData = labels.map(() => 48);
-
-        window.telemetryChartInstance = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [
-              {
-                label: 'Ping (ms)',
-                data: pingData,
-                borderColor: 'rgba(244,114,182,0.8)',
-                backgroundColor: 'rgba(244,114,182,0.06)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0,
-                borderWidth: 2,
-              },
-              {
-                label: 'RAM (%)',
-                data: ramData,
-                borderColor: 'rgba(34,211,238,0.8)',
-                backgroundColor: 'rgba(34,211,238,0.04)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0,
-                borderWidth: 2,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-              legend: {
-                labels: {
-                  color: 'rgba(148,163,184,0.8)',
-                  font: { family: 'JetBrains Mono', size: 10 },
-                  boxWidth: 10,
-                  padding: 12,
-                },
-              },
-              tooltip: {
-                backgroundColor: 'rgba(10,13,24,0.9)',
-                borderColor: 'rgba(255,255,255,0.08)',
-                borderWidth: 1,
-                titleColor: '#f1f5f9',
-                bodyColor: '#94a3b8',
-                titleFont: { family: 'Space Grotesk', size: 11 },
-                bodyFont: { family: 'JetBrains Mono', size: 11 },
-              },
-            },
-            scales: {
-              x: {
-                ticks: { color: 'rgba(71,85,105,0.8)', font: { family: 'JetBrains Mono', size: 9 } },
-                grid: { color: 'rgba(255,255,255,0.03)' },
-              },
-              y: {
-                ticks: { color: 'rgba(71,85,105,0.8)', font: { family: 'JetBrains Mono', size: 9 } },
-                grid: { color: 'rgba(255,255,255,0.03)' },
-              },
-            },
-          },
-        });
-      })();
-
-      // ── Command Distribution Doughnut ───────────────────────────────
-      (function initCommandChart() {
-        const ctx = document.getElementById('homeCommandChart');
-        if (!ctx) return;
-        window.homeCommandChartInstance = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Music', 'AI', 'RPG', 'Admin', 'Utility'],
-            datasets: [{
-              data: [24, 20, 18, 15, 23],
-              backgroundColor: [
-                'rgba(244,114,182,0.7)',
-                'rgba(34,211,238,0.7)',
-                'rgba(245,158,11,0.7)',
-                'rgba(167,139,250,0.7)',
-                'rgba(96,165,250,0.7)',
-              ],
-              borderColor: [
-                'rgba(244,114,182,0.3)',
-                'rgba(34,211,238,0.3)',
-                'rgba(245,158,11,0.3)',
-                'rgba(167,139,250,0.3)',
-                'rgba(96,165,250,0.3)',
-              ],
-              borderWidth: 1,
-            }],
-          },
-          options: {
-            cutout: '72%',
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: 'rgba(10,13,24,0.9)',
-                borderColor: 'rgba(255,255,255,0.08)',
-                borderWidth: 1,
-                titleColor: '#f1f5f9',
-                bodyColor: '#94a3b8',
-                callbacks: {
-                  label: (ctx) => ` ${ctx.label}: ${ctx.parsed}%`,
-                },
-              },
-            },
-          },
-        });
-      })();
-
-      // ── Demo: Animated counter ───────────────────────────────────────
-      function animateCounter(el, target, suffix = '') {
-        if (!el) return;
-        let start = 0;
-        const duration = 1200;
-        const step = target / (duration / 16);
-        const update = () => {
-          start = Math.min(start + step, target);
-          el.textContent = Math.floor(start).toLocaleString() + suffix;
-          if (start < target) requestAnimationFrame(update);
-        };
-        requestAnimationFrame(update);
-      }
-
-      window.addEventListener('load', () => {
-        // Fetch real overview, leaderboard, and user vitals from API
-        let dashboardLoadInFlight = false;
-
-        async function loadDashboardData() {
-          // Polling 30 detik bisa bertumpuk bila satu siklus berjalan lebih
-          // lama dari intervalnya, terutama saat tab dilatarbelakankan dan
-          // timer di-throttle browser. Dua siklus yang menulis DOM bersamaan
-          // membuat respons lama menimpa respons baru.
-          if (dashboardLoadInFlight) return;
-          dashboardLoadInFlight = true;
-
-          // Skeleton hanya saat muat pertama. Menampilkannya tiap polling
-          // membuat feed yang sudah terisi berkedip kembali ke placeholder.
-          if (window.showSkeleton && !loadDashboardData.hasRendered) {
-            window.showSkeleton('#homeFeedList', { count: 4, type: 'feed' });
-          }
-          try {
-            const [overviewRes, feedRes, statusRes, lbRes, meRes] = await Promise.all([
-              fetch('/api/realtime/overview').catch(() => null),
-              fetch('/api/realtime/feed').catch(() => null),
-              fetch('/api/supabase/status').catch(() => null),
-              fetch('/api/realtime/leaderboard').catch(() => null),
-              fetch('/api/me', { credentials: 'include' }).catch(() => null),
-            ]);
-
-            const overview = overviewRes?.ok ? await overviewRes.json().catch(() => null) : null;
-            const feed = feedRes?.ok ? await feedRes.json().catch(() => null) : null;
-            const status = statusRes?.ok ? await statusRes.json().catch(() => null) : null;
-            const lb = lbRes?.ok ? await lbRes.json().catch(() => null) : null;
-            const me = meRes?.ok ? await meRes.json().catch(() => null) : null;
-
-            // 1. Overview Telemetry
-            if (overview && overview.success) {
-              const d = overview.data;
-              setTimeout(() => {
-                animateCounter(document.getElementById('statPing'), d.dbLatencyMs || 28, '');
-                animateCounter(document.getElementById('statUsers'), d.registeredUsers || 4);
-                animateCounter(document.getElementById('statServers'), d.activeGuilds || 2);
-
-                const uptimeEl = document.getElementById('statUptime');
-                if (uptimeEl) {
-                  const s = d.uptimeSeconds || 0;
-                  const h = Math.floor(s / 3600);
-                  const m = Math.floor((s % 3600) / 60);
-                  uptimeEl.textContent = `${h}j ${m}m`;
-                }
-
-                const walletEl = document.getElementById('walletAmount');
-                if (walletEl) {
-                  const userNc = (me && me.loggedIn && me.db)
-                    ? ((Number(me.db.economy_wallet) || 0) + (Number(me.db.economy_bank) || 0))
-                    : (window.NauraAuth?.isLoggedIn() ? Number(window.NauraAuth.getUser()?.nc || 0) : null);
-                  animateCounter(walletEl, userNc !== null ? userNc : (d.treasuryPoolNc || 875));
-                }
-              }, 400);
-
-              // Update telemetry cards
-              const telemetryItems = [
-                { id: 'telUserCount', value: d.registeredUsers },
-                { id: 'telSurvivalCount', value: d.activeSurvivalPlayers },
-                { id: 'telNsf', value: d.treasuryPoolNsf },
-                { id: 'telNc', value: d.treasuryPoolNc },
-              ];
-              telemetryItems.forEach(({ id, value }) => {
-                const el = document.getElementById(id);
-                if (el && value !== undefined) animateCounter(el, value);
-              });
-
-              // Update Command Chart & Legend with Real Plugins Data
-              if (d.plugins && window.homeCommandChartInstance) {
-                const badgeEl = document.getElementById('homeTotalModulesBadge');
-                if (badgeEl && d.plugins.totalModules) {
-                  badgeEl.textContent = `${d.plugins.totalModules} Modul (${d.plugins.totalCommands || 0} Perintah)`;
-                }
-                if (d.plugins.distribution && d.plugins.distribution.length > 0) {
-                  const dist = d.plugins.distribution;
-                  window.homeCommandChartInstance.data.labels = dist.map(x => x.name);
-                  window.homeCommandChartInstance.data.datasets[0].data = dist.map(x => x.percentage);
-                  window.homeCommandChartInstance.update();
-
-                  const legendEl = document.getElementById('commandChartLegend');
-                  if (legendEl) {
-                    const colors = [
-                      'var(--primary)',
-                      'var(--accent-cyan)',
-                      'var(--accent-amber)',
-                      'var(--accent-violet)',
-                      '#60a5fa',
-                      '#34d399',
-                      '#f472b6'
-                    ];
-                    legendEl.innerHTML = dist.map((item, idx) => `
-                      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);">
-                        <span style="width:8px;height:8px;border-radius:50%;background:${colors[idx % colors.length]};display:inline-block;"></span>${item.name} (${item.percentage}%)
-                      </span>
-                    `).join('');
-                  }
-                }
-              }
-
-              // Update Architecture Badges with Real Live Data
-              if (d.architecture) {
-                const dbBadge = document.getElementById('archDbBadge');
-                if (dbBadge && d.architecture.db) {
-                  dbBadge.textContent = d.architecture.db.name || 'PostgreSQL';
-                  dbBadge.className = d.architecture.db.status === 'Optimal' ? 'badge badge-green' : 'badge badge-amber';
-                }
-                const clusterBadge = document.getElementById('archClusterBadge');
-                if (clusterBadge && d.architecture.cluster) {
-                  clusterBadge.textContent = `${d.architecture.cluster.name} (${d.architecture.cluster.nodes || 3} Nodes)`;
-                }
-                const shardBadge = document.getElementById('archShardBadge');
-                if (shardBadge && d.architecture.shard) {
-                  shardBadge.textContent = `#${d.architecture.shard.id} ${d.architecture.shard.status}`;
-                }
-              }
-            }
-
-            // 2. Render Top 5 Hall of Fame
-            const lbContainer = document.getElementById('homeTopLeaderboard');
-            if (lbContainer && lb?.success && lb.data?.economy?.length) {
-              const top5 = lb.data.economy.slice(0, 5);
-              const rankMedals = ['🥇', '🥈', '🥉', '4', '5'];
-              const rankClasses = ['rank-1', 'rank-2', 'rank-3', '', ''];
-              const medalColors = ['var(--accent-amber)', '#94a3b8', '#b4783c', 'var(--text-muted)', 'var(--text-muted)'];
-
-              lbContainer.innerHTML = top5.map((item, idx) => {
-                const medal = rankMedals[idx] || (idx + 1);
-                const rankClass = rankClasses[idx] || '';
-                const color = medalColors[idx] || 'var(--text-muted)';
-                const badgeHtml = item.isOwner
-                  ? '<span class="badge badge-amber">Owner VIP</span>'
-                  : (item.isPremium ? '<span class="badge badge-primary">VIP Member</span>' : '');
-
-                const roleTitle = item.isOwner
-                  ? `Level ${item.level} · Server Administrator`
-                  : `Level ${item.level} · Explorer`;
-
-                const initialLetter = (item.name || 'U').charAt(0).toUpperCase();
-                const avatarHtml = item.avatar
-                  ? `<img src="${item.avatar}" alt="${item.name}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border-subtle);flex-shrink:0;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div style="display:none;width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);align-items:center;justify-content:center;font-weight:700;color:var(--text-muted);flex-shrink:0;">${initialLetter}</div>`
-                  : `<div style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-muted);flex-shrink:0;">${initialLetter}</div>`;
-
-                return `
-                <div class="rank-item ${rankClass}" style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--r-md);background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);">
-                  <span class="rank-number" style="font-size:16px;font-weight:700;min-width:24px;text-align:center;color:${color};">${medal}</span>
-                  ${avatarHtml}
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                      <span>${item.name}</span> ${badgeHtml}
-                    </div>
-                    <div style="font-size:11px;color:var(--text-muted);">${roleTitle}</div>
-                  </div>
-                  <div style="text-align:right;min-width:95px;flex-shrink:0;">
-                    <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 ${(item.total || 0).toLocaleString('id-ID')}</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">${(item.xp || 0).toLocaleString('id-ID')} XP</div>
-                  </div>
-                </div>`;
-              }).join('');
-            } else if (lbContainer && lb?.success) {
-              lbContainer.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px 0;font-size:13px;">Belum ada data ranking ekonomi.</div>';
-            }
-
-            // 3. Render Survival Vitals
-            const survivalData = (me && me.loggedIn && me.survival) ? me.survival : window.NauraAuth?.getUser()?.vitals;
-            if (survivalData) {
-              const updateVital = (barId, valId, value, defaultGradient) => {
-                const bar = document.getElementById(barId);
-                const val = document.getElementById(valId);
-                // Logika inti terkunci di /shared/vitalPercent.js dan diuji
-                // oleh src/utils/vitalPercent.test.js. Jangan menulis ulang
-                // clamping di sini: `Number(value) ?? 100` pernah dipakai dan
-                // selalu gagal, karena `Number()` mengubah null menjadi 0 dan
-                // undefined menjadi NaN lebih dulu, sehingga `??` tidak pernah
-                // menyala dan bar menampilkan 0% atau "NaN%".
-                const pct = window.NauraVitalPercent
-                  ? window.NauraVitalPercent.clampVitalPercent(value)
-                  : 100;
-                if (val) val.textContent = `${pct}%`;
-                if (bar) {
-                  bar.style.width = `${pct}%`;
-                  if (pct < 30) {
-                    bar.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
-                  } else if (pct < 60) {
-                    bar.style.background = 'linear-gradient(90deg, var(--accent-amber), #fcd34d)';
-                  } else {
-                    bar.style.background = defaultGradient;
-                  }
-                }
-              };
-              updateVital('vitalHp', 'vitalHpVal', survivalData.hp, 'linear-gradient(90deg,#34d399,#6ee7b7)');
-              updateVital('vitalHydration', 'vitalHydrationVal', survivalData.thirst ?? survivalData.hydration, 'linear-gradient(90deg,var(--accent-cyan),#67e8f9)');
-              updateVital('vitalSatiation', 'vitalSatiationVal', survivalData.hunger ?? survivalData.satiation, 'linear-gradient(90deg,var(--accent-amber),#fcd34d)');
-              updateVital('vitalEnergy', 'vitalEnergyVal', survivalData.stamina ?? survivalData.energy, 'linear-gradient(90deg,var(--accent-violet),#c4b5fd)');
-            }
-
-            // 4. Render Activity Feed
-            const feedContainer = document.getElementById('homeFeedList');
-            if (feed?.success && feed.data?.length) {
-              if (feedContainer) {
-                const feedTypeIcon = {
-                  leveling: { icon: 'fa-arrow-up', color: 'var(--accent-cyan)', bg: 'var(--cyan-dim)' },
-                  economy: { icon: 'fa-coins', color: 'var(--accent-amber)', bg: 'var(--amber-dim)' },
-                  survival: { icon: 'fa-leaf', color: 'var(--accent-green)', bg: 'var(--green-dim)' },
-                  system: { icon: 'fa-circle-check', color: 'var(--accent-violet)', bg: 'var(--violet-dim)' },
-                  default: { icon: 'fa-bolt', color: 'var(--primary)', bg: 'var(--primary-dim)' }
-                };
-                feedContainer.innerHTML = feed.data.slice(0, 5).map(item => {
-                  const t = feedTypeIcon[item.type] || feedTypeIcon.default;
-                  return `
-                  <div class="feed-item">
-                    <div class="feed-icon" style="background:${t.bg};color:${t.color};">
-                      <i class="fa-solid ${t.icon}"></i>
-                    </div>
-                    <div class="feed-content">
-                      <div class="feed-title">${item.title}</div>
-                      <div class="feed-desc">${item.desc}</div>
-                      <div class="feed-time">${item.time}</div>
-                    </div>
-                    <span class="badge" style="font-size:9px;padding:3px 6px;background:${t.bg};color:${t.color};">${item.badge}</span>
-                  </div>`;
-                }).join('');
-              }
-            } else if (feedContainer) {
-              if (window.renderEmptyState) {
-                window.renderEmptyState(feedContainer, {
-                  title: 'Belum Ada Aktivitas',
-                  message: 'Belum ada transaksi atau aktivitas command baru.'
-                });
-              }
-            }
-
-            // 5. Database Status Dot
-            if (status?.success && status.supabase) {
-              const dotEl = document.getElementById('dbStatusDot');
-              if (dotEl) {
-                const isSbConnected = status.supabase.connected || status.supabase.status === 'connected';
-                dotEl.style.background = isSbConnected ? '#22c55e' : '#ef4444';
-              }
-              const latencyEl = document.getElementById('dbLatencyDisplay');
-              if (latencyEl) {
-                latencyEl.textContent = `${status.supabase.latencyMs}ms`;
-              }
-            }
-
-          } catch(e) {
-            console.warn('[Dashboard] Data fetch error:', e.message);
-            const feedContainer = document.getElementById('homeFeedList');
-            if (feedContainer && window.renderErrorState) {
-              window.renderErrorState(feedContainer, {
-                title: 'Gagal Memuat Feed',
-                message: 'Tidak dapat mengambil log aktivitas terbaru.',
-                onRetry: () => location.reload()
-              });
-            }
-            setTimeout(() => {
-              animateCounter(document.getElementById('statPing'), 28, '');
-              animateCounter(document.getElementById('statUsers'), 4);
-              animateCounter(document.getElementById('statServers'), 2);
-              const uptimeEl = document.getElementById('statUptime');
-              if (uptimeEl) uptimeEl.textContent = '0j 0m';
-            }, 800);
-          } finally {
-            // Dilepas di finally supaya siklus yang gagal tidak mengunci
-            // seluruh polling berikutnya.
-            dashboardLoadInFlight = false;
-            loadDashboardData.hasRendered = true;
-          }
-        }
-
-        loadDashboardData();
-        setInterval(loadDashboardData, 30000);
-      });
-
-        // ── Real-Time Socket.IO Telemetry & Feed Connection ──
-        if (typeof io === 'function') {
-          try {
-            const socket = io();
-            socket.emit('join_room', 'home');
-
-            socket.on('stats_update', (data) => {
-              if (!data) return;
-
-              // Update Live Latency
-              const pingEl = document.getElementById('statPing');
-              if (pingEl && data.ping !== undefined) {
-                pingEl.textContent = data.ping;
-              }
-
-              // Update Users
-              const usersEl = document.getElementById('statUsers');
-              if (usersEl && data.users !== undefined) {
-                usersEl.textContent = Number(data.users).toLocaleString();
-              }
-
-              // Update Guilds
-              const serversEl = document.getElementById('statServers');
-              if (serversEl && data.guilds !== undefined) {
-                serversEl.textContent = Number(data.guilds).toLocaleString();
-              }
-
-              // Update Uptime
-              const uptimeEl = document.getElementById('statUptime');
-              if (uptimeEl && data.uptimeFormatted) {
-                uptimeEl.textContent = data.uptimeFormatted;
-              }
-
-              // Update Shard Indicator Badge
-              const shardBadge = document.getElementById('archShardBadge');
-              if (shardBadge) {
-                shardBadge.textContent = `#0 Online (${data.ping || 28}ms)`;
-                shardBadge.className = 'badge badge-green';
-              }
-
-              // Push data point into Telemetry Chart live
-              if (window.telemetryChartInstance && data.ping !== undefined && data.ramUsed !== undefined) {
-                const chart = window.telemetryChartInstance;
-                const nowTime = new Date().toLocaleTimeString('id-ID', { hour12: false, minute: '2-digit', second: '2-digit' });
-                chart.data.labels.push(nowTime);
-                chart.data.labels.shift();
-
-                chart.data.datasets[0].data.push(Number(data.ping));
-                chart.data.datasets[0].data.shift();
-
-                const ramTotal = parseFloat(data.ramTotal) || 16000;
-                const ramPercent = Math.min(100, Math.round((Number(data.ramUsed) / ramTotal) * 100)) || 52;
-                chart.data.datasets[1].data.push(ramPercent);
-                chart.data.datasets[1].data.shift();
-
-                chart.update('none');
-              }
-            });
-
-            // Activity Feed Real-Time push
-            socket.on('activity:new', (item) => {
-              const feedContainer = document.getElementById('homeFeedList');
-              if (!feedContainer || !item) return;
-
-              const feedTypeIcon = {
-                leveling: { icon: 'fa-arrow-up', color: 'var(--accent-cyan)', bg: 'var(--cyan-dim)' },
-                economy: { icon: 'fa-coins', color: 'var(--accent-amber)', bg: 'var(--amber-dim)' },
-                survival: { icon: 'fa-leaf', color: 'var(--accent-green)', bg: 'var(--green-dim)' },
-                system: { icon: 'fa-circle-check', color: 'var(--accent-violet)', bg: 'var(--violet-dim)' },
-                default: { icon: 'fa-bolt', color: 'var(--primary)', bg: 'var(--primary-dim)' }
-              };
-              const t = feedTypeIcon[item.type] || feedTypeIcon.default;
-
-              const feedElem = document.createElement('div');
-              feedElem.className = 'feed-item';
-              feedElem.innerHTML = `
-                <div class="feed-icon" style="background:${t.bg};color:${t.color};">
-                  <i class="fa-solid ${t.icon}"></i>
-                </div>
-                <div class="feed-content">
-                  <div class="feed-title">${item.title}</div>
-                  <div class="feed-desc">${item.desc}</div>
-                  <div class="feed-time">${item.time || 'Baru saja'}</div>
-                </div>
-                <span class="badge" style="font-size:9px;padding:3px 6px;background:${t.bg};color:${t.color};">${item.badge || 'LIVE'}</span>
-              `;
-              feedContainer.insertBefore(feedElem, feedContainer.firstChild);
-              if (feedContainer.children.length > 5) feedContainer.lastElementChild.remove();
-            });
-
-            // Mini Music Player Live Sync
-            socket.on('music_state', (data) => {
-              if (!data || !data.currentTrack) return;
-              const track = data.currentTrack;
-              const titleEl = document.getElementById('nowPlayingTitle');
-              const artistEl = document.getElementById('nowPlayingArtist');
-              const progressEl = document.getElementById('nowPlayingProgress');
-              const playBtn = document.getElementById('btnMusicPlay');
-
-              if (titleEl) titleEl.textContent = track.title || 'Idle';
-              if (artistEl) artistEl.textContent = track.author || 'Queue kosong';
-              if (progressEl && track.duration > 0) {
-                const pct = Math.min(100, Math.round((track.position / track.duration) * 100));
-                progressEl.style.width = `${pct}%`;
-              }
-              if (playBtn) {
-                playBtn.innerHTML = track.isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
-              }
-            });
-          } catch (sockErr) {
-            console.warn('[Dashboard] Socket connection error:', sockErr);
-          }
-        }
-
-        // ── Mini Music Player Controller ──
-        async function sendMusicControl(action) {
-          try {
-            const res = await fetch('/api/music/control', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action })
-            });
-            const data = await res.json().catch(() => null);
-            if (data && data.success) {
-              if (window.showToast) window.showToast('Music Player', `Aksi ${action} berhasil dieksekusi.`, 'success');
-              fetchNowPlaying();
-            } else if (data && data.message) {
-              if (window.showToast) window.showToast('Music Player', data.message, 'info');
-            }
-          } catch (e) {
-            console.warn('[MusicControl] Gagal mengirim aksi:', e);
-          }
-        }
-
-        async function fetchNowPlaying() {
-          try {
-            const res = await fetch('/api/music/now-playing');
-            const data = await res.json().catch(() => null);
-            if (data && data.success && data.data && data.data.currentTrack) {
-              const track = data.data.currentTrack;
-              const titleEl = document.getElementById('nowPlayingTitle');
-              const artistEl = document.getElementById('nowPlayingArtist');
-              const progressEl = document.getElementById('nowPlayingProgress');
-              const playBtn = document.getElementById('btnMusicPlay');
-
-              if (titleEl) titleEl.textContent = track.title || 'Idle';
-              if (artistEl) artistEl.textContent = track.author || 'Queue kosong';
-              if (progressEl && track.duration > 0) {
-                const pct = Math.min(100, Math.round((track.position / track.duration) * 100));
-                progressEl.style.width = `${pct}%`;
-              }
-              if (playBtn) {
-                playBtn.innerHTML = track.isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
-              }
-            }
-          } catch (_) {}
-        }
-
-        const btnPrev = document.getElementById('btnMusicPrev');
-        const btnPlay = document.getElementById('btnMusicPlay');
-        const btnNext = document.getElementById('btnMusicNext');
-
-        if (btnPrev) btnPrev.addEventListener('click', () => sendMusicControl('prev'));
-        if (btnPlay) btnPlay.addEventListener('click', () => sendMusicControl('toggle'));
-        if (btnNext) btnNext.addEventListener('click', () => sendMusicControl('next'));
-
-        fetchNowPlaying();
-
-        // ── EventSource SSE Fallback Stream ──
-        try {
-          const sse = new EventSource('/api/activity/stream');
-          sse.addEventListener('activity', (ev) => {
-            try {
-              const item = JSON.parse(ev.data);
-              const feedContainer = document.getElementById('homeFeedList');
-              if (feedContainer && item) {
-                const feedTypeIcon = {
-                  leveling: { icon: 'fa-arrow-up', color: 'var(--accent-cyan)', bg: 'var(--cyan-dim)' },
-                  economy: { icon: 'fa-coins', color: 'var(--accent-amber)', bg: 'var(--amber-dim)' },
-                  survival: { icon: 'fa-leaf', color: 'var(--accent-green)', bg: 'var(--green-dim)' },
-                  system: { icon: 'fa-circle-check', color: 'var(--accent-violet)', bg: 'var(--violet-dim)' },
-                  default: { icon: 'fa-bolt', color: 'var(--primary)', bg: 'var(--primary-dim)' }
-                };
-                const t = feedTypeIcon[item.type] || feedTypeIcon.default;
-                const feedElem = document.createElement('div');
-                feedElem.className = 'feed-item';
-                feedElem.innerHTML = `
-                  <div class="feed-icon" style="background:${t.bg};color:${t.color};">
-                    <i class="fa-solid ${t.icon}"></i>
-                  </div>
-                  <div class="feed-content">
-                    <div class="feed-title">${item.title}</div>
-                    <div class="feed-desc">${item.desc}</div>
-                    <div class="feed-time">${item.time}</div>
-                  </div>
-                  <span class="badge" style="font-size:9px;padding:3px 6px;background:${t.bg};color:${t.color};">${item.badge}</span>
-                `;
-                feedContainer.insertBefore(feedElem, feedContainer.firstChild);
-                if (feedContainer.children.length > 5) feedContainer.lastElementChild.remove();
-              }
-            } catch (_) {}
-          });
-        } catch (_) {}
-
-      // Kendali BGM dan WebAudio disinkronkan secara terpusat oleh sharedNav.js & soundManager.js
-
-      // ── 3D Anim buttons ───────────────────────────────────────────────
-      document.querySelectorAll('.naura3d-anim-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.naura3d-anim-btn').forEach((b) => {
-            b.style.background = 'transparent';
-            b.style.borderColor = 'var(--border-subtle)';
-            b.style.color = 'var(--text-muted)';
-          });
-          btn.style.background = 'var(--primary-dim)';
-          btn.style.borderColor = 'var(--border-primary)';
-          btn.style.color = 'var(--primary)';
-          const label = btn.getAttribute('data-label') || btn.textContent;
-          const statusEl = document.getElementById('naura3d-status-text');
-          if (statusEl) statusEl.textContent = label;
-        });
-      });
-
-      // Responsive layout adjustment
-      function adjustTelemetryGrid() {
-        // Handled natively by .bento-grid CSS rules
-      }
-
-      function adjustHeroGrid() {
-        const heroGrid = document.querySelector('.hero-grid-layout');
-        if (!heroGrid) return;
-        if (window.innerWidth < 900) {
-          heroGrid.style.gridTemplateColumns = '1fr';
-        } else {
-          heroGrid.style.gridTemplateColumns = '1fr 320px';
-        }
-      }
-
-      function adjustChartsGrid() {
-        // Handled natively by .bento-grid CSS rules
-      }
-
-      function adjustBottomGrid() {
-        // Handled natively by .bento-grid CSS rules
-      }
-
-      function adjustQuickActionsGrid() {
-        // Handled natively by .quick-actions-grid CSS rules
-      }
-
-      window.addEventListener('resize', () => {
-        adjustTelemetryGrid();
-        adjustHeroGrid();
-        adjustChartsGrid();
-        adjustBottomGrid();
-        adjustQuickActionsGrid();
-      });
-
-      adjustTelemetryGrid();
-      adjustHeroGrid();
-      adjustChartsGrid();
-      adjustBottomGrid();
-      adjustQuickActionsGrid();
-    </script>
-    <!-- PWA Install Prompt Banner (#14) -->
-    <div id="pwa-install-banner" class="pwa-install-banner" style="display:none;position:fixed;bottom:24px;right:96px;z-index:9990;background:rgba(15,23,42,0.95);backdrop-filter:blur(20px);border:1px solid rgba(244,114,182,0.4);border-radius:var(--r-xl);padding:12px 16px;box-shadow:0 12px 36px rgba(0,0,0,0.65), 0 0 24px rgba(244,114,182,0.15);align-items:center;gap:14px;max-width:calc(100vw - 32px);">
-      <img src="/naura_3d_closeup.png" alt="Naura 3D" style="width:40px;height:40px;border-radius:12px;object-fit:cover;border:1px solid rgba(244,114,182,0.5);flex-shrink:0;" />
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;font-size:14px;color:var(--text-primary);font-family:var(--font-heading);">Install Naura OS</div>
-        <div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Akses dashboard lebih cepat langsung dari layar utama</div>
-      </div>
-      <button type="button" class="btn btn-primary btn-sm" onclick="window.installPwa()" style="display:inline-flex;align-items:center;gap:6px;flex-shrink:0;">
-        <i class="fa-solid fa-download"></i> Install
-      </button>
-      <button type="button" class="pwa-close-btn" id="pwaCloseBtn" onclick="window.dismissPwaBanner()" title="Tutup pemberitahuan" aria-label="Tutup prompt install" style="width:32px;height:32px;min-width:32px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);color:#94a3b8;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s ease;padding:0;flex-shrink:0;font-size:13px;">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+      <!-- Mobile Navigation -->
+      <nav class="mobile-nav" aria-label="Navigasi mobile">
+        <a href="/" class="mobile-nav-item active" aria-current="page">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/lounge" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-cube"></i></span>
+          <span>3D Lounge</span>
+        </a>
+        <a href="/music" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+          <span>Music</span>
+        </a>
+        <a href="/world" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+          <span>Wilds</span>
+        </a>
+        <a href="/settings" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+          <span>Settings</span>
+        </a>
+      </nav>
     </div>
 
-    <script src="/js/theme-switcher.js"></script>
-    <script src="/js/pwa-install.js"></script>
-    <!-- Hero 3D Viewer, WAJIB module script terpisah.
-         Seluruh script inline di halaman ini adalah script klasik, sehingga
-         tidak bisa memakai import. Tanpa blok ini, canvas #naura-hero-3d-canvas
-         tidak pernah diinisialisasi dan overlay "Memuat Model 3D VRM..."
-         tampil tanpa henti. -->
-    <script type="module">
-      // import wajib berada di tingkat modul, tidak boleh di dalam blok if.
-      import { initHeroViewer } from "/src/components/NauraHeroViewer/heroController.js";
-
-      function startHero() {
-        const canvas = document.getElementById("naura-hero-3d-canvas");
-        if (!canvas) return;
-
-        const loadingBox = document.getElementById("naura3d-loading");
-        const loadingText = document.getElementById("naura3d-loading-text");
-
-        // Semua pengaman di sini memakai satu batas waktu, bukan polling
-        // setInterval. Polling yang menunggu perubahan DOM tidak pernah
-        // dibersihkan kalau overlay tidak pernah disembunyikan, sehingga
-        // timer-nya tetap berjalan sepanjang halaman hidup.
-        const startedAt = Date.now();
-        const HERO_LOAD_TIMEOUT_MS = 45000;
-
-        const showFailure = (message) => {
-          if (loadingText) loadingText.textContent = message;
-          if (loadingBox) loadingBox.style.display = "none";
-          const errorBox = document.getElementById("naura3d-error");
-          if (errorBox) errorBox.style.display = "flex";
-        };
-
-        const isSettled = () =>
-          !loadingBox || loadingBox.style.display === "none";
-
-        const watchdog = setInterval(() => {
-          const timedOut = Date.now() - startedAt > HERO_LOAD_TIMEOUT_MS;
-          if (!isSettled() && !timedOut) return;
-
-          // Berhenti begitu saja setelah overlay tertutup atau waktu habis.
-          clearInterval(watchdog);
-          if (!isSettled() && timedOut) {
-            // Model 3D ada di server yang sama dengan halaman ini, jadi
-            // kegagalan hampir selalu berarti WebGL dimatikan atau diblokir
-            // oleh ekstensi. Menyebut penyebab yang mungkin lebih berguna
-            // daripada menyuruh user "periksa konsol".
-            showFailure(
-              "Avatar 3D gagal dimuat. Coba aktifkan akselerasi grafis, atau matikan ekstensi browser yang memblokir WebGL."
-            );
-          }
-        }, 500);
-
-        try {
-          const viewer = initHeroViewer(canvas);
-          if (!viewer) {
-            clearInterval(watchdog);
-            // Pesan ini hanya muncul kalau HTML-nya sendiri rusak saat
-            // diproses, jadi cukup singkat tanpa menyebut "canvas".
-            showFailure("Avatar 3D tidak tersedia di halaman ini.");
-            return;
-          }
-        } catch (err) {
-          clearInterval(watchdog);
-          console.warn("[Hero3D] Gagal inisialisasi viewer:", err);
-          showFailure("Avatar 3D gagal dibuka. Muat ulang halaman untuk mencoba lagi.");
-        }
-      }
-
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", startHero, { once: true });
-      } else {
-        startHero();
-      }
-    </script>
-
+    <!-- Page Scripts -->
+    <script src="/src/js/naura-os.js"></script>
+    <script src="/src/js/pages/index.js"></script>
+    <script type="module" src="/src/js/three/nauraHero3D.js"></script>
   </body>
 </html>

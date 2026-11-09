@@ -23,7 +23,7 @@ const customEmojis = {
   naura_donate: "<a:naura_donate:ID_PLACEHOLDER>",
 
   // B. AI Companion & Machine Learning (6 items)
-  ai_sparkle: "<a:ai_sparkle:ID_PLACEHOLDER>",
+  ai_sparkle: "<:ai_sparkle:1492712303911633009>",
   ai_thinking: "<:ai_thinking:1568829676808445962>",
   ai_vision: "<:ai_vision:1568829682676146307>",
   ai_voice: "<:ai_voice:1568829686174191688>",
@@ -77,13 +77,13 @@ const customEmojis = {
   dl_cobalt: "<:dl_cobalt:1568829706407780482>",
 
   // Core Character Expressions (17 items)
-  naura_happy: "<a:naura_happy:ID_PLACEHOLDER>",
-  naura_thinking: "<a:naura_thinking:ID_PLACEHOLDER>",
-  naura_cry: "<a:naura_cry:ID_PLACEHOLDER>",
+  naura_happy: "<:naura_happy:1533824826077085759>",
+  naura_thinking: "<:naura_thinking:1533824864367149096>",
+  naura_cry: "<:naura_cry:1533824832938967130>",
   naura_angry: "<:naura_angry:1568829790666891335>",
   naura_shy: "<:naura_shy:1568829845159550976>",
   naura_sleepy: "<:naura_sleepy:1568829847600631899>",
-  naura_shocked: "<:naura_shocked:ID_PLACEHOLDER>",
+  naura_shocked: "<:naura_shocked:1533824850051993601>",
   naura_eat: "<:naura_eat:1568829822321557634>",
   naura_cheers: "<:naura_cheers:1568829802108948600>",
   naura_chirping: "<:naura_chirping:1568829807175667825>",

@@ -87,6 +87,19 @@ const ART_FILES = {
   Sleepy: "naura_sleepy",
 };
 
+/**
+ * Kunci customEmojis untuk keempat ekspresi yang tidak punya art batch baru.
+ * Bersama ART_FILES, ini menutup seluruh 17 ekspresi agar semuanya lewat resolver.
+ */
+const EXTRA_EMOJI_KEYS = {
+  Cry: "naura_cry",
+  Happy: "naura_happy",
+  Shocked: "naura_shocked",
+  Thinking: "naura_thinking",
+};
+
+const EMOJI_KEYS = { ...ART_FILES, ...EXTRA_EMOJI_KEYS };
+
 /** Emoji kustom Discord untuk tiap ekspresi. */
 const EMOJIS = {
   Akward: "<:Akward:1533824815725805668>",
@@ -336,11 +349,11 @@ function exists(nameOrMood) {
  */
 function getEmoji(nameOrMood) {
   const expression = resolveExpression(nameOrMood);
-  // ID baru menang atas ID lama untuk ekspresi yang punya art batch baru.
-  const artKey = ART_FILES[expression];
-  if (artKey) {
+  // ID baru menang atas ID lama untuk semua ekspresi yang punya kunci resolver.
+  const emojiKey = EMOJI_KEYS[expression];
+  if (emojiKey) {
     const custom = require("../config/ui/customEmojis");
-    const resolved = custom.getCustomEmoji(artKey);
+    const resolved = custom.getCustomEmoji(emojiKey);
     if (resolved && custom.isCustomEmojiConfigured(resolved)) {
       return resolved;
     }
@@ -371,7 +384,7 @@ function getAttachment(nameOrMood) {
     name,
     fileName,
     url: `attachment://${fileName}`,
-    emoji: EMOJIS[name] || null,
+    emoji: getEmoji(name) || null,
     attachment: new AttachmentBuilder(filePath, { name: fileName }),
   };
 }
