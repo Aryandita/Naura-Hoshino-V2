@@ -4,8 +4,7 @@
  * Font: Space Grotesk (heading) + Inter (body) + JetBrains Mono (metrics)
  * ===================================================================== */
 
-/* â”€â”€â”€ Google Fonts â”€â”€â”€ */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* Font dimuat lewat input.css (build) atau <link> HTML (halaman langsung). */
 @import './tokens.css';
 @import './components.css';
 
