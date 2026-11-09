@@ -226,7 +226,7 @@ ${
     buttons.push(
       new ButtonBuilder()
         .setCustomId("story_btn_restart")
-        .setLabel("✨ Mulai Petualangan Baru")
+        .setLabel(`${ui.getEmoji("ai_sparkle") || "✨"} Mulai Petualangan Baru`)
         .setStyle(ButtonStyle.Success),
     );
   }

@@ -136,13 +136,13 @@ module.exports = {
       const lines = towers.map((t) => {
         const controller = t.controllerFedTag ? `[${t.controllerFedTag}]` : "UNCLAIMED";
         const hpBar = `HP: \`${t.defenseHp.toLocaleString("id-ID")} / ${t.maxHp.toLocaleString("id-ID")}\``;
-        return `🗼 **${t.name}** (${t.zone})\n   👑 Pengontrol: \`${controller}\` | ${hpBar}\n   ✨ Buff Wilayah: *${t.buffDescription}*`;
+        return `🗼 **${t.name}** (${t.zone})\n   👑 Pengontrol: \`${controller}\` | ${hpBar}\n   ${ui.getEmoji("ai_sparkle") || "✨"} Buff Wilayah: *${t.buffDescription}*`;
       });
 
       const payload = buildContainerV2({
         accentColorHex: "#8B5CF6",
         authorName: "CROSS-SERVER FEDERATION WAR",
-        title: "⚔️ Menara Relik Kuno & Peta Pengepungan",
+        title: `${ui.getEmoji("arcade_duel") || "⚔️"} Menara Relik Kuno & Peta Pengepungan`,
         description: [
           `Event mingguan perebutan Menara Relik Kuno antar federasi aliansi galaksi Naura Wilds:\n`,
           lines.join("\n\n"),

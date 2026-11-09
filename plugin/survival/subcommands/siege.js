@@ -84,13 +84,13 @@ module.exports = {
           ? `[${t.controllerFedTag}]`
           : "BELUM DIKONTROL";
         const hpBar = `Ketahanan: \`${t.defenseHp.toLocaleString("id-ID")} / ${t.maxHp.toLocaleString("id-ID")}\``;
-        return `🗼 **${t.name}** (${t.zone})\n   👑 Pengontrol: \`${controller}\` | ${hpBar}\n   ✨ Buff Wilayah: *${t.buffDescription}*`;
+        return `🗼 **${t.name}** (${t.zone})\n   👑 Pengontrol: \`${controller}\` | ${hpBar}\n   ${ui.getEmoji("ai_sparkle") || "✨"} Buff Wilayah: *${t.buffDescription}*`;
       });
 
       const payload = buildContainerV2({
         accentColorHex: "#8B5CF6",
         authorName: "NAURA ANCIENT RELIC TOWERS",
-        title: "⚔️ Status Menara Relik Kuno & Wilayah Galaksi",
+        title: `${ui.getEmoji("arcade_duel") || "⚔️"} Status Menara Relik Kuno & Wilayah Galaksi`,
         description: [
           "Daftar menara relik kuno yang diperebutkan oleh seluruh aliansi klan antar-server:\n",
           lines.join("\n\n"),

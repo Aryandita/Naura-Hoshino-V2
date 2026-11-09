@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const fs = require("node:fs");
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require("discord.js");
@@ -177,7 +177,7 @@ const ttsDB = [
 const MINIGAME_INFOS = {
   math: {
     title: "Kuis Matematika Kecepatan",
-    emoji: "🧮",
+    emoji: "ðŸ§®",
     description:
       "Uji seberapa cepat otakmu berhitung di bawah tekanan waktu!\n\n" +
       "**Cara Bermain:**\n" +
@@ -188,7 +188,7 @@ const MINIGAME_INFOS = {
   },
   trivia: {
     title: "Kuis Pengetahuan Umum AI",
-    emoji: "🧠",
+    emoji: "ðŸ§ ",
     description:
       "Tantang wawasan dan pengetahuanmu bersama AI Naura!\n\n" +
       "**Cara Bermain:**\n" +
@@ -199,18 +199,18 @@ const MINIGAME_INFOS = {
   },
   rps: {
     title: "Batu Gunting Kertas",
-    emoji: "✂️",
+    emoji: "âœ‚ï¸",
     description:
       "Permainan klasik adu insting dan keberuntungan!\n\n" +
       "**Cara Bermain:**\n" +
       "> 1. Pasang taruhan SC dan pilih lawan bermain (AI Naura atau temanmu).\n" +
-      "> 2. Pilih antara Batu 🪨, Gunting ✂️, atau Kertas 📄.\n" +
+      "> 2. Pilih antara Batu ðŸª¨, Gunting âœ‚ï¸, atau Kertas ðŸ“„.\n" +
       "> 3. Pemenang berhak membawa pulang seluruh taruhan SC!",
     tip: "Batu mengalahkan gunting, gunting memotong kertas, kertas membungkus batu!",
   },
   tictactoe: {
     title: "Tic-Tac-Toe Arena",
-    emoji: "⭕",
+    emoji: "â­•",
     description:
       "Adu strategi kotak 3x3 klasik yang legendaris!\n\n" +
       "**Cara Bermain:**\n" +
@@ -221,18 +221,18 @@ const MINIGAME_INFOS = {
   },
   wordle: {
     title: "Wordle 5 Huruf",
-    emoji: "🟩",
+    emoji: "ðŸŸ©",
     description:
       "Tebak kata rahasia 5 huruf dalam 6 kesempatan!\n\n" +
       "**Arti Warna Kotak:**\n" +
-      "> 🟩 Hijau: Huruf tepat di posisi yang benar\n" +
-      "> 🟨 Kuning: Huruf ada di dalam kata tapi posisinya salah\n" +
-      "> ⬛ Abu-abu: Huruf tidak ada di dalam kata",
+      "> ðŸŸ© Hijau: Huruf tepat di posisi yang benar\n" +
+      "> ðŸŸ¨ Kuning: Huruf ada di dalam kata tapi posisinya salah\n" +
+      "> â¬› Abu-abu: Huruf tidak ada di dalam kata",
     tip: "Gunakan kata pertama yang mengandung banyak vokal (A, I, U, E, O)!",
   },
   akinator: {
     title: "Akinator AI Tebak Karakter",
-    emoji: "🧞",
+    emoji: "ðŸ§ž",
     description:
       "Pikirkan satu karakter anime, game, atau tokoh nyata, dan biarkan Naura menebaknya!\n\n" +
       "**Cara Bermain:**\n" +
@@ -243,7 +243,7 @@ const MINIGAME_INFOS = {
   },
   hangman: {
     title: "Hangman Klasik",
-    emoji: "🪢",
+    emoji: "ðŸª¢",
     description:
       "Tebak huruf demi huruf untuk melengkapi kata rahasia!\n\n" +
       "**Cara Bermain:**\n" +
@@ -254,7 +254,7 @@ const MINIGAME_INFOS = {
   },
   memory: {
     title: "Memory Match Emoji",
-    emoji: "🎴",
+    emoji: "ðŸŽ´",
     description:
       "Uji daya ingat visualmu dengan mencocokkan pasangan kartu!\n\n" +
       "**Cara Bermain:**\n" +
@@ -265,7 +265,7 @@ const MINIGAME_INFOS = {
   },
   tebakkata: {
     title: "Tebak Kata Anagram",
-    emoji: "🔠",
+    emoji: "ðŸ” ",
     description:
       "Susun huruf-huruf yang berantakan menjadi kata yang bermakna!\n\n" +
       "**Cara Bermain:**\n" +
@@ -276,7 +276,7 @@ const MINIGAME_INFOS = {
   },
   tebakgambar: {
     title: "Tebak Gambar Misteri",
-    emoji: "🖼️",
+    emoji: "ðŸ–¼ï¸",
     description:
       "Tebak objek atau makna tersembunyi dari gambar petunjuk!\n\n" +
       "**Cara Bermain:**\n" +
@@ -287,7 +287,7 @@ const MINIGAME_INFOS = {
   },
   tts: {
     title: "Teka-Teki Silang Mini",
-    emoji: "📝",
+    emoji: "ðŸ“",
     description:
       "Isi kotak mendatar dan menurun dengan jawaban cerdasmu!\n\n" +
       "**Cara Bermain:**\n" +
@@ -298,7 +298,7 @@ const MINIGAME_INFOS = {
   },
   tod: {
     title: "Truth or Dare Party",
-    emoji: "🎭",
+    emoji: "ðŸŽ­",
     description:
       "Game seru penguji kejujuran dan keberanian bersama teman!\n\n" +
       "**Cara Bermain:**\n" +
@@ -309,7 +309,7 @@ const MINIGAME_INFOS = {
   },
   blackjack: {
     title: "Blackjack 21 Kasino",
-    emoji: "🃏",
+    emoji: "ðŸƒ",
     description:
       "Tantang dealer Naura dalam permainan kartu Blackjack 21 standar!\n\n" +
       "**Cara Bermain:**\n" +
@@ -321,13 +321,13 @@ const MINIGAME_INFOS = {
   },
   typerace: {
     title: "TypeRacer Kecepatan Ketik",
-    emoji: "⌨️",
+    emoji: "âŒ¨ï¸",
     description:
       "Uji kecepatan jari dan ketelitian mengetikmu dalam arena TypeRacer!\n\n" +
       "**Cara Bermain:**\n" +
       "> 1. Pilih tingkat kesulitan (Mudah, Sedang, Sulit) dan pasang taruhan opsional.\n" +
       "> 2. Baca teks kutipan target yang diberikan.\n" +
-      "> 3. Tekan tombol **Mulai Ketik 🏁** untuk membuka jendela modal input.\n" +
+      "> 3. Tekan tombol **Mulai Ketik ðŸ** untuk membuka jendela modal input.\n" +
       "> 4. Ketik teks secepat dan seakurat mungkin sebelum batas waktu 90 detik habis!",
     tip: "Akurasi minimal 85% wajib dipenuhi agar kecepatan WPM menghasilkan hadiah Star Fragments!",
   },
@@ -352,7 +352,7 @@ async function showMinigameIntro(interaction, subcommand, onStart) {
   const rowIntro = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`mg_intro_start_${interaction.user.id}`)
-      .setLabel("Lanjutkan Bermain 🚀")
+      .setLabel("Lanjutkan Bermain ðŸš€")
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId(`mg_intro_cancel_${interaction.user.id}`)
@@ -368,8 +368,8 @@ async function showMinigameIntro(interaction, subcommand, onStart) {
     expression: "cheers",
     description:
       `${info.description}\n\n` +
-      `💡 **Tips Naura:** *${info.tip}*\n\n` +
-      `Tekan tombol **Lanjutkan Bermain 🚀** di bawah jika kamu sudah siap!`,
+      `ðŸ’¡ **Tips Naura:** *${info.tip}*\n\n` +
+      `Tekan tombol **Lanjutkan Bermain ðŸš€** di bawah jika kamu sudah siap!`,
     bannerAttachmentName,
     bannerPosition: "bottom",
     files,
@@ -389,24 +389,14 @@ async function showMinigameIntro(interaction, subcommand, onStart) {
     });
 
     if (confirmation.customId === `mg_intro_cancel_${interaction.user.id}`) {
-      await confirmation.update({
-        content: "❌ Permainan dibatalkan. Panggil Naura lagi jika kamu sudah siap bermain ya!",
-        embeds: [],
-        components: [],
-      });
+      await confirmation.update(buildContainerV2({ accentColorHex: "#EF4444", authorName: "Naura Minigames", title: "Permainan Dibatalkan", description: "Permainan dibatalkan. Panggil Naura lagi jika kamu sudah siap bermain ya!", footerText: ui.getFooter("core") }));
       return;
     }
 
     await confirmation.deferUpdate();
     return onStart();
   } catch (e) {
-    await interaction
-      .editReply({
-        content: "⏳ Waktu konfirmasi habis. Permainan dibatalkan otomatis.",
-        embeds: [],
-        components: [],
-      })
-      .catch(() => {});
+    await interaction.editReply(buildContainerV2({ accentColorHex: "#F59E0B", authorName: "Naura Minigames", title: "Waktu Habis", description: "Waktu konfirmasi habis. Permainan dibatalkan otomatis.", footerText: ui.getFooter("core") })).catch(() => {});
   }
 }
 
@@ -421,3 +411,4 @@ module.exports = {
   MINIGAME_INFOS,
   showMinigameIntro,
 };
+

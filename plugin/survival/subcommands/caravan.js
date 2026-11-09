@@ -116,7 +116,7 @@ function formatMarketPrices(market) {
  */
 function formatRoutes(routes) {
   return Object.values(routes)
-    .map((r) => `• **${r.name}**\n  ⏱️ Durasi: \`${r.durationMinutes}m\` | 📈 Margin: \`+${r.profitMarginPercent}%\` | ⚠️ Risiko: \`${r.riskPercent}%\``)
+    .map((r) => `• **${r.name}**\n  ⏱️ Durasi: \`${r.durationMinutes}m\` | 📈 Margin: \`+${r.profitMarginPercent}%\` | ${ui.getEmoji("mod_warn") || "⚠️"} Risiko: \`${r.riskPercent}%\``)
     .join("\n");
 }
 
@@ -127,7 +127,7 @@ function formatRoutes(routes) {
  */
 function formatMercenaryRoster(roster) {
   return Object.values(roster)
-    .map((m) => `• **${m.name}**\n  💰 Biaya: \`${m.cost} SC\` | 🛡️ Def: \`+${m.defenseBonus}\` | 🎯 Mitigasi Risiko: \`-${m.ambushMitigation}%\``)
+    .map((m) => `• **${m.name}**\n  💰 Biaya: \`${m.cost} SC\` | ${ui.getEmoji("mod_shield") || "🛡️"} Def: \`+${m.defenseBonus}\` | ${ui.getEmoji("arcade_target") || "🎯"} Mitigasi Risiko: \`-${m.ambushMitigation}%\``)
     .join("\n");
 }
 
@@ -138,7 +138,7 @@ function formatMercenaryRoster(roster) {
  */
 function formatExpeditionModes(modes) {
   return Object.values(modes)
-    .map((m) => `• **${m.name}**\n  ⚠️ Risiko Ambush: \`${m.riskPercent}%\` | 📈 Pengganda Hasil: \`${m.profitMultiplier}x\``)
+    .map((m) => `• **${m.name}**\n  ${ui.getEmoji("mod_warn") || "⚠️"} Risiko Ambush: \`${m.riskPercent}%\` | 📈 Pengganda Hasil: \`${m.profitMultiplier}x\``)
     .join("\n");
 }
 
@@ -152,8 +152,8 @@ function formatEscortBoard(board) {
     const finishTs = toUnixTimestamp(c.finishTime);
     return [
       `🐫 **ID:** \`${c.caravanId}\` (Pemilik: **${c.ownerName}**)`,
-      `   📦 Muatan: \`${c.commodityId}\` | 🎯 Estimasi Tiba: <t:${finishTs}:R>`,
-      `   🛡️ Pengawal: \`${c.escortCount}/${c.maxEscorts}\` | 💰 Hadiah: \`+${c.escortReward.toLocaleString("id-ID")}\` Koin`,
+      `   📦 Muatan: \`${c.commodityId}\` | ${ui.getEmoji("arcade_target") || "🎯"} Estimasi Tiba: <t:${finishTs}:R>`,
+      `   ${ui.getEmoji("mod_shield") || "🛡️"} Pengawal: \`${c.escortCount}/${c.maxEscorts}\` | 💰 Hadiah: \`+${c.escortReward.toLocaleString("id-ID")}\` Koin`,
       `   👉 *Kawal dengan \`/survival caravan aksi:escort caravan_id:${c.caravanId}\`*`,
     ].join("\n");
   }).join("\n\n");
@@ -227,7 +227,7 @@ async function handleMarket(interaction, displayName) {
   const payload = buildContainerV2({
     authorName: "GALACTIC MERCHANT CARTEL",
     title: "📈 Bursa Komoditas & Rute Ekspedisi Karavan",
-    description: `Halo, **${displayName}**! Berikut adalah harga komoditas dan rute perdagangan antariksa terkini:\n\n📦 **Harga Komoditas Pasar:**\n${marketLines}\n\n🗺️ **Rute Perdagangan Aktif:**\n${routeLines}\n\n> *Gunakan \`/survival caravan dispatch\` untuk memberangkatkan karavan dagangmu!*`,
+    description: `Halo, **${displayName}**! Berikut adalah harga komoditas dan rute perdagangan antariksa terkini:\n\n📦 **Harga Komoditas Pasar:**\n${marketLines}\n\n${ui.getEmoji("edu_map") || "🗺️"} **Rute Perdagangan Aktif:**\n${routeLines}\n\n> *Gunakan \`/survival caravan dispatch\` untuk memberangkatkan karavan dagangmu!*`,
     footerText: ui.getFooter("survival"),
   });
 
@@ -253,14 +253,14 @@ async function handleMercenary(interaction, displayName) {
   const payload = buildContainerV2({
     accentColorHex: ACCENT_COLORS.MERCENARY_BLUE,
     authorName: "MERCENARY GUILD & HIGH-RISK EXPEDITIONS",
-    title: "🛡️ Roster Tentara Bayaran & Mode Ekspedisi",
+    title: `${ui.getEmoji("mod_shield") || "🛡️"} Roster Tentara Bayaran & Mode Ekspedisi`,
     description: [
       `Halo, **${displayName}**! Lindungi karavan dagangmu dari sergapan perompak kosmik dengan menyewa pengawal profesional:`,
       "",
-      "⚔️ **Daftar Tentara Bayaran:**",
+      `${ui.getEmoji("arcade_duel") || "⚔️"} **Daftar Tentara Bayaran:**`,
       mercLines,
       "",
-      "🗺️ **Mode Ekspedisi High-Risk High-Reward:**",
+      `${ui.getEmoji("edu_map") || "🗺️"} **Mode Ekspedisi High-Risk High-Reward:**`,
       modeLines,
       "",
       "-# 💡 *Sewa saat dispatch: `/survival caravan dispatch ... pengawal:<pilihan> mode:<pilihan>`!*",
@@ -354,7 +354,7 @@ async function handleDispatch(interaction, user, displayName) {
   const descriptionLines = [
     `Selamat jalan, **${displayName}**! Karavanmu telah memulai perjalanan ekspedisi melintasi rute kosmik.`,
     "",
-    `🗺️ **Rute Tujuan:** **${crv.route.name}**`,
+    `${ui.getEmoji("edu_map") || "🗺️"} **Rute Tujuan:** **${crv.route.name}**`,
     `⚡ **Mode Ekspedisi:** **${expeditionMode.name}** (Risiko: \`${finalRiskData.finalRisk}%\`)`,
     `📦 **Muatan Kargo:** \`${crv.amount}x\` **${crv.commodity.name}**`,
     `💰 **Modal Investasi:** \`${crv.investedCost.toLocaleString("id-ID")}\` Koin`,
@@ -363,12 +363,12 @@ async function handleDispatch(interaction, user, displayName) {
 
   if (hiredMerc) {
     descriptionLines.push(
-      `🛡️ **Pengawal:** **${hiredMerc.name}** (Mitigasi Risiko: \`-${hiredMerc.ambushMitigation}%\`)`,
+      `${ui.getEmoji("mod_shield") || "🛡️"} **Pengawal:** **${hiredMerc.name}** (Mitigasi Risiko: \`-${hiredMerc.ambushMitigation}%\`)`,
     );
   }
 
   descriptionLines.push(
-    `⏳ **Estimasi Tiba:** <t:${finishTs}:R> (<t:${finishTs}:t>)`,
+    `${ui.getEmoji("naura_uptime") || "⏳"} **Estimasi Tiba:** <t:${finishTs}:R> (<t:${finishTs}:t>)`,
     "",
     "-# 💡 *Setelah karavan tiba, gunakan `/survival caravan claim` untuk mencairkan seluruh laba perdaganganmu!*",
   );
@@ -419,8 +419,8 @@ async function handleClaim(interaction, user, displayName) {
 
   const netProfit = res.profit - res.invested;
   const ambushNote = res.wasAmbushed
-    ? "\n⚠️ *Karavan sempat disergap bandit antariksa, namun tim pengawal berhasil menyelamatkan 70% muatan kargo!*"
-    : "\n✨ *Perjalanan berlangsung aman tanpa gangguan perompak kosmik!*";
+    ? `\n${ui.getEmoji("mod_warn") || "⚠️"} *Karavan sempat disergap bandit antariksa, namun tim pengawal berhasil menyelamatkan 70% muatan kargo!*`
+    : `\n${ui.getEmoji("ai_sparkle") || "✨"} *Perjalanan berlangsung aman tanpa gangguan perompak kosmik!*`;
 
   const payload = buildContainerV2({
     authorName: "GALACTIC MERCHANT CARTEL",
@@ -490,11 +490,11 @@ async function handleEscort(interaction, user, displayName) {
   const payload = buildContainerV2({
     accentColorHex: ACCENT_COLORS.MERCENARY_BLUE,
     authorName: "GALACTIC MERCHANT CARTEL",
-    title: "🛡️ Terdaftar Sebagai Pengawal Bersenjata!",
+    title: `${ui.getEmoji("mod_shield") || "🛡️"} Terdaftar Sebagai Pengawal Bersenjata!`,
     description: [
       `Petualang **${displayName}** resmi dikontrak sebagai pengawal keamanan karavan \`${caravanId}\`!`,
       "",
-      `⚔️ **Kekuatan Pertahanan Disumbang:** \`+${ESCORT_COMBAT_POWER} Combat Power\``,
+      `${ui.getEmoji("arcade_duel") || "⚔️"} **Kekuatan Pertahanan Disumbang:** \`+${ESCORT_COMBAT_POWER} Combat Power\``,
       `💰 **Bagi Hasil Keuntungan:** \`${ESCORT_PROFIT_SHARE_PERCENT}%\` saat karavan berhasil mendarat selamat.`,
     ].join("\n"),
     footerText: ui.getFooter("survival"),
@@ -664,16 +664,16 @@ async function handleStatus(interaction, user, displayName) {
   const payload = buildContainerV2({
     authorName: "GALACTIC MERCHANT CARTEL",
     title: isDone
-      ? "✨ Karavan Telah Tiba di Tujuan!"
+      ? `${ui.getEmoji("ai_sparkle") || "✨"} Karavan Telah Tiba di Tujuan!`
       : "🐫 Karavan Sedang Melintasi Rute Kosmik",
     description: [
       `Berikut adalah status ekspedisi karavan milik **${displayName}**:`,
       "",
-      `🗺️ **Rute:** **${active.route.name}**`,
+      `${ui.getEmoji("edu_map") || "🗺️"} **Rute:** **${active.route.name}**`,
       `📦 **Kargo:** \`${active.amount}x\` **${active.commodity.name}**`,
       `💰 **Modal:** \`${active.investedCost.toLocaleString("id-ID")}\` Koin`,
       `📈 **Estimasi Hasil:** \`${active.potentialProfit.toLocaleString("id-ID")}\` Koin`,
-      `⏳ **Status Waktu:** ${isDone ? "**Sudah Tiba & Siap Diklaim!**" : `Tiba <t:${finishTs}:R>`}`,
+      `${ui.getEmoji("naura_uptime") || "⏳"} **Status Waktu:** ${isDone ? "**Sudah Tiba & Siap Diklaim!**" : `Tiba <t:${finishTs}:R>`}`,
       "",
       isDone
         ? `👉 *Ketik \`/survival caravan claim\` untuk mengambil koin labamu!*`

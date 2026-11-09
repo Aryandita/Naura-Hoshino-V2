@@ -313,7 +313,7 @@ module.exports = {
           `👤 **Korban:** \`${session.scenario.victim}\``,
           `📍 **Lokasi:** \`${session.scenario.location}\``,
           `🔍 **Petunjuk Terbuka:** \`${session.currentClueIndex} / ${session.scenario.clues.length}\``,
-          `🎙️ **Total Interogasi:** \`${session.interrogations.length} Tanya Jawab\``,
+          `${ui.getEmoji("ai_voice") || "🎙️"} **Total Interogasi:** \`${session.interrogations.length} Tanya Jawab\``,
           ``,
           `👥 **Tersangka:**\n${suspectsList}`,
         ].join("\n"),

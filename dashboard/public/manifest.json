@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Naura Hoshino V2 - Stellar Glass OS",
+  "name": "Naura Hoshino V2",
   "short_name": "Naura OS",
-  "description": "Next-Gen Discord Bot & Autonomous Living AI Ecosystem Dashboard",
+  "description": "Dasbor kontrol bot Discord: musik, ekonomi, survival, dan status server realtime.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

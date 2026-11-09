@@ -1,8 +1,14 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Peta dunia Adisha, lihat wilayah, POI, dan sumber daya dalam satu radar interaktif." />
+    <meta property="og:title" content="Naura OS" />
+    <meta property="og:description" content="Peta dunia Adisha, lihat wilayah, POI, dan sumber daya dalam satu radar interaktif." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0b0c10" />
+    <link rel="manifest" href="/manifest.json" />
     <title>Peta Dunia Adisha & Roam Interaktif | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,7 +20,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
     <style>
       /* Layout Grid Khusus Peta Adisha */
       .adisha-grid-layout {
@@ -2333,5 +2339,6 @@
         fetchInitialData();
       })();
     </script>
+      <script src="/src/js/naura-os.js"></script>
   </body>
 </html>

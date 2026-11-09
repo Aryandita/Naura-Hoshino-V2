@@ -1,275 +1,409 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="naura">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stellar Arcade Games | Naura OS</title>
+    <title>Retro Arcade | Naura OS</title>
+    <meta name="description" content="Arcade klasik & minigame edukasi: Blackjack, RPS, TicTacToe, Wordle, Tebak Kata, Memory, dan banyak lagi." />
+    <meta property="og:title" content="Naura OS" />
+    <meta property="og:description" content="Arcade klasik & minigame edukasi: Blackjack, RPS, TicTacToe, Wordle, Tebak Kata, Memory, dan banyak lagi." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0b0c10" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
-    <style>
-      .arcade-container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 32px 20px 80px;
-        text-align: center;
-      }
-      .game-canvas-wrapper {
-        position: relative;
-        background: #060814;
-        border: 2px solid var(--border-primary);
-        border-radius: var(--r-xl);
-        overflow: hidden;
-        margin: 20px auto;
-        box-shadow: 0 12px 40px rgba(124, 58, 237, 0.25);
-        max-width: 600px;
-      }
-      canvas {
-        display: block;
-        width: 100%;
-        height: auto;
-        background: radial-gradient(circle at center, #111827 0%, #030712 100%);
-      }
-      .arcade-hud {
-        display: flex;
-        justify-content: space-around;
-        padding: 14px;
-        background: rgba(15, 23, 42, 0.8);
-        border-top: 1px solid var(--border-subtle);
-        font-family: var(--font-mono);
-      }
-      .hud-val {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--primary);
-      }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
   </head>
   <body>
-    <div id="shared-nav"></div>
+    <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
 
-    <main class="arcade-container">
-      <h1 style="margin:0; font-family:var(--font-heading); font-size:28px;">🎮 Astral Rhythm Catcher Arcade</h1>
-      <p style="color:var(--text-secondary); margin:6px 0 20px;">
-        Tangkap serpihan bintang kosmik yang jatuh untuk mengumpulkan skor dan menangkan hadiah Star Fragments!
-      </p>
+    <div class="app-shell">
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-      <div class="game-canvas-wrapper">
-        <canvas id="gameCanvas" width="600" height="400"></canvas>
-        <div class="arcade-hud">
-          <div>
-            <div style="font-size:11px; color:var(--text-muted);">SKOR</div>
-            <div id="score-display" class="hud-val">0</div>
+      <aside class="sidebar" id="sidebar" aria-label="Navigasi utama" role="navigation">
+        <div class="sidebar-header">
+          <div class="header-brand">
+            <div class="header-brand-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-10 10c0 6.5 10 14 10 14s10-7.5 10-14a10 10 0 0 0-10-10z"/><path d="M12 6v4"/><path d="M12 14h.01"/></svg>
+            </div>
+            <span class="header-brand-text">Naura Hoshino</span>
           </div>
-          <div>
-            <div style="font-size:11px; color:var(--text-muted);">KOMBO</div>
-            <div id="combo-display" class="hud-val" style="color:#22D3EE;">x1</div>
+          <button type="button" class="btn btn-icon-only btn-ghost" id="sidebarCollapseBtn" aria-label="Toggle sidebar compact" title="Ciutkan Sidebar (Ctrl+B)">
+            <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="pillar-indicator" id="pillarIndicator">
+          <span class="pillar-indicator-label">Senja Ruang Ekskul</span>
+        </div>
+
+        <nav class="sidebar-nav" role="navigation" aria-label="Menu utama">
+          <!-- Overview -->
+          <div class="nav-section">
+            <span class="nav-section-title">Overview</span>
+            <a href="/" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-item-label">Dashboard</span>
+            </a>
+            <a href="/lounge" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--ui-primary);"></i></span>
+              <span class="nav-item-label">3D AI Lounge</span>
+              <span class="nav-item-badge">31 Anim</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
+              <span class="nav-item-label">Live Status</span>
+              <span class="nav-item-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-rss"></i></span>
+              <span class="nav-item-label">Activity Feed</span>
+            </a>
           </div>
-          <div>
-            <div style="font-size:11px; color:var(--text-muted);">HADIAH NSF</div>
-            <div id="reward-display" class="hud-val" style="color:#10B981;">0 NSF</div>
+
+          <!-- Community -->
+          <div class="nav-section">
+            <span class="nav-section-title">Community</span>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label">Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-coins"></i></span>
+              <span class="nav-item-label">Economy</span>
+            </a>
+            <a href="/clan" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-users-rays"></i></span>
+              <span class="nav-item-label">Sindikat & Klan</span>
+            </a>
+            <a href="/marketplace" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-shop"></i></span>
+              <span class="nav-item-label">Pasar Galaksi</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-item-label">Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-section">
+            <span class="nav-section-title">Media & Audio</span>
+            <a href="/music" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+              <span class="nav-item-label">Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
+              <span class="nav-item-label">Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-guitar"></i></span>
+              <span class="nav-item-label">Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-item-label">Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-section">
+            <span class="nav-section-title">Naura Wilds RPG</span>
+            <a href="/world" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-item-label">World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-map"></i></span>
+              <span class="nav-item-label">Survival Map</span>
+            </a>
+            <a href="/inventory" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-backpack"></i></span>
+              <span class="nav-item-label">Tas & Ransel</span>
+            </a>
+            <a href="/arcade" class="nav-item active" aria-current="page">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
+              <span class="nav-item-label">Retro Arcade</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+              <span class="nav-item-label">Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-section">
+            <span class="nav-section-title">Configuration</span>
+            <a href="/settings" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+              <span class="nav-item-label">Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-palette"></i></span>
+              <span class="nav-item-label">Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-item-label">Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
+              <span class="nav-item-label">Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-ticket"></i></span>
+              <span class="nav-item-label">Tickets</span>
+            </a>
+            <a href="/admin" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <span class="nav-item-label">Admin God Mode</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-section">
+            <span class="nav-section-title">More</span>
+            <a href="/profile" class="nav-item" style="color: var(--ui-primary);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--ui-primary);"><i class="fa-solid fa-id-card"></i></span>
+              <span class="nav-item-label" style="color: var(--ui-primary);">Profil Petualang</span>
+            </a>
+            <a href="/achievements" class="nav-item" style="color: var(--color-warning);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-warning);"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label" style="color: var(--color-warning);">Ruang Trofi</span>
+            </a>
+            <a href="/portfolio" class="nav-item" style="color: var(--color-success);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-success);"><i class="fa-solid fa-id-badge"></i></span>
+              <span class="nav-item-label" style="color: var(--color-success);">Creator Portfolio</span>
+            </a>
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-user" id="sidebarUser" role="button" tabindex="0" aria-label="Buka profil" onclick="window.location.href='/profile'">
+            <img src="/assets/core/avatar.png" alt="" class="sidebar-user-avatar" id="sidebarAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebarUserName">Guest</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">Klik untuk login</div>
+            </div>
+            <a href="/login?redirect=/profile" title="Login Akun" class="sidebar-login-link" id="sidebarLoginBtn" aria-label="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+            </a>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <div style="display:flex; justify-content:center; gap:12px; margin-top:20px;">
-        <button id="start-btn" class="btn btn-primary" onclick="startGame()"><i class="fa-solid fa-play"></i> Mulai Main</button>
-        <button id="claim-btn" class="btn btn-secondary" onclick="claimReward()" style="display:none;"><i class="fa-solid fa-gift"></i> Klaim Hadiah Star Fragments</button>
-      </div>
-
-      <!-- Real Arcade Leaderboard -->
-      <section style="margin-top:36px; max-width:600px; margin-left:auto; margin-right:auto; background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--r-xl); padding:20px; text-align:left;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-          <h3 style="margin:0; font-family:var(--font-heading); font-size:16px; color:var(--text-primary);"><i class="fa-solid fa-trophy" style="color:#F59E0B; margin-right:8px;"></i> Rekor Penjelajah Galaksi</h3>
-          <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">TOP 5</span>
-        </div>
-        <div id="arcade-leaderboard-list" style="display:flex; flex-direction:column; gap:8px;">
-          <div style="text-align:center; padding:12px; color:var(--text-muted); font-size:13px;">
-            <i class="fa-solid fa-spinner fa-spin" style="margin-right:6px; color:var(--primary);"></i> Memuat rekor pemain...
+      <main class="main-content" role="main">
+        <header class="app-header" role="banner">
+          <div class="header-left">
+            <button type="button" class="btn btn-icon-only btn-ghost" id="hamburgerBtn" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="sidebar">
+              <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            <div>
+              <h1 class="page-title" id="pageTitle">Retro Arcade</h1>
+              <nav class="breadcrumb" aria-label="Breadcrumb">
+                <span>Naura OS</span>
+                <span class="breadcrumb-sep" aria-hidden="true">/</span>
+                <span>Senja Ruang Ekskul</span>
+              </nav>
+            </div>
           </div>
-        </div>
-      </section>
-    </main>
 
-    <script src="/src/js/sharedNav.js"></script>
-    <script src="/js/theme-switcher.js"></script>
-    <script src="/js/pwa-install.js"></script>
-    <script>
-      const canvas = document.getElementById('gameCanvas');
-      const ctx = canvas.getContext('2d');
+          <div class="header-right">
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="themeToggle" data-tooltip="Ganti Tema (T)" aria-label="Ganti Tema">
+              <i class="fa-solid fa-palette" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="densityToggle" data-tooltip="Ganti Densitas" aria-label="Ganti Densitas">
+              <i class="fa-solid fa-grip-lines" aria-hidden="true"></i>
+            </button>
+            <div class="wallet-badge" id="headerWallet" title="Naura Coins" role="status" aria-live="polite">
+              <i class="fa-solid fa-coins" aria-hidden="true"></i>
+              <span id="walletAmount">0</span>
+            </div>
+            <a href="/auth/discord" class="btn btn-primary btn-sm" id="headerAuthBtn" title="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+              <span id="headerAuthLabel">Login</span>
+            </a>
+            <img src="/assets/core/avatar.png" alt="" class="header-avatar" id="headerAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+          </div>
+        </header>
 
-      let score = 0;
-      let combo = 1;
-      let isRunning = false;
-      let basketX = 260;
-      let stars = [];
-      let gameInterval = null;
-
-      function spawnStar() {
-        stars.push({
-          x: Math.random() * (canvas.width - 40) + 20,
-          y: 0,
-          speed: Math.random() * 2 + 2,
-          radius: 12,
-        });
-      }
-
-      function startGame() {
-        if (isRunning) return;
-        isRunning = true;
-        score = 0;
-        combo = 1;
-        stars = [];
-        document.getElementById('start-btn').style.display = 'none';
-        document.getElementById('claim-btn').style.display = 'none';
-
-        canvas.addEventListener('mousemove', (e) => {
-          const rect = canvas.getBoundingClientRect();
-          basketX = Math.max(40, Math.min(canvas.width - 40, (e.clientX - rect.left) * (canvas.width / rect.width)));
-        });
-
-        // Touch support
-        canvas.addEventListener('touchmove', (e) => {
-          const rect = canvas.getBoundingClientRect();
-          if (e.touches[0]) {
-            basketX = Math.max(40, Math.min(canvas.width - 40, (e.touches[0].clientX - rect.left) * (canvas.width / rect.width)));
-          }
-        });
-
-        let frames = 0;
-        gameInterval = setInterval(() => {
-          frames++;
-          if (frames % 40 === 0) spawnStar();
-
-          // Clear
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          // Draw Paddle/Basket
-          ctx.fillStyle = '#F472B6';
-          ctx.beginPath();
-          ctx.roundRect(basketX - 45, canvas.height - 30, 90, 16, 8);
-          ctx.fill();
-
-          // Move & Draw Stars
-          for (let i = stars.length - 1; i >= 0; i--) {
-            const s = stars[i];
-            s.y += s.speed;
-
-            // Draw glowing star
-            ctx.fillStyle = '#F59E0B';
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Collision check
-            if (s.y >= canvas.height - 35 && s.y <= canvas.height - 15 && Math.abs(s.x - basketX) < 55) {
-              score += 10 * combo;
-              combo = Math.min(combo + 1, 8);
-              stars.splice(i, 1);
-              updateHUD();
-            } else if (s.y > canvas.height) {
-              combo = 1;
-              stars.splice(i, 1);
-              updateHUD();
-            }
-          }
-
-          // Game ends after 900 frames (~15 seconds fast round)
-          if (frames >= 900) {
-            endGame();
-          }
-        }, 1000 / 60);
-      }
-
-      function updateHUD() {
-        document.getElementById('score-display').innerText = score;
-        document.getElementById('combo-display').innerText = 'x' + combo;
-        const reward = Math.round(score * 1.5);
-        document.getElementById('reward-display').innerText = reward + ' NSF';
-      }
-
-      function endGame() {
-        clearInterval(gameInterval);
-        isRunning = false;
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#FFF';
-        ctx.font = '24px Space Grotesk';
-        ctx.textAlign = 'center';
-        ctx.fillText('Permainan Selesai!', canvas.width / 2, canvas.height / 2 - 10);
-        ctx.font = '16px Inter';
-        ctx.fillText('Total Skor: ' + score + ' | Hadiah: ' + Math.round(score * 1.5) + ' NSF', canvas.width / 2, canvas.height / 2 + 25);
-
-        document.getElementById('start-btn').style.display = 'inline-block';
-        document.getElementById('claim-btn').style.display = 'inline-block';
-      }
-
-      async function claimReward() {
-        const claimBtn = document.getElementById('claim-btn');
-        if (claimBtn) claimBtn.disabled = true;
-        try {
-          const res = await fetch('/api/arcade/claim', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ score })
-          });
-          const data = await res.json();
-          if (data && data.success) {
-            if (window.showToast) {
-              window.showToast({
-                type: 'success',
-                title: 'Klaim Hadiah Arcade Berhasil',
-                message: data.message,
-                duration: 5000
-              });
-            } else {
-              alert(data.message);
-            }
-          } else {
-            alert(data.error || 'Gagal mengklaim hadiah.');
-          }
-        } catch (err) {
-          alert('Terjadi kesalahan saat menghubungi server.');
-        } finally {
-          if (claimBtn) claimBtn.disabled = false;
-        }
-      }
-
-      async function loadArcadeLeaderboard() {
-        const listEl = document.getElementById('arcade-leaderboard-list');
-        if (!listEl) return;
-        try {
-          const res = await fetch('/api/arcade/leaderboard');
-          const data = await res.json();
-          if (data && data.success && Array.isArray(data.leaderboard) && data.leaderboard.length > 0) {
-            listEl.innerHTML = data.leaderboard.map(item => `
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-elevated); border-radius:var(--r-md); font-size:13px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <span style="font-family:var(--font-mono); font-weight:700; color:${item.rank === 1 ? '#F59E0B' : (item.rank === 2 ? '#94A3B8' : '#D97706')};">#${item.rank}</span>
-                  <span style="font-weight:600; color:var(--text-primary);">${item.name}</span>
-                </div>
-                <span style="font-family:var(--font-mono); color:var(--primary); font-weight:700;">${item.highScore.toLocaleString('id-ID')} pts</span>
+        <div class="page" id="mainContent">
+          <div class="page-header-bar animate-slide-up">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background: var(--ui-primary-glow); border: 1px solid var(--hairline-brand);">
+                  <i class="fa-solid fa-gamepad" style="color: var(--ui-primary);"></i>
+                </span>
+                Retro Arcade
+              </h1>
+              <p class="page-sub">Minigame klasik & edukasi · Taruhan MP · Leaderboard · Multiplayer PvP</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--space-3); flex-shrink:0;">
+              <div id="arcadeMPDisplay" style="display:flex; align-items:center; gap:var(--space-2); padding:var(--space-1) var(--space-3); background:var(--amber-dim); border:1px solid var(--hairline-brand); border-radius:var(--radius-full); color:var(--color-warning); font-family:var(--font-mono); font-size:var(--text-sm); font-weight:700;">
+                <i class="fa-solid fa-coins" aria-hidden="true"></i> <span id="arcadeMPAmount">0</span> MP
               </div>
-            `).join('');
-          } else {
-            listEl.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:13px;">Belum ada skor tercatat. Jadilah yang pertama!</div>`;
-          }
-        } catch (err) {
-          listEl.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:13px;">Rekor arcade siap diperbarui.</div>`;
-        }
-      }
+              <div style="width:36px; height:36px; border-radius:var(--radius-full); background:var(--ui-primary-glow); border:1px solid var(--hairline-brand); display:flex; align-items:center; justify-content:center;">
+                <span style="width:10px; height:10px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 10px var(--ui-primary-glow); animation:badge-pulse 2s var(--ease-in-out) infinite;"></span>
+              </div>
+            </div>
+          </div>
 
-      window.addEventListener('DOMContentLoaded', loadArcadeLeaderboard);
-    </script>
+          <!-- Game Categories -->
+          <section aria-labelledby="arcadeCategoriesTitle" class="animate-slide-up stagger-1" style="margin-top:var(--space-6);">
+            <header style="margin-bottom:var(--space-4);">
+              <h2 id="arcadeCategoriesTitle" style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                <i class="fa-solid fa-layer-group" style="color:var(--ui-primary);"></i> Kategori Permainan
+              </h2>
+            </header>
+            <div style="display:flex; gap:var(--space-2); flex-wrap:wrap; margin-bottom:var(--space-4);" role="tablist" aria-label="Kategori game">
+              <button type="button" role="tab" aria-selected="true" class="btn btn-primary btn-sm arcade-cat-btn" data-cat="all">Semua</button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm arcade-cat-btn" data-cat="classic">Klasik</button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm arcade-cat-btn" data-cat="card">Kartu</button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm arcade-cat-btn" data-cat="word">Kata</button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm arcade-cat-btn" data-cat="puzzle">Puzzle</button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm arcade-cat-btn" data-cat="edu">Edukasi</button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm arcade-cat-btn" data-cat="pvp">PvP</button>
+            </div>
+          </section>
+
+          <!-- Game Grid -->
+          <section aria-labelledby="gamesTitle" class="animate-slide-up stagger-2">
+            <header style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-4); flex-wrap:wrap; gap:var(--space-3);">
+              <h2 id="gamesTitle" style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                <i class="fa-solid fa-dice-d6" style="color:var(--color-warning);"></i> Daftar Game
+              </h2>
+              <div style="display:flex; gap:var(--space-2);">
+                <input type="text" id="arcadeGameSearch" placeholder="Cari game&hellip;" class="form-input" style="width:200px; padding:var(--space-1) var(--space-3); font-size:var(--text-xs);" aria-label="Cari game">
+                <select id="arcadeSortSelect" class="form-select" style="width:auto; min-width:160px;" aria-label="Urutkan">
+                  <option value="popular">Populer</option>
+                  <option value="name">Nama A-Z</option>
+                  <option value="reward">Hadiah Tertinggi</option>
+                  <option value="new">Terbaru</option>
+                </select>
+              </div>
+            </header>
+            <div class="bento-grid" id="arcadeGameGrid" role="list" aria-label="Daftar game arcade">
+              <!-- Games injected by JS -->
+            </div>
+          </section>
+
+          <!-- Featured Game Detail (Modal-like inline) -->
+          <section id="arcadeGameDetail" class="animate-slide-up stagger-3" style="margin-top:var(--space-6); display:none;">
+            <article class="card" style="border-color:var(--hairline-brand);">
+              <div class="card-header">
+                <div class="card-title" id="arcadeDetailTitle" style="color:var(--ui-primary); display:flex; align-items:center; gap:var(--space-2);">
+                  <i class="fa-solid fa-gamepad" aria-hidden="true"></i> <span id="arcadeDetailName">Game</span>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm" id="arcadeBtnCloseDetail" aria-label="Tutup detail">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div class="card-body" style="padding-top:0;">
+                <div style="display:grid; grid-template-columns:300px 1fr; gap:var(--space-6); align-items:start;">
+                  <div>
+                    <div id="arcadeDetailArtwork" style="aspect-ratio:16/9; border-radius:var(--radius-xl); background:var(--bg-deep); border:1px solid var(--hairline); display:flex; align-items:center; justify-content:center; font-size:4rem; color:var(--text-faint); overflow:hidden;">
+                      <i class="fa-solid fa-gamepad" aria-hidden="true"></i>
+                    </div>
+                    <div style="margin-top:var(--space-4); display:flex; flex-wrap:wrap; gap:var(--space-2);" id="arcadeDetailBadges">
+                      <!-- Badges injected -->
+                    </div>
+                  </div>
+                  <div>
+                    <p id="arcadeDetailDesc" style="font-size:var(--text-body); color:var(--text-secondary); line-height:1.7; margin-bottom:var(--space-4);"></p>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:var(--space-3); margin-bottom:var(--space-4);">
+                      <div class="stat-card" style="padding:var(--space-3);">
+                        <div class="stat-label">Min Taruhan</div>
+                        <div class="stat-value" id="arcadeDetailMinBet">0 MP</div>
+                      </div>
+                      <div class="stat-card" style="padding:var(--space-3);">
+                        <div class="stat-label">Max Taruhan</div>
+                        <div class="stat-value" id="arcadeDetailMaxBet">0 MP</div>
+                      </div>
+                      <div class="stat-card" style="padding:var(--space-3);">
+                        <div class="stat-label">Hadiah Menang</div>
+                        <div class="stat-value" id="arcadeDetailWinReward">0 MP</div>
+                      </div>
+                      <div class="stat-card" style="padding:var(--space-3);">
+                        <div class="stat-label">Tipe</div>
+                        <div class="stat-value" style="font-size:var(--text-sm); font-family:var(--font-body);" id="arcadeDetailType">-</div>
+                      </div>
+                    </div>
+                    <div style="display:flex; gap:var(--space-3); flex-wrap:wrap;">
+                      <button type="button" class="btn btn-primary btn-lg" id="arcadeBtnPlayNow">
+                        <i class="fa-solid fa-play" aria-hidden="true"></i> Mainkan Sekarang
+                      </button>
+                      <button type="button" class="btn btn-ghost btn-lg" id="arcadeBtnLeaderboard">
+                        <i class="fa-solid fa-trophy" aria-hidden="true"></i> Leaderboard
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- Leaderboard Preview -->
+          <section aria-labelledby="arcadeLBTitle" class="animate-slide-up stagger-4" style="margin-top:var(--space-6);">
+            <header style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-4); flex-wrap:wrap; gap:var(--space-3);">
+              <h2 id="arcadeLBTitle" style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                <i class="fa-solid fa-medal" style="color:var(--color-warning);"></i> Arcade Leaderboard (Minggu Ini)
+              </h2>
+              <a href="/leaderboard?category=arcade" class="btn btn-ghost btn-sm">Lihat Lengkap</a>
+            </header>
+            <div class="card" style="overflow:hidden;">
+              <div style="overflow-x:auto;">
+                <table class="data-table" style="width:100%; min-width:600px;">
+                  <thead>
+                    <tr>
+                      <th scope="col" style="width:50px;">#</th>
+                      <th scope="col">Pemain</th>
+                      <th scope="col" style="width:120px;">MP</th>
+                      <th scope="col" style="width:120px;">Menang</th>
+                      <th scope="col" style="width:120px;">Kalah</th>
+                      <th scope="col" style="width:100px;">Winrate</th>
+                      <th scope="col" style="width:150px;">Game Favorit</th>
+                    </tr>
+                  </thead>
+                  <tbody id="arcadeLeaderboardBody">
+                    <tr>
+                      <td colspan="7" style="text-align:center; padding:var(--space-8); color:var(--text-muted);">Memuat leaderboard&hellip;</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <nav class="mobile-nav" aria-label="Navigasi mobile">
+        <a href="/" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/lounge" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-cube"></i></span>
+          <span>3D Lounge</span>
+        </a>
+        <a href="/music" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+          <span>Music</span>
+        </a>
+        <a href="/world" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+          <span>Wilds</span>
+        </a>
+        <a href="/settings" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+          <span>Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <script src="/src/js/naura-os.js"></script>
+    <script src="/src/js/pages/arcade.js"></script>
   </body>
 </html>

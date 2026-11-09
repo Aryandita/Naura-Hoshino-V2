@@ -2,6 +2,7 @@
 
 const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
 const { buildInteractiveHubPayload } = require("../../src/utils/hubMenuHelper");
+const ui = require("../../src/config/ui");
 
 module.exports = {
   category: "fun",
@@ -14,7 +15,7 @@ module.exports = {
       title: "🎉 Naura Fun and Casual Hub",
       authorName: "Naura Entertainment Hub",
       description: [
-        "Hai hai! Selamat datang di **Pusat Hiburan Naura**! ✨",
+        `Hai hai! Selamat datang di **Pusat Hiburan Naura**! ${ui.getEmoji("ai_sparkle") || "✨"}`,
         "Lagi bosan atau butuh hiburan santai? Coba ramal harimu dengan Omikuji, tanyakan sesuatu pada bola ajaib, atau lempar dadu hoki!",
         "",
         "💡 *Pilih salah satu tombol cepat di bawah atau buka menu dropdown untuk melihat semua permainan seru.*",
@@ -23,15 +24,15 @@ module.exports = {
       quickButtons: [
         { id: "fortune", label: "Omikuji Hoki", emoji: "🌸", style: ButtonStyle.Success },
         { id: "8ball", label: "Bola Ajaib", emoji: "🎱", style: ButtonStyle.Primary },
-        { id: "dice", label: "Lempar Dadu", emoji: "🎲", style: ButtonStyle.Secondary },
+        { id: "dice", label: "Lempar Dadu", emoji: ui.getEmoji("arcade_dice") || "🎲", style: ButtonStyle.Secondary },
       ],
       selectOptions: [
         { value: "fortune", label: "Ramalan Omikuji", emoji: "🌸", description: "Cek keberuntungan harian dan buff berkah RPG" },
         { value: "8ball", label: "Magic 8-Ball", emoji: "🎱", description: "Tanyakan apa saja pada bola ajaib Naura" },
-        { value: "dice", label: "Lempar Dadu", emoji: "🎲", description: "Lempar dadu keberuntungan 6 sisi" },
-        { value: "coin", label: "Lempar Koin", emoji: "🪙", description: "Tentukan pilihan dengan lemparan koin (Heads / Tails)" },
+        { value: "dice", label: "Lempar Dadu", emoji: ui.getEmoji("arcade_dice") || "🎲", description: "Lempar dadu keberuntungan 6 sisi" },
+        { value: "coin", label: "Lempar Koin", emoji: ui.getEmoji("eco_cash") || "🪙", description: "Tentukan pilihan dengan lemparan koin (Heads / Tails)" },
         { value: "meme", label: "Meme Acak", emoji: "😂", description: "Ambil meme kocak dari internet untuk menghibur harimu" },
-        { value: "quote", label: "Kutipan Bijak", emoji: "📖", description: "Kata mutiara dan inspirasi penuh makna" },
+        { value: "quote", label: "Kutipan Bijak", emoji: ui.getEmoji("edu_word") || "📖", description: "Kata mutiara dan inspirasi penuh makna" },
         { value: "ship", label: "Kalkulator Cinta", emoji: "💘", description: "Ukur persentase kecocokanmu dengan seseorang" },
         { value: "tod", label: "Truth or Dare", emoji: "🎭", description: "Tantangan jujur atau berani seru bersama teman" },
       ],

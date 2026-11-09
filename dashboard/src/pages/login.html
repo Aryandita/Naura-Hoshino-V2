@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Autentikasi Diperlukan | Naura Hoshino OS</title>
     <meta name="description" content="Banner gerbang masuk Naura Hoshino OS. Silakan login menggunakan akun Discord resmi untuk mengakses profil dan pengaturan." />
+    <meta name="theme-color" content="#0b0c10" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,7 +17,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
     <style>
       :root {
         --login-bg: #0b0c10;
@@ -67,7 +68,7 @@
         position: relative;
         padding: 32px 32px 24px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        background: linear-gradient(180deg, rgba(244, 114, 182, 0.06) 0%, transparent 100%);
+        background: var(--bg-surface);
       }
 
       .login-badge-row {
@@ -415,5 +416,6 @@
         }
       })();
     </script>
+      <script src="/src/js/naura-os.js"></script>
   </body>
 </html>

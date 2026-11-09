@@ -87,7 +87,7 @@ module.exports = {
       const descLines = [
         `🏆 **Status Season Pass:** **Tier ${progress.tier} / ${seasonPassEngine.MAX_PASS_TIER}**`,
         progressBar,
-        `✨ **Season XP:** \`${progress.currentTierXp} / ${progress.xpNeeded} XP\``,
+        `${ui.getEmoji("ai_sparkle") || "✨"} **Season XP:** \`${progress.currentTierXp} / ${progress.xpNeeded} XP\``,
         `⭐ **Status Star Pass:** ${hasPremiumPass ? "`🌟 AKTIF (PREMIUM)`" : "`🔒 TERKUNCI (GRATIS)`"}`,
         "",
         `🎁 **Hadiah Tier ${progress.tier} Saat Ini:**`,
@@ -116,7 +116,7 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId("btn_pass_preview")
           .setLabel("Preview Manfaat")
-          .setEmoji("✨")
+          .setEmoji(ui.getEmoji("ai_sparkle") || "✨")
           .setStyle(ButtonStyle.Secondary),
       );
 
@@ -125,7 +125,7 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("btn_pass_buy_prem")
             .setLabel(`Buka Star Pass (${STAR_PASS_COST_COUPONS} Kupon)`)
-            .setEmoji("💎")
+            .setEmoji(ui.getEmoji("naura_shard") || "💎")
             .setStyle(ButtonStyle.Primary),
         );
       }
@@ -245,7 +245,7 @@ module.exports = {
             new ButtonBuilder()
               .setCustomId("btn_pass_buy_prem")
               .setLabel(`Buka Star Pass (${STAR_PASS_COST_COUPONS} Kupon)`)
-              .setEmoji("💎")
+              .setEmoji(ui.getEmoji("naura_shard") || "💎")
               .setStyle(ButtonStyle.Primary),
           );
         }
@@ -283,7 +283,7 @@ module.exports = {
         });
 
         hasPremiumPass = true;
-        return i.update(buildPayload("✨ **Selamat!** Star Pass kamu telah aktif! Nikmati hadiah ganda dan kosmetik eksklusif!"));
+        return i.update(buildPayload(`${ui.getEmoji("ai_sparkle") || "✨"} **Selamat!** Star Pass kamu telah aktif! Nikmati hadiah ganda dan kosmetik eksklusif!`));
       }
     });
 

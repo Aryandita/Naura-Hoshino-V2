@@ -11,24 +11,20 @@ const PUBLIC_DIR = path.join(ROOT_DIR, "dashboard/public");
 const PAGES_DIR = path.join(ROOT_DIR, "dashboard/src/pages");
 
 test("M3 Web Dashboard: File Existence & Parity", () => {
-  const publicSoundboard = path.join(PUBLIC_DIR, "soundboard.html");
   const pagesSoundboard = path.join(PAGES_DIR, "soundboard.html");
-  const publicAutomod = path.join(PUBLIC_DIR, "automod.html");
   const pagesAutomod = path.join(PAGES_DIR, "automod.html");
 
-  assert.ok(fs.existsSync(publicSoundboard), "dashboard/public/soundboard.html must exist");
   assert.ok(fs.existsSync(pagesSoundboard), "dashboard/src/pages/soundboard.html must exist");
-  assert.ok(fs.existsSync(publicAutomod), "dashboard/public/automod.html must exist");
   assert.ok(fs.existsSync(pagesAutomod), "dashboard/src/pages/automod.html must exist");
 
-  const sbStat = fs.statSync(publicSoundboard);
-  const amStat = fs.statSync(publicAutomod);
+  const sbStat = fs.statSync(pagesSoundboard);
+  const amStat = fs.statSync(pagesAutomod);
   assert.ok(sbStat.size > 1000, "soundboard.html must be populated");
   assert.ok(amStat.size > 1000, "automod.html must be populated");
 });
 
 test("M3 Web Dashboard: soundboard.html Pure WebSocket & Elimination of Legacy REST", () => {
-  const content = fs.readFileSync(path.join(PUBLIC_DIR, "soundboard.html"), "utf8");
+  const content = fs.readFileSync(path.join(PAGES_DIR, "soundboard.html"), "utf8");
 
   // Eliminating legacy REST
   assert.equal(
@@ -71,7 +67,7 @@ test("M3 Web Dashboard: soundboard.html Pure WebSocket & Elimination of Legacy R
 });
 
 test("M3 Web Dashboard: automod.html Visual Automod Studio Requirements", () => {
-  const content = fs.readFileSync(path.join(PUBLIC_DIR, "automod.html"), "utf8");
+  const content = fs.readFileSync(path.join(PAGES_DIR, "automod.html"), "utf8");
 
   // API sync
   assert.ok(content.includes("/api/guilds/"), "Must sync with /api/guilds/:guildId/config");
@@ -111,8 +107,6 @@ test("M3 Web Dashboard: automod.html Visual Automod Studio Requirements", () => 
 
 test("M3 Web Dashboard: Inline Script Acorn Syntax Validation", () => {
   const pages = [
-    path.join(PUBLIC_DIR, "soundboard.html"),
-    path.join(PUBLIC_DIR, "automod.html"),
     path.join(PAGES_DIR, "soundboard.html"),
     path.join(PAGES_DIR, "automod.html"),
   ];

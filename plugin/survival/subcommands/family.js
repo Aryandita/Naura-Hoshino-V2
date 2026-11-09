@@ -95,8 +95,8 @@ module.exports = {
           `💖 **Kebahagiaan:** \`${happyBar.bar}\``,
           "",
           child.level >= 8
-            ? "✨ *Anakmu sudah cukup dewasa dan siap membantu mata pencaharian keluarga! Gunakan `/survival family aksi:apprentice` untuk mengklaim bantuan harian.*"
-            : "📖 *Rawat dan bimbing anakmu dengan `/survival family aksi:feed` dan `/survival family aksi:teach` agar cepat tumbuh dewasa.*",
+            ? `${ui.getEmoji("ai_sparkle") || "✨"} *Anakmu sudah cukup dewasa dan siap membantu mata pencaharian keluarga! Gunakan \`/survival family aksi:apprentice\` untuk mengklaim bantuan harian.*`
+            : `${ui.getEmoji("edu_word") || "📖"} *Rawat dan bimbing anakmu dengan \`/survival family aksi:feed\` dan \`/survival family aksi:teach\` agar cepat tumbuh dewasa.*`,
         ].join("\n"),
         footerText: ui.getFooter("survival"),
       });

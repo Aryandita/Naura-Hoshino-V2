@@ -1,8 +1,13 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Panel administrasi God Mode untuk konfigurasi server dan kendali arsitektur." />
+    <meta property="og:title" content="Naura OS" />
+    <meta property="og:description" content="Panel administrasi God Mode untuk konfigurasi server dan kendali arsitektur." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0b0c10" />
     <title>Admin God Mode Panel | Naura OS</title>
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,7 +20,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
     <style>
       .admin-container {
         max-width: 1280px;
@@ -23,7 +28,7 @@
         padding: 32px 20px 80px;
       }
       .admin-header {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%);
+        background: var(--bg-surface);
         border: 1px solid rgba(239, 68, 68, 0.3);
         border-radius: var(--r-xl);
         padding: 24px;
@@ -309,5 +314,6 @@
 
       window.addEventListener('DOMContentLoaded', refreshAdminTelemetry);
     </script>
+      <script src="/src/js/naura-os.js"></script>
   </body>
 </html>

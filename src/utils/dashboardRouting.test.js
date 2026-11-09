@@ -85,23 +85,24 @@ test("view memakai helper pickPage yang aman terhadap stat gagal", () => {
 });
 
 test("tidak ada penutup IIFE yang salah pada blok addEventListener", () => {
-  // Regresi nyata yang ditemukan lewat verifikasi browser: handler load
-  // ditulis `})();` alih-alih `});`. Pola `})()` adalah penutup IIFE,
-  // sehingga addEventListener yang mengembalikan undefined langsung
-  // dipanggil sebagai fungsi dan melempar
-  // "TypeError: window.addEventListener(...) is not a function".
-  // Akibatnya seluruh pemuatan data dashboard berhenti di halaman utama.
-  const source = read(INDEX_HTML);
+  // Regresi nyata: handler DOM-ready ditulis `})();` alih-alih `});`. Pola
+  // `})()` adalah penutup IIFE, sehingga addEventListener yang mengembalikan
+  // undefined langsung dipanggil sebagai fungsi dan melempar
+  // "TypeError: ... is not a function", menghentikan pemuatan data halaman.
+  // Pasca migrasi MPA, logika boot pindah dari inline index.html ke modul
+  // eksternal index.js, maka penjaga membaca modul tersebut.
+  const indexModule = path.join(__dirname, "..", "..", "dashboard", "src", "js", "pages", "index.js");
+  const source = read(indexModule);
 
   assert.ok(
-    !/window\.addEventListener\([^)]*=>\s*\{[\s\S]{0,40000}?\}\)\(\);/.test(source),
-    "window.addEventListener tidak boleh ditutup dengan `})();`, harus `});`",
+    !/addEventListener\([^)]*=>\s*\{[\s\S]{0,40000}?\}\)\(\);/.test(source),
+    "addEventListener tidak boleh ditutup dengan `})();`, harus `});`",
   );
 
-  // Pastikan penutup yang benar benar-benar dipakai.
+  // Pastikan listener DOM-ready benar-benar ada dan ditutup dengan `});`.
   assert.ok(
-    /window\.addEventListener\('load'[\s\S]{0,40000}?\}\);/.test(source),
-    "penutup window.addEventListener('load', ...) harus `});`",
+    /addEventListener\(['"]DOMContentLoaded['"][\s\S]{0,40000}?\}\);/.test(source),
+    "penutup addEventListener('DOMContentLoaded', ...) harus `});`",
   );
 });
 

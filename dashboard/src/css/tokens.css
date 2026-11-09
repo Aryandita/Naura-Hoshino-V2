@@ -38,7 +38,7 @@
   --ink: #ffffff;
   --body: #9ca3af;
   --body-strong: #d1d5db;
-  --muted: #6b7280;
+  --muted: #9CA3AF;
   --on-primary: #0b0c10;
   --on-dark: #ffffff;
 
@@ -176,7 +176,7 @@
   --hairline: rgba(255,192,203,0.15); --hairline-brand: rgba(244,114,182,0.35);
   --ui-primary: #F472B6; --ui-primary-glow: rgba(244,114,182,0.25);
   --accent-cyan-live: #22D3EE;
-  --ink: #ffffff; --body: #9ca3af; --body-strong: #d1d5db; --muted: #6b7280;
+  --ink: #ffffff; --body: #9ca3af; --body-strong: #d1d5db; --muted: #9CA3AF;
 }
 
 /* 2. Sakura Blossom */

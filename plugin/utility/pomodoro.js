@@ -39,12 +39,12 @@ function buildPomodoroButtons(session) {
       new ButtonBuilder()
         .setCustomId("pomodoro_pause")
         .setLabel(session.isPaused ? "Lanjutkan" : "Jeda")
-        .setEmoji(session.isPaused ? "▶️" : "⏸️")
+        .setEmoji(session.isPaused ? ui.getEmoji("music_play") || "▶️" : ui.getEmoji("music_pause") || "⏸️")
         .setStyle(session.isPaused ? ButtonStyle.Success : ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId("pomodoro_skip")
         .setLabel("Lewati Fase")
-        .setEmoji("⏭️")
+        .setEmoji(ui.getEmoji("music_skip") || "⏭️")
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId("pomodoro_stop")
@@ -77,7 +77,7 @@ function buildPomodoroContainer(session) {
     title: `${eIcon} ${modeTitle} (Siklus #${session.cycle})`,
     description: [
       `### ${eClock} Sisa Waktu: \`${formatTime(session.timeLeft)}\``,
-      `**Status:** ${session.isPaused ? "⏸️ Dijeda" : isFocus ? `${eFire} Sedang Fokus Bekerja / Belajar` : `${eLeaf} Rehat & Minum Air`}`,
+      `**Status:** ${session.isPaused ? `${ui.getEmoji("music_pause") || "⏸️"} Dijeda` : isFocus ? `${eFire} Sedang Fokus Bekerja / Belajar` : `${eLeaf} Rehat & Minum Air`}`,
       `**Target Fokus:** ${session.focusDuration / 60} Menit | **Istirahat:** ${session.breakDuration / 60} Menit`,
       session.voiceChannelId
         ? `**Voice Room:** <#${session.voiceChannelId}> (Notifikasi Audio Aktif)`
@@ -297,7 +297,7 @@ module.exports = {
         if (i.customId === "pomodoro_skip") {
           session.timeLeft = 0;
           return i.reply({
-            content: "⏭️ Fase saat ini dilewati!",
+            content: `${ui.getEmoji("music_skip") || "⏭️"} Fase saat ini dilewati!`,
             flags: MessageFlags.Ephemeral,
           });
         }

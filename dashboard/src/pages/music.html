@@ -1,912 +1,564 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Music Hub | Naura OS</title>
     <meta name="description" content="Kontrol pemutar musik Lavalink v4 dengan Fish Audio AI DJ dan antrian real-time." />
+    <meta property="og:title" content="Naura OS" />
+    <meta property="og:description" content="Kontrol pemutar musik Lavalink v4 dengan Fish Audio AI DJ dan antrian real-time." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0b0c10" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
     <script src="/socket.io/socket.io.js"></script>
-    <style>
-      /* ── Vinyl/Artwork rotation ── */
-      .artwork-disc {
-        width: 180px;
-        height: 180px;
-        border-radius: 50%;
-        position: relative;
-        flex-shrink: 0;
-      }
-
-      .artwork-disc-inner {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background: conic-gradient(
-          from 0deg,
-          #0e111a 0%,
-          #1e2538 25%,
-          #0e111a 50%,
-          #1e2538 75%,
-          #0e111a 100%
-        );
-        border: 4px solid var(--border-primary);
-        box-shadow:
-          0 0 30px var(--primary-glow),
-          0 0 50px rgba(244,114,182,0.12),
-          inset 0 0 25px rgba(0,0,0,0.85);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: disc-spin 8s linear infinite paused;
-      }
-
-      .artwork-disc-inner.playing {
-        animation-play-state: running;
-      }
-
-      @keyframes disc-spin {
-        from { transform: rotate(0deg); }
-        to   { transform: rotate(360deg); }
-      }
-
-      .artwork-disc-center {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: var(--bg-deep);
-        border: 3px solid var(--border-primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        box-shadow: 0 0 12px var(--primary-glow);
-        z-index: 2;
-      }
-
-      /* ── Equalizer visualizer ── */
-      .eq-bar {
-        width: 4px;
-        border-radius: var(--r-full);
-        background: var(--primary);
-        box-shadow: 0 0 6px var(--primary-glow);
-        transition: height 0.15s ease;
-        min-height: 4px;
-      }
-
-      .eq-bars {
-        display: flex;
-        align-items: flex-end;
-        gap: 3px;
-        height: 40px;
-      }
-
-      @keyframes eq-anim-1 { 0%,100%{height:8px} 50%{height:32px} }
-      @keyframes eq-anim-2 { 0%,100%{height:24px} 50%{height:10px} }
-      @keyframes eq-anim-3 { 0%,100%{height:16px} 50%{height:36px} }
-      @keyframes eq-anim-4 { 0%,100%{height:28px} 50%{height:6px} }
-      @keyframes eq-anim-5 { 0%,100%{height:12px} 50%{height:30px} }
-      @keyframes eq-anim-6 { 0%,100%{height:34px} 50%{height:14px} }
-      @keyframes eq-anim-7 { 0%,100%{height:8px} 50%{height:24px} }
-
-      .eq-playing .eq-bar:nth-child(1) { animation: eq-anim-1 0.7s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(2) { animation: eq-anim-2 0.9s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(3) { animation: eq-anim-3 0.6s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(4) { animation: eq-anim-4 0.8s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(5) { animation: eq-anim-5 0.7s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(6) { animation: eq-anim-6 0.85s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(7) { animation: eq-anim-7 0.65s ease-in-out infinite; }
-
-      /* ── Queue item ── */
-      .queue-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
-        border-radius: var(--r-lg);
-        transition: all var(--t-base);
-        border: 1px solid transparent;
-        cursor: pointer;
-      }
-
-      .queue-item:hover {
-        background: var(--bg-surface-hv);
-        border-color: var(--border-subtle);
-      }
-
-      .queue-item.current {
-        background: var(--primary-dim);
-        border-color: var(--border-primary);
-      }
-
-      .queue-num {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text-muted);
-        width: 20px;
-        text-align: center;
-        flex-shrink: 0;
-      }
-
-      .queue-item.current .queue-num { color: var(--primary); }
-
-      .queue-thumb {
-        width: 38px;
-        height: 38px;
-        border-radius: var(--r-md);
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-subtle);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        flex-shrink: 0;
-      }
-
-      .queue-item.current .queue-thumb {
-        background: var(--primary-dim);
-        border-color: var(--border-primary);
-        animation: glow-pulse 2s ease-in-out infinite;
-      }
-
-      /* ── Volume slider ── */
-      input[type=range].vol-slider {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 100%;
-        height: 4px;
-        border-radius: var(--r-full);
-        background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--val, 70%), var(--bg-elevated) var(--val, 70%), var(--bg-elevated) 100%);
-        outline: none;
-        cursor: pointer;
-      }
-
-      input[type=range].vol-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: var(--primary);
-        box-shadow: 0 0 8px var(--primary-glow);
-        cursor: pointer;
-        transition: all var(--t-fast);
-      }
-
-      input[type=range].vol-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.3);
-        box-shadow: 0 0 14px var(--primary-glow);
-      }
-
-      /* ── Lavalink node status ── */
-      .node-card {
-        padding: 12px 14px;
-        border-radius: var(--r-xl);
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
-        transition: all var(--t-base);
-      }
-
-      .node-card:hover {
-        border-color: var(--border-medium);
-        background: var(--bg-surface-hv);
-      }
-
-      .node-card.active {
-        border-color: var(--border-cyan);
-        background: var(--cyan-dim);
-      }
-    </style>
   </head>
   <body>
     <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
-    <!-- Sidebar Overlay -->
-    
 
     <div class="app-shell">
-      <!-- Mobile Sidebar Overlay -->
-      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-      <!-- ════ SIDEBAR ════ -->
-      <aside class="sidebar " id="sidebar">
-        <div class="sidebar-brand">
-          <div class="sidebar-logo-icon">
-            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" />
+      <aside class="sidebar" id="sidebar" aria-label="Navigasi utama" role="navigation">
+        <div class="sidebar-header">
+          <div class="header-brand">
+            <div class="header-brand-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-10 10c0 6.5 10 14 10 14s10-7.5 10-14a10 10 0 0 0-10-10z"/><path d="M12 6v4"/><path d="M12 14h.01"/></svg>
+            </div>
+            <span class="header-brand-text">Naura Hoshino</span>
           </div>
-          <div class="sidebar-brand-text">
-            <div class="sidebar-brand-name">Naura Hoshino</div>
-            <div class="sidebar-brand-sub">v2.5.0 · Online</div>
-          </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
-            <i class="fa-solid fa-xmark"></i>
+          <button type="button" class="btn btn-icon-only btn-ghost" id="sidebarCollapseBtn" aria-label="Toggle sidebar compact" title="Ciutkan Sidebar (Ctrl+B)">
+            <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
-        <nav class="sidebar-nav" role="navigation">
 
+        <div class="pillar-indicator" id="pillarIndicator">
+          <span class="pillar-indicator-label">Studio Kontrol OSIS</span>
+        </div>
+
+        <nav class="sidebar-nav" role="navigation" aria-label="Menu utama">
           <!-- Overview -->
-          <div class="nav-group">
-            <div class="nav-group-label">Overview</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Overview</span>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
-              <span>Dashboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-item-label">Dashboard</span>
+            </a>
+            <a href="/lounge" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--ui-primary);"></i></span>
+              <span class="nav-item-label">3D AI Lounge</span>
+              <span class="nav-item-badge">31 Anim</span>
             </a>
             <a href="/status" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
-              <span>Live Status</span>
-              <span class="nav-badge">Live</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
+              <span class="nav-item-label">Live Status</span>
+              <span class="nav-item-badge">Live</span>
             </a>
             <a href="/feed" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
-              <span>Activity Feed</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-rss"></i></span>
+              <span class="nav-item-label">Activity Feed</span>
             </a>
           </div>
 
           <!-- Community -->
-          <div class="nav-group">
-            <div class="nav-group-label">Community</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Community</span>
             <a href="/leaderboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
-              <span>Leaderboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label">Leaderboard</span>
             </a>
             <a href="/economy" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
-              <span>Economy</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-coins"></i></span>
+              <span class="nav-item-label">Economy</span>
+            </a>
+            <a href="/clan" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-users-rays"></i></span>
+              <span class="nav-item-label">Sindikat & Klan</span>
+            </a>
+            <a href="/marketplace" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-shop"></i></span>
+              <span class="nav-item-label">Pasar Galaksi</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
-              <span>Guild Topology</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-item-label">Guild Topology</span>
             </a>
           </div>
 
           <!-- Media & Audio -->
-          <div class="nav-group">
-            <div class="nav-group-label">Media & Audio</div>
-            <a href="/music" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
-              <span>Music Hub</span>
+          <div class="nav-section">
+            <span class="nav-section-title">Media & Audio</span>
+            <a href="/music" class="nav-item active" aria-current="page">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+              <span class="nav-item-label">Music Hub</span>
             </a>
             <a href="/soundboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
-              <span>Soundboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
+              <span class="nav-item-label">Soundboard</span>
             </a>
             <a href="/jam" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
-              <span>Jam Session</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-guitar"></i></span>
+              <span class="nav-item-label">Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
-              <span>Karaoke</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-item-label">Karaoke</span>
             </a>
           </div>
 
           <!-- Naura Wilds RPG -->
-          <div class="nav-group">
-            <div class="nav-group-label">Naura Wilds RPG</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Naura Wilds RPG</span>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
-              <span>World Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-item-label">World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
-              <span>Survival Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-map"></i></span>
+              <span class="nav-item-label">Survival Map</span>
+            </a>
+            <a href="/inventory" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-backpack"></i></span>
+              <span class="nav-item-label">Tas & Ransel</span>
+            </a>
+            <a href="/arcade" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
+              <span class="nav-item-label">Retro Arcade</span>
             </a>
             <a href="/activity" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
-              <span>Activity Hub</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+              <span class="nav-item-label">Activity Hub</span>
             </a>
           </div>
 
           <!-- Configuration -->
-          <div class="nav-group">
-            <div class="nav-group-label">Configuration</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Configuration</span>
             <a href="/settings" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
-              <span>Settings</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+              <span class="nav-item-label">Settings</span>
             </a>
             <a href="/welcomer" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
-              <span>Welcomer Card</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-palette"></i></span>
+              <span class="nav-item-label">Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-              <span>Embed Builder</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-item-label">Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
-              <span>Automations</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
+              <span class="nav-item-label">Automations</span>
             </a>
             <a href="/tickets" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
-              <span>Tickets</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-ticket"></i></span>
+              <span class="nav-item-label">Tickets</span>
+            </a>
+            <a href="/admin" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <span class="nav-item-label">Admin God Mode</span>
             </a>
           </div>
 
           <!-- More -->
-          <div class="nav-group">
-            <div class="nav-group-label">More</div>
-            <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+          <div class="nav-section">
+            <span class="nav-section-title">More</span>
+            <a href="/profile" class="nav-item" style="color: var(--ui-primary);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--ui-primary);"><i class="fa-solid fa-id-card"></i></span>
+              <span class="nav-item-label" style="color: var(--ui-primary);">Profil Petualang</span>
+            </a>
+            <a href="/achievements" class="nav-item" style="color: var(--color-warning);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-warning);"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label" style="color: var(--color-warning);">Ruang Trofi</span>
+            </a>
+            <a href="/portfolio" class="nav-item" style="color: var(--color-success);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-success);"><i class="fa-solid fa-id-badge"></i></span>
+              <span class="nav-item-label" style="color: var(--color-success);">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
+
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+          <div class="sidebar-user" id="sidebarUser" role="button" tabindex="0" aria-label="Buka profil" onclick="window.location.href='/profile'">
+            <img src="/assets/core/avatar.png" alt="" class="sidebar-user-avatar" id="sidebarAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
             <div class="sidebar-user-info">
-              <div class="sidebar-user-name">Guest</div>
-              <div class="sidebar-user-role">Klik untuk login</div>
+              <div class="sidebar-user-name" id="sidebarUserName">Guest</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">Klik untuk login</div>
             </div>
+            <a href="/login?redirect=/profile" title="Login Akun" class="sidebar-login-link" id="sidebarLoginBtn" aria-label="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+            </a>
           </div>
         </div>
       </aside>
 
-      <!-- ════ MAIN CONTENT ════ -->
-      <div class="main-content">
-
-        <!-- Header -->
-        <header class="top-header">
+      <main class="main-content" role="main">
+        <header class="app-header" role="banner">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <button type="button" class="btn btn-icon-only btn-ghost" id="hamburgerBtn" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="sidebar">
+              <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
             <div>
-              <div class="page-title">Music Hub</div>
-              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Music</span></div>
+              <h1 class="page-title" id="pageTitle">Music Hub</h1>
+              <nav class="breadcrumb" aria-label="Breadcrumb">
+                <span>Naura OS</span>
+                <span class="breadcrumb-sep" aria-hidden="true">/</span>
+                <span>Studio Kontrol OSIS</span>
+              </nav>
             </div>
           </div>
+
           <div class="header-right">
-            <div class="status-pill" title="Lavalink Node Status">
-              <span class="status-dot online"></span>
-              <span style="color:var(--accent-cyan);font-family:var(--font-mono);">Lavalink</span>
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="themeToggle" data-tooltip="Ganti Tema (T)" aria-label="Ganti Tema">
+              <i class="fa-solid fa-palette" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="densityToggle" data-tooltip="Ganti Densitas" aria-label="Ganti Densitas">
+              <i class="fa-solid fa-grip-lines" aria-hidden="true"></i>
+            </button>
+            <div class="wallet-badge" id="headerWallet" title="Naura Coins" role="status" aria-live="polite">
+              <i class="fa-solid fa-coins" aria-hidden="true"></i>
+              <span id="walletAmount">0</span>
             </div>
-            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <a href="/auth/discord" class="btn btn-primary btn-sm" id="headerAuthBtn" title="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+              <span id="headerAuthLabel">Login</span>
+            </a>
+            <img src="/assets/core/avatar.png" alt="" class="header-avatar" id="headerAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
           </div>
         </header>
 
-        <!-- Page Content -->
-        <main class="page-content" id="mainContent" data-user-data-page="true">
-
-          <div class="page-header-bar animate-in">
+        <div class="page" id="mainContent">
+          <div class="page-header-bar animate-slide-up">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
-                  <i class="fa-solid fa-music" style="color:var(--primary);"></i>
+                <span class="page-heading-icon" style="background: var(--ui-primary-glow); border: 1px solid var(--hairline-brand);">
+                  <i class="fa-solid fa-music" style="color: var(--ui-primary);"></i>
                 </span>
                 Music Hub
               </h1>
-              <p class="page-sub">Lavalink v4 Cluster · Fish Audio AI DJ · Real-Time Queue Management</p>
+              <p class="page-sub">Pemutar Lavalink v4 · Fish Audio AI DJ · Antrian Real-time · Equalizer Visualizer</p>
             </div>
-            <div class="tab-group">
-              <button class="tab-btn active" onclick="switchMusicTab('player')"><i class="fa-solid fa-circle-play"></i> Player</button>
-              <button class="tab-btn" onclick="switchMusicTab('queue')"><i class="fa-solid fa-list"></i> Queue</button>
-              <button class="tab-btn" onclick="switchMusicTab('nodes')"><i class="fa-solid fa-server"></i> Nodes</button>
+            <div style="display:flex; align-items:center; gap:var(--space-3); flex-shrink:0;">
+              <div id="musicGuildSelect" style="min-width:200px;">
+                <select class="form-select" id="musicGuildDropdown" aria-label="Pilih server" style="width:100%;">
+                  <option value="">Memuat server&hellip;</option>
+                </select>
+              </div>
+              <div style="width:36px; height:36px; border-radius:var(--radius-full); background:var(--ui-primary-glow); border:1px solid var(--hairline-brand); display:flex; align-items:center; justify-content:center;">
+                <span style="width:10px; height:10px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 10px var(--ui-primary-glow); animation:badge-pulse 2s var(--ease-in-out) infinite;"></span>
+              </div>
             </div>
           </div>
 
-          <!-- Player Tab -->
-          <div id="musicTabPlayer" class="animate-in delay-1">
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;" id="musicMainGrid">
-
-              <!-- Now Playing Card -->
-              <div class="card card-glow-primary card-p" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
-                <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--primary);margin-bottom:20px;font-family:var(--font-heading);">Now Playing</div>
-
-                <!-- Vinyl disc -->
-                <div class="artwork-disc" style="margin-bottom:24px;">
-                  <div class="artwork-disc-inner" id="artworkDisc">
-                    <div class="artwork-disc-center"><i class="fa-solid fa-music" style="color:var(--primary);font-size:16px;"></i></div>
+          <!-- Player Section -->
+          <section aria-labelledby="playerTitle" class="animate-slide-up stagger-1" style="margin-top:var(--space-6);">
+            <div class="card" style="background:linear-gradient(135deg, var(--bg-layer) 0%, var(--bg-elevated) 100%); border-color:var(--hairline-brand);">
+              <div style="display:grid; grid-template-columns:220px 1fr auto; gap:var(--space-6); align-items:center; padding:var(--space-5);">
+                <!-- Artwork / Vinyl -->
+                <div class="artwork-disc" style="width:220px; height:220px; border-radius:var(--radius-full); position:relative; flex-shrink:0; margin:0 auto;" aria-hidden="true">
+                  <div class="artwork-disc-inner" id="musicArtworkDisc" style="width:100%; height:100%; border-radius:var(--radius-full); background:conic-gradient(from 0deg, var(--bg-deep) 0%, var(--bg-elevated) 25%, var(--bg-deep) 50%, var(--bg-elevated) 75%, var(--bg-deep) 100%); border:4px solid var(--hairline-brand); box-shadow:0 0 30px var(--ui-primary-glow), 0 0 50px rgba(244,114,182,0.12), inset 0 0 25px rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; animation:disc-spin 8s linear infinite paused;">
+                    <div class="artwork-disc-center" style="width:64px; height:64px; border-radius:var(--radius-full); background:var(--bg-deep); border:3px solid var(--hairline-brand); display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 0 12px var(--ui-primary-glow); z-index:2;">
+                      <i class="fa-solid fa-music" style="color:var(--ui-primary);"></i>
+                    </div>
+                    <img id="musicArtworkImg" alt="" style="width:100%; height:100%; border-radius:var(--radius-full); object-fit:cover; opacity:0; transition:opacity var(--duration-base) var(--ease-in-out);">
+                  </div>
+                  <div id="musicEqualizerBars" class="eq-bars" style="position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); display:flex; align-items:flex-end; gap:4px; height:40px; pointer-events:none; z-index:1;">
+                    <div class="eq-bar" style="width:4px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 6px var(--ui-primary-glow); min-height:4px;"></div>
+                    <div class="eq-bar" style="width:4px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 6px var(--ui-primary-glow); min-height:4px;"></div>
+                    <div class="eq-bar" style="width:4px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 6px var(--ui-primary-glow); min-height:4px;"></div>
+                    <div class="eq-bar" style="width:4px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 6px var(--ui-primary-glow); min-height:4px;"></div>
+                    <div class="eq-bar" style="width:4px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 6px var(--ui-primary-glow); min-height:4px;"></div>
+                    <div class="eq-bar" style="width:4px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 6px var(--ui-primary-glow); min-height:4px;"></div>
+                    <div class="eq-bar" style="width:4px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 6px var(--ui-primary-glow); min-height:4px;"></div>
                   </div>
                 </div>
 
-                <!-- Equalizer -->
-                <div class="eq-bars" id="eqBars" style="margin-bottom:16px;">
-                  <div class="eq-bar" style="height:8px;background:var(--primary);"></div>
-                  <div class="eq-bar" style="height:24px;background:var(--accent-violet);"></div>
-                  <div class="eq-bar" style="height:16px;background:var(--accent-cyan);"></div>
-                  <div class="eq-bar" style="height:28px;background:var(--primary);"></div>
-                  <div class="eq-bar" style="height:12px;background:var(--accent-violet);"></div>
-                  <div class="eq-bar" style="height:34px;background:var(--accent-cyan);"></div>
-                  <div class="eq-bar" style="height:8px;background:var(--primary);"></div>
-                </div>
-
-                <!-- Track info -->
-                <div id="nowPlayingTitle" style="font-family:var(--font-heading);font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Idle, Tidak Ada Lagu</div>
-                <div id="nowPlayingArtist" style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Queue kosong · Masukkan lagu lewat bot</div>
-
-                <!-- Progress bar -->
-                <div style="width:100%;margin-bottom:8px;">
-                  <div class="progress-track" style="height:5px;">
-                    <div class="progress-fill" id="musicProgress" style="width:0%;transition:width 1s linear;"></div>
+                <!-- Track Info & Controls -->
+                <div style="min-width:0;">
+                  <div id="musicNowPlayingTitle" style="font-family:var(--font-heading); font-size:clamp(1.25rem, 3vw, 1.75rem); font-weight:700; color:var(--ink); margin-bottom:var(--space-1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Tidak Ada Lagu Diputar</div>
+                  <div id="musicNowPlayingArtist" style="font-size:var(--text-body); color:var(--text-secondary); margin-bottom:var(--space-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Pilih server untuk memulai</div>
+                  <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3);">
+                    <div class="progress-bar" style="flex:1; height:6px; min-width:0;" role="slider" aria-label="Progress lagu" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                      <div class="progress-fill" id="musicProgressFill" style="width:0%;"></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:var(--space-1); font-family:var(--font-mono); font-size:var(--text-xs); color:var(--text-muted); min-width:100px;">
+                      <span id="musicCurrentTime">0:00</span>
+                      <span>/</span>
+                      <span id="musicTotalTime">0:00</span>
+                    </div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:var(--space-2); flex-wrap:wrap;">
+                    <button type="button" class="btn btn-ghost btn-sm" id="musicBtnShuffle" aria-label="Acak" title="Acak">
+                      <i class="fa-solid fa-shuffle" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="musicBtnPrev" aria-label="Sebelumnya" title="Sebelumnya">
+                      <i class="fa-solid fa-backward-step" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="btn btn-primary" id="musicBtnPlayPause" aria-label="Putar" title="Putar/Jeda" style="width:56px; height:56px; border-radius:var(--radius-full); font-size:1.25rem; box-shadow:0 4px 20px var(--ui-primary-glow);">
+                      <i class="fa-solid fa-play" id="musicPlayIcon" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="musicBtnNext" aria-label="Berikutnya" title="Berikutnya">
+                      <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="musicBtnLoop" aria-label="Ulangi" title="Ulangi">
+                      <i class="fa-solid fa-repeat" aria-hidden="true"></i>
+                    </button>
+                    <div style="margin-left:auto; display:flex; align-items:center; gap:var(--space-2);">
+                      <button type="button" class="btn btn-ghost btn-sm" id="musicBtnLyrics" aria-label="Lirik" title="Lirik">
+                        <i class="fa-solid fa-music" aria-hidden="true"></i>
+                      </button>
+                      <button type="button" class="btn btn-ghost btn-sm" id="musicBtnQueue" aria-label="Antrian" title="Antrian">
+                        <i class="fa-solid fa-list" aria-hidden="true"></i>
+                      </button>
+                      <div style="display:flex; align-items:center; gap:var(--space-1);">
+                        <i class="fa-solid fa-volume-high" style="color:var(--text-muted);" aria-hidden="true"></i>
+                        <input type="range" id="musicVolume" class="slider" min="0" max="100" value="80" style="width:100px;" aria-label="Volume">
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div style="display:flex;justify-content:space-between;width:100%;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:20px;">
-                  <span id="musicCurrentTime">0:00</span>
-                  <span id="musicDuration">0:00</span>
-                </div>
 
-                <!-- Controls -->
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                  <button id="btnShuffle" title="Shuffle" style="width:44px;height:44px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:14px;">
-                    <i class="fa-solid fa-shuffle"></i>
-                  </button>
-                  <button id="btnPrev" title="Previous" style="width:44px;height:44px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
-                    <i class="fa-solid fa-backward-step"></i>
-                  </button>
-                  <button id="btnPlayPause" title="Play / Pause" style="width:56px;height:56px;border-radius:50%;background:var(--primary-dim);border:2px solid var(--border-primary);color:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-spring);font-size:20px;box-shadow:0 0 20px var(--primary-glow);" onclick="togglePlay()">
-                    <i class="fa-solid fa-play" id="playIcon"></i>
-                  </button>
-                  <button id="btnNext" title="Next" style="width:44px;height:44px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
-                    <i class="fa-solid fa-forward-step"></i>
-                  </button>
-                  <button id="btnRepeat" title="Repeat" style="width:44px;height:44px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:14px;">
-                    <i class="fa-solid fa-repeat"></i>
-                  </button>
-                </div>
-
-                <!-- Volume -->
-                <div style="display:flex;align-items:center;gap:10px;width:100%;">
-                  <i class="fa-solid fa-volume-low" style="color:var(--text-muted);font-size:12px;flex-shrink:0;"></i>
-                  <input type="range" class="vol-slider" id="volumeSlider" min="0" max="100" value="70" style="--val:70%" oninput="this.style.setProperty('--val', this.value+'%')">
-                  <i class="fa-solid fa-volume-high" style="color:var(--text-muted);font-size:12px;flex-shrink:0;"></i>
-                  <span id="volumeLabel" style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:28px;text-align:right;flex-shrink:0;">70%</span>
+                <!-- Now Playing Meta -->
+                <div style="text-align:right; min-width:180px;">
+                  <div style="display:flex; flex-direction:column; gap:var(--space-2); align-items:flex-end;">
+                    <div class="badge badge-primary" id="musicSourceBadge" style="font-size:var(--text-xs);">Lavalink v4</div>
+                    <div class="badge badge-info" id="musicNodeBadge" style="font-size:var(--text-xs);">Node: -</div>
+                    <div style="font-size:var(--text-xs); color:var(--text-muted); font-family:var(--font-mono);" id="musicBitrate">- kbps</div>
+                    <div style="font-size:var(--text-xs); color:var(--text-muted); font-family:var(--font-mono);" id="musicPing">- ms</div>
+                  </div>
                 </div>
               </div>
+            </div>
+          </section>
 
-              <!-- Right Column: Search + AI DJ -->
-              <div style="display:flex;flex-direction:column;gap:16px;">
-
-                <!-- Search -->
-                <div class="card card-p-sm">
-                  <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-search" style="color:var(--primary);"></i> Tambah Lagu</div>
-                  <div style="display:flex;gap:8px;">
-                    <input type="text" class="input" id="searchQuery" placeholder="Cari lagu, YouTube URL, Spotify..." style="flex:1;" />
-                    <button onclick="addSong()" class="btn btn-primary" style="flex-shrink:0;">
-                      <i class="fa-solid fa-plus"></i> Tambah
+          <!-- Queue & Search -->
+          <div class="bento-grid animate-slide-up stagger-2" style="margin-top:var(--space-6);">
+            <!-- Queue -->
+            <article class="card" style="display:flex; flex-direction:column; grid-column:span 8; min-height:400px;">
+              <div class="card-header">
+                <div class="card-title" style="color:var(--ui-primary); display:flex; align-items:center; gap:var(--space-2);">
+                  <i class="fa-solid fa-list" aria-hidden="true"></i> Antrian
+                </div>
+                <div style="display:flex; gap:var(--space-2);">
+                  <input type="text" id="musicQueueSearch" placeholder="Cari di antrian&hellip;" class="form-input" style="width:200px; padding:var(--space-1) var(--space-3); font-size:var(--text-xs);" aria-label="Cari di antrian">
+                  <button type="button" class="btn btn-ghost btn-sm" id="musicBtnClearQueue" aria-label="Bersihkan antrian">
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i> Clear
+                  </button>
+                  <button type="button" class="btn btn-primary btn-sm" id="musicBtnAddSearch">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah
+                  </button>
+                </div>
+              </div>
+              <div class="card-body" style="flex:1; overflow-y:auto; padding-top:0; max-height:360px;">
+                <div id="musicQueueList" style="display:flex; flex-direction:column; gap:var(--space-2);">
+                  <div class="empty-state" style="padding:var(--space-8); border:none; background:transparent;">
+                    <div class="empty-state-icon" style="background:var(--ui-primary-glow); border-color:var(--hairline-brand); color:var(--ui-primary);">
+                      <i class="fa-solid fa-music" style="font-size:2rem;"></i>
+                    </div>
+                    <h3 class="empty-state-title">Antrian Kosong</h3>
+                    <p class="empty-state-body">Tambahkan lagu dari YouTube, Spotify, SoundCloud, atau cari langsung.</p>
+                    <button type="button" class="btn btn-primary btn-sm" id="musicEmptyBtnSearch" style="margin-top:var(--space-3);">
+                      <i class="fa-solid fa-search" aria-hidden="true"></i> Cari Lagu
                     </button>
                   </div>
-                  <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
-                    <button class="btn btn-ghost btn-sm" onclick="setFilter('youtube')"><i class="fa-brands fa-youtube" style="color:#ff4444;"></i> YouTube</button>
-                    <button class="btn btn-ghost btn-sm" onclick="setFilter('spotify')"><i class="fa-brands fa-spotify" style="color:#1db954;"></i> Spotify</button>
-                    <button class="btn btn-ghost btn-sm" onclick="setFilter('soundcloud')"><i class="fa-brands fa-soundcloud" style="color:#ff5500;"></i> SoundCloud</button>
-                  </div>
                 </div>
-
-                <!-- AI DJ -->
-                <div class="card card-p-sm" style="background:linear-gradient(135deg, rgba(167,139,250,0.08), rgba(244,114,182,0.06));border-color:var(--border-violet);">
-                  <div class="section-title" style="margin-bottom:12px;color:var(--accent-violet);"><i class="fa-solid fa-robot"></i> Fish Audio AI DJ</div>
-                  <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">AI DJ Naura akan memberikan narasi suara di antara lagu menggunakan Fish Audio TTS, menciptakan pengalaman radio yang imersif.</p>
-                  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-                    <label class="toggle" title="Toggle AI DJ">
-                      <input type="checkbox" id="aiDjToggle" />
-                      <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                    </label>
-                    <span style="font-size:13px;color:var(--text-secondary);font-weight:500;">AI DJ Mode</span>
-                    <span class="badge badge-violet" id="aiDjStatus">Offline</span>
-                  </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <button class="btn btn-ghost btn-sm" id="btnDjAnnounce"><i class="fa-solid fa-microphone-lines"></i> Announce</button>
-                    <button class="btn btn-ghost btn-sm" id="btnDjRadio"><i class="fa-solid fa-radio"></i> Radio Mode</button>
-                  </div>
-                </div>
-
-                <!-- Filters / Effects -->
-                <div class="card card-p-sm">
-                  <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-amber);"></i> Audio Filters</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;" id="audioFilters">
-                    <button class="btn btn-ghost btn-sm" id="filterNone" onclick="setAudioFilter('none')" style="font-size:11px;">✨ Normal</button>
-                    <button class="btn btn-ghost btn-sm" id="filterNightcore" onclick="setAudioFilter('nightcore')" style="font-size:11px;">🌙 Nightcore</button>
-                    <button class="btn btn-ghost btn-sm" id="filterVaporwave" onclick="setAudioFilter('vaporwave')" style="font-size:11px;">🌊 Vaporwave</button>
-                    <button class="btn btn-ghost btn-sm" id="filterBass" onclick="setAudioFilter('bassboost')" style="font-size:11px;">🔊 Bass Boost</button>
-                    <button class="btn btn-ghost btn-sm" id="filterLofi" onclick="setAudioFilter('lofi')" style="font-size:11px;">☕ Lofi</button>
-                    <button class="btn btn-ghost btn-sm" id="filter8d" onclick="setAudioFilter('8d')" style="font-size:11px;">🎧 8D Audio</button>
-                  </div>
-                </div>
-
-                <!-- Now in Voice -->
-                <div class="card card-p-sm">
-                  <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-headphones" style="color:var(--accent-green);"></i> Voice Channel</div>
-                  <div id="voiceChannelInfo" style="display:flex;flex-direction:column;gap:8px;">
-                    <div class="status-item">
-                      <span style="font-size:12px;color:var(--text-secondary);">Status</span>
-                      <span class="badge badge-muted" id="vcStatus">Not Connected</span>
-                    </div>
-                    <div class="status-item">
-                      <span style="font-size:12px;color:var(--text-secondary);">Channel</span>
-                      <span style="font-size:12px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono);" id="vcName">-</span>
-                    </div>
-                    <div class="status-item">
-                      <span style="font-size:12px;color:var(--text-secondary);">Listeners</span>
-                      <span style="font-size:12px;font-weight:700;color:var(--accent-cyan);font-family:var(--font-mono);" id="vcListeners">0</span>
-                    </div>
-                  </div>
-                </div>
-
               </div>
-            </div>
-          </div>
+            </article>
 
-          <!-- Queue Tab (hidden initially) -->
-          <div id="musicTabQueue" style="display:none;" class="animate-in">
-            <div class="card card-p animate-in delay-1">
+            <!-- Search Panel -->
+            <article class="card" style="display:flex; flex-direction:column; grid-column:span 4; min-height:400px;">
               <div class="card-header">
-                <div class="card-title"><i class="fa-solid fa-list" style="color:var(--primary);"></i> Antrian Lagu</div>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-ghost btn-sm" id="btnClearQueue" onclick="clearQueue()"><i class="fa-solid fa-trash"></i> Clear</button>
-                  <button class="btn btn-ghost btn-sm" id="btnShuffleQueue" onclick="shuffleQueue()"><i class="fa-solid fa-shuffle"></i> Shuffle</button>
+                <div class="card-title" style="color:var(--accent-cyan); display:flex; align-items:center; gap:var(--space-2);">
+                  <i class="fa-solid fa-search" aria-hidden="true"></i> Cari & Tambah
                 </div>
               </div>
-              <div id="queueList" style="display:flex;flex-direction:column;gap:4px;">
-                <div class="queue-item current">
-                  <div class="queue-num">▶</div>
-                  <div class="queue-thumb">🎵</div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Idle, Tidak ada lagu yang diputar</div>
-                    <div style="font-size:11px;color:var(--text-muted);">0:00 · Masukkan lagu lewat bot</div>
+              <div class="card-body" style="flex:1; padding-top:0;">
+                <div style="margin-bottom:var(--space-4);">
+                  <label class="form-label" style="display:block; margin-bottom:var(--space-2);">Cari Lagu</label>
+                  <div style="display:flex; gap:var(--space-2);">
+                    <input type="text" id="musicSearchInput" placeholder="Judul, artis, URL YouTube/Spotify&hellip;" class="form-input" style="flex:1;" aria-label="Cari lagu">
+                    <button type="button" class="btn btn-primary" id="musicBtnSearch" aria-label="Cari">
+                      <i class="fa-solid fa-search" aria-hidden="true"></i>
+                    </button>
                   </div>
                 </div>
-                <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">
-                  <div style="font-size:32px;margin-bottom:12px;animation:float 3s ease-in-out infinite;">🎶</div>
-                  <div>Queue kosong. Gunakan <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;color:var(--primary);">/play</code> di Discord untuk menambahkan lagu.</div>
+
+                <div style="margin-bottom:var(--space-4);">
+                  <label class="form-label" style="display:block; margin-bottom:var(--space-2);">Sumber</label>
+                  <div style="display:flex; gap:var(--space-2); flex-wrap:wrap;">
+                    <button type="button" class="btn btn-ghost btn-sm" data-source="youtube" style="flex:1; min-width:80px;">
+                      <i class="fa-brands fa-youtube" style="color:#ff0000;" aria-hidden="true"></i> YouTube
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-source="spotify" style="flex:1; min-width:80px;">
+                      <i class="fa-brands fa-spotify" style="color:#1db954;" aria-hidden="true"></i> Spotify
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-source="soundcloud" style="flex:1; min-width:80px;">
+                      <i class="fa-brands fa-soundcloud" style="color:#ff5500;" aria-hidden="true"></i> SoundCloud
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-source="direct" style="flex:1; min-width:80px;">
+                      <i class="fa-solid fa-link" aria-hidden="true"></i> Langsung
+                    </button>
+                  </div>
+                </div>
+
+                <div id="musicSearchResults" style="flex:1; overflow-y:auto; max-height:280px;">
+                  <div class="empty-state" style="padding:var(--space-6); border:none; background:transparent;">
+                    <div class="empty-state-icon" style="background:var(--cyan-dim); border-color:rgba(34,211,238,0.3); color:var(--accent-cyan);">
+                      <i class="fa-solid fa-magnifying-glass" style="font-size:2rem;"></i>
+                    </div>
+                    <h3 class="empty-state-title">Cari Lagu</h3>
+                    <p class="empty-state-body">Ketik judul, artis, atau tempel URL YouTube/Spotify/SoundCloud.</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </article>
           </div>
 
-          <!-- Nodes Tab (hidden initially) -->
-          <div id="musicTabNodes" style="display:none;" class="animate-in">
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;" id="lavalinkNodes">
-
-              <div class="node-card active">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent-cyan);">NODE-01</div>
-                  <span class="badge badge-green">Primary</span>
+          <!-- AI DJ & Settings -->
+          <div class="bento-grid animate-slide-up stagger-3" style="margin-top:var(--space-6);">
+            <article class="card" style="grid-column:span 6;">
+              <div class="card-header">
+                <div class="card-title" style="color:var(--color-maintenance); display:flex; align-items:center; gap:var(--space-2);">
+                  <i class="fa-solid fa-robot" aria-hidden="true"></i> Fish Audio AI DJ
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">localhost:2333</div>
-                <div style="display:flex;flex-direction:column;gap:5px;">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">RTT</span>
-                    <span style="color:var(--accent-cyan);font-family:var(--font-mono);">12ms</span>
-                  </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Players</span>
-                    <span style="color:var(--text-primary);font-family:var(--font-mono);">3</span>
-                  </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Region</span>
-                    <span style="color:var(--text-primary);">Asia / SGP</span>
-                  </div>
-                </div>
-                <div class="progress-track" style="margin-top:10px;">
-                  <div class="progress-fill cyan" style="width:30%;"></div>
-                </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;font-family:var(--font-mono);">CPU 30%</div>
               </div>
-
-              <div class="node-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text-secondary);">NODE-02</div>
-                  <span class="badge badge-muted">Standby</span>
-                </div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">node2.example.com:2333</div>
-                <div style="display:flex;flex-direction:column;gap:5px;">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">RTT</span>
-                    <span style="color:var(--text-secondary);font-family:var(--font-mono);">89ms</span>
+              <div class="card-body" style="padding-top:0;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:var(--space-4);">
+                  <div>
+                    <label class="form-label">Mode DJ</label>
+                    <select id="musicDJMode" class="form-select">
+                      <option value="off">Mati</option>
+                      <option value="smart">Smart Mix</option>
+                      <option value="radio">Radio Mode</option>
+                      <option value="mood">Mood Based</option>
+                    </select>
                   </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Players</span>
-                    <span style="color:var(--text-primary);font-family:var(--font-mono);">0</span>
+                  <div>
+                    <label class="form-label">Genre Preferensi</label>
+                    <input type="text" id="musicDJGenre" class="form-input" placeholder="pop, rock, electronic&hellip;" aria-label="Genre preferensi">
                   </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Region</span>
-                    <span style="color:var(--text-primary);">Asia / TKY</span>
+                  <div>
+                    <label class="form-label">Energi</label>
+                    <input type="range" id="musicDJEnergy" class="slider" min="0" max="1" step="0.1" value="0.7" aria-label="Tingkat energi">
+                  </div>
+                  <div>
+                    <label class="form-label">Durasi Sesi (menit)</label>
+                    <input type="number" id="musicDJDuration" class="form-input" value="30" min="5" max="180" style="width:100px;" aria-label="Durasi sesi DJ">
                   </div>
                 </div>
-                <div class="progress-track" style="margin-top:10px;">
-                  <div class="progress-fill" style="width:0%;"></div>
+                <div style="margin-top:var(--space-4); display:flex; gap:var(--space-2);">
+                  <button type="button" class="btn btn-primary" id="musicBtnStartDJ">
+                    <i class="fa-solid fa-play" aria-hidden="true"></i> Mulai AI DJ
+                  </button>
+                  <button type="button" class="btn btn-ghost" id="musicBtnStopDJ">
+                    <i class="fa-solid fa-stop" aria-hidden="true"></i> Hentikan
+                  </button>
                 </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;font-family:var(--font-mono);">CPU 0%</div>
               </div>
+            </article>
 
-              <div class="node-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text-secondary);">NODE-03</div>
-                  <span class="badge badge-muted">Standby</span>
+            <article class="card" style="grid-column:span 6;">
+              <div class="card-header">
+                <div class="card-title" style="color:var(--color-success); display:flex; align-items:center; gap:var(--space-2);">
+                  <i class="fa-solid fa-sliders" aria-hidden="true"></i> Pengaturan Audio
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">node3.example.com:2333</div>
-                <div style="display:flex;flex-direction:column;gap:5px;">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">RTT</span>
-                    <span style="color:var(--text-secondary);font-family:var(--font-mono);">142ms</span>
-                  </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Players</span>
-                    <span style="color:var(--text-primary);font-family:var(--font-mono);">0</span>
-                  </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Region</span>
-                    <span style="color:var(--text-primary);">EU / FRA</span>
-                  </div>
-                </div>
-                <div class="progress-track" style="margin-top:10px;">
-                  <div class="progress-fill" style="width:0%;"></div>
-                </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;font-family:var(--font-mono);">CPU 0%</div>
               </div>
+              <div class="card-body" style="padding-top:0;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:var(--space-4);">
+                  <div>
+                    <label class="form-label">Normalisasi Volume</label>
+                    <div class="toggle">
+                      <input type="checkbox" id="musicNormalize" class="toggle-input" checked>
+                      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label">Crossfade (detik)</label>
+                    <input type="range" id="musicCrossfade" class="slider" min="0" max="15" step="1" value="3" aria-label="Durasi crossfade">
+                  </div>
+                  <div>
+                    <label class="form-label">Kualitas Stream</label>
+                    <select id="musicQuality" class="form-select">
+                      <option value="high">Tinggi (320kbps)</option>
+                      <option value="medium" selected>Sedang (128kbps)</option>
+                      <option value="low">Rendah (64kbps)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Auto-play</label>
+                    <div class="toggle">
+                      <input type="checkbox" id="musicAutoplay" class="toggle-input" checked>
+                      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
 
-            </div>
+            <article class="card" style="grid-column:span 12;">
+              <div class="card-header">
+                <div class="card-title" style="color:var(--accent-cyan); display:flex; align-items:center; gap:var(--space-2);">
+                  <i class="fa-solid fa-server" aria-hidden="true"></i> Node Lavalink
+                </div>
+              </div>
+              <div class="card-body" style="padding-top:0;">
+                <div style="overflow-x:auto;">
+                  <table class="data-table" style="width:100%; min-width:600px;">
+                    <thead>
+                      <tr>
+                        <th scope="col">Nama</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Region</th>
+                        <th scope="col">Player</th>
+                        <th scope="col">CPU</th>
+                        <th scope="col">RAM</th>
+                        <th scope="col">Ping</th>
+                        <th scope="col">Uptime</th>
+                        <th scope="col">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="musicNodesTable">
+                      <tr>
+                        <td colspan="9" style="text-align:center; padding:var(--space-8); color:var(--text-muted);">Memuat node Lavalink&hellip;</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </article>
           </div>
+        </div>
+      </main>
 
-        </main>
-      </div>
+      <nav class="mobile-nav" aria-label="Navigasi mobile">
+        <a href="/" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/lounge" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-cube"></i></span>
+          <span>3D Lounge</span>
+        </a>
+        <a href="/music" class="mobile-nav-item active" aria-current="page">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+          <span>Music</span>
+        </a>
+        <a href="/world" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+          <span>Wilds</span>
+        </a>
+        <a href="/settings" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+          <span>Settings</span>
+        </a>
+      </nav>
     </div>
 
-    <!-- Mobile Nav -->
-    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
-      <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
-      </div>
-    </nav>
-
-    <script src="/src/js/sharedNav.js"></script>
-    <script>
-      // Tab switch
-      function switchMusicTab(tab) {
-        ['player','queue','nodes'].forEach(t => {
-          const el = document.getElementById(`musicTab${t.charAt(0).toUpperCase()+t.slice(1)}`);
-          if (el) el.style.display = 'none';
-        });
-        const target = document.getElementById(`musicTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`);
-        if (target) target.style.display = 'block';
-        document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-          btn.classList.toggle('active', ['player','queue','nodes'][i] === tab);
-        });
-
-        if (tab === 'queue') {
-          fetchMusicQueue();
-        } else if (tab === 'nodes') {
-          fetchMusicState();
-        }
-      }
-
-      // Live Music State & Controls
-      let isPlaying = false;
-
-      function formatTime(ms) {
-        const totalSec = Math.floor(Number(ms || 0) / 1000);
-        const m = Math.floor(totalSec / 60);
-        const s = totalSec % 60;
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-      }
-
-      function updatePlayerUI(data) {
-        if (!data) return;
-        isPlaying = !!data.isPlaying && !data.isPaused;
-        const playIcon = document.getElementById('playIcon');
-        if (playIcon) playIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
-
-        const disc = document.getElementById('artworkDisc');
-        if (disc) disc.classList.toggle('playing', isPlaying);
-        const eq = document.getElementById('eqBars');
-        if (eq) eq.classList.toggle('eq-playing', isPlaying);
-
-        const titleEl = document.getElementById('nowPlayingTitle');
-        if (titleEl && data.currentTrack?.title) titleEl.textContent = data.currentTrack.title;
-
-        const artistEl = document.getElementById('nowPlayingArtist');
-        if (artistEl && data.currentTrack?.author) artistEl.textContent = data.currentTrack.author;
-
-        const dur = data.currentTrack?.duration || 0;
-        const pos = data.currentTrack?.position || 0;
-        const durEl = document.getElementById('musicDuration');
-        if (durEl) durEl.textContent = formatTime(dur);
-        const curEl = document.getElementById('musicCurrentTime');
-        if (curEl) curEl.textContent = formatTime(pos);
-
-        const progressEl = document.getElementById('musicProgress');
-        if (progressEl && dur > 0) {
-          progressEl.style.width = `${Math.min(100, Math.round((pos / dur) * 100))}%`;
-        }
-
-        if (data.volume !== undefined) {
-          const volSlider = document.getElementById('volumeSlider');
-          const volLabel = document.getElementById('volumeLabel');
-          if (volSlider && document.activeElement !== volSlider) volSlider.value = data.volume;
-          if (volLabel) volLabel.textContent = `${data.volume}%`;
-        }
-      }
-
-      async function fetchMusicState() {
-        try {
-          const res = await fetch('/api/music/now-playing');
-          if (!res.ok) return;
-          const data = await res.json();
-          if (!data.success) return;
-          updatePlayerUI(data);
-        } catch (_) {}
-      }
-
-      // Fetch and Render Real Music Queue
-      async function fetchMusicQueue() {
-        try {
-          const res = await fetch('/api/music/queue');
-          if (!res.ok) return;
-          const data = await res.json();
-          if (!data.success) return;
-          renderQueue(data.queue || []);
-        } catch (err) {
-          console.warn("Queue fetch error:", err);
-        }
-      }
-
-      function renderQueue(queue) {
-        const listEl = document.getElementById('queueList');
-        if (!listEl) return;
-
-        if (!queue || queue.length === 0) {
-          listEl.innerHTML = `
-            <div style="text-align:center;padding:36px;color:var(--text-muted);font-size:13px;">
-              <div style="font-size:32px;margin-bottom:12px;animation:float 3s ease-in-out infinite;">🎶</div>
-              <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">Antrian Kosong</div>
-              <div>Gunakan perintah <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;color:var(--primary);">/play</code> di Discord untuk memutar musik.</div>
-            </div>
-          `;
-          return;
-        }
-
-        listEl.innerHTML = queue.map((track, i) => `
-          <div class="queue-item ${i === 0 ? 'current' : ''}">
-            <div class="queue-num">${i === 0 ? '▶' : i + 1}</div>
-            <div class="queue-thumb">${i === 0 ? '🎵' : '💿'}</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:600;color:${i === 0 ? 'var(--primary)' : 'var(--text-primary)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                ${track.title || 'Unknown Title'}
-              </div>
-              <div style="font-size:11px;color:var(--text-muted);">
-                ${track.author || 'Artis'} · ${formatTime(track.duration)}
-              </div>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      async function clearQueue() {
-        try {
-          await fetch('/api/music/control', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guildId: 'current', action: 'clear' }),
-          });
-          renderQueue([]);
-        } catch (_) {}
-      }
-
-      async function shuffleQueue() {
-        try {
-          await fetch('/api/music/control', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guildId: 'current', action: 'shuffle' }),
-          });
-          setTimeout(fetchMusicQueue, 400);
-        } catch (_) {}
-      }
-
-      async function togglePlay() {
-        isPlaying = !isPlaying;
-        const icon = document.getElementById('playIcon');
-        if (icon) icon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
-        document.getElementById('artworkDisc')?.classList.toggle('playing', isPlaying);
-        document.getElementById('eqBars')?.classList.toggle('eq-playing', isPlaying);
-
-        try {
-          await fetch('/api/music/control', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guildId: 'current', action: 'playpause' }),
-          });
-          setTimeout(fetchMusicState, 300);
-        } catch (_) {}
-      }
-
-      document.getElementById('btnNext')?.addEventListener('click', async () => {
-        try {
-          await fetch('/api/music/control', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guildId: 'current', action: 'skip' }),
-          });
-          setTimeout(fetchMusicState, 300);
-          setTimeout(fetchMusicQueue, 500);
-        } catch (_) {}
-      });
-
-      // Volume slider label update & control send
-      const volSlider = document.getElementById('volumeSlider');
-      if (volSlider) {
-        volSlider.addEventListener('input', function() {
-          const lbl = document.getElementById('volumeLabel');
-          if (lbl) lbl.textContent = this.value + '%';
-        });
-        volSlider.addEventListener('change', async function() {
-          const vol = parseInt(this.value, 10) || 70;
-          try {
-            await fetch('/api/music/control', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ guildId: 'current', action: 'volume', value: vol }),
-            });
-          } catch (_) {}
-        });
-      }
-
-      // Audio filter highlight
-      function setAudioFilter(filter) {
-        document.querySelectorAll('#audioFilters .btn').forEach(btn => {
-          btn.classList.remove('btn-primary');
-          btn.classList.add('btn-ghost');
-        });
-        const target = document.getElementById(`filter${filter.charAt(0).toUpperCase()+filter.slice(1)}`);
-        if (target) { target.classList.add('btn-primary'); target.classList.remove('btn-ghost'); }
-      }
-
-      setAudioFilter('none');
-
-      // AI DJ toggle
-      document.getElementById('aiDjToggle')?.addEventListener('change', function() {
-        document.getElementById('aiDjStatus').textContent = this.checked ? 'Active' : 'Offline';
-        document.getElementById('aiDjStatus').className = this.checked ? 'badge badge-violet' : 'badge badge-muted';
-      });
-
-      // Socket.IO live integration
-      if (typeof io !== 'undefined') {
-        try {
-          const socket = io();
-          socket.on('connect', () => {
-            socket.emit('join_room', 'dashboard:home');
-          });
-          socket.on('music_state', (data) => {
-            updatePlayerUI(data);
-          });
-          socket.on('music_queue', (queueData) => {
-            renderQueue(queueData.queue || queueData);
-          });
-        } catch (_) {}
-      }
-
-      window.addEventListener('load', () => {
-        fetchMusicState();
-        fetchMusicQueue();
-        setInterval(fetchMusicState, 4000);
-      });
-
-      // Mobile grid
-      function adjustMusicGrid() {
-        const g = document.getElementById('musicMainGrid');
-        if (!g) return;
-        g.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : '1fr 1fr';
-      }
-      window.addEventListener('resize', adjustMusicGrid);
-      adjustMusicGrid();
-
-      // Node grid
-      function adjustNodeGrid() {
-        const g = document.getElementById('lavalinkNodes');
-        if (!g) return;
-        g.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : window.innerWidth < 1024 ? '1fr 1fr' : 'repeat(3,1fr)';
-      }
-      window.addEventListener('resize', adjustNodeGrid);
-      adjustNodeGrid();
-    </script>
+    <script src="/src/js/naura-os.js"></script>
+    <script src="/src/js/pages/music.js"></script>
   </body>
 </html>

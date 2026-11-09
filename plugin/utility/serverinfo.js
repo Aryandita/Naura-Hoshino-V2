@@ -76,14 +76,14 @@ module.exports = {
       },
       {
         name: "💬 Struktur Saluran (Channels)",
-        value: `📝 Teks: **${textChannels}** | 🔊 Suara: **${voiceChannels}** | 📁 Kategori: **${categoryChannels}**`,
+        value: `📝 Teks: **${textChannels}** | ${ui.getEmoji("music_bass") || "🔊"} Suara: **${voiceChannels}** | 📁 Kategori: **${categoryChannels}**`,
       },
       {
         name: "🚀 Status Nitro Boost",
         value: `Tier: **${boostTier}** (${boostCount} Boosts)`,
       },
       {
-        name: "🛡️ Keamanan & Verifikasi",
+        name: `${ui.getEmoji("mod_shield") || "🛡️"} Keamanan & Verifikasi`,
         value: `Tingkat: **${verification}**`,
       },
       {

@@ -116,13 +116,8 @@ module.exports = {
   },
 
   async execute(interaction) {
-    const limited = await RateLimiter.isRateLimited(
-      interaction.user.id,
-      "downloader",
-      4,
-      60,
-    );
-    if (limited) return ui.sendError(interaction, "err_sys_30", true);
+    const _ip = interaction.guild?.preferredLocale ? "g" : "g"; const limited = await RateLimiter.consume(interaction.user.id, "downloader", 10, 60); const globalLimited = await RateLimiter.consume("global", "downloader", 600, 60);
+    if (limited.limited || globalLimited.limited) return ui.sendError(interaction, "err_sys_30", true);
 
     const url = String(interaction.options.getString("url"))
       .replace(/[<>]/g, "")

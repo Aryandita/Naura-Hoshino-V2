@@ -244,7 +244,7 @@ module.exports = {
         opened = met.find((b) => b.npcId === i.values[0]) || null;
         if (!opened) {
           return i.followUp({
-            content: "🔒 Foto ini belum berhasil kamu dapatkan di petualanganmu.",
+            content: `${e("mod_lock", "🔒")} Foto ini belum berhasil kamu dapatkan di petualanganmu.`,
             flags: MessageFlags.Ephemeral,
           });
         }

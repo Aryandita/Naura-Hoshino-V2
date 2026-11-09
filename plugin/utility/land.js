@@ -130,7 +130,7 @@ module.exports = {
           `Pusat teritorial dan tanah virtual milik klan **${clan.name}** di server ini.`,
           "",
           `📊 **Total Kapling Dimiliki:** \`${clanStats.plotsOwned} Plot\``,
-          `🛡️ **Bonus Pertahanan Klan:** \`+${clanStats.totalDefense} DEF\``,
+          `${ui.getEmoji("mod_shield") || "🛡️"} **Bonus Pertahanan Klan:** \`+${clanStats.totalDefense} DEF\``,
           `💰 **Kapasitas Ekstra Brankas:** \`+${clanStats.totalVaultBonus.toLocaleString("id-ID")} SC\``,
           `👥 **Kapasitas Ekstra Anggota:** \`+${clanStats.maxMembersBonus} Member\``,
           "",
@@ -166,7 +166,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22C55E",
         authorName: "Naura Metaverse Land",
-        title: "✨ Kapling Tanah Berhasil Diklaim!",
+        title: `${ui.getEmoji("ai_sparkle") || "✨"} Kapling Tanah Berhasil Diklaim!`,
         description: [
           `Selamat! Klan **${clan.name}** berhasil mengklaim kapling virtual di koordinat **(${x}, ${y})**.`,
           "",

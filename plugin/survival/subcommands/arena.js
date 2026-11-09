@@ -344,14 +344,14 @@ async function handleColiseumTeam(interaction) {
   const fighterList = fighters
     .map(
       (f, idx) =>
-        `**Slot ${idx + 1}:** **${f.name}** (\`${f.type}\`), ⚔️ ATK: ${f.atk} | 🛡️ DEF: ${f.def} | ❤️ HP: ${f.hp}`,
+        `**Slot ${idx + 1}:** **${f.name}** (\`${f.type}\`), ${ui.getEmoji("arcade_duel") || "⚔️"} ATK: ${f.atk} | ${ui.getEmoji("mod_shield") || "🛡️"} DEF: ${f.def} | ❤️ HP: ${f.hp}`,
     )
     .join("\n");
 
   const payload = buildContainerV2({
     accentColorHex: survivalUI.getRarityColor("epic"),
     authorName: "🛡️ Formasi Tim Galactic Coliseum",
-    title: `✨ Skuad: ${team.teamName}`,
+    title: `${ui.getEmoji("ai_sparkle") || "✨"} Skuad: ${team.teamName}`,
     description: [
       "Formasi 3v3 ini akan bertarung saat kamu menantang pemain lain atau saat timmu diserang saat offline!",
       "",
@@ -502,7 +502,7 @@ async function handlePetLeaderboard(interaction) {
       "👑 **Tingkatan Divisi Pet Arena:**",
       `• 👑 **Master Rimba** (≥ ${PET_DIVISION_THRESHOLDS.MASTER} MMR)`,
       `• 💠 **Diamond** (${PET_DIVISION_THRESHOLDS.DIAMOND} - ${PET_DIVISION_THRESHOLDS.MASTER - 1} MMR)`,
-      `• 💎 **Platinum** (${PET_DIVISION_THRESHOLDS.PLATINUM} - ${PET_DIVISION_THRESHOLDS.DIAMOND - 1} MMR)`,
+      `• ${ui.getEmoji("naura_shard") || "💎"} **Platinum** (${PET_DIVISION_THRESHOLDS.PLATINUM} - ${PET_DIVISION_THRESHOLDS.DIAMOND - 1} MMR)`,
       `• 🥇 **Gold** (${PET_DIVISION_THRESHOLDS.GOLD} - ${PET_DIVISION_THRESHOLDS.PLATINUM - 1} MMR)`,
       `• 🥈 **Silver** (${PET_DIVISION_THRESHOLDS.SILVER} - ${PET_DIVISION_THRESHOLDS.GOLD - 1} MMR)`,
       `• 🥉 **Bronze** (< ${PET_DIVISION_THRESHOLDS.SILVER} MMR)`,
@@ -515,7 +515,7 @@ async function handlePetLeaderboard(interaction) {
           .setCustomId("btn_petarena_match")
           .setLabel("Cari Lawan Pet Arena")
           .setStyle(ButtonStyle.Primary)
-          .setEmoji("⚔️"),
+          .setEmoji(ui.getEmoji("arcade_duel") || "⚔️"),
       ),
     ],
     footerText: ui.getFooter("survival"),

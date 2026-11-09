@@ -38,10 +38,10 @@ const {
 /** @type {Map<string, object>} Loaded subcommand handlers */
 const subcommands = new Map();
 
-// Load all subcommand files dynamically
+// Load all subcommand files dynamically (ignoring test files)
 const subCommandFiles = fs
   .readdirSync(path.join(__dirname, "subcommands"))
-  .filter((file) => file.endsWith(".js"));
+  .filter((file) => file.endsWith(".js") && !file.endsWith(".test.js"));
 
 for (const file of subCommandFiles) {
   const subCmd = require(`./subcommands/${file}`);

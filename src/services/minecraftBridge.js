@@ -41,7 +41,7 @@ class MinecraftBridgeService {
   /**
    * Buat kode verifikasi 6 digit kriptografis untuk penautan akun in-game.
    */
-  static async generateLinkCode(userId, mcUsername) {
+  static async generateLinkCode(userId, mcUsername) { if(!/^[A-Za-z0-9_]{3,16}$/.test(String(mcUsername||""))){ throw new Error("Invalid Minecraft username"); }
     const cleanCode = crypto.randomInt(100000, 1000000).toString();
     const now = Date.now();
     codeIssuedAtMap.set(cleanCode, { userId, mcUsername, issuedAt: now });
@@ -170,7 +170,7 @@ class MinecraftBridgeService {
   /**
    * Verifikasi paksa oleh Administrator Discord tanpa memerlukan kode in-game.
    */
-  static async adminVerifyAccount(userId, mcUsername) {
+  static async adminVerifyAccount(userId, mcUsername) { if(!/^[A-Za-z0-9_]{3,16}$/.test(String(mcUsername||""))){ throw new Error("Invalid Minecraft username"); }
     return withUserLock(userId, async () => {
       const [link, created] = await MinecraftLink.findOrCreate({
         where: { userId },

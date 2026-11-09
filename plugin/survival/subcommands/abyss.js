@@ -237,7 +237,7 @@ async function handleLeave(interaction, userId) {
   const payload = buildContainerV2({
     accentColorHex: survivalUI.getColor("emerald"),
     authorName: "🏁 Pintu Keluar The Neo-Abyss",
-    title: "✨ Ekspedisi Berhasil Diselesaikan!",
+    title: `${ui.getEmoji("ai_sparkle") || "✨"} Ekspedisi Berhasil Diselesaikan!`,
     description: descriptionLines.join("\n"),
     buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
     footerText: ui.getFooter("survival"),
@@ -356,7 +356,7 @@ async function displayRoomSelection(interaction, run, outcomeText, userId) {
   const payload = buildContainerV2({
     accentColorHex: survivalUI.getRarityColor("epic"),
     authorName,
-    title: `❤️ HP: ${run.currentHp}/${run.maxHp}  |  ⚔️ ATK: ${run.attackPower}  |  💰 ${run.fragmentsCollected} ⭐`,
+    title: `❤️ HP: ${run.currentHp}/${run.maxHp}  |  ${ui.getEmoji("arcade_duel") || "⚔️"} ATK: ${run.attackPower}  |  💰 ${run.fragmentsCollected} ⭐`,
     description: [
       outcomeText ? `${outcomeText}\n` : "",
       wagerDesc,
@@ -420,7 +420,7 @@ async function handleCollectorLeave(interaction, userId) {
   return interaction.followUp({
     ...buildContainerV2({
       accentColorHex: survivalUI.getColor("emerald"),
-      title: "✨ Ekspedisi Berhasil Diselesaikan!",
+      title: `${ui.getEmoji("ai_sparkle") || "✨"} Ekspedisi Berhasil Diselesaikan!`,
       description: `Kamu berhasil mengamankan **+${leaveRes.totalCoins.toLocaleString("id-ID")} Sukamaju Koin (SC)**!${wagerBonusText}`,
       buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
       footerText: ui.getFooter("survival"),

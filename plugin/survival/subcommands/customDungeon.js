@@ -74,7 +74,7 @@ module.exports = {
 
       const listLines = dungeons
         .map((d, i) => {
-          return `**#${i + 1}. ${d.dungeonName}** (\`${d.dungeonId}\`)\n• Tema: \`${d.theme}\` | ⭐ Rating: \`${d.ratingAverage} / 5.0\`\n• Tiket: \`${d.entryFee.toLocaleString("id-ID")}\` Koin | ⚔️ Dimainkan: \`${d.totalPlays}\`x (Tuntas: \`${d.totalClears}\`)\n• Brankas Royalti Kreator: \`${d.vaultBalance.toLocaleString("id-ID")}\` Koin`;
+          return `**#${i + 1}. ${d.dungeonName}** (\`${d.dungeonId}\`)\n• Tema: \`${d.theme}\` | ⭐ Rating: \`${d.ratingAverage} / 5.0\`\n• Tiket: \`${d.entryFee.toLocaleString("id-ID")}\` Koin | ${ui.getEmoji("arcade_duel") || "⚔️"} Dimainkan: \`${d.totalPlays}\`x (Tuntas: \`${d.totalClears}\`)\n• Brankas Royalti Kreator: \`${d.vaultBalance.toLocaleString("id-ID")}\` Koin`;
         })
         .join("\n\n");
 

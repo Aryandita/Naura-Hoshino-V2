@@ -95,7 +95,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: theme === "cyberpunk" ? "#00F0FF" : theme === "celestial" ? "#A78BFA" : "#EC4899",
         authorName: "Naura Motion Studio",
-        title: `✨ Dynamic Motion Banner [${theme.toUpperCase()}]`,
+        title: `${ui.getEmoji("ai_sparkle") || "✨"} Dynamic Motion Banner [${theme.toUpperCase()}]`,
         description: [
           `Dynamic Motion Banner untuk **${interaction.user.username}** telah berhasil digenerate!`,
           "",

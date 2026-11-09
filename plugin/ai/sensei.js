@@ -73,7 +73,7 @@ module.exports = {
       .setCustomId("sensei_nav_survival")
       .setLabel("Mulai /survival")
       .setStyle(ButtonStyle.Primary)
-      .setEmoji("⚔️");
+      .setEmoji(ui.getEmoji("arcade_duel") || "⚔️");
 
     const row = new ActionRowBuilder().addComponents(btnDaily, btnSurvival);
 

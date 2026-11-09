@@ -124,7 +124,7 @@ async function handleList(interaction, user) {
   }
 
   const lines = board.map((b, idx) => {
-    return `${idx + 1}. **<@${b.targetUserId}>**\n> 💰 Hadiah Kepala: **${b.rewardNsf.toLocaleString("id-ID")} SC**\n> 📜 Alasan: *${b.reason}*\n> 🎯 Pemburu Pengaju: <@${b.issuerId}>`;
+    return `${idx + 1}. **<@${b.targetUserId}>**\n> 💰 Hadiah Kepala: **${b.rewardNsf.toLocaleString("id-ID")} SC**\n> 📜 Alasan: *${b.reason}*\n> ${ui.getEmoji("arcade_target") || "🎯"} Pemburu Pengaju: <@${b.issuerId}>`;
   });
 
   const listPayload = buildContainerV2({
@@ -248,7 +248,7 @@ async function handleHunterVictory(interaction, user, target, duelResult) {
   const victoryPayload = buildContainerV2({
     accentColorHex: ACCENT_COLORS.SUCCESS,
     authorName: "PERBURUAN BURONAN BERHASIL",
-    title: "⚔️ Buronan Berhasil Dilumpuhkan!",
+    title: `${ui.getEmoji("arcade_duel") || "⚔️"} Buronan Berhasil Dilumpuhkan!`,
     description: [
       `Kakak berhasil mengalahkan buronan <@${target.id}> dalam pertarungan sengit!`,
       "",

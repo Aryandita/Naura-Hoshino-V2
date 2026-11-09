@@ -272,7 +272,7 @@ module.exports = {
         market.status === "OPEN"
           ? "🟢 Terbuka"
           : market.status === "LOCKED"
-            ? "🔒 Terkunci"
+            ? `${ui.getEmoji("mod_lock") || "🔒"} Terkunci`
             : market.status === "RESOLVED"
               ? "🏆 Selesai"
               : "❌ Dibatalkan";

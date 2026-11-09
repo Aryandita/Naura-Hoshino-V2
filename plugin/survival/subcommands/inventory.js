@@ -177,14 +177,14 @@ module.exports = {
         .setPlaceholder("🔍 Filter Kategori atau Urutkan Barang...")
         .addOptions(
           { label: "Semua Kategori (Bawaan)", value: "all", emoji: "🎒" },
-          { label: "Senjata (Weapon)", value: "weapon", emoji: "⚔️" },
-          { label: "Zirah (Armor)", value: "armor", emoji: "🛡️" },
-          { label: "Alat Kerja (Tool)", value: "tool", emoji: "⛏️" },
+          { label: "Senjata (Weapon)", value: "weapon", emoji: e("arcade_duel", "⚔️") },
+          { label: "Zirah (Armor)", value: "armor", emoji: e("mod_shield", "🛡️") },
+          { label: "Alat Kerja (Tool)", value: "tool", emoji: e("mc_pickaxe", "⛏️") },
           { label: "Konsumsi (Consumable)", value: "consumable", emoji: "🧪" },
-          { label: "Material & Bahan Mentah", value: "material", emoji: "💎" },
+          { label: "Material & Bahan Mentah", value: "material", emoji: e("naura_shard", "💎") },
           { label: "Urutkan: Tier Tertinggi", value: "sort_tier", emoji: "⭐" },
           { label: "Urutkan: Jumlah Terbanyak", value: "sort_amount", emoji: "📊" },
-          { label: "Urutkan: Nilai Jual Tertinggi", value: "sort_price", emoji: "🪙" },
+          { label: "Urutkan: Nilai Jual Tertinggi", value: "sort_price", emoji: e("eco_cash", "🪙") },
         );
       const selectRow = new ActionRowBuilder().addComponents(filterSelect);
 
@@ -231,9 +231,9 @@ module.exports = {
         {
           name: `📦 Kategori Muatan`,
           value: [
-            `> ⚔️ **Senjata:** \`${categoryCounts.weapon}\` • 🛡️ **Zirah:** \`${categoryCounts.armor}\``,
-            `> ⛏️ **Alat:** \`${categoryCounts.tool}\` • 🧪 **Konsumsi:** \`${categoryCounts.consumable}\``,
-            `> 💎 **Bahan Baku:** \`${categoryCounts.material}\``,
+            `> ${e("arcade_duel", "⚔️")} **Senjata:** \`${categoryCounts.weapon}\` • ${e("mod_shield", "🛡️")} **Zirah:** \`${categoryCounts.armor}\``,
+            `> ${e("mc_pickaxe", "⛏️")} **Alat:** \`${categoryCounts.tool}\` • 🧪 **Konsumsi:** \`${categoryCounts.consumable}\``,
+            `> ${e("naura_shard", "💎")} **Bahan Baku:** \`${categoryCounts.material}\``,
           ].join("\n"),
           inline: true,
         },

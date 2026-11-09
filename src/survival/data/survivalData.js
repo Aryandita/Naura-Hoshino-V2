@@ -25,30 +25,29 @@ addProfileGroup(builder);
 builder.addSubcommand((sub) =>
   sub
     .setName("quick")
-    .setDescription("🚀 Menu aksi cepat survival via select menu"),
+    .setDescription("Menu aksi cepat survival"),
 );
 
 // Command Center Hub
 builder.addSubcommand((sub) =>
   sub
     .setName("hub")
-    .setDescription("🌿 Buka Command Center Survival Naura Wilds"),
+    .setDescription("Buka Command Center Survival"),
 );
 
 // Sistem Quest Harian
 builder.addSubcommand((sub) =>
   sub
     .setName("dailyquest")
-    .setDescription("📜 Sistem quest harian Naura Wilds")
+    .setDescription("Sistem quest harian")
     .addStringOption((opt) =>
       opt
         .setName("aksi")
-        .setDescription("Pilih aksi quest harian")
+        .setDescription("Aksi quest")
         .addChoices(
-          { name: "📜 Buat Quest", value: "generate" },
-          { name: "👁️ Lihat Quest", value: "view" },
-          { name: "🎁 Klaim Hadiah", value: "claim" },
-          { name: "🗓️ Papan Mingguan", value: "weekly" },
+          { name: "Buat", value: "generate" },
+          { name: "Lihat", value: "view" },
+          { name: "Klaim", value: "claim" },
         )
         .setRequired(false),
     ),
@@ -58,29 +57,22 @@ builder.addSubcommand((sub) =>
 builder.addSubcommand((sub) =>
   sub
     .setName("roam")
-    .setDescription("🚶 Jelajahi area sekitar di kawasan saat ini")
+    .setDescription("Jelajahi area sekitar")
     .addStringOption((opt) =>
       opt
         .setName("aksi")
-        .setDescription("Apa yang ingin dilakukan?")
+        .setDescription("Aksi jelajah")
         .addChoices(
-          { name: "🗺️ Jelajah", value: "explore" },
-          { name: "💼 Bekerja", value: "work" },
-          { name: "🛒 Belanja", value: "shop" },
+          { name: "Jelajah", value: "explore" },
+          { name: "Bekerja", value: "work" },
+          { name: "Belanja", value: "shop" },
         )
-        .setRequired(true),
+        .setRequired(false),
     )
     .addStringOption((opt) =>
       opt
         .setName("lokasi")
-        .setDescription("Lokasi tujuan (untuk work/shop)")
-        .setRequired(false)
-        .setAutocomplete(true),
-    )
-    .addStringOption((opt) =>
-      opt
-        .setName("item")
-        .setDescription("Item yang ingin dibeli (untuk shop)")
+        .setDescription("Lokasi tujuan")
         .setRequired(false)
         .setAutocomplete(true),
     ),
@@ -90,18 +82,15 @@ builder.addSubcommand((sub) =>
 builder.addSubcommand((sub) =>
   sub
     .setName("chronicle")
-    .setDescription("📜 Generate narasi sinematik dari peristiwa server")
+    .setDescription("Narasi sinematik server")
     .addStringOption((opt) =>
       opt
         .setName("type")
         .setDescription("Tipe event")
         .addChoices(
-          { name: "⚔️ Boss Defeat", value: "boss_defeat" },
-          { name: "🎉 Festival", value: "festival" },
-          { name: "💰 Trade Milestone", value: "trade_milestone" },
-          { name: "🏰 Dungeon Clear", value: "dungeon_clear" },
-          { name: "⚔️ Clan War", value: "clan_war" },
-          { name: "📝 Generic", value: "generic" },
+          { name: "Boss Defeat", value: "boss_defeat" },
+          { name: "Festival", value: "festival" },
+          { name: "Milestone", value: "trade_milestone" },
         )
         .setRequired(false),
     )
@@ -110,18 +99,9 @@ builder.addSubcommand((sub) =>
         .setName("style")
         .setDescription("Gaya narasi")
         .addChoices(
-          { name: "🗡️ Epic", value: "epic" },
-          { name: "🌙 Mysterious", value: "mysterious" },
-          { name: "☀️ Cheerful", value: "cheerful" },
-          { name: "🎭 Dramatic", value: "dramatic" },
-          { name: "📜 Poetic", value: "poetic" },
+          { name: "Epic", value: "epic" },
+          { name: "Mysterious", value: "mysterious" },
         )
-        .setRequired(false),
-    )
-    .addStringOption((opt) =>
-      opt
-        .setName("location")
-        .setDescription("Lokasi peristiwa")
         .setRequired(false),
     ),
 );
@@ -130,24 +110,16 @@ builder.addSubcommand((sub) =>
 builder.addSubcommand((sub) =>
   sub
     .setName("raidplan")
-    .setDescription("⚔️ Analisis komposisi party dan strategi raid")
+    .setDescription("Analisis party raid")
     .addStringOption((opt) =>
       opt
         .setName("boss")
         .setDescription("Nama boss target")
         .setRequired(false),
-    )
-    .addIntegerOption((opt) =>
-      opt
-        .setName("level")
-        .setDescription("Level boss (default: 50)")
-        .setMinValue(1)
-        .setMaxValue(100)
-        .setRequired(false),
     ),
 );
 
-const { data } = optimizeCommandBuilder(builder, 0, 100);
+const { data } = optimizeCommandBuilder(builder, 0, 36);
 
 // Autocomplete handler untuk roam command
 async function handleRoamAutocomplete(interaction) {

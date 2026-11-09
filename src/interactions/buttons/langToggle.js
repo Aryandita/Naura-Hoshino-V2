@@ -17,39 +17,66 @@ module.exports = [
       let targetLang = "id";
       if (customId === "btn_lang_en") {
         targetLang = "en";
+      } else if (customId === "btn_lang_ja") {
+        targetLang = "ja";
+      } else if (customId === "btn_lang_es") {
+        targetLang = "es";
       } else if (customId === "btn_lang_id") {
         targetLang = "id";
       } else if (customId === "btn_lang_toggle") {
         const currentLang = await languageManager.getUserLanguage(userId, interaction.guildId);
-        targetLang = currentLang === "id" ? "en" : "id";
+        const order = ["id", "en", "ja", "es"];
+        const idx = order.indexOf(currentLang);
+        targetLang = order[(idx + 1) % order.length];
       }
 
       await languageManager.setUserLanguage(userId, targetLang);
 
-      const isId = targetLang === "id";
-      const title = isId ? "🌐 Bahasa Berhasil Diubah!" : "🌐 Language Successfully Updated!";
-      const description = isId
-        ? "Seluruh respons bot Naura Hoshino kini disajikan dalam **Bahasa Indonesia**."
-        : "All Naura Hoshino bot responses will now be served in **English**.";
+      const titles = {
+        id: "🌐 Bahasa Berhasil Diubah!",
+        en: "🌐 Language Successfully Updated!",
+        ja: "🌐 言語が正常に更新されました！",
+        es: "🌐 ¡Idioma Actualizado Correctamente!",
+      };
 
-      const nextLang = isId ? "en" : "id";
-      const nextLabel = isId ? "Switch to English 🇬🇧" : "Ganti ke Bahasa Indonesia 🇮🇩";
+      const descriptions = {
+        id: "Seluruh respons bot Naura Hoshino kini disajikan dalam **Bahasa Indonesia**.",
+        en: "All Naura Hoshino bot responses will now be served in **English**.",
+        ja: "ナウラ・ホシノのボット応答は**日本語**で表示されます。",
+        es: "Todas las respuestas de Naura Hoshino ahora se mostrarán en **Español**.",
+      };
+
+      const langButtons = [
+        { id: "id", label: "🇮🇩 ID" },
+        { id: "en", label: "🇬🇧 EN" },
+        { id: "ja", label: "🇯🇵 JA" },
+        { id: "es", label: "🇪🇸 ES" },
+      ];
 
       const toggleRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`btn_lang_${nextLang}`)
-          .setLabel(nextLabel)
-          .setStyle(ButtonStyle.Secondary),
+        langButtons.map((b) =>
+          new ButtonBuilder()
+            .setCustomId(`btn_lang_${b.id}`)
+            .setLabel(b.label)
+            .setStyle(targetLang === b.id ? ButtonStyle.Primary : ButtonStyle.Secondary)
+            .setDisabled(targetLang === b.id),
+        ),
       );
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
         authorName: "Naura Localization Engine",
-        title,
-        description,
+        title: titles[targetLang] || titles.id,
+        description: descriptions[targetLang] || descriptions.id,
         buttonsRow: toggleRow,
         footerText: ui.getFooter("core"),
       });
+
+      if (typeof interaction.update === "function" && !interaction.replied) {
+        return interaction.update({
+          ...payload,
+        });
+      }
 
       return interaction.reply({
         ...payload,

@@ -1,8 +1,14 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="War Room, operasi klan dan strategi pengepungan wilayah." />
+    <meta property="og:title" content="Naura OS" />
+    <meta property="og:description" content="War Room, operasi klan dan strategi pengepungan wilayah." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0b0c10" />
+    <link rel="manifest" href="/manifest.json" />
     <title>Survival RPG War Room | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,7 +20,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
     <style>
       .war-layout {
         display: grid;
@@ -30,7 +36,7 @@
 
       /* 8x8 Grid Container */
       .grid-8x8-wrapper {
-        background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(7, 12, 23, 0.95) 100%);
+        background: var(--bg-surface);
         border: 1px solid var(--border-medium);
         border-radius: var(--r-xl);
         padding: 20px;
@@ -100,7 +106,7 @@
 
       /* World Boss Card */
       .boss-card {
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%), rgba(15, 23, 42, 0.85);
+        background: var(--bg-surface);
         border: 1px solid var(--border-cyan);
         border-radius: var(--r-xl);
         padding: 20px;
@@ -118,7 +124,7 @@
       }
       .boss-bar-fill {
         height: 100%;
-        background: linear-gradient(90deg, #ef4444 0%, #f472b6 100%);
+        background: var(--bg-surface);
         border-radius: var(--r-full);
         transition: width 0.5s ease;
       }
@@ -715,5 +721,6 @@
         <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
       </div>
     </nav>
+      <script src="/src/js/naura-os.js"></script>
   </body>
 </html>

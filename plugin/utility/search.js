@@ -315,7 +315,7 @@ module.exports = {
         if (detail.buff) {
           fields.push({
             name: "Efek Konsumsi (Buff)",
-            value: `✨ **${detail.buff.description}** (Durasi: ${detail.buff.durationHours} Jam)`,
+            value: `${e("ai_sparkle", "✨")} **${detail.buff.description}** (Durasi: ${detail.buff.durationHours} Jam)`,
             inline: true,
           });
         }

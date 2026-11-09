@@ -208,7 +208,8 @@ describe("Milestone M2 Empirical Adversarial Stress Suite: YouTube Cookies & Dow
       const args = buildYtdlpArgs(url, tempOutput, null);
 
       assert.equal(args.includes("--cookies"), false, "--cookies flag must NOT be present");
-      assert.equal(args[0], url, "URL must be the first element");
+      assert.ok(args.includes(url), "URL must remain a discrete argv element");
+      assert.equal(args[args.indexOf("--") + 1], url, "URL must follow the -- end-of-options marker (option-injection safe)");
       assert.equal(args[args.indexOf("-o") + 1], tempOutput, "Output path must follow -o flag");
     });
 
@@ -256,7 +257,8 @@ describe("Milestone M2 Empirical Adversarial Stress Suite: YouTube Cookies & Dow
       const tempOutput = "C:\\temp\\output.mp4";
       const args = buildYtdlpArgs(maliciousUrl, tempOutput, null);
 
-      assert.equal(args[0], maliciousUrl, "Raw malicious URL must remain untouched as argv[0]");
+      assert.ok(args.includes(maliciousUrl), "Raw malicious URL must remain a single discrete element");
+      assert.equal(args[args.indexOf("--") + 1], maliciousUrl, "Malicious URL must follow the -- marker untouched, never shell-split");
       assert.ok(args.length >= 10, "Argument array must not split malicious URL into shell tokens");
     });
 
@@ -285,7 +287,7 @@ describe("Milestone M2 Empirical Adversarial Stress Suite: YouTube Cookies & Dow
         "--no-playlist",
         "--no-warnings",
         "--max-filesize",
-        "500M",
+        "100M",
         "--socket-timeout",
         "15",
       ];

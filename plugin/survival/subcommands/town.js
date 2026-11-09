@@ -85,7 +85,7 @@ module.exports = {
 
       if (region.id === "kota_pratama") {
         descLines.push(
-          `🏦 **Layanan Bank Pratama:** Kamu dapat menukarkan Sukamaju Koin (SC) ke Pratama Dollar (PD) di sini!`,
+          `${ui.getEmoji("eco_bank") || "🏦"} **Layanan Bank Pratama:** Kamu dapat menukarkan Sukamaju Koin (SC) ke Pratama Dollar (PD) di sini!`,
         );
       }
 
@@ -164,7 +164,7 @@ module.exports = {
             new ButtonBuilder()
               .setCustomId("town_exchange_sc")
               .setLabel("Tukar SC -> PD (Bank Pratama)")
-              .setEmoji("🏦")
+              .setEmoji(ui.getEmoji("eco_bank") || "🏦")
               .setStyle(ButtonStyle.Success),
           ),
         );
@@ -175,7 +175,7 @@ module.exports = {
       return buildContainerV2({
         accentColorHex: survivalUI.getColor(region.themeColor) || survivalUI.getColor("emerald"),
         authorName: `Naura Wilds - ${region.name}`,
-        title: `🗺️ ${region.title}`,
+        title: `${ui.getEmoji("edu_map") || "🗺️"} ${region.title}`,
         topBannerAttachmentName,
         files,
         description: descLines.join("\n"),
@@ -200,7 +200,7 @@ module.exports = {
         const detail = await poiEngine.getPoiDetail(selectedPoiId, inGameHour, user.id);
 
         if (!detail) {
-          const payload = buildPayload("⚠️ Tempat yang kamu tuju sedang tidak dapat diakses.");
+          const payload = buildPayload(`${ui.getEmoji("mod_warn") || "⚠️"} Tempat yang kamu tuju sedang tidak dapat diakses.`);
           return i.editReply(payload).catch(() => {});
         }
 
@@ -248,7 +248,7 @@ module.exports = {
         const amountToExchange = Math.max(1000, minNeeded);
         const currentSc = currency.balanceOf(currency.FRAGMENT, { survival, profile });
         if (currentSc < amountToExchange) {
-          const errPayload = buildPayload(`⚠️ **Bank Pratama:** Saldo Sukamaju Koin (SC) milikmu kurang (${currentSc.toLocaleString("id-ID")} / butuh ${amountToExchange.toLocaleString("id-ID")} SC).`);
+          const errPayload = buildPayload(`${ui.getEmoji("mod_warn") || "⚠️"} **Bank Pratama:** Saldo Sukamaju Koin (SC) milikmu kurang (${currentSc.toLocaleString("id-ID")} / butuh ${amountToExchange.toLocaleString("id-ID")} SC).`);
           return i.editReply(errPayload).catch(() => {});
         }
 
@@ -260,11 +260,11 @@ module.exports = {
           } else if (result.reason === "below_minimum") {
             errReason = `Jumlah penukaran di bawah batas minimum (minimal ${result.minimum.toLocaleString("id-ID")} SC untuk 1 PD).`;
           }
-          const errPayload = buildPayload(`⚠️ **Bank Pratama:** ${errReason}`);
+          const errPayload = buildPayload(`${ui.getEmoji("mod_warn") || "⚠️"} **Bank Pratama:** ${errReason}`);
           return i.editReply(errPayload).catch(() => {});
         }
 
-        const successSnippet = `🏦 **Transaksi Sukses:** Kamu menukarkan **${result.spent.toLocaleString("id-ID")} SC** menjadi **${result.received.toLocaleString("id-ID")} Pratama Dollar (PD)** di Bank Sentral Pratama!\n*(Biaya Spread: ${result.feeNsf.toLocaleString("id-ID")} SC dialirkan ke Server Treasury & Kas Kota)*`;
+        const successSnippet = `${ui.getEmoji("eco_bank") || "🏦"} **Transaksi Sukses:** Kamu menukarkan **${result.spent.toLocaleString("id-ID")} SC** menjadi **${result.received.toLocaleString("id-ID")} Pratama Dollar (PD)** di Bank Sentral Pratama!\n*(Biaya Spread: ${result.feeNsf.toLocaleString("id-ID")} SC dialirkan ke Server Treasury & Kas Kota)*`;
         currentPayload = buildPayload(successSnippet);
         await i.editReply(currentPayload).catch(() => {});
       }

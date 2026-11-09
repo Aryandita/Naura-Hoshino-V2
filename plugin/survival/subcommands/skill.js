@@ -76,7 +76,7 @@ function buildSkillView(survival, user) {
     `Setiap naik level, kamu mendapatkan **3 Stat Points** untuk diinvestasikan di kehidupan sehari-hari.`,
     "",
     `⭐ **Stat Points Tersedia:** \`${unspent} Poin\``,
-    `🛡️ **Batas Maksimal Stat (Cap):** \`${statCap}\` *(naik tiap level)*`,
+    `${e("mod_shield", "🛡️")} **Batas Maksimal Stat (Cap):** \`${statCap}\` *(naik tiap level)*`,
     "",
     "**Statistik Kehidupan (Life Stats):**",
     `> ${e("strength", "\uD83D\uDCAA")} **Strength (STR):** \`${str}/${statCap}\` \u2022 *Bonus Kecepatan Crafting +${bonuses.craftingSpeedBonusPercent}%*`,

@@ -79,7 +79,7 @@ module.exports = {
           log.status === "SUCCESS"
             ? "✅"
             : log.status === "COOLDOWN"
-              ? "⏳"
+              ? e("naura_uptime", "⏳")
               : "❌";
 
         const cmd = log.commandName || "command";
@@ -107,7 +107,7 @@ module.exports = {
           "",
           logLines.join("\n"),
           "",
-          "-# 🔒 *Semua transaksi ekonomi dan perintah tercatat secara permanen untuk integritas data.*",
+          `-# ${e("mod_lock", "🔒")} *Semua transaksi ekonomi dan perintah tercatat secara permanen untuk integritas data.*`,
         ].join("\n"),
         footerText: ui.getFooter("survival"),
       });

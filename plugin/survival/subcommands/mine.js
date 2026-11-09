@@ -277,7 +277,7 @@ module.exports = {
 
       const descLines = [
         "Tebasan beliungmu membelah batu dengan telak!",
-        `-# ⛏️ *${pulse.flavorText}*`,
+        `-# ${e("mc_pickaxe", "⛏️")} *${pulse.flavorText}*`,
       ];
 
       if (season) {

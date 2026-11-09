@@ -527,74 +527,20 @@ module.exports = (containerOrClient) => {
   webApp.use("/v2", (req, res) => res.redirect("/"));
 
   // ==================================================================
-  // Mobile Dashboard, dashboard/mobile/ (sub-folder khusus mobile)
-  //
-  // Production: sajikan dari mobile/dist/ (hasil `npm run mobile:build`)
-  // Development: sajikan langsung dari mobile/src/pages/ (tanpa build)
-  //
-  // Auth session berbagi otomatis karena menggunakan Express instance yang sama.
-  // Socket.IO juga berbagi namespace yang sama.
+  // Unified Hybrid Dashboard: Redirect legacy /mobile ke rute hybrid utama
+  // Seluruh halaman sekarang menggunakan Naura OS v2.5 yang 100% responsif
+  // di Desktop, Laptop, Tablet, dan Mobile.
   // ==================================================================
-  const mobileDist = path.join(__dirname, "mobile", "dist");
-  const mobileSrc  = path.join(__dirname, "mobile", "src", "pages");
+  webApp.get("/mobile", (req, res) => res.redirect(301, "/"));
+  webApp.get("/mobile/", (req, res) => res.redirect(301, "/"));
+  webApp.get("/mobile/config", (req, res) => res.redirect(301, "/settings"));
+  webApp.get("/mobile/:page", (req, res) => res.redirect(301, `/${req.params.page}`));
 
-  if (fs.existsSync(mobileDist)) {
-    // Production, sajikan dari hasil build Vite
-    webApp.use("/mobile", express.static(mobileDist, { index: false }));
-
-    const mobileView = (page) => (req, res) => {
-      const distFile = path.join(mobileDist, "src", "pages", `${page}.html`);
-      const fallback = path.join(mobileDist, "src", "pages", "index.html");
-      res.sendFile(fs.existsSync(distFile) ? distFile : fallback);
-    };
-
-    webApp.get("/mobile",             mobileView("index"));
-    webApp.get("/mobile/",            mobileView("index"));
-    webApp.get("/mobile/survival",    mobileView("survival"));
-    webApp.get("/mobile/inventory",   mobileView("inventory"));
-    webApp.get("/mobile/clan",        mobileView("clan"));
-    webApp.get("/mobile/marketplace", mobileView("marketplace"));
-    webApp.get("/mobile/arcade",      mobileView("arcade"));
-    webApp.get("/mobile/music",       mobileView("music"));
-    webApp.get("/mobile/economy",     mobileView("economy"));
-    webApp.get("/mobile/leaderboard", mobileView("leaderboard"));
-    webApp.get("/mobile/config",      requireLogin, mobileView("config"));
-    webApp.get("/mobile/profile",     requireLogin, mobileView("profile"));
-  } else if (fs.existsSync(mobileSrc)) {
-    // Development fallback, sajikan langsung dari src (tanpa build)
-    webApp.use("/mobile", express.static(mobileSrc, { index: false }));
-    webApp.use("/mobile/css", express.static(path.join(__dirname, "mobile", "src", "css")));
-    webApp.use("/mobile/js",  express.static(path.join(__dirname, "mobile", "src", "js")));
-
-    webApp.get("/mobile",             (req, res) => res.sendFile(path.join(mobileSrc, "index.html")));
-    webApp.get("/mobile/",            (req, res) => res.sendFile(path.join(mobileSrc, "index.html")));
-    webApp.get("/mobile/survival",    (req, res) => res.sendFile(path.join(mobileSrc, "survival.html")));
-    webApp.get("/mobile/inventory",   (req, res) => res.sendFile(path.join(mobileSrc, "inventory.html")));
-    webApp.get("/mobile/clan",        (req, res) => res.sendFile(path.join(mobileSrc, "clan.html")));
-    webApp.get("/mobile/marketplace", (req, res) => res.sendFile(path.join(mobileSrc, "marketplace.html")));
-    webApp.get("/mobile/arcade",      (req, res) => res.sendFile(path.join(mobileSrc, "arcade.html")));
-    webApp.get("/mobile/music",       (req, res) => res.sendFile(path.join(mobileSrc, "music.html")));
-    webApp.get("/mobile/economy",     (req, res) => res.sendFile(path.join(mobileSrc, "economy.html")));
-    webApp.get("/mobile/leaderboard", (req, res) => res.sendFile(path.join(mobileSrc, "leaderboard.html")));
-    webApp.get("/mobile/config",      requireLogin, (req, res) => res.sendFile(path.join(mobileSrc, "config.html")));
-    webApp.get("/mobile/profile",     requireLogin, (req, res) => res.sendFile(path.join(mobileSrc, "profile.html")));
-  } else {
-    logger.warn("[DASHBOARD] Mobile dashboard (dashboard/mobile/) belum di-build. Jalankan: npm run mobile:build");
-  }
-
-  // --- Auto-redirect HP ke /mobile ---
-  const MOBILE_UA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+  // --- Mobile: single responsive entry + opt-in /mobile ---
+  // UA-sniffing 302 dihapus. Semua UA mendapat halaman responsif yang sama.
+  // /mobile tetap tersedia sebagai app khusus; tautan keluar ditandai Vary.
   webApp.use((req, res, next) => {
-    const ua = req.headers['user-agent'] || '';
-    const isMobilePath = req.path.startsWith('/mobile');
-    const isApiPath = req.path.startsWith('/api') || req.path.startsWith('/auth') 
-                   || req.path.startsWith('/socket.io') || req.path === '/health'
-                   || req.path.startsWith('/activity');
-    
-    // Redirect jika device mobile dan belum di path /mobile atau /api
-    if (MOBILE_UA.test(ua) && !isMobilePath && !isApiPath) {
-      return res.redirect(302, '/mobile' + (req.path === '/' ? '' : req.path));
-    }
+    if (req.path.startsWith('/mobile')) res.setHeader('Vary', 'User-Agent');
     next();
   });
 
@@ -675,6 +621,7 @@ module.exports = (containerOrClient) => {
   webApp.get("/soundboard", view("soundboard.html"));
   webApp.get("/jam", view("jam.html"));
   webApp.get("/lounge", view("lounge.html"));
+  webApp.get("/chat", view("chat.html"));
   webApp.get("/war-room", view("war-room.html"));
 webApp.get("/treasury", view("treasury.html"));
   webApp.get("/clan", view("clan.html"));

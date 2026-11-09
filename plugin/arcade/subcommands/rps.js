@@ -1,131 +1,82 @@
-"use strict";
-
+﻿"use strict";
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } = require("discord.js");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const { genGameId, cid, parseCid, setState, States, rewardOnce, tryReset } = require("../../../src/arcade/arcadeSession");
+const ArcadeEngine = require("../../../src/arcade/arcadeEngine");
 
 module.exports = {
   name: "rps",
   async execute(interaction, context) {
     const { user, profile, survival, coinEmoji, nsfEmoji, sendError } = context;
-    const taruhan = (interaction.options?.getInteger?.("taruhan")) || 0;
-    const opponent = interaction.options?.getUser?.("lawan") || null;
+    const taruhan = context.taruhan || (interaction.options?.getInteger?.("taruhan")) || 0;
+    const opponent = context.lawan || interaction.options?.getUser?.("lawan") || null;
+    const gameId = genGameId("rps", user.id);
+    setState(gameId, States.WAITING_INPUT);
     const curSurv = await cacheManager.getUserSurvival(user.id);
-    const curNsf = curSurv
-      ? Number(curSurv.starFragments || 0)
-      : Number(survival.starFragments || 0);
-
-    if (taruhan > 0 && curNsf < taruhan) {
-      return sendError(
-        `Saldo Star Fragments (NSF) tidak cukup untuk taruhan **${taruhan.toLocaleString()}**! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`,
-      );
+    const curNsf = curSurv ? Number(curSurv.starFragments || 0) : Number(survival.starFragments || 0);
+    if (taruhan > 0 && curNsf < taruhan) return sendError("Saldo Star Fragments (NSF) tidak cukup untuk taruhan **" + taruhan.toLocaleString() + "**! (Saldo: " + curNsf.toLocaleString() + " " + nsfEmoji + ")");
+    if (taruhan > 0) {
+      const debitRes = await cacheManager.debitUserSurvival(user.id, "starFragments", taruhan);
+      if (!debitRes || !debitRes.ok) return sendError("Gagal memotong taruhan di muka.");
     }
-
     if (opponent && !opponent.bot && opponent.id !== user.id) {
-      return interaction.editReply({
-        content:
-          "Fitur PvP RPS melawan pemain nyata sedang dalam pengembangan! Untuk sementara, silakan bermain melawan AI.",
-        flags: MessageFlags.Ephemeral,
-      });
+      if (taruhan > 0) await cacheManager.incrementUserSurvival(user.id, "starFragments", taruhan);
+      return interaction.editReply({ content: "Fitur PvP RPS melawan pemain nyata sedang dalam pengembangan! Untuk sementara, silakan bermain melawan AI.", flags: MessageFlags.Ephemeral });
     }
-
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("rps_batu")
-        .setLabel("Batu 🪨")
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId("rps_gunting")
-        .setLabel("Gunting ✂️")
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId("rps_kertas")
-        .setLabel("Kertas 📄")
-        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(cid(gameId, "rps_batu")).setLabel("Batu").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(cid(gameId, "rps_gunting")).setLabel("Gunting").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(cid(gameId, "rps_kertas")).setLabel("Kertas").setStyle(ButtonStyle.Primary),
     );
-
-    const payload = buildContainerV2({
-      accentColorHex: ui.colors.primary || "#00FFFF",
-      authorName: "Batu Gunting Kertas",
-      iconURL: user.displayAvatarURL(),
-      description: `Kamu mempertaruhkan **${taruhan.toLocaleString()}** ${coinEmoji}.\nSilakan pilih gerakanmu dalam **15 detik**!`,
-      buttonsRow: row,
-      footerText: ui.getFooter("core"),
-    });
-
+    const payload = buildContainerV2({ accentColorHex: ui.colors.primary || "#00FFFF", authorName: "Batu Gunting Kertas", iconURL: user.displayAvatarURL(), description: "Kamu mempertaruhkan **" + taruhan.toLocaleString() + "** " + coinEmoji + ".\nSilakan pilih gerakanmu dalam **15 detik**!", buttonsRow: row, footerText: ui.getFooter("core") });
     await interaction.editReply(payload);
     const message = await interaction.fetchReply();
-
-    const collector = message.createMessageComponentCollector({
-      componentType: ComponentType.Button,
-      time: 15000,
-    });
-
+    const collector = message.createMessageComponentCollector({ componentType: ComponentType.Button, time: 15000 });
+    let finished = false;
     collector.on("collect", async (i) => {
+      if (finished) return;
       if (i.user.id !== user.id) return ui.sendError(i, "err_sys_6", true);
-
-      const userChoice = i.customId.split("_")[1];
+      const parsed = parseCid(i.customId);
+      if (!parsed || parsed.gameId !== gameId) return ui.sendError(i, "err_sys_6", true);
+      finished = true;
+      setState(gameId, States.RESOLVING);
+      const userChoice = parsed.action.split("_")[1];
       const choices = ["batu", "gunting", "kertas"];
       const botChoice = choices[Math.floor(Math.random() * choices.length)];
-
       let result = "";
       let color = "#FFD700";
-
-      const ArcadeEngine = require("../../../src/survival/engines/arcadeEngine");
       if (userChoice === botChoice) {
-        await ArcadeEngine.postGame(user.id, "rps", "draw");
-        result = `SERI! Kalian berdua memilih **${userChoice}**.\n🏅 **Hadiah Arcade:** +5 MP (Seri)`;
+        await rewardOnce(gameId, () => ArcadeEngine.postGame(user.id, "rps", "draw"));
+        if (taruhan > 0) await cacheManager.incrementUserSurvival(user.id, "starFragments", taruhan);
+        result = "SERI! Kalian berdua memilih **" + userChoice + "**.\nHadiah Arcade: +5 MP (Seri)";
         color = "#FFFF00";
-      } else if (
-        (userChoice === "batu" && botChoice === "gunting") ||
-        (userChoice === "gunting" && botChoice === "kertas") ||
-        (userChoice === "kertas" && botChoice === "batu")
-      ) {
-        await ArcadeEngine.postGame(user.id, "rps", "win");
-        profile.minigame_rpsWin += 1;
-        await profile.save({ fields: ["minigame_rpsWin"] });
+      } else if ((userChoice === "batu" && botChoice === "gunting") || (userChoice === "gunting" && botChoice === "kertas") || (userChoice === "kertas" && botChoice === "batu")) {
+        await rewardOnce(gameId, () => ArcadeEngine.postGame(user.id, "rps", "win"));
+        try { profile.minigame_rpsWin = (profile.minigame_rpsWin || 0) + 1; await profile.save({ fields: ["minigame_rpsWin"] }); } catch (e) {}
         if (taruhan > 0) {
           const winNsf = profile.isPremium ? taruhan * 2 : taruhan;
-          await cacheManager.incrementUserSurvival(
-            user.id,
-            "starFragments",
-            winNsf,
-          );
+          await cacheManager.incrementUserSurvival(user.id, "starFragments", winNsf);
         }
-        result = `MENANG! Bot memilih **${botChoice}**.\n🏅 **Hadiah Arcade:** +25 MP${taruhan > 0 ? ` | Menang taruhan **+${(taruhan * 2).toLocaleString()}** ${coinEmoji}` : ""}`;
+        result = "MENANG! Bot memilih **" + botChoice + "**.\nHadiah Arcade: +25 MP" + (taruhan > 0 ? " | Menang taruhan **+" + (taruhan * 2).toLocaleString() + "** " + coinEmoji : "");
         color = "#00FF00";
       } else {
-        await ArcadeEngine.postGame(user.id, "rps", "loss");
-        if (taruhan > 0) {
-          await cacheManager.debitUserSurvival(
-            user.id,
-            "starFragments",
-            taruhan,
-          );
-        }
-        result = `KALAH! Bot memilih **${botChoice}**.\n${taruhan > 0 ? `Kehilangan taruhan **-${taruhan.toLocaleString()}** ${coinEmoji}. ` : ""}Coba lagi untuk menang MP!`;
+        await rewardOnce(gameId, () => ArcadeEngine.postGame(user.id, "rps", "loss"));
+        result = "KALAH! Bot memilih **" + botChoice + "**.\n" + (taruhan > 0 ? "Kehilangan taruhan **-" + taruhan.toLocaleString() + "** " + coinEmoji + ". " : "") + "Coba lagi untuk menang MP!";
         color = "#FF0000";
       }
-
-      const resPayload = buildContainerV2({
-        accentColorHex: color,
-        title: `Pilihanmu: ${userChoice.toUpperCase()} | Pilihan Bot: ${botChoice.toUpperCase()}`,
-        description: result,
-        footerText: ui.getFooter("core"),
-      });
-
+      setState(gameId, States.FINISHED);
+      const resPayload = buildContainerV2({ accentColorHex: color, title: "Pilihanmu: " + userChoice.toUpperCase() + " | Pilihan Bot: " + botChoice.toUpperCase(), description: result, footerText: ui.getFooter("core") });
       await i.update(resPayload);
-      collector.stop();
+      collector.stop("answered");
     });
-
-    collector.on("end", (collected) => {
-      if (collected.size === 0) {
-        interaction.editReply({
-          content: `⏰ Waktu memilih habis! Taruhan dibatalkan.`,
-          embeds: [],
-          components: [],
-        });
+    collector.on("end", async (collected, reason) => {
+      if (reason === "time" && !finished) {
+        setState(gameId, States.EXPIRED);
+        if (taruhan > 0) await cacheManager.incrementUserSurvival(user.id, "starFragments", taruhan);
+        await rewardOnce(gameId, () => ArcadeEngine.postGame(user.id, "rps", "loss"));
+        try { await interaction.editReply({ content: "Waktu memilih habis! Taruhan dikembalikan.", embeds: [], components: [] }); } catch (e) {}
       }
     });
   },

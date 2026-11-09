@@ -163,9 +163,9 @@ async function fetchWikiSummary(title, year) {
           let director = "IMDb / Wikipedia";
           if (
             data.description &&
-            /by\s+([A-Z][a-zA-Z\s]+)/i.test(data.description)
+            /by\s+([A-Z][a-zA-Z\s]{2,60})/.test(data.description)
           ) {
-            const match = data.description.match(/by\s+([A-Z][a-zA-Z\s]+)/i);
+            const match = data.description.match(/by\s+([A-Z][a-zA-Z\s]{2,60})/);
             if (match) director = match[1].trim();
           }
           return {
@@ -302,16 +302,11 @@ async function fetchFromIMDb(query, year) {
  * Fetch film dari OMDB API sebagai fallback opsional jika OMDB_API_KEY disetel
  */
 async function fetchFromOMDB(query, year) {
-  const apiKey =
-    env.OMDB_API_KEY ||
-    (typeof process !== "undefined" && process.env?.OMDB_API_KEY);
+  const apiKey = env.OMDB_API_KEY;
   if (!apiKey || apiKey === "YOUR_OMDB_API_KEY_HERE") return null;
 
   return omdbBreaker.execute(async () => {
-    let searchUrl = `https://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(query)}`;
-    if (year) searchUrl += `&y=${year}`;
-
-    const searchRes = await axios.get(searchUrl, { timeout: 5000 });
+    const searchParams={s:query}; if(year)searchParams.y=year; const searchRes=await axios.get("https://www.omdbapi.com/",{params:searchParams,headers:{apikey:apiKey},timeout:5000});
     if (
       !searchRes.data ||
       searchRes.data.Response === "False" ||
@@ -335,10 +330,7 @@ async function fetchFromOMDB(query, year) {
     const items = scoredItems.slice(0, 5).map((s) => s.item);
     const detailPromises = items.map(async (item) => {
       try {
-        const detailRes = await axios.get(
-          `https://www.omdbapi.com/?apikey=${apiKey}&i=${item.imdbID}&plot=full`,
-          { timeout: 5000 },
-        );
+        const detailRes = await axios.get("https://www.omdbapi.com/",{params:{i:item.imdbID,plot:"full"},headers:{apikey:apiKey},timeout:5000});
         const m = detailRes.data;
         const poster = m.Poster && m.Poster !== "N/A" ? m.Poster : null;
         const releaseYear = m.Year || item.Year || "N/A";
@@ -433,8 +425,8 @@ async function fetchFromTVMaze(query) {
 
     if (!res.data || res.data.length === 0) return null;
 
-    return res.data.slice(0, 5).map((entry) => {
-      const show = entry.show;
+    const entries = res.data.slice(0, 5); return Promise.all(entries.map(async (entry) => {
+      const show = entry.show; let _cast=[]; try{ const cr = await axios.get("https://api.tvmaze.com/shows/"+show.id+"/cast",{timeout:4000}); if(Array.isArray(cr.data)&&cr.data.length){ _cast = cr.data.slice(0,5).map(c=>c.person&&c.person.name).filter(Boolean); } }catch{} const _castNames = _cast.length? _cast.join(", ") : "N/A";
       const cleanSummary = (show.summary || "Tidak ada sinopsis.").replace(
         /<[^>]*>?/gm,
         "",
@@ -458,8 +450,8 @@ async function fetchFromTVMaze(query) {
             ? show.genres.join(", ")
             : "N/A",
         director: show.network?.name || show.webChannel?.name || "TV Network",
-        actors: show.type || "Television Show",
-        actorsList: [show.type || "Television Show"],
+        actors: _castNames,
+        actorsList: _cast,
         rating: ratingScore,
         rawRating: show.rating?.average ? String(show.rating.average) : null,
         runtime: show.runtime
@@ -474,14 +466,33 @@ async function fetchFromTVMaze(query) {
         type: "tvSeries",
         sourceName: "TVMaze Public Registry",
       };
-    });
+    }));
   });
 }
 
 /**
- * Pencarian film waterfall dengan IMDb Suggestions sebagai mesin utama,
+ * Pencarian film waterfall dengan TMDB/OMDB sebagai mesin utama, IMDb fallback. sebagai mesin utama,
  * diikuti fallback bertingkat (OMDb -> Wikipedia -> TVMaze).
  */
+async function fetchFromTMDB(query, year) {
+  const apiKey = env.TMDB_API_KEY;
+  if (!apiKey) return null;
+  return omdbBreaker.execute(async () => {
+    const base = env.TMDB_BASE_URL || "https://api.themoviedb.org/3";
+    const res = await axios.get(base + "/search/movie", { params: { query, api_key: apiKey }, timeout: 5000 });
+    const list = res.data && res.data.results ? res.data.results : [];
+    if (!list.length) return null;
+    return Promise.all(list.slice(0, 5).map(async (m) => {
+      try {
+        const det = await axios.get(base + "/movie/" + m.id, { params: { api_key: apiKey }, timeout: 5000 });
+        const d = det.data || m;
+        const poster = d.poster_path ? "https://image.tmdb.org/t/p/w500" + d.poster_path : null;
+        return { title: d.title + " (" + (d.release_date ? String(d.release_date).slice(0,4) : "N/A") + ")", rawTitle: d.title, year: d.release_date ? String(d.release_date).slice(0,4) : "N/A", synopsis: d.overview || "No synopsis.", overview: d.overview || "No synopsis.", genres: (d.genres||[]).map(g=>g.name).join(", ") || "N/A", director: "N/A", actors: "N/A", actorsList: [], rating: d.vote_average ? "**"+d.vote_average+"** / 10" : "N/A", rawRating: d.vote_average ? String(d.vote_average) : null, runtime: d.runtime ? d.runtime+" min" : "N/A", awards: "N/A", url: "https://www.themoviedb.org/movie/"+d.id, posterURL: poster, posterUrl: poster, type: "movie", sourceName: "TMDB Official" };
+      } catch { return null; }
+    })).then(r=>r.filter(Boolean));
+  });
+}
+
 async function searchMovieWaterfall(query, year) {
   const cacheKey = `${query.toLowerCase().trim()}:${year || "any"}`;
 
@@ -492,8 +503,9 @@ async function searchMovieWaterfall(query, year) {
   }
 
   const providers = [
-    { fn: () => fetchFromIMDb(query, year), name: "IMDb Suggestions" },
-    { fn: () => fetchFromOMDB(query, year), name: "OMDB Fallback" },
+    { fn: () => fetchFromTMDB(query, year), name: "TMDB Official" },
+    { fn: () => fetchFromOMDB(query, year), name: "OMDB Official" },
+    { fn: () => fetchFromIMDb(query, year), name: "IMDb Suggestion (unofficial)" },
     { fn: () => fetchFromWikipedia(query), name: "Wikipedia Fallback" },
     { fn: () => fetchFromTVMaze(query), name: "TVMaze Fallback" },
   ];

@@ -1,427 +1,545 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="naura">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Creator Portfolio | Aryandita · Naura OS</title>
+    <title>Creator Portfolio | Naura OS</title>
+    <meta name="description" content="Portfolio kreator: karya seni, musik, writing, coding, dan showcase interaktif." />
+    <meta property="og:title" content="Naura OS" />
+    <meta property="og:description" content="Portfolio kreator: karya seni, musik, writing, coding, dan showcase interaktif." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0b0c10" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
-    <style>
-      .portfolio-hero {
-        background: radial-gradient(circle at 85% 15%, rgba(244, 114, 182, 0.08), transparent 60%),
-                    linear-gradient(180deg, rgba(16, 22, 40, 0.85) 0%, rgba(8, 12, 22, 0.95) 100%);
-        border: 1px solid var(--border-medium);
-        border-radius: var(--r-2xl);
-        padding: 40px;
-        position: relative;
-        overflow: hidden;
-        margin-bottom: 24px;
-        backdrop-filter: blur(16px);
-        box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-      }
-
-      .hero-flex {
-        display: flex;
-        align-items: center;
-        gap: 32px;
-        flex-wrap: wrap;
-      }
-      .creator-avatar-wrap {
-        position: relative;
-      }
-      .creator-avatar-img {
-        width: 110px;
-        height: 110px;
-        border-radius: 28px;
-        border: 2px solid var(--accent-pink, #f472b6);
-        box-shadow: 0 0 24px rgba(244, 114, 182, 0.25);
-        object-fit: cover;
-      }
-      .creator-badge-online {
-        position: absolute;
-        bottom: -4px;
-        right: -4px;
-        background: #10b981;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        border: 3px solid #080c16;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 10px;
-      }
-
-      .hero-details {
-        flex: 1;
-        min-width: 280px;
-      }
-      .creator-name {
-        font-family: var(--font-heading);
-        font-size: 32px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-      .creator-role {
-        font-size: 15px;
-        color: var(--accent-green);
-        font-weight: 600;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .creator-bio {
-        font-size: 13px;
-        color: var(--text-secondary);
-        line-height: 1.7;
-        max-width: 640px;
-        margin-bottom: 20px;
-      }
-
-      .creator-social-links {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-
-      /* Metric Badges Grid */
-      .metric-grid-4 {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
-      }
-      .metric-box {
-        container-type: inline-size;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--r-xl);
-        padding: 20px;
-        box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-        transition: transform 0.4s var(--ease-spring), border-color 0.2s ease, box-shadow 0.4s var(--ease-spring);
-      }
-      .metric-box:hover {
-        transform: translateY(-2px);
-        border-color: var(--border-medium);
-        box-shadow: 0 14px 36px -12px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      }
-      .metric-val {
-        font-family: var(--font-mono);
-        font-size: 28px;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        color: var(--text-primary);
-        margin-bottom: 4px;
-      }
-      .metric-lbl {
-        font-size: 12px;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-
-      /* Tech Stack Cards */
-      .tech-category-title {
-        font-family: var(--font-heading);
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .tech-tags-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 24px;
-      }
-      .tech-pill {
-        padding: 8px 14px;
-        border-radius: var(--r-md);
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--border-subtle);
-        color: var(--text-secondary);
-        font-size: 12px;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all var(--t-fast);
-      }
-      .tech-pill:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: var(--text-primary);
-        border-color: var(--border-primary);
-      }
-    </style>
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   </head>
   <body>
     <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
 
     <div class="app-shell">
-      <!-- Mobile Sidebar Overlay -->
-      <div class="sidebar-overlay" id="sidebarOverlay"></div>
-      <aside class="sidebar " id="sidebar">
-        <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
-          <div class="sidebar-brand-text">
-            <div class="sidebar-brand-name">Naura Hoshino</div>
-            <div class="sidebar-brand-sub">v2.5.0 · Online</div>
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+      <aside class="sidebar" id="sidebar" aria-label="Navigasi utama" role="navigation">
+        <div class="sidebar-header">
+          <div class="header-brand">
+            <div class="header-brand-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-10 10c0 6.5 10 14 10 14s10-7.5 10-14a10 10 0 0 0-10-10z"/><path d="M12 6v4"/><path d="M12 14h.01"/></svg>
+            </div>
+            <span class="header-brand-text">Naura Hoshino</span>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
-            <i class="fa-solid fa-xmark"></i>
+          <button type="button" class="btn btn-icon-only btn-ghost" id="sidebarCollapseBtn" aria-label="Toggle sidebar compact" title="Ciutkan Sidebar (Ctrl+B)">
+            <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
-        <nav class="sidebar-nav" role="navigation">
 
+        <div class="pillar-indicator" id="pillarIndicator">
+          <span class="pillar-indicator-label">Senja Ruang Ekskul</span>
+        </div>
+
+        <nav class="sidebar-nav" role="navigation" aria-label="Menu utama">
           <!-- Overview -->
-          <div class="nav-group">
-            <div class="nav-group-label">Overview</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Overview</span>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
-              <span>Dashboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-item-label">Dashboard</span>
+            </a>
+            <a href="/lounge" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--ui-primary);"></i></span>
+              <span class="nav-item-label">3D AI Lounge</span>
+              <span class="nav-item-badge">31 Anim</span>
             </a>
             <a href="/status" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
-              <span>Live Status</span>
-              <span class="nav-badge">Live</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
+              <span class="nav-item-label">Live Status</span>
+              <span class="nav-item-badge">Live</span>
             </a>
             <a href="/feed" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
-              <span>Activity Feed</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-rss"></i></span>
+              <span class="nav-item-label">Activity Feed</span>
             </a>
           </div>
 
           <!-- Community -->
-          <div class="nav-group">
-            <div class="nav-group-label">Community</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Community</span>
             <a href="/leaderboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
-              <span>Leaderboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label">Leaderboard</span>
             </a>
             <a href="/economy" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
-              <span>Economy</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-coins"></i></span>
+              <span class="nav-item-label">Economy</span>
+            </a>
+            <a href="/clan" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-users-rays"></i></span>
+              <span class="nav-item-label">Sindikat & Klan</span>
+            </a>
+            <a href="/marketplace" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-shop"></i></span>
+              <span class="nav-item-label">Pasar Galaksi</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
-              <span>Guild Topology</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-item-label">Guild Topology</span>
             </a>
           </div>
 
           <!-- Media & Audio -->
-          <div class="nav-group">
-            <div class="nav-group-label">Media & Audio</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Media & Audio</span>
             <a href="/music" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
-              <span>Music Hub</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+              <span class="nav-item-label">Music Hub</span>
             </a>
             <a href="/soundboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
-              <span>Soundboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
+              <span class="nav-item-label">Soundboard</span>
             </a>
             <a href="/jam" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
-              <span>Jam Session</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-guitar"></i></span>
+              <span class="nav-item-label">Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
-              <span>Karaoke</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-item-label">Karaoke</span>
             </a>
           </div>
 
           <!-- Naura Wilds RPG -->
-          <div class="nav-group">
-            <div class="nav-group-label">Naura Wilds RPG</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Naura Wilds RPG</span>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
-              <span>World Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-item-label">World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
-              <span>Survival Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-map"></i></span>
+              <span class="nav-item-label">Survival Map</span>
+            </a>
+            <a href="/inventory" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-backpack"></i></span>
+              <span class="nav-item-label">Tas & Ransel</span>
+            </a>
+            <a href="/arcade" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
+              <span class="nav-item-label">Retro Arcade</span>
             </a>
             <a href="/activity" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
-              <span>Activity Hub</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+              <span class="nav-item-label">Activity Hub</span>
             </a>
           </div>
 
           <!-- Configuration -->
-          <div class="nav-group">
-            <div class="nav-group-label">Configuration</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Configuration</span>
             <a href="/settings" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
-              <span>Settings</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+              <span class="nav-item-label">Settings</span>
             </a>
             <a href="/welcomer" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
-              <span>Welcomer Card</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-palette"></i></span>
+              <span class="nav-item-label">Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-              <span>Embed Builder</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-item-label">Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
-              <span>Automations</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
+              <span class="nav-item-label">Automations</span>
             </a>
             <a href="/tickets" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
-              <span>Tickets</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-ticket"></i></span>
+              <span class="nav-item-label">Tickets</span>
+            </a>
+            <a href="/admin" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <span class="nav-item-label">Admin God Mode</span>
             </a>
           </div>
 
           <!-- More -->
-          <div class="nav-group">
-            <div class="nav-group-label">More</div>
-            <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+          <div class="nav-section">
+            <span class="nav-section-title">More</span>
+            <a href="/profile" class="nav-item" style="color: var(--ui-primary);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--ui-primary);"><i class="fa-solid fa-id-card"></i></span>
+              <span class="nav-item-label" style="color: var(--ui-primary);">Profil Petualang</span>
+            </a>
+            <a href="/achievements" class="nav-item" style="color: var(--color-warning);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-warning);"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label" style="color: var(--color-warning);">Ruang Trofi</span>
+            </a>
+            <a href="/portfolio" class="nav-item active" aria-current="page" style="color: var(--color-success);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-success);"><i class="fa-solid fa-id-badge"></i></span>
+              <span class="nav-item-label" style="color: var(--color-success);">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
+
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
-            <div class="sidebar-user-info"><div class="sidebar-user-name">Aryandita</div><div class="sidebar-user-role">Creator & Architect</div></div>
+          <div class="sidebar-user" id="sidebarUser" role="button" tabindex="0" aria-label="Buka profil" onclick="window.location.href='/profile'">
+            <img src="/assets/core/avatar.png" alt="" class="sidebar-user-avatar" id="sidebarAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="sidebarUserName">Guest</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">Klik untuk login</div>
+            </div>
+            <a href="/login?redirect=/profile" title="Login Akun" class="sidebar-login-link" id="sidebarLoginBtn" aria-label="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+            </a>
           </div>
         </div>
       </aside>
 
-      <div class="main-content">
-        <header class="top-header">
+      <main class="main-content" role="main">
+        <header class="app-header" role="banner">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <button type="button" class="btn btn-icon-only btn-ghost" id="hamburgerBtn" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="sidebar">
+              <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
             <div>
-              <div class="page-title">Creator & Lead Architect</div>
-              <div class="breadcrumb"><span>More</span><span class="breadcrumb-sep">/</span><span>Developer Portfolio</span></div>
+              <h1 class="page-title" id="pageTitle">Creator Portfolio</h1>
+              <nav class="breadcrumb" aria-label="Breadcrumb">
+                <span>Naura OS</span>
+                <span class="breadcrumb-sep" aria-hidden="true">/</span>
+                <span>Senja Ruang Ekskul</span>
+              </nav>
             </div>
           </div>
+
           <div class="header-right">
-            <a href="https://github.com/Aryandita/Naura-Hoshino-V2" target="_blank" class="btn btn-ghost btn-sm">
-              <i class="fa-brands fa-github"></i> Repository
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="themeToggle" data-tooltip="Ganti Tema (T)" aria-label="Ganti Tema">
+              <i class="fa-solid fa-palette" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="densityToggle" data-tooltip="Ganti Densitas" aria-label="Ganti Densitas">
+              <i class="fa-solid fa-grip-lines" aria-hidden="true"></i>
+            </button>
+            <div class="wallet-badge" id="headerWallet" title="Naura Coins" role="status" aria-live="polite">
+              <i class="fa-solid fa-coins" aria-hidden="true"></i>
+              <span id="walletAmount">0</span>
+            </div>
+            <a href="/auth/discord" class="btn btn-primary btn-sm" id="headerAuthBtn" title="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+              <span id="headerAuthLabel">Login</span>
             </a>
+            <img src="/assets/core/avatar.png" alt="" class="header-avatar" id="headerAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
           </div>
         </header>
 
-        <main class="page-content" id="mainContent">
-          <!-- Hero Section -->
-          <div class="portfolio-hero animate-in">
-            <div class="hero-flex">
-              <div class="creator-avatar-wrap">
-                <img src="/owner_photo.jpeg" alt="Aryandita" class="creator-avatar-img" onerror="this.src='/assets/core/avatar.png'" />
-                <div class="creator-badge-online"><i class="fa-solid fa-check"></i></div>
+        <div class="page" id="mainContent">
+          <div class="page-header-bar animate-slide-up">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background: var(--color-success); border: 1px solid var(--color-success);">
+                  <i class="fa-solid fa-id-badge" style="color: var(--bg-deep);"></i>
+                </span>
+                Creator Portfolio
+              </h1>
+              <p class="page-sub">Showcase karya seni, musik, writing, coding, dan proyek interaktif</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--space-3); flex-shrink:0;">
+              <div style="display:flex; gap:var(--space-2);">
+                <button type="button" class="btn btn-ghost btn-sm" id="portfolioBtnRefresh" aria-label="Segarkan portfolio">
+                  <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" id="portfolioBtnAddWork">
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah Karya
+                </button>
               </div>
-              <div class="hero-details">
-                <div class="creator-name">
-                  Aryandita
-                  <span class="badge badge-success" style="font-size:11px;"><i class="fa-solid fa-code"></i> Lead Architect</span>
-                </div>
-                <div class="creator-role">
-                  <i class="fa-solid fa-laptop-code"></i> Creator of Naura Hoshino Ecosystem & Bot Engine
-                </div>
-                <p class="creator-bio">
-                  Software engineer dan bot architect dengan spesialisasi arsitektur terdistribusi Node.js, Polyglot Database (PostgreSQL Supabase + MongoDB + Redis), Lavalink Audio Streaming, dan Discord Components V2 UI Framework.
-                </p>
-                <div class="creator-social-links">
-                  <a href="https://github.com/Aryandita" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-brands fa-github"></i> GitHub Profile</a>
-                  <a href="https://github.com/Aryandita/Naura-Hoshino-V2" target="_blank" class="btn btn-primary btn-sm"><i class="fa-solid fa-star"></i> Naura Hoshino V2</a>
-                  <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-gauge-high"></i> Buka Dashboard</a>
-                </div>
+              <div style="width:36px; height:36px; border-radius:var(--radius-full); background:var(--color-success); border:1px solid var(--color-success); display:flex; align-items:center; justify-content:center;">
+                <span style="width:10px; height:10px; border-radius:var(--radius-full); background:var(--bg-deep); box-shadow:0 0 10px var(--color-success); animation:badge-pulse 2s var(--ease-in-out) infinite;"></span>
               </div>
             </div>
           </div>
 
-          <!-- Architecture Metrics Grid -->
-          <div class="metric-grid-4 animate-in delay-1">
-            <div class="metric-box">
-              <div class="metric-val" style="color:var(--primary);">v2.5.0</div>
-              <div class="metric-lbl">Generasi Era Ekosistem</div>
-            </div>
-            <div class="metric-box">
-              <div class="metric-val" style="color:#34d399;" id="metricTestsVal">523 Tests</div>
-              <div class="metric-lbl">Automated Tests Passed (100%)</div>
-            </div>
-            <div class="metric-box">
-              <div class="metric-val" style="color:#22d3ee;">6 Pilar</div>
-              <div class="metric-lbl">Arsitektur Terintegrasi</div>
-            </div>
-            <div class="metric-box">
-              <div class="metric-val" style="color:#f59e0b;" id="metricPluginsVal">55+ Plugin</div>
-              <div class="metric-lbl">Modular Slash Commands</div>
-            </div>
-          </div>
+          <!-- Portfolio Header / Profile Card -->
+          <section aria-labelledby="portfolioProfileTitle" class="animate-slide-up stagger-1" style="margin-top:var(--space-6);">
+            <article class="card" style="background:linear-gradient(135deg, var(--bg-layer) 0%, var(--bg-elevated) 100%); border-color:rgba(134,239,172,0.35); overflow:hidden;">
+              <div style="position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg, var(--color-success), var(--accent-cyan), var(--ui-primary));"></div>
+              <div style="padding:var(--space-6); display:grid; grid-template-columns:140px 1fr auto; gap:var(--space-6); align-items:start;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-3);">
+                  <div class="profile-avatar-wrapper" style="position:relative; width:120px; height:120px;">
+                    <img id="portfolioAvatar" src="/assets/core/avatar.png" alt="" style="width:100%; height:100%; border-radius:var(--radius-2xl); border:3px solid var(--color-success); object-fit:cover; box-shadow:0 0 32px rgba(134,239,172,0.3);" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22><circle cx=%2260%22 cy=%2260%22 r=%2260%22 fill=%22%2386efac%22/><text x=%2260%22 y=%2275%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2248%22>N</text></svg>'" />
+                  </div>
+                  <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); text-align:center;">
+                    <h2 id="portfolioName" style="font-family:var(--font-heading); font-size:var(--text-h2); font-weight:700; color:var(--ink);">Kreator</h2>
+                    <div id="portfolioTagline" style="font-size:var(--text-sm); color:var(--text-secondary); max-width:200px;">Maker · Builder · Dreamer</div>
+                    <div style="display:flex; gap:var(--space-1); margin-top:var(--space-2);" id="portfolioTags">
+                      <span class="badge badge-success" style="font-size:var(--text-xs);">Artist</span>
+                      <span class="badge badge-info" style="font-size:var(--text-xs);">Developer</span>
+                      <span class="badge badge-warning" style="font-size:var(--text-xs);">Musician</span>
+                    </div>
+                  </div>
+                </div>
 
-          <!-- Technologies Grid -->
-          <div class="animate-in delay-2">
-            <div class="tech-category-title"><i class="fa-solid fa-layer-group" style="color:var(--accent-cyan);"></i> Stack Teknologi & Arsitektur</div>
-            <div class="tech-tags-list">
-              <div class="tech-pill"><i class="fa-brands fa-node-js" style="color:#34d399;"></i> Node.js 24 Runtime</div>
-              <div class="tech-pill"><i class="fa-brands fa-discord" style="color:#5865f2;"></i> discord.js v14 & Components V2</div>
-              <div class="tech-pill"><i class="fa-solid fa-database" style="color:#3b82f6;"></i> Supabase PostgreSQL & Sequelize</div>
-              <div class="tech-pill"><i class="fa-solid fa-leaf" style="color:#10b981;"></i> MongoDB Mongoose v9</div>
-              <div class="tech-pill"><i class="fa-solid fa-bolt" style="color:#ef4444;"></i> Redis Mutex & Write-Behind Cache</div>
-              <div class="tech-pill"><i class="fa-solid fa-music" style="color:#f472b6;"></i> Poru v5 & Lavalink v4 Cluster</div>
-              <div class="tech-pill"><i class="fa-solid fa-cube" style="color:#a78bfa;"></i> Three.js & Pixiv VRM 3D Avatar</div>
-              <div class="tech-pill"><i class="fa-solid fa-brain" style="color:#22d3ee;"></i> Gemini 2.5 & Groq LLaMA 3.3 AI</div>
-              <div class="tech-pill"><i class="fa-solid fa-wand-magic" style="color:#f59e0b;"></i> Fish Audio AI Voice & TTS Streaming</div>
-            </div>
+                <div style="min-width:0;">
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:var(--space-4); margin-bottom:var(--space-6);">
+                    <div class="stat-card" style="padding:var(--space-4); text-align:center;">
+                      <div class="stat-label">Total Karya</div>
+                      <div class="stat-value text-success" id="portfolioTotalWorks">0</div>
+                    </div>
+                    <div class="stat-card" style="padding:var(--space-4); text-align:center;">
+                      <div class="stat-label">Total Views</div>
+                      <div class="stat-value" id="portfolioTotalViews">0</div>
+                    </div>
+                    <div class="stat-card" style="padding:var(--space-4); text-align:center;">
+                      <div class="stat-label">Total Likes</div>
+                      <div class="stat-value text-warning" id="portfolioTotalLikes">0</div>
+                    </div>
+                    <div class="stat-card" style="padding:var(--space-4); text-align:center;">
+                      <div class="stat-label">Followers</div>
+                      <div class="stat-value" id="portfolioFollowers">0</div>
+                    </div>
+                  </div>
 
-            <div class="tech-category-title"><i class="fa-solid fa-crown" style="color:var(--accent-amber);"></i> Inovasi Kunci Naura Hoshino V2</div>
-            <div class="card card-p" style="line-height:1.8;color:var(--text-secondary);font-size:13px;">
-              <ul style="padding-left:20px;display:flex;flex-direction:column;gap:10px;">
-                <li><b style="color:var(--text-primary);">Closed-Loop Economy V2:</b> Sistem ekonomi tertutup dengan pajak sirkulasi otomatis yang dialirkan ke <code style="color:var(--primary);font-family:var(--font-mono);">ServerTreasury</code>, mencegah inflasi tak terbatas.</li>
-                <li><b style="color:var(--text-primary);">Atomic Concurrency & Anti-Dupe:</b> Menggunakan mutasi atomik PostgreSQL dengan transaksi <code style="color:var(--accent-cyan);font-family:var(--font-mono);">SELECT FOR UPDATE</code> dan Redis distributed mutex.</li>
-                <li><b style="color:var(--text-primary);">Components V2 5-Layer Layout:</b> Format antarmuka Discord modern menggantikan embed kuno, mematuhi standar desain Discord terkini.</li>
-                <li><b style="color:var(--text-primary);">Document Parsing & Server RAG:</b> Konversi cerdas dokumen multi-format (PDF, DOCX, XLSX) menjadi semantic knowledge embeddings untuk asisten AI.</li>
-              </ul>
+                  <div style="margin-bottom:var(--space-4);">
+                    <h3 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-3); display:flex; align-items:center; gap:var(--space-2);">
+                      <i class="fa-solid fa-quote-left" style="color:var(--color-success);"></i> Bio Singkat
+                    </h3>
+                    <p id="portfolioBio" style="font-size:var(--text-body); color:var(--text-secondary); line-height:1.7; max-width:600px;">Belum ada bio. Tambahkan bio di pengaturan profil.</p>
+                  </div>
+
+                  <div style="display:flex; flex-wrap:wrap; gap:var(--space-2);" id="portfolioSkills">
+                    <span class="badge badge-success">Digital Art</span>
+                    <span class="badge badge-info">TypeScript</span>
+                    <span class="badge badge-warning">Music Production</span>
+                    <span class="badge badge-primary">Creative Writing</span>
+                    <span class="badge badge-success">3D Modeling</span>
+                    <span class="badge badge-info">Game Dev</span>
+                  </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:var(--space-2); min-width:140px;">
+                  <button type="button" class="btn btn-primary" id="portfolioBtnEditProfile">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i> Edit Profil
+                  </button>
+                  <button type="button" class="btn btn-ghost" id="portfolioBtnSettings">
+                    <i class="fa-solid fa-gears" aria-hidden="true"></i> Pengaturan
+                  </button>
+                  <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-ghost" id="portfolioBtnExternal">
+                    <i class="fa-solid fa-external-link-alt" aria-hidden="true"></i> Lihat Publik
+                  </a>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- Filter & Search -->
+          <section aria-labelledby="portfolioFilterTitle" class="animate-slide-up stagger-2" style="margin-top:var(--space-6);">
+            <div class="card">
+              <div class="card-body" style="padding:var(--space-4) var(--space-6);">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-3);">
+                  <div style="display:flex; gap:var(--space-2);" role="tablist" aria-label="Kategori portfolio">
+                    <button type="button" role="tab" aria-selected="true" class="btn btn-primary btn-sm portfolio-cat-btn" data-cat="all">Semua</button>
+                    <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm portfolio-cat-btn" data-cat="art">Seni Digital</button>
+                    <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm portfolio-cat-btn" data-cat="music">Musik</button>
+                    <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm portfolio-cat-btn" data-cat="writing">Writing</button>
+                    <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm portfolio-cat-btn" data-cat="code">Coding</button>
+                    <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm portfolio-cat-btn" data-cat="3d">3D & Game</button>
+                    <button type="button" role="tab" aria-selected="false" class="btn btn-ghost btn-sm portfolio-cat-btn" data-cat="other">Lainnya</button>
+                  </div>
+                  <div style="display:flex; gap:var(--space-2);">
+                    <input type="text" id="portfolioSearch" placeholder="Cari karya&hellip;" class="form-input" style="width:240px; padding:var(--space-1) var(--space-3); font-size:var(--text-xs);" aria-label="Cari karya">
+                    <select id="portfolioSort" class="form-select" style="width:auto; min-width:160px;" aria-label="Urutkan">
+                      <option value="newest">Terbaru</option>
+                      <option value="oldest">Terlama</option>
+                      <option value="popular">Populer</option>
+                      <option value="views">Dilihat</option>
+                      <option value="title">Judul A-Z</option>
+                    </select>
+                    <button type="button" class="btn btn-ghost btn-sm" id="portfolioBtnGridView" aria-label="Tampilan grid" title="Grid">
+                      <i class="fa-solid fa-th-large" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="portfolioBtnListView" aria-label="Tampilan list" title="List">
+                      <i class="fa-solid fa-list" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- Portfolio Grid -->
+          <section aria-labelledby="portfolioWorksTitle" class="animate-slide-up stagger-3">
+            <header style="display:flex; align-items:center; justify-content:space-between; margin:var(--space-6) 0 var(--space-4); flex-wrap:wrap; gap:var(--space-3);">
+              <h2 id="portfolioWorksTitle" style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                <i class="fa-solid fa-image" style="color:var(--color-success);"></i> Karya Saya
+              </h2>
+              <span id="portfolioCount" class="badge badge-info" style="font-size:var(--text-xs);">0 karya</span>
+            </header>
+            <div id="portfolioGrid" class="bento-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:var(--space-5);">
+              <!-- Empty State -->
+              <div id="portfolioEmpty" class="empty-state" style="grid-column:1/-1; padding:var(--space-12); border:none; background:transparent;">
+                <div class="empty-state-icon" style="background:var(--green-dim); border-color:rgba(134,239,172,0.3); color:var(--color-success);">
+                  <i class="fa-solid fa-palette" style="font-size:3rem;"></i>
+                </div>
+                <h3 class="empty-state-title">Belum Ada Karya</h3>
+                <p class="empty-state-body">Mulai bagikan karya Anda: seni digital, musik, writing, kode, model 3D, atau proyek apapun.</p>
+                <button type="button" class="btn btn-primary" id="portfolioEmptyBtnAdd" style="margin-top:var(--space-4);">
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah Karya Pertama
+                </button>
+              </div>
             </div>
-          </div>
-        </main>
-      </div>
+          </section>
+
+          <!-- Featured / Pinned Works -->
+          <section aria-labelledby="portfolioFeaturedTitle" class="animate-slide-up stagger-4" style="margin-top:var(--space-6);">
+            <header style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-4); flex-wrap:wrap; gap:var(--space-3);">
+              <h2 id="portfolioFeaturedTitle" style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                <i class="fa-solid fa-thumbtack" style="color:var(--color-warning);"></i> Karya Unggulan (Pinned)
+              </h2>
+              <button type="button" class="btn btn-ghost btn-sm" id="portfolioBtnManagePinned">
+                <i class="fa-solid fa-cog" aria-hidden="true"></i> Kelola
+              </button>
+            </header>
+            <div id="portfolioPinned" class="bento-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:var(--space-4);">
+              <div class="empty-state" style="grid-column:1/-1; padding:var(--space-8); border:none; background:transparent;">
+                <div class="empty-state-icon" style="background:var(--amber-dim); border-color:rgba(245,158,11,0.3); color:var(--color-warning);">
+                  <i class="fa-solid fa-thumbtack" style="font-size:2.5rem;"></i>
+                </div>
+                <h3 class="empty-state-title">Belum Ada Karya Dipin</h3>
+                <p class="empty-state-body">Pin hingga 6 karya terbaik Anda untuk ditampilkan di sini.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Analytics -->
+          <section aria-labelledby="portfolioAnalyticsTitle" class="animate-slide-up stagger-5" style="margin-top:var(--space-6);">
+            <header style="margin-bottom:var(--space-4);">
+              <h2 id="portfolioAnalyticsTitle" style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                <i class="fa-solid fa-chart-line" style="color:var(--accent-cyan);"></i> Analitik Portfolio
+              </h2>
+            </header>
+            <div class="bento-grid">
+              <article class="card" style="grid-column:span 4; display:flex; flex-direction:column;">
+                <div class="card-header">
+                  <div class="card-title" style="color:var(--accent-cyan);">Views 30 Hari</div>
+                </div>
+                <div class="card-body" style="flex:1; min-height:200px;">
+                  <canvas id="portfolioViewsChart" aria-label="Grafik views 30 hari"></canvas>
+                </div>
+              </article>
+              <article class="card" style="grid-column:span 4; display:flex; flex-direction:column;">
+                <div class="card-header">
+                  <div class="card-title" style="color:var(--color-warning);">Likes & Engagement</div>
+                </div>
+                <div class="card-body" style="flex:1; min-height:200px;">
+                  <canvas id="portfolioEngagementChart" aria-label="Grafik engagement 30 hari"></canvas>
+                </div>
+              </article>
+              <article class="card" style="grid-column:span 4; display:flex; flex-direction:column;">
+                <div class="card-header">
+                  <div class="card-title" style="color:var(--color-success);">Kategori Karya</div>
+                </div>
+                <div class="card-body" style="flex:1; min-height:200px; display:flex; align-items:center; justify-content:center;">
+                  <canvas id="portfolioCategoryChart" aria-label="Diagram kategori karya"></canvas>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- Social Links -->
+          <section aria-labelledby="portfolioSocialTitle" class="animate-slide-up stagger-6" style="margin-top:var(--space-6);">
+            <header style="margin-bottom:var(--space-4);">
+              <h2 id="portfolioSocialTitle" style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                <i class="fa-solid fa-link" style="color:var(--ui-primary);"></i> Tautan Sosial & Eksternal
+              </h2>
+            </header>
+            <div class="card">
+              <div class="card-body">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-4);">
+                  <div class="form-group">
+                    <label class="form-label" for="socialWebsite">Website / Portfolio Eksternal</label>
+                    <input type="url" id="socialWebsite" class="form-input" placeholder="https://example.com" aria-label="Website">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="socialGitHub">GitHub</label>
+                    <input type="url" id="socialGitHub" class="form-input" placeholder="https://github.com/username" aria-label="GitHub">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="socialTwitter">Twitter / X</label>
+                    <input type="url" id="socialTwitter" class="form-input" placeholder="https://twitter.com/username" aria-label="Twitter">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="socialDiscord">Discord</label>
+                    <input type="text" id="socialDiscord" class="form-input" placeholder="username#1234 atau link server" aria-label="Discord">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="socialYouTube">YouTube</label>
+                    <input type="url" id="socialYouTube" class="form-input" placeholder="https://youtube.com/@channel" aria-label="YouTube">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="socialSoundCloud">SoundCloud</label>
+                    <input type="url" id="socialSoundCloud" class="form-input" placeholder="https://soundcloud.com/username" aria-label="SoundCloud">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="socialArtStation">ArtStation</label>
+                    <input type="url" id="socialArtStation" class="form-input" placeholder="https://artstation.com/username" aria-label="ArtStation">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="socialBehance">Behance</label>
+                    <input type="url" id="socialBehance" class="form-input" placeholder="https://behance.net/username" aria-label="Behance">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="socialCustom1">Custom Link 1</label>
+                    <div style="display:flex; gap:var(--space-2);">
+                      <input type="text" id="socialCustomLabel1" class="form-input" placeholder="Label" style="width:100px;" aria-label="Label link">
+                      <input type="url" id="socialCustomUrl1" class="form-input" placeholder="https://..." aria-label="URL">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="socialCustom2">Custom Link 2</label>
+                    <div style="display:flex; gap:var(--space-2);">
+                      <input type="text" id="socialCustomLabel2" class="form-input" placeholder="Label" style="width:100px;" aria-label="Label link">
+                      <input type="url" id="socialCustomUrl2" class="form-input" placeholder="https://..." aria-label="URL">
+                    </div>
+                  </div>
+                </div>
+                <div style="margin-top:var(--space-6); display:flex; gap:var(--space-3); justify-content:flex-end;">
+                  <button type="button" class="btn btn-ghost" id="portfolioBtnResetSocial">
+                    <i class="fa-solid fa-rotate" aria-hidden="true"></i> Reset
+                  </button>
+                  <button type="button" class="btn btn-primary" id="portfolioBtnSaveSocial">
+                    <i class="fa-solid fa-save" aria-hidden="true"></i> Simpan Tautan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <nav class="mobile-nav" aria-label="Navigasi mobile">
+        <a href="/" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/lounge" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-cube"></i></span>
+          <span>3D Lounge</span>
+        </a>
+        <a href="/music" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+          <span>Music</span>
+        </a>
+        <a href="/world" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+          <span>Wilds</span>
+        </a>
+        <a href="/settings" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+          <span>Settings</span>
+        </a>
+      </nav>
     </div>
 
-    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
-      <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
-      </div>
-    </nav>
-
-    <script src="/src/js/sharedNav.js"></script>
-    <script>
-      fetch('/api/realtime/overview')
-        .then(r => r.json())
-        .then(d => {
-          if (d && d.success && d.data) {
-            const data = d.data;
-            if (data.plugins && data.plugins.totalCommands) {
-              const el = document.getElementById('metricPluginsVal');
-              if (el) el.textContent = `${data.plugins.totalCommands} Plugin`;
-            }
-          }
-        })
-        .catch(() => {});
-    </script>
+    <script src="/src/js/naura-os.js"></script>
+    <script src="/src/js/pages/portfolio.js"></script>
   </body>
 </html>

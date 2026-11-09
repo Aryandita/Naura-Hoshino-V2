@@ -89,8 +89,8 @@ module.exports = {
           territoryList,
           ``,
           userClan
-            ? `🚩 **Klan Anda:** **${userClan.name}** (Level ${userClan.level})`
-            : `⚠️ *Anda belum bergabung dengan klan mana pun!*`,
+            ? `${ui.getEmoji("edu_flag") || "🚩"} **Klan Anda:** **${userClan.name}** (Level ${userClan.level})`
+            : `${ui.getEmoji("mod_warn") || "⚠️"} *Anda belum bergabung dengan klan mana pun!*`,
           ``,
           `-# 💡 *Gunakan \`/survival rpg conquest aksi:attack sektor:SECTOR_DOCKS energi:50\` untuk menyerang!*`,
         ].join("\n"),
@@ -131,7 +131,7 @@ module.exports = {
             `Luar biasa! Klan **${userClan.name}** berhasil menaklukkan **${res.territoryName}**!`,
             ``,
             `🏰 **Penguasa Baru:** **${res.newOwnerName}**`,
-            `🛡️ **Poin Kontrol Awal:** \`${res.controlPoints} Poin\``,
+            `${ui.getEmoji("mod_shield") || "🛡️"} **Poin Kontrol Awal:** \`${res.controlPoints} Poin\``,
             ``,
             `Seluruh anggota klan kini menikmati buff pasif sektor dan royalti pajak harian yang masuk ke kas klan!`,
           ].join("\n"),
@@ -143,7 +143,7 @@ module.exports = {
         const payload = buildContainerV2({
           accentColorHex: "#38BDF8",
           authorName: "🛡️ Penguatan Pertahanan Sektor",
-          title: `✨ Pertahanan ${res.territoryName} Meningkat!`,
+          title: `${ui.getEmoji("ai_sparkle") || "✨"} Pertahanan ${res.territoryName} Meningkat!`,
           description: `Klan **${userClan.name}** memperkuat pertahanan sektor! Poin kontrol kini mencapai **${res.controlPoints} / 1000**.`,
           footerText: ui.getFooter("survival"),
         });
@@ -157,7 +157,7 @@ module.exports = {
           description: [
             `Klan **${userClan.name}** mengerahkan ${energy} poin energi tempur!`,
             ``,
-            `🛡️ **Sisa Pertahanan Lawan:** \`${res.remainingDefPoints} Poin Kontrol\``,
+            `${ui.getEmoji("mod_shield") || "🛡️"} **Sisa Pertahanan Lawan:** \`${res.remainingDefPoints} Poin Kontrol\``,
             `Serang terus bersama anggota klan lain untuk merebut sektor ini sepenuhnya!`,
           ].join("\n"),
           footerText: ui.getFooter("survival"),
@@ -189,7 +189,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#86EFAC",
         authorName: "💰 Kas Bendahara Klan",
-        title: "✨ Pajak Wilayah Masuk ke Kas Klan!",
+        title: `${ui.getEmoji("ai_sparkle") || "✨"} Pajak Wilayah Masuk ke Kas Klan!`,
         description: [
           `Hasil panen pajak dari **${taxRes.territoriesCount} Sektor** telah berhasil disetorkan!`,
           ``,

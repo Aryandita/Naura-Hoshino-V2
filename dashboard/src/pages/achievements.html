@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trophy Room & 34 Achievements | Naura OS</title>
     <meta name="description" content="Koleksi 34 medali kehormatan, lencana langka, dan gelar prestisius petualang Naura Wilds." />
+    <meta name="theme-color" content="#0b0c10" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,7 +17,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
     <style>
       .trophy-container {
         max-width: 1280px;
@@ -24,7 +25,7 @@
         padding: 32px 20px 80px;
       }
       .trophy-hero {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(244, 114, 182, 0.06) 100%);
+        background: var(--bg-surface);
         border: 1px solid var(--border-medium);
         border-radius: var(--r-xl);
         padding: 28px;
@@ -46,7 +47,7 @@
       }
       .progress-bar-fill {
         height: 100%;
-        background: linear-gradient(90deg, #F59E0B, #F472B6);
+        background: var(--bg-surface);
         border-radius: 9999px;
         transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       }
@@ -395,5 +396,6 @@
         fetchAchievements();
       })();
     </script>
+      <script src="/src/js/naura-os.js"></script>
   </body>
 </html>

@@ -167,9 +167,7 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
         current: client.shard ? client.shard.ids[0] : 0,
         total: client.shard ? client.shard.count : 1,
       },
-      shardsList: [
-        { id: 0, status: "online", ping: avgPing }
-      ],
+      shardsList: (shardStats.size > 0 ? [...shardStats.entries()].map(([id, s]) => ({ id, status: "online", ping: s.ping || avgPing })) : [{ id: 0, status: "online", ping: avgPing }]),
       dbStatus: getDbStatus(),
       mongoStatus: mongoManager ? mongoManager.getStatus() : null,
       redisStatus: !!(redisManager.client && redisManager.client.isReady),

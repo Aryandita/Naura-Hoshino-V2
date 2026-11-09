@@ -104,7 +104,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#C084FC",
         authorName: "🤖 AI Multi-Persona Studio",
-        title: `✨ Persona Baru Terdaftar: ${persona.name}`,
+        title: `${ui.getEmoji("ai_sparkle") || "✨"} Persona Baru Terdaftar: ${persona.name}`,
         description: [
           `Sub-persona AI berhasil diaktifkan untuk server ini!`,
           ``,

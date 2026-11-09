@@ -128,12 +128,12 @@ module.exports = {
       const auraPayload = buildContainerV2({
         accentColorHex: auraData.primaryColor || "#38BDF8",
         authorName: `${target.username} - Resonansi Musik`,
-        title: `🔮 AI Music Aura: ${auraData.auraName}`,
+        title: `${ui.getEmoji("naura_core") || "🔮"} AI Music Aura: ${auraData.auraName}`,
         bannerAttachmentName: "music_aura.png",
         description: [
           `> *"${auraData.description}"*`,
           "",
-          `• **Signature Track:** 🎵 ${auraData.signatureTrack}`,
+          `• **Signature Track:** ${ui.getEmoji("naura_chirping") || "🎵"} ${auraData.signatureTrack}`,
           `• **Dominant Genres:** ${Array.isArray(auraData.genres) ? auraData.genres.join(", ") : "Lo-Fi, Synthwave"}`,
           `• **Vibe Energy:** ⚡ ${auraData.energy}% | **Tempo:** 🎚️ ${auraData.tempo} BPM`,
         ].join("\n"),
@@ -204,8 +204,8 @@ module.exports = {
       const hours = (stats.totalDurationMs / (1000 * 60 * 60)).toFixed(1);
       const wrappedPayload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: `✨ Naura Music Wrapped: ${target.displayName || target.username}`,
-        description: `Kilas balik petualangan musik **${target.displayName || target.username}** bersama Naura!\n\n🎧 **Total Lagu Didengar:** \`${stats.tracksListened} lagu\`\n⏳ **Waktu Berputar:** \`${hours} jam\`\n🎵 **Lagu Teratas:** \`${stats.topTracks[0] || "Belum ada data"}\`\n🏰 **Server Favorit:** \`${stats.topServers[0] || guild.name}\`\n\n*Terima kasih telah mewarnai harimu bersama alunan musik Naura Hoshino~* 🌸`,
+        title: `${ui.getEmoji("ai_sparkle") || "✨"} Naura Music Wrapped: ${target.displayName || target.username}`,
+        description: `Kilas balik petualangan musik **${target.displayName || target.username}** bersama Naura!\n\n🎧 **Total Lagu Didengar:** \`${stats.tracksListened} lagu\`\n${ui.getEmoji("naura_uptime") || "⏳"} **Waktu Berputar:** \`${hours} jam\`\n${ui.getEmoji("naura_chirping") || "🎵"} **Lagu Teratas:** \`${stats.topTracks[0] || "Belum ada data"}\`\n🏰 **Server Favorit:** \`${stats.topServers[0] || guild.name}\`\n\n*Terima kasih telah mewarnai harimu bersama alunan musik Naura Hoshino~* 🌸`,
         bannerAttachmentName: "naura-wrapped.png",
         footerText: ui.getFooter("music"),
       });

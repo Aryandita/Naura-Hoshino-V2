@@ -349,7 +349,7 @@ module.exports = {
         const replyPayload = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#22c55e",
           authorName: `Pertemuan Pertama • ${updatedNpc?.name || "NPC"}`,
-          title: "✨ Tanggapan Pilihan",
+          title: `${ui.getEmoji("ai_sparkle") || "✨"} Tanggapan Pilihan`,
           description: `Kamu menjawab: *${choice?.label || "..."}*\n\n${updatedNpc?.name || "NPC"} tersenyum ramah kepadamu.\n${bonusAfeksi > 0 ? `💖 **+${bonusAfeksi} Afeksi**` : ""}\n\nSekarang kamu bisa mulai berinteraksi secara reguler dengan warga ini!`,
           buttonsRow: [selectRow, buildActions(updatedNpc, npcData, t)],
           footerText: ui.getFooter("survival"),

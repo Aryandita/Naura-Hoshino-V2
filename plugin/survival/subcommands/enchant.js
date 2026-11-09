@@ -41,9 +41,9 @@ function e(name, fallback) {
 }
 
 const SOCKETABLE_GEAR = [
-  { id: "sword", name: "Pedang Petualang ⚔️", maxSockets: 3 },
-  { id: "armor", name: "Zirah Perlindungan 🛡️", maxSockets: 3 },
-  { id: "pickaxe", name: "Beliung Penambang ⛏️", maxSockets: 2 },
+  { id: "sword", name: `Pedang Petualang ${e("arcade_duel", "⚔️")}`, maxSockets: 3 },
+  { id: "armor", name: `Zirah Perlindungan ${e("mod_shield", "🛡️")}`, maxSockets: 3 },
+  { id: "pickaxe", name: `Beliung Penambang ${e("mc_pickaxe", "⛏️")}`, maxSockets: 2 },
   { id: "fishing_rod", name: "Pancingan Sakti 🎣", maxSockets: 2 },
 ];
 
@@ -96,7 +96,7 @@ module.exports = {
       const gearData = enchantedGear[g.id] || { cosmic_sockets: [] };
       const socketCount = gearData.cosmic_sockets?.length || 0;
       const socketVisual = (gearData.cosmic_sockets || [])
-        .map((s) => `[💎 ${s.name}]`)
+        .map((s) => `[${e("naura_shard", "💎")} ${s.name}]`)
         .concat(
           Array(Math.max(0, g.maxSockets - socketCount)).fill("[⚪ Kosong]"),
         )
@@ -111,7 +111,7 @@ module.exports = {
       "**Status Socket Peralatan Saat Ini:**",
       gearOverview,
       "",
-      `💎 **Permata di Tas Kamu:** ${userGems.length > 0 ? userGems.map((ug) => `\`${ug.amount}x\` ${ug.name}`).join(", ") : "*Belum ada permata kosmik. Dapatkan dari jarahan Boss atau Gacha!*"}`,
+      `${e("naura_shard", "💎")} **Permata di Tas Kamu:** ${userGems.length > 0 ? userGems.map((ug) => `\`${ug.amount}x\` ${ug.name}`).join(", ") : "*Belum ada permata kosmik. Dapatkan dari jarahan Boss atau Gacha!*"}`,
       "",
       userGems.length > 0
         ? "Pilih peralatan dan permata yang ingin kamu sematkan di bawah!"
@@ -278,14 +278,14 @@ module.exports = {
         const successContainer = buildContainerV2({
           accentColorHex: survivalUI.getColor("moss"),
           authorName: "Altar Tempa & Cosmic Enchanter",
-          title: `✨ Penyematan Permata Berhasil!`,
+          title: `${e("ai_sparkle", "✨")} Penyematan Permata Berhasil!`,
           expression: "success",
           description: [
             `Hebat, **${user.displayName || user.username}**! Permata kosmik berhasil disatukan:`,
             "",
-            `💎 **Permata:** ${gemDef.name}`,
-            `🛡️ **Peralatan:** ${gearConfig.name}`,
-            `✨ **Efek Aktif:** *${gemDef.description}*`,
+            `${e("naura_shard", "💎")} **Permata:** ${gemDef.name}`,
+            `${e("mod_shield", "🛡️")} **Peralatan:** ${gearConfig.name}`,
+            `${e("ai_sparkle", "✨")} **Efek Aktif:** *${gemDef.description}*`,
             "",
             "> *Efek permata ini akan otomatis aktif saat kamu bertarung di Infinite Dungeon dan Duel PvP!*",
           ].join("\n"),

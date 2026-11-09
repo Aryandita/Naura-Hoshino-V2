@@ -89,14 +89,14 @@ module.exports = {
 
       const payload = buildContainerV2({
         authorName: "NAURA CHRONICLE & TIME CAPSULE",
-        title: "⏳ Kapsul Waktu Berhasil Dikunci!",
+        title: `${ui.getEmoji("naura_uptime") || "⏳"} Kapsul Waktu Berhasil Dikunci!`,
         description: [
           `Pesan kenangan dari **${displayName}** telah disegel aman di dalam Brankas Memori Bintang!`,
           ``,
           `📜 **Judul Kapsul:** **${capsule.title}**`,
           `🔑 **Kode Kapsul:** \`${capsule.capsuleCode}\``,
-          `🔒 **Durasi Kunci:** \`${duration} Bulan\``,
-          `✨ **Tanggal Pembukaan:** <t:${unlockTs}:D> (<t:${unlockTs}:R>)`,
+          `${ui.getEmoji("mod_lock") || "🔒"} **Durasi Kunci:** \`${duration} Bulan\``,
+          `${ui.getEmoji("ai_sparkle") || "✨"} **Tanggal Pembukaan:** <t:${unlockTs}:D> (<t:${unlockTs}:R>)`,
           ``,
           `-# 💡 *Saat tanggal pembukaan tiba, gunakan \`/capsule reveal ${capsule.capsuleCode}\` untuk membuka kenangan masa lalu ini bersama seluruh server!*`,
         ].join("\n"),
@@ -116,7 +116,7 @@ module.exports = {
       if (!capsules || capsules.length === 0) {
         const payload = buildContainerV2({
           authorName: "NAURA CHRONICLE & TIME CAPSULE",
-          title: "⏳ Daftar Kapsul Waktu Server",
+          title: `${ui.getEmoji("naura_uptime") || "⏳"} Daftar Kapsul Waktu Server`,
           description: `Belum ada Kapsul Waktu yang dikubur di server ini.\n\n💡 *Gunakan \`/capsule bury\` untuk menyegel pesan berharga pertama servermu!*`,
           footerText: ui.getFooter("utility"),
         });
@@ -130,13 +130,13 @@ module.exports = {
         const unlockTs = Math.floor(new Date(c.unlockDate).getTime() / 1000);
         const status = c.isUnlocked
           ? "🔓 Telah Dibuka"
-          : `🔒 Terkunci (Buka <t:${unlockTs}:R>)`;
+          : `${ui.getEmoji("mod_lock") || "🔒"} Terkunci (Buka <t:${unlockTs}:R>)`;
         return `• \`${c.capsuleCode}\` **${c.title}** (oleh ${c.authorName})\n  └ ${status}`;
       });
 
       const payload = buildContainerV2({
         authorName: "NAURA CHRONICLE & TIME CAPSULE",
-        title: "⏳ Daftar Kapsul Waktu Server",
+        title: `${ui.getEmoji("naura_uptime") || "⏳"} Daftar Kapsul Waktu Server`,
         description: `Berikut adalah brankas kapsul waktu yang tersimpan di server ini:\n\n${lines.join("\n\n")}\n\n> *Gunakan \`/capsule reveal <kode>\` untuk membuka kapsul yang sudah jatuh tempo.*`,
         footerText: ui.getFooter("utility"),
       });
@@ -187,7 +187,7 @@ module.exports = {
           `💌 **Pesan Masa Lalu:**`,
           `>>> *"${cap.message}"*`,
           ``,
-          `✨ **Kilas Balik AI:**`,
+          `${ui.getEmoji("ai_sparkle") || "✨"} **Kilas Balik AI:**`,
           `_${cap.aiNostalgiaSummary || "Kenangan indah melintasi waktu, menghubungkan masa lalu dengan hari ini."}_`,
         ].join("\n"),
         footerText: ui.getFooter("utility"),

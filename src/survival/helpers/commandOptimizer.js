@@ -2,9 +2,9 @@
 // Memotong payload JSON agar selalu berada di bawah batas ketat Discord API (8000 bytes)
 // tanpa mengurangi fitur pengguna dengan mengalihkan choices besar ke autocomplete dinamis.
 
-// Discord menolak command yang payload JSON-nya >= 8000 bytes. Kita sisakan
-// margin karena pre-flight check di CommandHandler memakai angka yang sama.
-const PAYLOAD_BUDGET = 7800;
+// Discord menolak command yang payload JSON-nya >= 8000 bytes.
+// Kita terapkan budget ketat 6000 bytes agar selalu aman di bawah batas Discord.
+const PAYLOAD_BUDGET = 6000;
 
 /**
  * Terapkan pemotongan deskripsi + pemindahan choices ke autocomplete pada

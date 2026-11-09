@@ -61,9 +61,9 @@ module.exports = {
 
       const isVoiceReady = fishAudioService.isConfigured();
       const statusDesc = isVoiceReady
-        ? `🎙️ **Mode AI Smart DJ Naura BERHASIL DIAKTIFKAN!**\n\n` +
-          `Naura kini aktif memandu sesi musik di <#${memberVoice.id}> sebagai Radio Host cerdas, memberikan pengumuman lagu secara personal dengan suara anime khas Naura via Fish Audio TTS! ✨🎶\n${divider}\n💡 *Ketik \`/music dj mode:off\` untuk mematikan mode DJ cerdas.*`
-        : `🎙️ **Mode AI Smart DJ Naura BERHASIL DIAKTIFKAN!**\n\n` +
+        ? `${ui.getEmoji("ai_voice") || "🎙️"} **Mode AI Smart DJ Naura BERHASIL DIAKTIFKAN!**\n\n` +
+          `Naura kini aktif memandu sesi musik di <#${memberVoice.id}> sebagai Radio Host cerdas, memberikan pengumuman lagu secara personal dengan suara anime khas Naura via Fish Audio TTS! ${ui.getEmoji("ai_sparkle") || "✨"}${ui.getEmoji("naura_chirping") || "🎶"}\n${divider}\n💡 *Ketik \`/music dj mode:off\` untuk mematikan mode DJ cerdas.*`
+        : `${ui.getEmoji("ai_voice") || "🎙️"} **Mode AI Smart DJ Naura BERHASIL DIAKTIFKAN!**\n\n` +
           `Naura kini aktif memandu sesi musik di <#${memberVoice.id}> dengan kurasi pintar otomatis, sinkronisasi mood obrolan, dan transisi lagu dinamis.\n\n` +
           `💡 *Catatan:* API Key Fish Audio belum terkonfigurasi di \`.env\` (\`FISH_AUDIO_API_KEY\`), sehingga AI DJ berjalan dalam mode **Visual Chat Announcer**. Masukkan API Key Fish Audio untuk mengaktifkan suara asli Naura!\n${divider}\n💡 *Ketik \`/music dj mode:off\` untuk mematikan mode DJ cerdas.*`;
 
@@ -100,8 +100,8 @@ module.exports = {
         expression: isEnabled ? "happy" : "neutral",
         description:
           `📻 **Status DJ Server:** ${isEnabled ? "🟢 **Aktif (ON)**" : "🔴 **Nonaktif (OFF)**"}\n` +
-          `🎙️ **Voice Engine (Fish Audio):** ${isVoiceReady ? "🟢 **Siap (Connected)**" : "🟡 **Belum Ada API Key (Visual Mode Only)**"}\n` +
-          `🔊 **Channel Voice:** <#${memberVoice.id}>\n` +
+          `${ui.getEmoji("ai_voice") || "🎙️"} **Voice Engine (Fish Audio):** ${isVoiceReady ? "🟢 **Siap (Connected)**" : "🟡 **Belum Ada API Key (Visual Mode Only)**"}\n` +
+          `${ui.getEmoji("music_bass") || "🔊"} **Channel Voice:** <#${memberVoice.id}>\n` +
           `🤖 **Autoplay Cerdas:** **${player.isAutoplay ? "Aktif" : "Mati"}**\n` +
           `🌸 **Karakter Host:** Naura Hoshino (Kawaii Radio Host)\n\n` +
           `Gunakan \`/music dj mode:on\` untuk mengaktifkan atau \`/music dj mode:off\` untuk mematikan.\n${divider}`,
@@ -415,9 +415,9 @@ module.exports = {
       description:
         `**${hostName}** telah membuka sesi **Listening Party Kolaboratif** di channel **${memberVoice.name}**!\n\n` +
         `👥 **Peserta Aktif di Voice:** \`${membersInVc.size} Pendengar\`\n` +
-        `🎵 **Sedang Memutar:** \`${currentTrack ? `${currentTrack.title} - ${currentTrack.author}` : "Belum ada lagu (Gunakan tombol request)"}\`\n` +
+        `${ui.getEmoji("naura_chirping") || "🎵"} **Sedang Memutar:** \`${currentTrack ? `${currentTrack.title} - ${currentTrack.author}` : "Belum ada lagu (Gunakan tombol request)"}\`\n` +
         `📋 **Antrean Bersama:** \`${player.queue.length} lagu di antrean\`\n\n` +
-        `Semua anggota voice channel dapat berkontribusi memasukkan lagu dan memberikan vote skip bersama-sama! 🎧✨`,
+        `Semua anggota voice channel dapat berkontribusi memasukkan lagu dan memberikan vote skip bersama-sama! 🎧${ui.getEmoji("ai_sparkle") || "✨"}`,
       expression: "happy",
       buttonsRow: [rowParty],
       footerText: ui.getFooter("music"),
@@ -435,7 +435,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#10B981",
         authorName: "HOSHINO MUSIC • SMART QUEUE",
-        title: "🛡️ Filter Anti-Duplikasi Aktif",
+        title: `${ui.getEmoji("mod_shield") || "🛡️"} Filter Anti-Duplikasi Aktif`,
         description:
           "Sistem anti-duplikasi telah diaktifkan untuk server ini. Lagu yang sama tidak dapat diputar berulang kali dalam 5 lagu terakhir demi menjaga variasi musik.",
         expression: "happy",
@@ -449,7 +449,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("warning") || "#F59E0B",
         authorName: "HOSHINO MUSIC • SMART QUEUE",
-        title: "⚠️ Filter Anti-Duplikasi Dinonaktifkan",
+        title: `${ui.getEmoji("mod_warn") || "⚠️"} Filter Anti-Duplikasi Dinonaktifkan`,
         description:
           "Sistem anti-duplikasi telah dimatikan. Anggota voice channel sekarang bebas memutar lagu yang sama secara berulang tanpa pembatasan.",
         expression: "neutral",
@@ -462,7 +462,7 @@ module.exports = {
     const payload = buildContainerV2({
       accentColorHex: isEnabled ? "#10B981" : "#6B7280",
       authorName: "HOSHINO MUSIC • SMART QUEUE STATUS",
-      title: "🛡️ Status Filter Anti-Duplikasi Lagu",
+      title: `${ui.getEmoji("mod_shield") || "🛡️"} Status Filter Anti-Duplikasi Lagu`,
       description:
         `Status saat ini: **${isEnabled ? "🟢 AKTIF (5 Lagu Terakhir Dilindungi)" : "🔴 NONAKTIF (Bebas Duplikat)"}**\n\n` +
         `Gunakan \`/music duplicates mode:on\` untuk mengaktifkan atau \`/music duplicates mode:off\` untuk mematikan.`,
@@ -496,7 +496,7 @@ module.exports = {
         description: [
           `Format streaming audio server **${guild.name}** telah diubah ke:`,
           "",
-          `> 💎 **Kualitas:** \`${qualityMap[mode] || mode}\``,
+          `> ${ui.getEmoji("naura_shard") || "💎"} **Kualitas:** \`${qualityMap[mode] || mode}\``,
           `> 🌐 **Federasi Node:** Lossless Hi-Fi Lavalink Federation aktif.`,
           "",
           "-# *Kualitas Lossless memerlukan bandwidth suara server Discord yang mendukung bitrate tinggi.*",
@@ -545,7 +545,7 @@ module.exports = {
       title: "🌐 Status Kluster Audio & Federasi Node",
       description: [
         `📊 **Total Node Kluster:** \`${fedStatus.totalNodes} Nodes\` (\`${fedStatus.connectedNodes} Connected\`)`,
-        `💎 **Dukungan Codec:** \`${fedStatus.supportedCodecs.join(" • ")}\``,
+        `${ui.getEmoji("naura_shard") || "💎"} **Dukungan Codec:** \`${fedStatus.supportedCodecs.join(" • ")}\``,
         "",
         "**📡 Daftar Node Lossless Hi-Fi Federation:**",
         hiFiList,

@@ -252,7 +252,7 @@ module.exports = {
       const adjustments =
         result.compositionAnalysis.recommendedAdjustments.length > 0
           ? result.compositionAnalysis.recommendedAdjustments
-              .map((adj) => `⚠️ ${adj}`)
+              .map((adj) => `${ui.getEmoji("mod_warn") || "⚠️"} ${adj}`)
               .join("\n")
           : "✅ Komposisi party sudah optimal!";
 
@@ -266,16 +266,16 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: survivalUI.getColor("danger"),
         authorName: "Raid Strategy Planner",
-        title: `⚔️ Strategi Raid: ${bossName} (Lv.${bossLevel})`,
+        title: `${ui.getEmoji("arcade_duel") || "⚔️"} Strategi Raid: ${bossName} (Lv.${bossLevel})`,
         description: [
           `**📊 Analisis Komposisi Party:**`,
           roleBreakdown,
           "",
           `**💯 Balance Score:** ${(result.compositionAnalysis.balanceScore * 100).toFixed(1)}%`,
           "",
-          `**🎯 Formasi:** ${result.strategy.formation.replace(/_/g, " ").toUpperCase()}`,
+          `**${ui.getEmoji("arcade_target") || "🎯"} Formasi:** ${result.strategy.formation.replace(/_/g, " ").toUpperCase()}`,
           `**⚡ Approach:** ${result.strategy.approach.toUpperCase()}`,
-          `**⚠️ Risk Level:** ${result.strategy.riskLevel.toUpperCase()}`,
+          `**${ui.getEmoji("mod_warn") || "⚠️"} Risk Level:** ${result.strategy.riskLevel.toUpperCase()}`,
           "",
           `**📋 Battle Phases:**`,
           result.strategy.phases.map((p, i) => `${i + 1}. ${p.replace(/_/g, " ")}`).join("\n"),

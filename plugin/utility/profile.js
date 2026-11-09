@@ -315,7 +315,7 @@ module.exports = {
                 .setCustomId("owner_profile_panel")
                 .setLabel("👑 Panel Command Owner")
                 .setStyle(ButtonStyle.Danger)
-                .setEmoji("🔒"),
+                .setEmoji(ui.getEmoji("mod_lock") || "🔒"),
             ),
           );
         }
@@ -397,7 +397,7 @@ module.exports = {
               .setCustomId("owner_profile_panel")
               .setLabel("👑 Panel Command Owner")
               .setStyle(ButtonStyle.Danger)
-              .setEmoji("🔒"),
+              .setEmoji(ui.getEmoji("mod_lock") || "🔒"),
           ),
         );
       }

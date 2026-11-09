@@ -43,7 +43,7 @@ const playlistEngine = {
     const importingPayload = buildContainerV2({
       accentColorHex: "#1DB954",
       title: "Mengimpor Playlist",
-      description: `⏳ Sedang mengimpor playlist ke database Naura...`,
+      description: `${ui.getEmoji("naura_uptime") || "⏳"} Sedang mengimpor playlist ke database Naura...`,
       footerText: ui.getFooter("music"),
     });
     await sendReply(importingPayload);
@@ -474,7 +474,7 @@ const playlistEngine = {
     const loadingPayload = buildContainerV2({
       accentColorHex: "#1DB954",
       title: "Memuat Playlist",
-      description: `⏳ Memuat \`${trackList.length}\` lagu dari **${playlist.name}** ke antrean...`,
+      description: `${ui.getEmoji("naura_uptime") || "⏳"} Memuat \`${trackList.length}\` lagu dari **${playlist.name}** ke antrean...`,
       footerText: ui.getFooter("music"),
     });
     await sendReply(loadingPayload, true);

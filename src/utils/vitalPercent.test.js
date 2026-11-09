@@ -89,7 +89,7 @@ test("vitalTone memakai ambang kustom dan tetap aman untuk NaN", () => {
 // tanpa menggagalkan satu pun test.
 
 const DASHBOARD_VITAL_SOURCES = [
-  "dashboard/src/pages/index.html",
+  "dashboard/src/js/pages/index.js",
   "dashboard/src/js/sessionPresenter.js",
 ];
 

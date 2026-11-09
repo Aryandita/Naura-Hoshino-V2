@@ -16,6 +16,7 @@ const telemetry = require("./api/telemetry");
 const economy = require("./api/economy");
 const music = require("./api/music");
 const activity = require("./api/activity");
+const arcadeApi = require("./api/arcade");
 const admin = require("./api/admin");
 const env = require("../../src/config/env");
 const { getDbStatus, sequelize } = require("../../src/managers/dbManager");
@@ -288,6 +289,7 @@ module.exports = function (client) {
   economy.register(router, client);
   music.register(router, client);
   activity.register(router, client);
+  arcadeApi.register(router, client);
   admin.register(router, client);
 
   // --- Health Detailed Endpoint ---

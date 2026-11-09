@@ -228,6 +228,14 @@ module.exports = {
 
   loadImage: loadCachedImage,
 
+  get GifEncoder() {
+    return loadCanvas().GifEncoder;
+  },
+
+  get GifDisposal() {
+    return loadCanvas().GifDisposal;
+  },
+
   /**
    * Jalankan task berat Canvas dengan mematuhi batas konkurensi (2-3).
    * Menerima format:

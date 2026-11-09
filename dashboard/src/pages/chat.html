@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Neural Chat & AI Companion | Naura OS</title>
     <meta name="description" content="Naura Hoshino AI Neural Chat Terminal with multi-tier routing (OpenRouter Free Cascade & VIP Ultra Fast Gemini/Groq)." />
+    <meta name="theme-color" content="#0b0c10" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,7 +16,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
     <style>
       .chat-page-layout {
         display: flex;
@@ -29,7 +30,7 @@
 
       .chat-terminal-card {
         flex: 1;
-        background: radial-gradient(circle at top right, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.85) 100%);
+        background: var(--bg-surface);
         border: 1px solid var(--border-medium);
         border-radius: var(--r-2xl);
         overflow: hidden;
@@ -41,7 +42,7 @@
 
       .chat-terminal-header {
         padding: 16px 20px;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+        background: var(--bg-surface);
         border-bottom: 1px solid var(--border-subtle);
         display: flex;
         align-items: center;
@@ -145,7 +146,7 @@
       }
 
       .chat-message-row.is-user .chat-message-bubble {
-        background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+        background: var(--bg-surface);
         color: #ffffff;
         border-bottom-right-radius: 4px;
       }
@@ -223,7 +224,7 @@
       .chat-send-btn {
         padding: 12px 20px;
         border-radius: var(--r-lg);
-        background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+        background: var(--bg-surface);
         border: none;
         color: #ffffff;
         font-weight: 600;
@@ -509,5 +510,6 @@
 
     <!-- Chat Page Script -->
     <script type="module" src="/src/js/chatPage.js"></script>
+      <script src="/src/js/naura-os.js"></script>
   </body>
 </html>

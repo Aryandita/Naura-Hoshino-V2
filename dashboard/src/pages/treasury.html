@@ -1,8 +1,13 @@
 <!doctype html>
-<html lang="id" data-pillar="kontrol">
+<html lang="id" data-theme="midnight" data-pillar="dashboard" data-pillar="kontrol">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Kas server Treasury, alokasi finansial dan pool server." />
+    <meta property="og:title" content="Naura OS" />
+    <meta property="og:description" content="Kas server Treasury, alokasi finansial dan pool server." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0b0c10" />
     <title>Kas Server Treasury | Naura OS</title>
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,7 +20,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <style>
       .treasury-container {
@@ -24,7 +29,7 @@
         padding: 8px 0 64px;
       }
       .treasury-hero {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(34, 211, 238, 0.08) 100%);
+        background: var(--bg-surface);
         border: 1px solid var(--border-medium);
         border-radius: var(--r-xl);
         padding: 24px 28px;
@@ -262,5 +267,6 @@
       }
       document.addEventListener('DOMContentLoaded', fetchTreasury);
     </script>
+      <script src="/src/js/naura-os.js"></script>
   </body>
 </html>

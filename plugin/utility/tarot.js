@@ -33,7 +33,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("warning") || "#F59E0B",
         authorName: "HOSHINO ASTRAL SANCTUARY • TAROT SPREAD",
-        title: "⏳ Energi Bintang Masih Menyelaraskan",
+        title: `${ui.getEmoji("naura_uptime") || "⏳"} Energi Bintang Masih Menyelaraskan`,
         description: spread.message,
         footerText: ui.getFooter("utility"),
       });
@@ -55,9 +55,9 @@ module.exports = {
     const description = [
       `Halo, **${displayName}**! Tiga kartu takdir telah terbuka di hadapanmu:\n`,
       cardFields,
-      `\n🔮 **Bimbingan Semesta:**`,
+      `\n${ui.getEmoji("naura_core") || "🔮"} **Bimbingan Semesta:**`,
       `> *"${spread.summaryAdvice}"*\n`,
-      `✨ **Berkah Takdir Aktif (24 Jam):**`,
+      `${ui.getEmoji("ai_sparkle") || "✨"} **Berkah Takdir Aktif (24 Jam):**`,
       buffText,
     ].join("\n");
 

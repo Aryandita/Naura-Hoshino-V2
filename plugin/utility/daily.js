@@ -69,12 +69,12 @@ const REWARD_TABLE = [
 function getStreakCalendarCard(currentDay) {
   const activeIndex = ((currentDay - 1) % 7) + 1;
   const days = [
-    { day: 1, label: "Day 1", reward: "1.000 SC", icon: "🪙" },
-    { day: 2, label: "Day 2", reward: "1.500 SC", icon: "🪙" },
+    { day: 1, label: "Day 1", reward: "1.000 SC", icon: ui.getEmoji("eco_cash") || "🪙" },
+    { day: 2, label: "Day 2", reward: "1.500 SC", icon: ui.getEmoji("eco_cash") || "🪙" },
     { day: 3, label: "Day 3", reward: "Mystery Box", icon: "📦" },
-    { day: 4, label: "Day 4", reward: "2.500 SC", icon: "🪙" },
+    { day: 4, label: "Day 4", reward: "2.500 SC", icon: ui.getEmoji("eco_cash") || "🪙" },
     { day: 5, label: "Day 5", reward: "1x VB", icon: "🎟️" },
-    { day: 6, label: "Day 6", reward: "5.000 SC", icon: "🪙" },
+    { day: 6, label: "Day 6", reward: "5.000 SC", icon: ui.getEmoji("eco_cash") || "🪙" },
     { day: 7, label: "Day 7", reward: "Jackpot Kosmik", icon: "👑" },
   ];
 
@@ -83,7 +83,7 @@ function getStreakCalendarCard(currentDay) {
     .map((d) => {
       const isClaimed = d.day < activeIndex;
       const isToday = d.day === activeIndex;
-      const badge = isClaimed ? "✅" : isToday ? "🔥" : "🔒";
+      const badge = isClaimed ? "✅" : isToday ? "🔥" : ui.getEmoji("mod_lock") || "🔒";
       return `\`[${d.label}]\` ${badge} ${d.icon} **${d.reward}**`;
     })
     .join("  •  ");
@@ -93,7 +93,7 @@ function getStreakCalendarCard(currentDay) {
     .map((d) => {
       const isClaimed = d.day < activeIndex;
       const isToday = d.day === activeIndex;
-      const badge = isClaimed ? "✅" : isToday ? "🔥" : "🔒";
+      const badge = isClaimed ? "✅" : isToday ? "🔥" : ui.getEmoji("mod_lock") || "🔒";
       return `\`[${d.label}]\` ${badge} ${d.icon} **${d.reward}**`;
     })
     .join("  •  ");
@@ -112,10 +112,10 @@ function getStreakCalendarCard(currentDay) {
 }
 
 function buildChecklistSection({ isClaimedToday, currentStreak, questsCompleted, totalQuests, shieldCount }) {
-  const claimIcon = isClaimedToday ? "✅" : "⏳";
+  const claimIcon = isClaimedToday ? "✅" : ui.getEmoji("naura_uptime") || "⏳";
   const claimStatus = isClaimedToday ? "Sudah Diambil" : "Siap Diklaim";
   const questIcon = questsCompleted >= totalQuests ? "✅" : "📋";
-  const shieldIcon = shieldCount > 0 ? "🛡️" : "⚪";
+  const shieldIcon = shieldCount > 0 ? ui.getEmoji("mod_shield") || "🛡️" : "⚪";
 
   return [
     "📌 **CHECKLIST AKTIVITAS HARIAN:**",
@@ -141,7 +141,7 @@ function buildDailyHubRow(isClaimedToday, shieldCount) {
     new ButtonBuilder()
       .setCustomId("daily_btn_shield")
       .setLabel(`Pelindung Streak (${shieldCount})`)
-      .setEmoji("🛡️")
+      .setEmoji(ui.getEmoji("mod_shield") || "🛡️")
       .setStyle(ButtonStyle.Secondary),
   );
 }
@@ -199,7 +199,7 @@ module.exports = {
         if (shieldIdx !== -1 && currentStreak > 1) {
           await takeItemsAtomic(userId, [{ id: "streak_shield", amount: 1 }]);
           newStreak = currentStreak + 1;
-          streakMessage = `🛡️ **Jimat Pelindung Streak Digunakan.** Streak kamu berhasil diselamatkan dan bertambah ke **${newStreak} hari**.`;
+          streakMessage = `${ui.getEmoji("mod_shield") || "🛡️"} **Jimat Pelindung Streak Digunakan.** Streak kamu berhasil diselamatkan dan bertambah ke **${newStreak} hari**.`;
         } else {
           newStreak = 1;
           streakMessage = "Streak sebelumnya terhenti karena melewati batas waktu 48 jam. Memulai kembali streak baru.";
@@ -248,7 +248,7 @@ module.exports = {
         `${getStreakCalendarCard(newStreak)}`,
         ``,
         `**Perolehan Hadiah (Hari ke-${dayInCycle}):**`,
-        `• 🪙 **+${reward.sukamajuCoins.toLocaleString("id-ID")} Sukamaju Koin (SC)**`,
+        `• ${ui.getEmoji("eco_cash") || "🪙"} **+${reward.sukamajuCoins.toLocaleString("id-ID")} Sukamaju Koin (SC)**`,
 
         `• 💬 **+${reward.xp} Chat XP**`,
         reward.scholarshipVouchers > 0 ? `• 🎟️ **+${reward.scholarshipVouchers} Voucher Beasiswa (VB)**` : "",
@@ -314,12 +314,12 @@ module.exports = {
         ``,
         checklistText,
         ``,
-        `⏳ **Waktu Tunggu:** \`${remainingHours} jam ${remainingMinutes} menit\` lagi`,
+        `${ui.getEmoji("naura_uptime") || "⏳"} **Waktu Tunggu:** \`${remainingHours} jam ${remainingMinutes} menit\` lagi`,
         ``,
         `${getStreakCalendarCard(currentStreak)}`,
         ``,
         `**Pratinjau Hadiah Berikutnya (Hari ke-${nextDay}):**`,
-        `• 🪙 \`+${nextReward.sukamajuCoins.toLocaleString("id-ID")} SC\``,
+        `• ${ui.getEmoji("eco_cash") || "🪙"} \`+${nextReward.sukamajuCoins.toLocaleString("id-ID")} SC\``,
 
         `• 💬 \`+${nextReward.xp} XP\``,
         nextReward.bonus ? `• ${nextReward.bonus}` : "",
@@ -385,9 +385,9 @@ function setupDailyCollector(message, interaction, userId, questsCompleted, tota
       const questLines = [
         `📋 **STATUS MISI HARIAN NAURA WILDS:**`,
         ``,
-        `1. **Bekerja di Kota:** \`${wCount}/1 Selesai\` ${wCount >= 1 ? "✅" : "⏳"} *(Gunakan \`/survival work\`)*`,
-        `2. **Taklukkan Monster Dungeon:** \`${dCount}/1 Selesai\` ${dCount >= 1 ? "✅" : "⏳"} *(Gunakan \`/survival dungeon\`)*`,
-        `3. **Kumpulkan Bahan Alam:** \`${cCount}/3 Selesai\` ${cCount >= 3 ? "✅" : "⏳"} *(Gunakan \`/survival collect\`)*`,
+        `1. **Bekerja di Kota:** \`${wCount}/1 Selesai\` ${wCount >= 1 ? "✅" : ui.getEmoji("naura_uptime") || "⏳"} *(Gunakan \`/survival work\`)*`,
+        `2. **Taklukkan Monster Dungeon:** \`${dCount}/1 Selesai\` ${dCount >= 1 ? "✅" : ui.getEmoji("naura_uptime") || "⏳"} *(Gunakan \`/survival dungeon\`)*`,
+        `3. **Kumpulkan Bahan Alam:** \`${cCount}/3 Selesai\` ${cCount >= 3 ? "✅" : ui.getEmoji("naura_uptime") || "⏳"} *(Gunakan \`/survival collect\`)*`,
         ``,
         `🎁 **Hadiah Penyelesaian Semua Misi:** \`+2.500 SC\`, \`+150 XP\`, \`+1x Mystery Crate\``,
         claimed ? `\n✅ *Semua hadiah misi harian telah berhasil diklaim hari ini!*` : `\n💡 *Selesaikan ketiga misi di atas lalu jalankan \`/survival quest\` untuk klaim hadiah!*`,
@@ -396,7 +396,7 @@ function setupDailyCollector(message, interaction, userId, questsCompleted, tota
       const questPayload = buildContainerV2({
         accentColorHex: "#38BDF8",
         authorName: "Pusat Misi Harian • Naura Wilds",
-        title: "🎯 Daftar Misi Harian Aktif",
+        title: `${ui.getEmoji("arcade_target") || "🎯"} Daftar Misi Harian Aktif`,
         description: questLines,
         footerText: ui.getFooter("survival"),
       });
@@ -410,11 +410,11 @@ function setupDailyCollector(message, interaction, userId, questsCompleted, tota
     // 2. Tombol Pelindung Streak
     if (i.customId === "daily_btn_shield") {
       const shieldDesc = shieldCount > 0
-        ? `🛡️ **Jimat Pelindung Streak Aktif!**\n\n` +
+        ? `${ui.getEmoji("mod_shield") || "🛡️"} **Jimat Pelindung Streak Aktif!**\n\n` +
           `Kamu memiliki **${shieldCount}x Jimat Pelindung Streak** di tas penyimpanan.\n` +
           `Jika suatu saat kamu berhalangan hadir dan melewatkan login harian (antara 48 s/d 72 jam), jimat ini akan otomatis digunakan untuk menyelamatkan rantai streak milikmu agar tidak tereset ke Hari ke-1.\n\n` +
           `• **Streak Saat Ini:** **${streak} Hari**\n` +
-          `• **Status Perlindungan:** **AMAN & AKTIF** 🛡️`
+          `• **Status Perlindungan:** **AMAN & AKTIF** ${ui.getEmoji("mod_shield") || "🛡️"}`
         : `⚪ **Belum Memiliki Pelindung Streak**\n\n` +
           `Kamu saat ini tidak memiliki Jimat Pelindung Streak di tas.\n` +
           `Jika kamu melewatkan login lebih dari 48 jam, streak harianmu akan terputus dan kembali ke Hari ke-1.\n\n` +
@@ -423,7 +423,7 @@ function setupDailyCollector(message, interaction, userId, questsCompleted, tota
       const shieldPayload = buildContainerV2({
         accentColorHex: shieldCount > 0 ? "#10B981" : "#F59E0B",
         authorName: "Sistem Proteksi Streak • Naura",
-        title: shieldCount > 0 ? "🛡️ Streak Kamu Dilindungi" : "⚠️ Perhatian Streak Harian",
+        title: shieldCount > 0 ? `${ui.getEmoji("mod_shield") || "🛡️"} Streak Kamu Dilindungi` : `${ui.getEmoji("mod_warn") || "⚠️"} Perhatian Streak Harian`,
         description: shieldDesc,
         footerText: ui.getFooter("core"),
       });

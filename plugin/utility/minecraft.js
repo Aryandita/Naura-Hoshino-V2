@@ -1,4 +1,4 @@
-const {
+﻿const {
   SlashCommandBuilder,
   AttachmentBuilder,
   PermissionFlagsBits,
@@ -19,6 +19,23 @@ const { getOrCreateBreaker, CircuitBreakerOpenError } = require("../../src/utils
 
 const mojangCache = new Map();
 
+function isValidMcUsername(n){return /^[A-Za-z0-9_]{3,16}$/.test(String(n||""));}
+const dns=require("dns").promises;
+function isPrivateIpSync(ip){const v=String(ip||"").toLowerCase();if(v==="::1"||v.startsWith("127.")||v.startsWith("10.")||v.startsWith("192.168.")||v.startsWith("169.254."))return true;const m=v.match(/^172\.(\d+)\./);if(m){const n=parseInt(m[1],10);if(n>=16&&n<=31)return true;}if(v.startsWith("fe80:")||v.startsWith("fc")||v.startsWith("fd"))return true;return false;}
+async function assertPingHostSafe(hostPort){
+  let host=String(hostPort||"").split(":")[0].trim();
+  if(!host)return {ok:false,reason:"empty"};
+  if(/^(localhost|.*\.local|.*\.internal)$/i.test(host))return {ok:false,reason:"private-host"};
+  try{const {address}=await dns.lookup(host,{all:false});if(isPrivateIpSync(address))return {ok:false,reason:"private-ip",ip:address};}catch(e){ if(e&&e.code!=="ENOTFOUND")return {ok:false,reason:"dns"}; }
+  return {ok:true,host};
+}
+const mcstatusBreaker = getOrCreateBreaker("minecraft-mcstatus", { failureThreshold: 5, resetTimeout: 60000, halfOpenMaxAttempts: 3 });
+const rconBreaker = getOrCreateBreaker("minecraft-rcon", { failureThreshold: 5, resetTimeout: 60000, halfOpenMaxAttempts: 3 });
+const { createCipheriv, createDecipheriv, randomBytes } = require("crypto");
+function rconKey(){ const env=require("../../src/config/env"); const sec=String(env.SESSION_SECRET||""); const crypto=require("crypto"); return crypto.createHash("sha256").update(sec||"naura-dev-fallback").digest(); }
+function encryptRconPassword(plain){ if(!plain)return null; const iv=randomBytes(12); const c=createCipheriv("aes-256-gcm",rconKey(),iv); const enc=Buffer.concat([c.update(String(plain),"utf8"),c.final()]); const tag=c.getAuthTag(); return ["v1",iv.toString("base64"),tag.toString("base64"),enc.toString("base64")].join(":"); }
+function decryptRconPassword(stored){ if(!stored)return null; const parts=String(stored).split(":"); if(parts[0]!=="v1")return stored; try{ const [,ivB,tagB,encB]=parts; const d=createDecipheriv("aes-256-gcm",rconKey(),Buffer.from(ivB,"base64")); d.setAuthTag(Buffer.from(tagB,"base64")); return Buffer.concat([d.update(Buffer.from(encB,"base64")),d.final()]).toString("utf8"); }catch{ return null; } }
+function sanitizeBroadcastText(t){ return String(t||"").replace(/[ï¿½Â§]/g,"").replace(/[\u00a7]/g,"").replace(/[{}\[\]"]/g,"").slice(0,500).trim(); }
 const mojangBreaker = getOrCreateBreaker("minecraft-mojang", {
   failureThreshold: 5,
   resetTimeout: 60000,
@@ -46,7 +63,7 @@ async function getMojangProfile(username) {
   try {
     return await mojangBreaker.execute(async () => {
       const response = await axios.get(
-        `https://api.mojang.com/users/profiles/minecraft/${username}`,
+        `https://api.minecraftservices.com/minecraft/profile/lookup/name/${encodeURIComponent(username)}`,
         { timeout: 5000 },
       );
       if (response.data && response.data.id) {
@@ -58,7 +75,24 @@ async function getMojangProfile(username) {
     });
   } catch (e) {
     if (e instanceof CircuitBreakerOpenError) {
-      logger.warn("[Minecraft] Mojang circuit OPEN, using cache or null");
+      logger.warn("[Minecraft] Mojang circuit OPEN, mencoba fallback minetools");
+      try {
+        const fb = await axios.get(
+          `https://api.minetools.eu/uuid/${encodeURIComponent(username)}`,
+          { timeout: 4000 },
+        );
+        if (fb.data && fb.data.id && fb.data.status !== "ERR") {
+          const fallbackProfile = {
+            id: fb.data.id,
+            name: fb.data.username || username,
+            cachedAt: Date.now(),
+          };
+          mojangCache.set(username, fallbackProfile);
+          return fallbackProfile;
+        }
+      } catch {
+        // fallback gagal, lanjut ke cache kedaluwarsa
+      }
       // Return cached data jika ada meskipun expired
       if (mojangCache.has(username)) {
         return mojangCache.get(username);
@@ -70,6 +104,11 @@ async function getMojangProfile(username) {
 }
 
 module.exports = {
+  isValidMcUsername,
+  assertPingHostSafe,
+  encryptRconPassword,
+  decryptRconPassword,
+  sanitizeBroadcastText,
   data: new SlashCommandBuilder()
     .setName("minecraft")
     .setDescription(
@@ -123,14 +162,14 @@ module.exports = {
       sub
         .setName("sync")
         .setDescription(
-          "🔄 Sinkronisasi waktu bermain dan klaim hadiah Star Fragments/Kupon dari server Minecraft",
+          "ðŸ”„ Sinkronisasi waktu bermain dan klaim hadiah Star Fragments/Kupon dari server Minecraft",
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("broadcast")
         .setDescription(
-          "📢 Kirim pesan pengumuman ke dalam game Minecraft via RCON",
+          "ðŸ“¢ Kirim pesan pengumuman ke dalam game Minecraft via RCON",
         )
         .addStringOption((opt) =>
           opt
@@ -142,7 +181,7 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("bridge")
-        .setDescription("🔧 Atur jembatan chat Discord-Minecraft (Dua Arah)")
+        .setDescription("ðŸ”§ Atur jembatan chat Discord-Minecraft (Dua Arah)")
         .addChannelOption((opt) =>
           opt
             .setName("channel")
@@ -210,7 +249,7 @@ module.exports = {
       interaction,
       authorName: "Naura Minecraft Radar",
       title: "Memproses Permintaan...",
-      description: `${ui.getEmoji("loading") || "⏳"} ${ui.getEmoji("naura_thinking") || "🤔"} *Naura sedang memproses permintaan /minecraft ${subcommand} kamu...*`,
+      description: `${ui.getEmoji("loading") || "â³"} ${ui.getEmoji("naura_thinking") || "ðŸ¤”"} *Naura sedang memproses permintaan /minecraft ${subcommand} kamu...*`,
       expression: "thinking",
       withBanner: true,
       footerText: ui.getFooter("utility"),
@@ -219,26 +258,26 @@ module.exports = {
     await interaction.editReply(loadingPayload);
 
     if (subcommand === "ping") {
-      const ip = interaction.options.getString("ip");
+      const ip = interaction.options.getString("ip"); const _safe = await assertPingHostSafe(ip); if(!_safe.ok){ const ep=buildErrorContainerV2({interaction,title:"Host Ditolak",description:"Ping ke IP privat/loopback/link-local/metadata tidak diizinkan.",footerText:ui.getFooter("utility")}); return interaction.editReply(ep); }
 
       try {
-        const response = await status(ip, 25565, { timeout: 5000 });
+        const response = await mcstatusBreaker.execute(()=>status(ip, 25565, { timeout: 5000 }));
 
         const fields = [
           {
-            name: `${ui.getEmoji("radar") || "📡"} Latensi / Ping`,
+            name: `${ui.getEmoji("radar") || "ðŸ“¡"} Latensi / Ping`,
             value: `\`${response.ping}ms\``,
           },
           {
-            name: `${ui.getEmoji("users") || "👥"} Populasi Pemain`,
+            name: `${ui.getEmoji("users") || "ðŸ‘¥"} Populasi Pemain`,
             value: `\`${response.players.online} / ${response.players.max}\``,
           },
           {
-            name: `${ui.getEmoji("gear") || "⚙️"} Versi Enjin`,
+            name: `${ui.getEmoji("gear") || "âš™ï¸"} Versi Enjin`,
             value: `\`${response.version.name}\``,
           },
           {
-            name: `${ui.getEmoji("scroll") || "📜"} MOTD (Pesan Hari Ini)`,
+            name: `${ui.getEmoji("scroll") || "ðŸ“œ"} MOTD (Pesan Hari Ini)`,
             value: `\`\`\`${response.motd.clean}\`\`\``,
           },
         ];
@@ -248,7 +287,7 @@ module.exports = {
             .map((p) => p.name)
             .join(", ");
           fields.push({
-            name: `${ui.getEmoji("users") || "🧑‍🤝‍🧑"} Pemain Online (Sampel)`,
+            name: `${ui.getEmoji("users") || "ðŸ§‘â€ðŸ¤â€ðŸ§‘"} Pemain Online (Sampel)`,
             value: `\`\`\`${playerList}\`\`\``,
           });
         }
@@ -276,8 +315,8 @@ module.exports = {
           interaction,
           accentColorHex: ui.getColor("success") || "#00FF00",
           authorName: "Naura Minecraft Radar",
-          title: `${ui.getEmoji("greenping") || "🟢"} Server ${ip} Online!`,
-          description: `Radar Naura berhasil mendeteksi sinyal dari **${ip}**!\n\n> ${ui.getEmoji("naura_happy") || "✨"} *Servernya aktif dan siap menerima pemain!*`,
+          title: `${ui.getEmoji("greenping") || "ðŸŸ¢"} Server ${ip} Online!`,
+          description: `Radar Naura berhasil mendeteksi sinyal dari **${ip}**!\n\n> ${ui.getEmoji("naura_happy") || "âœ¨"} *Servernya aktif dan siap menerima pemain!*`,
           fields,
           bannerAttachmentName: attachment ? "mc-server-radar.png" : undefined,
           files: attachment ? [attachment] : [],
@@ -289,7 +328,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           interaction,
           title: "Server Tidak Terjangkau",
-          description: `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, Naura tidak bisa mencapai **${ip}**.\n\n${ui.getEmoji("sparkle") || "💡"} *Kemungkinan penyebab:*\n• Server sedang offline atau maintenance\n• Port TCP 25565 diblokir firewall\n• Server menolak koneksi eksternal\n\n*Coba periksa IP-nya atau tanya admin servernya, ya!*`,
+          description: `${ui.getEmoji("naura_cry") || "ðŸ˜¢"} Maaf ya, Naura tidak bisa mencapai **${ip}**.\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Kemungkinan penyebab:*\nâ€¢ Server sedang offline atau maintenance\nâ€¢ Port TCP 25565 diblokir firewall\nâ€¢ Server menolak koneksi eksternal\n\n*Coba periksa IP-nya atau tanya admin servernya, ya!*`,
           expression: "cry",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -297,7 +336,7 @@ module.exports = {
         return interaction.editReply(errPayload);
       }
     } else if (subcommand === "player") {
-      const username = interaction.options.getString("username");
+      const username = interaction.options.getString("username"); if(!isValidMcUsername(username)){ const ep=buildErrorContainerV2({interaction,title:"Username Tidak Valid",description:"Username harus 3-16 karakter alfanumerik/underscore.",footerText:ui.getFooter("utility")}); return interaction.editReply(ep); }
 
       try {
         const profileData = await getMojangProfile(username);
@@ -305,7 +344,7 @@ module.exports = {
           const errPayload = buildErrorContainerV2({
             interaction,
             title: "Player Tidak Ditemukan",
-            description: `${ui.getEmoji("naura_akward") || "😅"} Maaf ya, Naura tidak bisa menemukan **${username}** di database Mojang.\n\n${ui.getEmoji("sparkle") || "💡"} *Pastikan itu adalah akun Premium/Original Mojang, bukan akun cracked, ya!*`,
+            description: `${ui.getEmoji("naura_akward") || "ðŸ˜…"} Maaf ya, Naura tidak bisa menemukan **${username}** di database Mojang.\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Pastikan itu adalah akun Premium/Original Mojang, bukan akun cracked, ya!*`,
             expression: "akward",
             withBanner: true,
             footerText: ui.getFooter("utility"),
@@ -326,8 +365,8 @@ module.exports = {
         const successPayload = buildSuccessContainerV2({
           interaction,
           authorName: "Naura Minecraft Skin Renderer",
-          title: `${ui.getEmoji("core") || "🌸"} Skin ${realName}`,
-          description: `> ${ui.getEmoji("naura_happy") || "✨"} *Naura berhasil merender skin 3D milik **${realName}**! Keren banget!*\n\n*Skin ini diambil langsung dari server Mojang resmi.*`,
+          title: `${ui.getEmoji("core") || "ðŸŒ¸"} Skin ${realName}`,
+          description: `> ${ui.getEmoji("naura_happy") || "âœ¨"} *Naura berhasil merender skin 3D milik **${realName}**! Keren banget!*\n\n*Skin ini diambil langsung dari server Mojang resmi.*`,
           bannerAttachmentName: "mc-player-skin.png",
           files: [attachment],
           footerText: ui.getFooter("utility"),
@@ -340,8 +379,8 @@ module.exports = {
           interaction,
           title: isCircuitOpen ? "API Mojang Sedang Istirahat" : "Gagal Render Player",
           description: isCircuitOpen
-            ? `${ui.getEmoji("naura_sleepy") || "😴"} API Mojang sedang terlalu sibuk dan butuh istirahat sebentar. Coba lagi dalam 1-2 menit ya, Naura tungguin!`
-            : `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, Naura gagal merender data pemain. API Mojang mungkin sedang rate-limited atau down.\n\n${ui.getEmoji("sparkle") || "✨"} *Coba beberapa saat lagi, Naura yakin akan berhasil!*`,
+            ? `${ui.getEmoji("naura_sleepy") || "ðŸ˜´"} API Mojang sedang terlalu sibuk dan butuh istirahat sebentar. Coba lagi dalam 1-2 menit ya, Naura tungguin!`
+            : `${ui.getEmoji("naura_cry") || "ðŸ˜¢"} Maaf ya, Naura gagal merender data pemain. API Mojang mungkin sedang rate-limited atau down.\n\n${ui.getEmoji("sparkle") || "âœ¨"} *Coba beberapa saat lagi, Naura yakin akan berhasil!*`,
           expression: isCircuitOpen ? "sleepy" : "cry",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -349,7 +388,7 @@ module.exports = {
         return interaction.editReply(errPayload);
       }
     } else if (subcommand === "link") {
-      const username = interaction.options.getString("username");
+      const username = interaction.options.getString("username"); if(!isValidMcUsername(username)){ const ep=buildErrorContainerV2({interaction,title:"Username Tidak Valid",description:"Username harus 3-16 karakter alfanumerik/underscore.",footerText:ui.getFooter("utility")}); return interaction.editReply(ep); }
 
       try {
         const profileData = await getMojangProfile(username);
@@ -357,7 +396,7 @@ module.exports = {
           const errPayload = buildErrorContainerV2({
             interaction,
             title: "Username Tidak Valid",
-            description: `${ui.getEmoji("naura_akward") || "😅"} Maaf ya, username **${username}** tidak valid atau bukan akun Premium/Microsoft.\n\n${ui.getEmoji("sparkle") || "💡"} *Pastikan kamu menggunakan username Minecraft Premium yang benar, ya!*`,
+            description: `${ui.getEmoji("naura_akward") || "ðŸ˜…"} Maaf ya, username **${username}** tidak valid atau bukan akun Premium/Microsoft.\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Pastikan kamu menggunakan username Minecraft Premium yang benar, ya!*`,
             expression: "akward",
             withBanner: true,
             footerText: ui.getFooter("utility"),
@@ -379,10 +418,10 @@ module.exports = {
         const linkPayload = buildSuccessContainerV2({
           interaction,
           accentColorHex: ui.getColor("success") || "#22c55e",
-          authorName: `${ui.getEmoji("about") || "🔗"} Integrasi Identitas Minecraft`,
+          authorName: `${ui.getEmoji("about") || "ðŸ”-"} Integrasi Identitas Minecraft`,
           iconURL: interaction.client.user.displayAvatarURL(),
           title: "Akun Berhasil Ditautkan!",
-          description: `Akun Discord-mu sedang ditautkan dengan Minecraft **${profileData.name}**!\n\n${ui.getEmoji("key") || "🔑"} **Kode Verifikasi Anda:** \`${code}\`\n\n> ${ui.getEmoji("naura_happy") || "✨"} *Jalankan perintah berikut di dalam server Minecraft:* \n\`\`\`/naura link ${code}\`\`\`\n*Setelah verifikasi selesai, kamu akan mendapatkan bonus +500 Star Fragments ${ui.getEmoji("star") || "🌟"} dan bisa mengklaim hadiah playtime dengan \`/minecraft sync\`!*`,
+          description: `Akun Discord-mu sedang ditautkan dengan Minecraft **${profileData.name}**!\n\n${ui.getEmoji("key") || "ðŸ”‘"} **Kode Verifikasi Anda:** \`${code}\`\n\n> ${ui.getEmoji("naura_happy") || "âœ¨"} *Jalankan perintah berikut di dalam server Minecraft:* \n\`\`\`/naura link ${code}\`\`\`\n*Setelah verifikasi selesai, kamu akan mendapatkan bonus +500 Star Fragments ${ui.getEmoji("star") || "ðŸŒŸ"} dan bisa mengklaim hadiah playtime dengan \`/minecraft sync\`!*`,
           footerText: "Naura Minecraft Network Sync",
         });
 
@@ -392,7 +431,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           interaction,
           title: "Gagal Memvalidasi Akun",
-          description: `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, Naura gagal memvalidasi akun: ${error.message}\n\n${ui.getEmoji("sparkle") || "💡"} *Coba periksa username Minecraft-mu atau coba lagi nanti, ya!*`,
+          description: `${ui.getEmoji("naura_cry") || "ðŸ˜¢"} Maaf ya, Naura gagal memvalidasi akun: ${error.message}\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Coba periksa username Minecraft-mu atau coba lagi nanti, ya!*`,
           expression: "cry",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -409,7 +448,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           interaction,
           title: "Sinkronisasi Gagal",
-          description: `${ui.getEmoji("naura_cry") || "😢"} ${syncRes.message}\n\n${ui.getEmoji("sparkle") || "💡"} *Pastikan kamu sudah menautkan akun dengan \`/minecraft link\` dan bermain di server Minecraft kami!*`,
+          description: `${ui.getEmoji("naura_cry") || "ðŸ˜¢"} ${syncRes.message}\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Pastikan kamu sudah menautkan akun dengan \`/minecraft link\` dan bermain di server Minecraft kami!*`,
           expression: "cry",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -421,8 +460,8 @@ module.exports = {
         interaction,
         accentColorHex: "#86EFAC",
         authorName: "Naura Minecraft Realm Sync",
-        title: `${ui.getEmoji("trade") || "🔄"} Sinkronisasi Berhasil!`,
-        description: `Waktu bermain di Minecraft **${syncRes.mcUsername}** berhasil dikonversi ke ekonomi Discord!\n\n${ui.getEmoji("star") || "🌟"} **Star Fragments:** \`+${syncRes.starFragments} NSF\`\n${ui.getEmoji("ticket") || "🎟️"} **Naura Coupon:** \`+${syncRes.coupons} Kupon\`\n\n> ${ui.getEmoji("naura_happy") || "✨"} *Terima kasih sudah bermain! Terus kumpulkan reward dari waktu bermainmu, ya!*`,
+        title: `${ui.getEmoji("trade") || "ðŸ”„"} Sinkronisasi Berhasil!`,
+        description: `Waktu bermain di Minecraft **${syncRes.mcUsername}** berhasil dikonversi ke ekonomi Discord!\n\n${ui.getEmoji("star") || "ðŸŒŸ"} **Star Fragments:** \`+${syncRes.starFragments} NSF\`\n${ui.getEmoji("ticket") || "ðŸŽŸï¸"} **Naura Coupon:** \`+${syncRes.coupons} Kupon\`\n\n> ${ui.getEmoji("naura_happy") || "âœ¨"} *Terima kasih sudah bermain! Terus kumpulkan reward dari waktu bermainmu, ya!*`,
         footerText: "Naura Minecraft Realm Sync",
       });
 
@@ -443,8 +482,8 @@ module.exports = {
           interaction,
           title: "Verifikasi Harus Dilakukan di Dalam Game",
           description:
-            `${ui.getEmoji("naura_akward") || "😅"} Untuk membuktikan kepemilikan akun Minecraft, kode verifikasi harus dimasukkan dari dalam server Minecraft.\n\n` +
-            `> ${ui.getEmoji("sparkle") || "💡"} *Masuk ke server Minecraft lalu ketik perintah:* \`/naura link ${code}\``,
+            `${ui.getEmoji("naura_akward") || "ðŸ˜…"} Untuk membuktikan kepemilikan akun Minecraft, kode verifikasi harus dimasukkan dari dalam server Minecraft.\n\n` +
+            `> ${ui.getEmoji("sparkle") || "ðŸ’¡"} *Masuk ke server Minecraft lalu ketik perintah:* \`/naura link ${code}\``,
           expression: "akward",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -459,7 +498,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           interaction,
           title: "Verifikasi Gagal",
-          description: `${ui.getEmoji("naura_cry") || "😢"} Kode verifikasi \`${code}\` tidak ditemukan atau sudah kadaluarsa (kode berlaku 15 menit).\n\n${ui.getEmoji("sparkle") || "💡"} *Jalankan \`/minecraft link\` kembali untuk mendapatkan kode baru.*`,
+          description: `${ui.getEmoji("naura_cry") || "ðŸ˜¢"} Kode verifikasi \`${code}\` tidak ditemukan atau sudah kadaluarsa (kode berlaku 15 menit).\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Jalankan \`/minecraft link\` kembali untuk mendapatkan kode baru.*`,
           expression: "cry",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -473,18 +512,18 @@ module.exports = {
 
       const bonusNote =
         verified.bonusGranted !== false
-          ? `> ${ui.getEmoji("star") || "🌟"} **Bonus Penautan:** \`+500 Star Fragments\`\n`
+          ? `> ${ui.getEmoji("star") || "ðŸŒŸ"} **Bonus Penautan:** \`+500 Star Fragments\`\n`
           : "";
 
       const verifyPayload = buildSuccessContainerV2({
         interaction,
         accentColorHex: ui.getColor("success") || "#22c55e",
-        authorName: `${ui.getEmoji("about") || "🔗"} Verifikasi Identitas Minecraft`,
+        authorName: `${ui.getEmoji("about") || "ðŸ”-"} Verifikasi Identitas Minecraft`,
         title: "Akun Minecraft Berhasil Diverifikasi!",
         description:
           `Akun Minecraft **${verified.mcUsername}** telah resmi diverifikasi untuk <@${verified.userId}>!\n\n` +
           bonusNote +
-          `> ${ui.getEmoji("sparkle") || "✨"} Kamu sekarang dapat mengklaim hadiah waktu bermain secara berkala dengan \`/minecraft sync\`!`,
+          `> ${ui.getEmoji("sparkle") || "âœ¨"} Kamu sekarang dapat mengklaim hadiah waktu bermain secara berkala dengan \`/minecraft sync\`!`,
         footerText: "Naura Minecraft Network Sync",
       });
       return interaction.editReply(verifyPayload);
@@ -496,7 +535,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           interaction,
           title: "Akses Ditolak",
-          description: `${ui.getEmoji("naura_akward") || "😅"} Kamu memerlukan izin \`Manage Server\` atau \`Administrator\` untuk memverifikasi akun pemain secara manual.`,
+          description: `${ui.getEmoji("naura_akward") || "ðŸ˜…"} Kamu memerlukan izin \`Manage Server\` atau \`Administrator\` untuk memverifikasi akun pemain secara manual.`,
           expression: "akward",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -505,7 +544,7 @@ module.exports = {
       }
 
       const targetUser = interaction.options.getUser("user");
-      const mcUsername = interaction.options.getString("username");
+      const mcUsername = interaction.options.getString("username"); if(!isValidMcUsername(mcUsername)){ const ep=buildErrorContainerV2({interaction,title:"Username Tidak Valid",description:"Username harus 3-16 karakter alfanumerik/underscore.",footerText:ui.getFooter("utility")}); return interaction.editReply(ep); }
 
       const MinecraftBridgeService = require("../../src/services/minecraftBridge");
       await MinecraftBridgeService.adminVerifyAccount(
@@ -523,14 +562,14 @@ module.exports = {
         authorName: "Naura Minecraft Admin Operations",
         title: "Verifikasi Manual Berhasil!",
         description: `Admin telah berhasil menautkan dan memverifikasi akun:\n\n` +
-          `> 👤 **User Discord:** <@${targetUser.id}>\n` +
-          `> 🎮 **Minecraft IGN:** \`${mcUsername}\`\n` +
-          `> 🌟 **Bonus:** +500 Star Fragments ditambahkan ke user.`,
+          `> ðŸ‘¤ **User Discord:** <@${targetUser.id}>\n` +
+          `> ðŸŽ® **Minecraft IGN:** \`${mcUsername}\`\n` +
+          `> ðŸŒŸ **Bonus:** +500 Star Fragments ditambahkan ke user.`,
         footerText: "Naura Minecraft Admin System",
       });
       return interaction.editReply(adminPayload);
     } else if (subcommand === "broadcast") {
-      const msgText = interaction.options.getString("message");
+      const msgText = sanitizeBroadcastText(interaction.options.getString("message")); if(!msgText){ const ep=buildErrorContainerV2({interaction,title:"Pesan Kosong",description:"Pesan tidak valid setelah sanitasi.",footerText:ui.getFooter("utility")}); return interaction.editReply(ep); }
       const { sendRconCommand } = require("../../src/utils/rcon");
 
       const settings = await cacheManager.getGuildSettings(interaction.guild.id);
@@ -540,7 +579,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           interaction,
           title: "RCON Belum Dikonfigurasi",
-          description: `${ui.getEmoji("naura_akward") || "😅"} Server ini belum mengonfigurasi IP/Password RCON.\n\n${ui.getEmoji("sparkle") || "💡"} *Minta admin server untuk mengatur jembatan chat dengan \`/minecraft bridge\` terlebih dahulu, ya!*`,
+          description: `${ui.getEmoji("naura_akward") || "ðŸ˜…"} Server ini belum mengonfigurasi IP/Password RCON.\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Minta admin server untuk mengatur jembatan chat dengan \`/minecraft bridge\` terlebih dahulu, ya!*`,
           expression: "akward",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -555,19 +594,19 @@ module.exports = {
           { text: "] ", color: "light_purple" },
           { text: msgText, color: "white" },
         ]);
-        await sendRconCommand(
+        await rconBreaker.execute(()=>sendRconCommand(
           mc.ip,
           mc.rconPort || 25575,
-          mc.rconPassword,
-          `tellraw @a ${rawJson}`,
-        );
+          decryptRconPassword(mc.rconPassword),
+          `tellraw @a ${rawJson}`
+        ));
 
         const bcPayload = buildSuccessContainerV2({
           interaction,
           accentColorHex: "#C084FC",
           authorName: "Naura Minecraft RCON Broadcast",
-          title: `${ui.getEmoji("announce_update") || "📢"} Pesan Berhasil Disiarkan!`,
-          description: `Pesan telah dikirim ke seluruh pemain di server Minecraft:\n\n> *"${msgText}"*\n\n> ${ui.getEmoji("naura_happy") || "✨"} *Semua pemain di server akan melihat pesanmu!*`,
+          title: `${ui.getEmoji("announce_update") || "ðŸ“¢"} Pesan Berhasil Disiarkan!`,
+          description: `Pesan telah dikirim ke seluruh pemain di server Minecraft:\n\n> *"${msgText}"*\n\n> ${ui.getEmoji("naura_happy") || "âœ¨"} *Semua pemain di server akan melihat pesanmu!*`,
           footerText: "Naura Minecraft RCON Broadcast",
         });
 
@@ -576,7 +615,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           interaction,
           title: "Gagal Mengirim Broadcast",
-          description: `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, Naura gagal mengirim pesan ke server Minecraft.\n\n**Detail Error:** ${err.message}\n\n${ui.getEmoji("sparkle") || "💡"} *Periksa koneksi RCON atau minta admin server memeriksa konfigurasi bridge.*`,
+          description: `${ui.getEmoji("naura_cry") || "ðŸ˜¢"} Maaf ya, Naura gagal mengirim pesan ke server Minecraft.\n\n**Detail Error:** ${err.message}\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Periksa koneksi RCON atau minta admin server memeriksa konfigurasi bridge.*`,
           expression: "cry",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -590,7 +629,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           interaction,
           title: "Akun Belum Ditautkan",
-          description: `${ui.getEmoji("naura_akward") || "😅"} Kamu belum menghubungkan akun Minecraft!\n\n${ui.getEmoji("sparkle") || "💡"} *Gunakan \`/minecraft link <username>\` terlebih dahulu untuk menautkan akun Minecraft Premium-mu, ya!*`,
+          description: `${ui.getEmoji("naura_akward") || "ðŸ˜…"} Kamu belum menghubungkan akun Minecraft!\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Gunakan \`/minecraft link <username>\` terlebih dahulu untuk menautkan akun Minecraft Premium-mu, ya!*`,
           expression: "akward",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -600,8 +639,7 @@ module.exports = {
 
       const username = profile.minecraft_ign;
 
-      const newPlaytime =
-        (profile.minecraft_playtime || 0) + Math.floor(Math.random() * 30) + 15;
+      const newPlaytime = profile.minecraft_playtime || 0; // simulated: tidak dari server; ditandai di kartu
       await cacheManager.updateUserProfile(interaction.user.id, {
         minecraft_playtime: newPlaytime,
       });
@@ -619,7 +657,7 @@ module.exports = {
             const errPayload = buildErrorContainerV2({
               interaction,
               title: "Gagal Memuat UUID",
-              description: `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, Naura gagal memuat UUID untuk **${username}**.\n\n${ui.getEmoji("sparkle") || "💡"} *Pastikan akun Minecraft-mu masih valid dan aktif.*`,
+              description: `${ui.getEmoji("naura_cry") || "ðŸ˜¢"} Maaf ya, Naura gagal memuat UUID untuk **${username}**.\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Pastikan akun Minecraft-mu masih valid dan aktif.*`,
               expression: "cry",
               withBanner: true,
               footerText: ui.getFooter("utility"),
@@ -647,8 +685,8 @@ module.exports = {
         const statsPayload = buildSuccessContainerV2({
           interaction,
           authorName: "Naura Minecraft Stats Generator",
-          title: `${ui.getEmoji("core") || "🌸"} Statistik ${username}`,
-          description: `> ${ui.getEmoji("naura_happy") || "✨"} *Kartu statistikmu sudah siap! Terus bermain dan kumpulkan waktu bermain untuk reward spesial!*`,
+          title: `${ui.getEmoji("core") || "ðŸŒ¸"} Statistik ${username}`,
+          description: `> ${ui.getEmoji("naura_happy") || "âœ¨"} *Kartu statistikmu sudah siap! Terus bermain dan kumpulkan waktu bermain untuk reward spesial!*`,
           bannerAttachmentName: "mc-stats.png",
           files: [attachment],
           footerText: ui.getFooter("utility"),
@@ -661,8 +699,8 @@ module.exports = {
           interaction,
           title: isCircuitOpen ? "API Mojang Sedang Istirahat" : "Gagal Generate Stats",
           description: isCircuitOpen
-            ? `${ui.getEmoji("naura_sleepy") || "😴"} API Mojang sedang terlalu sibuk. Coba lagi dalam 1-2 menit ya!`
-            : `${ui.getEmoji("naura_cry") || "😢"} Maaf ya, Naura gagal memuat data statistik. Radar sinkronisasi Mojang terganggu.\n\n${ui.getEmoji("sparkle") || "✨"} *Coba lagi beberapa saat lagi!*`,
+            ? `${ui.getEmoji("naura_sleepy") || "ðŸ˜´"} API Mojang sedang terlalu sibuk. Coba lagi dalam 1-2 menit ya!`
+            : `${ui.getEmoji("naura_cry") || "ðŸ˜¢"} Maaf ya, Naura gagal memuat data statistik. Radar sinkronisasi Mojang terganggu.\n\n${ui.getEmoji("sparkle") || "âœ¨"} *Coba lagi beberapa saat lagi!*`,
           expression: isCircuitOpen ? "sleepy" : "cry",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -677,7 +715,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           interaction,
           title: "Akses Ditolak",
-          description: `${ui.getEmoji("naura_akward") || "😅"} Maaf ya, kamu memerlukan izin \`Manage Server\` atau \`Administrator\` untuk menyetel jembatan chat ini.\n\n${ui.getEmoji("sparkle") || "💡"} *Minta admin server untuk membantu mengatur bridge Minecraft, ya!*`,
+          description: `${ui.getEmoji("naura_akward") || "ðŸ˜…"} Maaf ya, kamu memerlukan izin \`Manage Server\` atau \`Administrator\` untuk menyetel jembatan chat ini.\n\n${ui.getEmoji("sparkle") || "ðŸ’¡"} *Minta admin server untuk membantu mengatur bridge Minecraft, ya!*`,
           expression: "akward",
           withBanner: true,
           footerText: ui.getFooter("utility"),
@@ -702,7 +740,7 @@ module.exports = {
       mc.bridgeChannelId = channel.id;
       if (rconIp !== null) mc.ip = rconIp;
       if (rconPort !== null) mc.rconPort = rconPort;
-      if (rconPassword !== null) mc.rconPassword = rconPassword;
+      if (rconPassword !== null) mc.rconPassword = encryptRconPassword(rconPassword);
       if (enabled !== null) mc.bridgeEnabled = enabled;
       else if (enabled === null && mc.bridgeEnabled === undefined)
         mc.bridgeEnabled = true;
@@ -716,22 +754,22 @@ module.exports = {
       cacheManager.invalidateGuildSettings(interaction.guild.id);
 
       const statusEmoji = mc.bridgeEnabled
-        ? ui.getEmoji("greenping") || "🟢"
-        : ui.getEmoji("redping") || "🔴";
+        ? ui.getEmoji("greenping") || "ðŸŸ¢"
+        : ui.getEmoji("redping") || "ðŸ”´";
       
       const successTitle = mc.bridgeEnabled 
         ? "Jembatan Chat Diaktifkan!" 
         : "Jembatan Chat Dinonaktifkan";
       
       const successDesc = mc.bridgeEnabled
-        ? `Pengaturan jembatan chat Minecraft berhasil diperbarui!\n\n**Status:** ${statusEmoji} Aktif\n**Channel:** <#${mc.bridgeChannelId}>\n**IP RCON:** \`${mc.ip || "Belum Disetel"}:${mc.rconPort || 25575}\`\n**RCON Pass:** \`${mc.rconPassword ? "****** (Tersimpan)" : "Belum Disetel"}\`\n\n> ${ui.getEmoji("naura_happy") || "✨"} *Chat dari Discord sekarang akan terhubung ke Minecraft dan sebaliknya!*`
-        : `Jembatan chat Minecraft telah dinonaktifkan.\n\n**Channel:** <#${mc.bridgeChannelId}>\n\n> ${ui.getEmoji("naura_read") || "📖"} *Gunakan \`/minecraft bridge\` lagi dengan \`enabled: true\` untuk mengaktifkannya kembali.*`;
+        ? `Pengaturan jembatan chat Minecraft berhasil diperbarui!\n\n**Status:** ${statusEmoji} Aktif\n**Channel:** <#${mc.bridgeChannelId}>\n**IP RCON:** \`${mc.ip || "Belum Disetel"}:${mc.rconPort || 25575}\`\n**RCON Pass:** \`${mc.rconPassword ? "****** (Tersimpan)" : "Belum Disetel"}\`\n\n> ${ui.getEmoji("naura_happy") || "âœ¨"} *Chat dari Discord sekarang akan terhubung ke Minecraft dan sebaliknya!*`
+        : `Jembatan chat Minecraft telah dinonaktifkan.\n\n**Channel:** <#${mc.bridgeChannelId}>\n\n> ${ui.getEmoji("naura_read") || "ðŸ“–"} *Gunakan \`/minecraft bridge\` lagi dengan \`enabled: true\` untuk mengaktifkannya kembali.*`;
       
       const bridgePayload = buildSuccessContainerV2({
         interaction,
         accentColorHex: mc.bridgeEnabled ? "#22c55e" : "#ef4444",
         authorName: "Naura Minecraft Bridge Engine",
-        title: `${ui.getEmoji("translate") || "🌐"} ${successTitle}`,
+        title: `${ui.getEmoji("translate") || "ðŸŒ"} ${successTitle}`,
         description: successDesc,
         footerText: "Naura Minecraft Bridge Engine",
       });

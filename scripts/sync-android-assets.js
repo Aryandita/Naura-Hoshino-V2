@@ -13,8 +13,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const projectRoot = path.resolve(__dirname, "..");
-const mobileDir = path.join(projectRoot, "dashboard", "mobile");
-const mobileDistDir = path.join(mobileDir, "dist");
+const hybridDistDir = path.join(projectRoot, "dashboard", "dist");
 const androidAssetsDir = path.join(projectRoot, "android", "app", "src", "main", "assets", "www");
 const publicDir = path.join(projectRoot, "dashboard", "public");
 
@@ -22,9 +21,9 @@ function log(msg) {
   console.log(`[SYNC-ANDROID] ${msg}`);
 }
 
-function buildMobile() {
-  log("Building mobile dashboard with Vite...");
-  execSync("npm run mobile:build", {
+function buildDashboard() {
+  log("Building hybrid dashboard with Vite...");
+  execSync("npm run dashboard:build", {
     cwd: projectRoot,
     stdio: "inherit",
   });
@@ -316,8 +315,8 @@ async function generateAppIcons() {
 async function main() {
   log("Starting Android asset synchronization...");
 
-  // 1. Compile Mobile PWA
-  buildMobile();
+  // 1. Compile Hybrid PWA
+  buildDashboard();
 
   // 2. Prepare Android assets directory
   if (fs.existsSync(androidAssetsDir)) {
@@ -325,20 +324,20 @@ async function main() {
   }
   fs.mkdirSync(androidAssetsDir, { recursive: true });
 
-  // 3. Copy mobile dist files to assets/www
-  log(`Copying mobile dist to ${androidAssetsDir}...`);
-  copyDirectory(mobileDistDir, androidAssetsDir);
+  // 3. Copy hybrid dist files to assets/www
+  log(`Copying hybrid dist to ${androidAssetsDir}...`);
+  copyDirectory(hybridDistDir, androidAssetsDir);
 
   // Ensure root index.html exists in www
-  const mobilePageIndex = path.join(androidAssetsDir, "src", "pages", "index.html");
+  const pageIndex = path.join(androidAssetsDir, "src", "pages", "index.html");
   const wwwRootIndex = path.join(androidAssetsDir, "index.html");
-  if (fs.existsSync(mobilePageIndex)) {
-    fs.copyFileSync(mobilePageIndex, wwwRootIndex);
+  if (fs.existsSync(pageIndex)) {
+    fs.copyFileSync(pageIndex, wwwRootIndex);
   }
 
-  // Also synchronize to assets/ root so /mobile/ path handler can resolve assets directly
+  // Also synchronize to assets/ root
   const androidRootAssets = path.join(projectRoot, "android", "app", "src", "main", "assets");
-  copyDirectory(mobileDistDir, androidRootAssets);
+  copyDirectory(hybridDistDir, androidRootAssets);
 
   // 4. Copy manifest and public assets
   const filesToCopy = ["manifest.json", "favicon.ico", "naura_3d_closeup.png"];

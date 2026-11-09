@@ -222,7 +222,7 @@ module.exports = {
             `💰 Total Hasil Kas Daur Ulang: \`+${allRes.nsfAwarded} SC\``,
           ].join("\n");
         } else {
-          snippet = `⚠️ **Daur Ulang Massal:** ${allRes.message || "Tidak ada barang yang dibongkar."}`;
+          snippet = `${ui.getEmoji("mod_warn") || "⚠️"} **Daur Ulang Massal:** ${allRes.message || "Tidak ada barang yang dibongkar."}`;
         }
         currentPayload = buildPayload(snippet);
         await i.editReply(currentPayload).catch(() => {});
@@ -248,7 +248,7 @@ module.exports = {
             `💰 Bonus Kas Daur Ulang: \`+${salvageRes.nsfAwarded} SC\``,
           ].join("\n");
         } else {
-          snippet = `⚠️ **Gagal Daur Ulang:** ${salvageRes.message || "Barang tidak dapat dibongkar."}`;
+          snippet = `${ui.getEmoji("mod_warn") || "⚠️"} **Gagal Daur Ulang:** ${salvageRes.message || "Barang tidak dapat dibongkar."}`;
         }
 
         currentPayload = buildPayload(snippet);

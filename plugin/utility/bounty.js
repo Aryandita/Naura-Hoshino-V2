@@ -123,12 +123,12 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#10B981",
         authorName: "NAURA PRIVACY VAULT",
-        title: "🔒 Catatan Rahasia Tersimpan",
+        title: `${ui.getEmoji("mod_lock") || "🔒"} Catatan Rahasia Tersimpan`,
         description: [
           "Catatanmu telah dienkripsi secara end-to-end menggunakan standar **AES-256-GCM**.",
           "",
           `> 🗝️ **Vault ID:** \`${res.vaultId}\``,
-          "> 🛡️ **Zero-Knowledge:** Passphrase tidak pernah disimpan. Jika kamu lupa passphrase, catatan tidak dapat dipulihkan.",
+          `> ${ui.getEmoji("mod_shield") || "🛡️"} **Zero-Knowledge:** Passphrase tidak pernah disimpan. Jika kamu lupa passphrase, catatan tidak dapat dipulihkan.`,
           "",
           `Gunakan \`/bounty vault_read vault_id:${res.vaultId} passphrase:...\` untuk membuka kembali.`,
         ].join("\n"),
@@ -229,7 +229,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22C55E",
         authorName: "NAURA BOUNTY BOARD",
-        title: "✨ Sayembara Komunitas Resmi Dibuka!",
+        title: `${ui.getEmoji("ai_sparkle") || "✨"} Sayembara Komunitas Resmi Dibuka!`,
         description: [
           `Sayembara baru **"${title}"** telah terdaftar di papan pengumuman.`,
           "",

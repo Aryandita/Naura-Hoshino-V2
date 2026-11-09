@@ -275,7 +275,7 @@ async function handleStatus(interaction, userId, username) {
   const payload = buildContainerV2({
     accentColorHex: ACCENT_COLORS.CAFE_PINK,
     authorName: "☕ Cozy Cyber-Cafe & Maid Lounge",
-    title: `✨ ${cafe.cafeName} (Level ${cafe.level})`,
+    title: `${ui.getEmoji("ai_sparkle") || "✨"} ${cafe.cafeName} (Level ${cafe.level})`,
     description: [
       "Selamat datang di lounge santaimu! Tempat berkumpul hangat para petualang Neo-Hoshino.",
       "",
@@ -480,13 +480,13 @@ async function handleCook(interaction, userId, recipeId) {
   const payload = buildContainerV2({
     accentColorHex: ACCENT_COLORS.CAFE_PINK,
     authorName: "🍳 Dapur Cozy Cafe",
-    title: "✨ Masakan Selesai & Masuk Etalase!",
+    title: `${ui.getEmoji("ai_sparkle") || "✨"} Masakan Selesai & Masuk Etalase!`,
     description: [
       `Kamu telah selesai memasak **1x ${cookRes.emoji} ${cookRes.dishName}**!`,
       "",
       `⭐ **Reputasi Kafe:** \`+${cookRes.repGain} REP\` (Total: \`${cookRes.currentRep} REP\`)`,
       `📦 **Stok Saat Ini:** \`${cookRes.totalStock} Porsi\``,
-      `✨ **Khasiat Buff:** *${cookRes.buff.description}*`,
+      `${ui.getEmoji("ai_sparkle") || "✨"} **Khasiat Buff:** *${cookRes.buff.description}*`,
       cookRes.levelUp
         ? `\n🎉 **KAFE NAIK LEVEL!** Kafe kini mencapai **Level ${cookRes.newLevel}**!`
         : "",
@@ -523,7 +523,7 @@ async function handleServe(interaction, userId) {
   const payload = buildContainerV2({
     accentColorHex: ACCENT_COLORS.SERVE_BLUE,
     authorName: "👥 Layanan Tamu Kafe",
-    title: "✨ Pelanggan Menikmati Pesanan!",
+    title: `${ui.getEmoji("ai_sparkle") || "✨"} Pelanggan Menikmati Pesanan!`,
     description: [
       `Tamu baru saja membeli dan menghabiskan **${serveRes.soldQuantity}x ${serveRes.emoji} ${serveRes.dishName}**!`,
       "",
@@ -560,7 +560,7 @@ async function handleCollect(interaction, userId) {
   const payload = buildContainerV2({
     accentColorHex: ACCENT_COLORS.SUCCESS_GREEN,
     authorName: "💰 Kasir Kafe",
-    title: "✨ Pendapatan Pasif Diklaim!",
+    title: `${ui.getEmoji("ai_sparkle") || "✨"} Pendapatan Pasif Diklaim!`,
     description: [
       `Kamu telah memanen hasil usaha dari **${collectRes.cafeName}**!`,
       "",
@@ -618,12 +618,12 @@ async function handleOrder(interaction, userId, username, targetUser, recipeId) 
   const payload = buildContainerV2({
     accentColorHex: ACCENT_COLORS.ORDER_PURPLE,
     authorName: "🛍️ Pesanan Kafe Antar-Pemain",
-    title: "✨ Pesanan Kuliner Berhasil!",
+    title: `${ui.getEmoji("ai_sparkle") || "✨"} Pesanan Kuliner Berhasil!`,
     description: [
       `Kamu berhasil membeli **1x ${orderRes.emoji} ${orderRes.dishName}** dari **${orderRes.sellerCafeName}** (<@${targetUser.id}>)!`,
       "",
       `💸 **Biaya:** \`${orderRes.price} Sukamaju Koin (SC)\``,
-      `✨ **Khasiat Buff Aktif:** *${orderRes.buff.description}* (Berlaku selama ${orderRes.buff.durationHours} jam)`,
+      `${ui.getEmoji("ai_sparkle") || "✨"} **Khasiat Buff Aktif:** *${orderRes.buff.description}* (Berlaku selama ${orderRes.buff.durationHours} jam)`,
       "",
       "-# 💡 *Koin telah langsung dikirimkan ke pemilik kafe dan reputasi kafenya bertambah!*",
     ].join("\n"),

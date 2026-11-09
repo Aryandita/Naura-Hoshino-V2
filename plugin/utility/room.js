@@ -153,7 +153,7 @@ module.exports = {
       const payload = buildContainerV2({
         authorName: "NAURA LIVING ROOM 2.5D",
         title: `🛋️ Cyber Pod Milik ${targetDisplayName}`,
-        description: `Selamat datang di ruang santai **${targetDisplayName}**! Kamar ini tertata dengan suasana futuristik dan kenyamanan hangat.\n\n📊 **Statistik Kamar:**\n• Level Kamar: \`Level ${room.level || 1}\`\n• Skor Kenyamanan: \`${room.comfortScore || 120}/1000\`\n• Total Disukai: \`${room.likesCount || 0} ❤️\`\n\n📖 **Buku Tamu Terkini:**\n${guestEntries}`,
+        description: `Selamat datang di ruang santai **${targetDisplayName}**! Kamar ini tertata dengan suasana futuristik dan kenyamanan hangat.\n\n📊 **Statistik Kamar:**\n• Level Kamar: \`Level ${room.level || 1}\`\n• Skor Kenyamanan: \`${room.comfortScore || 120}/1000\`\n• Total Disukai: \`${room.likesCount || 0} ❤️\`\n\n${ui.getEmoji("edu_word") || "📖"} **Buku Tamu Terkini:**\n${guestEntries}`,
         mediaUrl: "attachment://cyber-room.png",
         footerText: ui.getFooter("survival"),
       });
@@ -174,7 +174,7 @@ module.exports = {
         const payload = buildContainerV2({
           authorName: "NAURA LIVING ROOM 2.5D",
           title: "✦ Buku Tamu Sendiri ✦",
-          description: `Kamu tidak bisa menulis di buku tamu kamarmu sendiri ya, **${authorDisplayName}**! Kunjungi kamar temanmu untuk meninggalkan pesan hangat~ ✨`,
+          description: `Kamu tidak bisa menulis di buku tamu kamarmu sendiri ya, **${authorDisplayName}**! Kunjungi kamar temanmu untuk meninggalkan pesan hangat~ ${ui.getEmoji("ai_sparkle") || "✨"}`,
           footerText: ui.getFooter("survival"),
         });
         return interaction.editReply({
@@ -245,7 +245,7 @@ module.exports = {
       const payload = buildContainerV2({
         authorName: "NAURA LIVING ROOM 2.5D",
         title: "☕ Secangkir Kopi Kosmik Dikirimkan!",
-        description: `**${authorDisplayName}** menyuguhkan secangkir kopi hangat ke kamar **${targetUser.username}**!\n\n✨ **Efek Kado:**\n• Stamina **${targetUser.username}** bertambah: \`+20 Stamina\`!`,
+        description: `**${authorDisplayName}** menyuguhkan secangkir kopi hangat ke kamar **${targetUser.username}**!\n\n${ui.getEmoji("ai_sparkle") || "✨"} **Efek Kado:**\n• Stamina **${targetUser.username}** bertambah: \`+20 Stamina\`!`,
         footerText: ui.getFooter("survival"),
       });
 
@@ -260,7 +260,7 @@ module.exports = {
       const payload = buildContainerV2({
         authorName: "NAURA LIVING ROOM 2.5D",
         title: "🛠️ Studio Dekorasi Kamar",
-        description: `Halo, **${authorDisplayName}**! Kamu bisa mengatur dan membeli furnitur kamar baru melalui Web Dashboard di **http://localhost:19130/portfolio** atau gunakan koin RPG untuk memperluas luas grid kamarmu!\n\n✨ *Setiap furnitur baru yang kamu pasang akan meningkatkan skor kenyamanan dan regenerasi staminamu.*`,
+        description: `Halo, **${authorDisplayName}**! Kamu bisa mengatur dan membeli furnitur kamar baru melalui Web Dashboard di **http://localhost:19130/portfolio** atau gunakan koin RPG untuk memperluas luas grid kamarmu!\n\n${ui.getEmoji("ai_sparkle") || "✨"} *Setiap furnitur baru yang kamu pasang akan meningkatkan skor kenyamanan dan regenerasi staminamu.*`,
         footerText: ui.getFooter("survival"),
       });
       return interaction.editReply({
@@ -348,7 +348,7 @@ module.exports = {
           "",
           `• **Furnitur:** \`${itemName}\` (${itemIcon})`,
           `• **Koordinat Target:** Grid \`(${px}, ${py})\``,
-          `• **Estimasi Kenyamanan:** \`+25 Comfort Score\` ✨`,
+          `• **Estimasi Kenyamanan:** \`+25 Comfort Score\` ${ui.getEmoji("ai_sparkle") || "✨"}`,
           "",
           "> *Jika tata letak sudah pas, simpan pengaturan dekorasi kamarmu melalui Web Dashboard atau menu `/room decorate`.*",
         ].join("\n"),

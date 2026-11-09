@@ -22,14 +22,15 @@ const path = require("node:path");
 // (scopeGuildId), lalu client mengurutkan ulang baris yang sudah ada. Jadi
 // tidak ada skema baru, tidak ada migrasi, dan tidak ada data yang hilang.
 
-const LEADERBOARD_HTML = path.join(
+const LEADERBOARD_JS = path.join(
   __dirname,
   "..",
   "..",
   "dashboard",
   "src",
+  "js",
   "pages",
-  "leaderboard.html",
+  "leaderboard.js",
 );
 const API_JS = path.join(
   __dirname,
@@ -44,47 +45,46 @@ function read(file) {
   return fs.readFileSync(file, "utf8");
 }
 
-test("leaderboard.html memanggil endpoint guild yang benar", () => {
-  const source = read(LEADERBOARD_HTML);
+test("leaderboard.js memanggil endpoint guild yang benar", () => {
+  const source = read(LEADERBOARD_JS);
   assert.ok(
     source.includes("/api/guilds/manageable"),
-    "leaderboard.html harus memakai /api/guilds/manageable yang benar-benar ada",
+    "leaderboard.js harus memakai /api/guilds/manageable yang benar-benar ada",
   );
   assert.ok(
     !/fetch\(\s*['"`]\/api\/guilds['"`]/.test(source),
-    "leaderboard.html tidak boleh memanggil /api/guilds karena rute itu tidak ada",
+    "leaderboard.js tidak boleh memanggil /api/guilds karena rute itu tidak ada",
   );
 });
 
-test("leaderboard.html meneruskan guildId ke endpoint leaderboard", () => {
-  const source = read(LEADERBOARD_HTML);
-  // guildId harus benar-benar dikirim. Pola yang dipakai adalah
-  // URLSearchParams + params.set('guildId', ...), bukan string literal
-  // di dalam template URL, jadi cukup dicek keduanya.
+test("leaderboard.js meneruskan guildId ke endpoint leaderboard", () => {
+  const source = read(LEADERBOARD_JS);
+  // guildId dikirim lewat URLSearchParams ke /api/leaderboard.
   assert.match(
     source,
-    /params\.set\(\s*['"]guildId['"]/,
-    "leaderboard.html harus mengirim guildId lewat query string",
+    /guildId:\s*this\.currentGuild/,
+    "leaderboard.js harus mengirim guildId lewat query string",
   );
   assert.match(
     source,
-    /api\/realtime\/leaderboard\?\$\{/,
+    /api\/leaderboard\?\$\{params\}/,
     "URL leaderboard harus menyisipkan query string yang sudah dibangun",
   );
 });
 
 test("dropdown guild memicu pemuatan ulang leaderboard", () => {
-  const source = read(LEADERBOARD_HTML);
-  const idx = source.indexOf("getElementById('guildSelector')?.addEventListener");
+  const source = read(LEADERBOARD_JS);
   assert.ok(
-    idx > -1,
-    "#guildSelector harus punya listener change",
+    source.includes('getElementById("lbGuildSelect")'),
+    "dropdown guild (lbGuildSelect) harus dibaca",
   );
+  const idx = source.indexOf('guildSelect?.addEventListener("change"');
+  assert.ok(idx > -1, "lbGuildSelect harus punya listener change");
   const slice = source.slice(idx, idx + 300);
   assert.match(
     slice,
-    /addEventListener\(\s*'change'[\s\S]{0,200}?fetchLeaderboard\(\)/,
-    "listener change harus memicu fetchLeaderboard()",
+    /addEventListener\(\s*["']change["'][\s\S]{0,200}?this\.loadLeaderboard\(\)/,
+    "listener change harus memicu loadLeaderboard()",
   );
 });
 

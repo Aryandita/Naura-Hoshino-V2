@@ -7,6 +7,7 @@ const {
 } = require("discord.js");
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
+const ui = require("../../../src/config/ui");
 const cacheManager = require("../../../src/managers/cacheManager");
 const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
 const { renderOnboardingPrompt } = require("../../../src/survival/engines/playerOnboardingEngine");
@@ -55,7 +56,7 @@ module.exports = {
           .setCustomId(`survival_act_mine:${userId}`)
           .setLabel("Tambang")
           .setStyle(ButtonStyle.Secondary)
-          .setEmoji("⛏️"),
+          .setEmoji(ui.getEmoji("mc_pickaxe") || "⛏️"),
         new ButtonBuilder()
           .setCustomId(`survival_act_chop:${userId}`)
           .setLabel("Tebang")
@@ -70,7 +71,7 @@ module.exports = {
           .setCustomId(`survival_act_roam:${userId}`)
           .setLabel("Jelajah")
           .setStyle(ButtonStyle.Secondary)
-          .setEmoji("🗺️"),
+          .setEmoji(ui.getEmoji("edu_map") || "🗺️"),
       );
 
       const row2 = new ActionRowBuilder().addComponents(
@@ -78,12 +79,12 @@ module.exports = {
           .setCustomId(`survival_act_dungeon:${userId}`)
           .setLabel("Dungeon")
           .setStyle(ButtonStyle.Danger)
-          .setEmoji("⚔️"),
+          .setEmoji(ui.getEmoji("arcade_duel") || "⚔️"),
         new ButtonBuilder()
           .setCustomId(`survival_act_shop:${userId}`)
           .setLabel("Toko")
           .setStyle(ButtonStyle.Secondary)
-          .setEmoji("🏪"),
+          .setEmoji(ui.getEmoji("eco_shop") || "🏪"),
         new ButtonBuilder()
           .setCustomId(`survival_act_craft:${userId}`)
           .setLabel("Tempa & Craft")
@@ -108,7 +109,7 @@ module.exports = {
         iconURL: user.displayAvatarURL(),
         expression: "Cheers",
         description:
-          `Selamat datang di **Naura Wilds**, Kak **${user.displayName || user.username}**! ✨\n` +
+          `Selamat datang di **Naura Wilds**, Kak **${user.displayName || user.username}**! ${ui.getEmoji("ai_sparkle") || "✨"}\n` +
           `Pilih langsung aktivitas petualanganmu melalui tombol di bawah tanpa perlu mengetik ulang perintah.\n\n` +
           `**Kondisi Fisik & Status Saat Ini:**\n` +
           `❤️ **HP**: \`${health}/100\` • ⚡ **Energi**: \`${energy}/100\`\n` +

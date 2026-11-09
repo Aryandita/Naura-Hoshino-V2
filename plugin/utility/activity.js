@@ -57,7 +57,7 @@ module.exports = {
           "",
           "**Naura World Activity** adalah game web mini interaktif yang berjalan langsung di dalam Discord client via iframe aman.",
           "",
-          "✨ **Fitur Utama Activity:**",
+          `${ui.getEmoji("ai_sparkle") || "✨"} **Fitur Utama Activity:**`,
           "• **TCG Card Battle:** Pertarungan kartu anime multiplayer real-time di voice channel.",
           "• **Interactive Survival Map:** Jelajahi 6 wilayah Naura Wilds secara visual.",
           "• **Synchronized Music Controller:** Kendali playlist musik bersama teman satu voice channel.",
@@ -76,8 +76,8 @@ module.exports = {
     // Subcommand: launch
     const memberVoice = interaction.member?.voice?.channel;
     const voiceNote = memberVoice
-      ? `🔊 **Voice Channel Aktif:** <#${memberVoice.id}> (Siap diluncurkan!)`
-      : `⚠️ *Kamu belum bergabung ke Voice Channel. Masuk ke Voice Channel untuk bermain bersama teman!*`;
+      ? `${ui.getEmoji("music_bass") || "🔊"} **Voice Channel Aktif:** <#${memberVoice.id}> (Siap diluncurkan!)`
+      : `${ui.getEmoji("mod_warn") || "⚠️"} *Kamu belum bergabung ke Voice Channel. Masuk ke Voice Channel untuk bermain bersama teman!*`;
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()

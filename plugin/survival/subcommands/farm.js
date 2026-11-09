@@ -99,8 +99,8 @@ module.exports = {
           }
           const seed = s.seed || {};
           const statusText = s.isMature
-            ? "✨ **Siap Dipanen!**"
-            : `⏳ ${s.stage} (\`${s.remainingMinutes} menit lagi\`) [${s.progressPercent}%]`;
+            ? `${ui.getEmoji("ai_sparkle") || "✨"} **Siap Dipanen!**`
+            : `${ui.getEmoji("naura_uptime") || "⏳"} ${s.stage} (\`${s.remainingMinutes} menit lagi\`) [${s.progressPercent}%]`;
           const fert = s.isFertilized ? "⚡ _Terpupuk (+50% Panen)_" : "";
           return `• **Pod #${idx + 1}**: ${seed.emoji || "🌱"} **${seed.name || "Tanaman"}** | ${statusText} ${fert}`;
         })
@@ -315,7 +315,7 @@ module.exports = {
           ``,
           `📦 **Hasil Panen:** \`${res.item.amount}x\` **${res.item.name}**`,
           `⭐ **Bonus XP:** \`+${res.xpYield} XP\``,
-          res.wasFertilized ? `✨ _Bonus Pupuk Bio-Elektrolit Aktif!_` : ``,
+          res.wasFertilized ? `${ui.getEmoji("ai_sparkle") || "✨"} _Bonus Pupuk Bio-Elektrolit Aktif!_` : ``,
           ``,
           `> *Bahan mentah ini siap diolah di Kafe (\`/survival cafe cook\`) atau dijual!*`,
         ]

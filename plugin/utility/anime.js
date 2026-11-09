@@ -41,6 +41,15 @@ const kitsuBreaker = getOrCreateBreaker("anime-kitsu", {
   halfOpenMaxAttempts: 3,
 });
 
+const JIKAN_MIN_INTERVAL=334; let jikanLast=0, jikanQueue=Promise.resolve();
+async function withJikanRateLimit(fn){const run=async()=>{const now=Date.now();const wait=Math.max(0,JIKAN_MIN_INTERVAL-(now-jikanLast));if(wait>0)await new Promise(r=>setTimeout(r,wait));const out=await fn();jikanLast=Date.now();return out;};const p=jikanQueue.then(run,run);jikanQueue=p.catch(()=>{});return p;}
+async function axiosWithRetry429(config, attempts=3){let lastErr;for(let i=0;i<attempts;i++){try{return await axios(config);}catch(e){lastErr=e;const st=e&&e.response&&e.response.status;if(st!==429)throw e;const ra=e.response.headers&&e.response.headers["retry-after"];const delay=ra?Math.min(5000,parseInt(ra,10)*1000||1000):Math.pow(2,i)*500;await new Promise(r=>setTimeout(r,delay));}}throw lastErr;}
+const POSTER_ALLOWLIST=["cdn.myanimelist.net","s4.anilist.co","cdn.kitsu.io"];
+function isPosterAllowed(u){if(!u||typeof u!=="string")return false;try{const h=new URL(u).hostname.toLowerCase();return POSTER_ALLOWLIST.some(a=>h===a||h.endsWith("."+a));}catch{return false;}}
+const posterCache=new Map(); const POSTER_CACHE_TTL=3600000;
+function posterCacheGet(u){const e=posterCache.get(u);if(!e)return null;if(Date.now()-e.t>POSTER_CACHE_TTL){posterCache.delete(u);return null;}return e.u;}
+function posterCacheSet(u,val){posterCache.set(u,{u:val,t:Date.now()});if(posterCache.size>500){posterCache.delete(posterCache.keys().next().value);}}
+function safePoster(u){if(!isPosterAllowed(u))return null;return posterCacheGet(u)||u;}
 const animeCache = new ApiResponseCache({ ttl: 300000, maxSize: 200 });
 
 /**
@@ -236,10 +245,7 @@ function normalizeAnimeStatus(raw) {
  */
 async function fetchFromJikan(query) {
   return jikanBreaker.execute(async () => {
-    const response = await axios.get(
-      `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=10`,
-      { timeout: 5000 },
-    );
+    const response = await withJikanRateLimit(()=>axiosWithRetry429({ url: `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=10`, timeout: 5000, headers: { "User-Agent": "NauraHoshinoBot/2.5 (Discord Utility Bot)" } }));
 
     if (
       !response.data ||
@@ -263,22 +269,16 @@ async function fetchFromJikan(query) {
       score: item.score
         ? `${ui.getEmoji("star") || "⭐"} **${item.score}** / 10`
         : "N/A",
-      rawScore: item.score ? String(item.score) : "8.5",
+      rawScore: item.score ? String(item.score) : null,
       type: (item.type || "TV").toUpperCase(),
       episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
       status: normalizeAnimeStatus(item.status),
       ageRating: item.rating || "N/A",
       url: item.url || null,
       posterURL:
-        item.images?.jpg?.large_image_url ||
-        item.images?.webp?.large_image_url ||
-        item.images?.jpg?.image_url ||
-        null,
+        safePoster(item.images?.jpg?.large_image_url || item.images?.webp?.large_image_url || item.images?.jpg?.image_url || null),
       posterUrl:
-        item.images?.jpg?.large_image_url ||
-        item.images?.webp?.large_image_url ||
-        item.images?.jpg?.image_url ||
-        null,
+        safePoster(item.images?.jpg?.large_image_url || item.images?.webp?.large_image_url || item.images?.jpg?.image_url || null),
       studio:
         item.studios && item.studios.length > 0
           ? item.studios.map((s) => s.name).join(", ")
@@ -363,7 +363,7 @@ async function fetchFromAniList(query) {
         ? (item.averageScore / 10).toFixed(1)
         : null;
       const poster =
-        item.coverImage?.extraLarge || item.coverImage?.large || null;
+        safePoster(item.coverImage?.extraLarge || item.coverImage?.large || null);
 
       return {
         title: item.title.english || item.title.romaji,
@@ -379,7 +379,7 @@ async function fetchFromAniList(query) {
         score: scoreVal
           ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10`
           : "N/A",
-        rawScore: scoreVal || "8.5",
+        rawScore: scoreVal || null,
         type: item.format || "TV",
         episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
         status: normalizeAnimeStatus(item.status),
@@ -422,10 +422,7 @@ async function fetchFromKitsu(query) {
         ? (parseFloat(attr.averageRating) / 10).toFixed(1)
         : null;
       const poster =
-        attr.posterImage?.large ||
-        attr.posterImage?.original ||
-        attr.posterImage?.medium ||
-        null;
+        safePoster(attr.posterImage?.large || attr.posterImage?.original || attr.posterImage?.medium || null);
 
       return {
         title: attr.titles?.en || attr.titles?.en_jp || attr.canonicalTitle,
@@ -440,7 +437,7 @@ async function fetchFromKitsu(query) {
         score: scoreVal
           ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10`
           : "N/A",
-        rawScore: scoreVal || "8.5",
+        rawScore: scoreVal || null,
         type: (attr.subtype || "TV").toUpperCase(),
         episodes: attr.episodeCount ? `${attr.episodeCount} Ep` : "Unknown",
         status: normalizeAnimeStatus(attr.status),

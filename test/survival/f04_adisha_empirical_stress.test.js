@@ -47,19 +47,19 @@ test.describe("F04 Empirical Stress - Locale Parsing & Parity", () => {
     }
   });
 
-  test("primary locales id.json and en.json strictly contain 508 flattened keys with 100% parity", () => {
+  test("primary locales id.json and en.json strictly contain 566 flattened keys with 100% parity", () => {
     const idFlattened = flatten(localeData.id);
     const enFlattened = flatten(localeData.en);
 
     assert.equal(
       idFlattened.length,
-      508,
-      `id.json has ${idFlattened.length} flattened keys, expected 508`,
+      566,
+      `id.json has ${idFlattened.length} flattened keys, expected 566`,
     );
     assert.equal(
       enFlattened.length,
-      508,
-      `en.json has ${enFlattened.length} flattened keys, expected 508`,
+      566,
+      `en.json has ${enFlattened.length} flattened keys, expected 566`,
     );
 
     const idSet = new Set(idFlattened);
@@ -95,8 +95,8 @@ test.describe("F04 Empirical Stress - Locale Parsing & Parity", () => {
       `ja.json has ${jaFlattened.length} flattened keys, expected 485`,
     );
 
-    // Verify exact difference between id (508) and es (485):
-    // 25 missing (chronicle, raidplan, economy, arcade) and 2 extra (setting.lang_es, setting.lang_ja) -> 508 - 25 + 2 = 485
+    // Verify exact difference between id (566) and es (485):
+    // 83 missing (key baru pasca-M1) dan 2 extra (setting.lang_es, setting.lang_ja) -> 566 - 83 + 2 = 485
     const idFlattened = flatten(localeData.id);
     const idSet = new Set(idFlattened);
     const esSet = new Set(esFlattened);
@@ -104,8 +104,8 @@ test.describe("F04 Empirical Stress - Locale Parsing & Parity", () => {
     const extraInEs = [...esSet].filter((k) => !idSet.has(k));
     assert.equal(
       missingInEs.length,
-      25,
-      "es.json must be missing exactly 25 keys from id.json",
+      83,
+      "es.json must be missing exactly 83 keys from id.json",
     );
     assert.equal(
       extraInEs.length,

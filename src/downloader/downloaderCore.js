@@ -16,7 +16,7 @@ const { logger } = require("../managers/logger");
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 const MAX_ATTACHMENTS = 10;
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+const httpsAgent = new https.Agent({ rejectUnauthorized: true });
 const NULL_DEVICE = process.platform === "win32" ? "NUL" : "/dev/null";
 
 const QUALITY_CHOICES = [
@@ -144,27 +144,25 @@ const dropCachedResult = (url) => urlCache.delete(url);
 // ==========================================
 
 const detectPlatform = (url) => {
-  if (url.includes("tiktok.com")) return "tiktok";
-  if (url.includes("instagram.com")) return "instagram";
-  if (url.includes("twitter.com") || url.includes("x.com")) return "twitter";
-  if (url.includes("facebook.com") || url.includes("fb.watch"))
+  let hn=""; try{ hn=new URL(url).hostname.toLowerCase(); }catch{ hn=""; }
+  const has=(d)=>hn===d||hn.endsWith("."+d);
+  if (has("tiktok.com")) return "tiktok";
+  if (has("instagram.com")) return "instagram";
+  if (has("twitter.com")||has("x.com")) return "twitter";
+  if (has("facebook.com")||has("fb.watch"))
     return "facebook";
-  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
-  if (url.includes("pinterest.com") || url.includes("pin.it"))
+  if (has("youtube.com")||has("youtu.be")) return "youtube";
+  if (has("pinterest.com")||has("pin.it"))
     return "pinterest";
-  if (url.includes("reddit.com") || url.includes("redd.it")) return "reddit";
-  if (url.includes("threads.net") || url.includes("threads.com"))
+  if (has("reddit.com")||has("redd.it")) return "reddit";
+  if (has("threads.net")||has("threads.com"))
     return "threads";
-  if (url.includes("linkedin.com")) return "linkedin";
-  if (
-    url.includes("vk.com") ||
-    url.includes("vk.ru") ||
-    url.includes("vkvideo.ru")
-  )
+  if (has("linkedin.com")) return "linkedin";
+  if (has("vk.com")||has("vk.ru")||has("vkvideo.ru"))
     return "vk";
-  if (url.includes("douyin.com") || url.includes("iesdouyin.com"))
+  if (has("douyin.com")||has("iesdouyin.com"))
     return "douyin";
-  if (url.includes("bilibili.com") || url.includes("b23.tv")) return "bilibili";
+  if (has("bilibili.com")||has("b23.tv")) return "bilibili";
   return "other";
 };
 
@@ -209,6 +207,30 @@ const getMediaDownloadHeaders = (platform) => {
   return headers;
 };
 
+const dns = require("dns").promises;
+function isPrivateIP(ip){
+  const v=String(ip||"").trim().toLowerCase();
+  if(v==="::1"||v==="::"||v==="127.0.0.1"||v.startsWith("127."))return true;
+  if(v.startsWith("10.")||v.startsWith("192.168.")||v.startsWith("169.254."))return true;
+  const m=v.match(/^172\.(\d+)\./); if(m){const n=parseInt(m[1],10); if(n>=16&&n<=31)return true;}
+  if(v.startsWith("fe80:")||v.startsWith("fc")||v.startsWith("fd"))return true;
+  const m2=v.match(/^::ffff:(\d+)\.(\d+)\.(\d+)\.(\d+)$/); if(m2)return isPrivateIP(m2.slice(1).join("."));
+  return false;
+}
+function isPrivateHostname(host){const h=String(host||"").toLowerCase();return h==="localhost"||h.endsWith(".local")||h.endsWith(".internal")||h==="metadata.google.internal"||h==="metadata";}
+const ALLOWED_HOSTS=new Set(["tiktok.com","instagram.com","twitter.com","x.com","facebook.com","fb.watch","youtube.com","youtu.be","pinterest.com","pin.it","reddit.com","redd.it","threads.net","linkedin.com","vk.com","vk.ru","vkvideo.ru","douyin.com","iesdouyin.com","bilibili.com","b23.tv","api.cobalt.tools","co.wuk.sh","cobalt.q0.ro","tiktokcdn.com","byteimg.com","fbcdn.net","cdninstagram.com","twimg.com","ytimg.com","ggpht.com"]);
+function hostAllowed(hostname){const h=String(hostname||"").toLowerCase();if(isPrivateHostname(h))return false;for(const a of ALLOWED_HOSTS){if(h===a||h.endsWith("."+a))return true;}return false;}
+async function assertSsrSafeUrl(raw){
+  let u; try{u=new URL(raw);}catch{return {ok:false,reason:"invalid-url"};}
+  if(u.protocol!=="https:"&&u.protocol!=="http:")return {ok:false,reason:"protocol"};
+  if(isPrivateHostname(u.hostname))return {ok:false,reason:"private-host"};
+  try{
+    const {address}=await dns.lookup(u.hostname,{all:false});
+    if(address&&isPrivateIP(address))return {ok:false,reason:"private-ip",ip:address};
+  }catch(e){ if(e&&e.code!=="ENOTFOUND"){} }
+  return {ok:true,url:u.hostname};
+}
+const ssrfGuard={assertSsrSafeUrl,hostAllowed,isPrivateIP};
 const resolveShortUrl = async (url) => {
   try {
     const res = await axios.get(url, {
@@ -250,6 +272,8 @@ const isBrandingHost = (link) => {
  * @returns {Promise<{ ok: boolean, contentType: string, sizeBytes: number }>}
  */
 const probeUrl = async (link, platform) => {
+  const ssrfCheck = await assertSsrSafeUrl(link).catch(()=>({ok:false}));
+  if(!ssrfCheck.ok) return { ok:false, contentType:"", sizeBytes:0, blocked:true };
   const headers = getMediaDownloadHeaders(platform);
   const readFrom = (res, isRange) => {
     const contentType = res.headers["content-type"] || "";
@@ -282,6 +306,10 @@ const probeUrl = async (link, platform) => {
 };
 
 module.exports = {
+  ssrfGuard,
+  assertSsrSafeUrl,
+  isPrivateIP,
+  hostAllowed,
   UA,
   MAX_ATTACHMENTS,
   httpsAgent,

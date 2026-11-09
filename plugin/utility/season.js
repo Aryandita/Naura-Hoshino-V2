@@ -66,7 +66,7 @@ module.exports = {
         const s = seasonEngine.season;
 
         const passType = progress.isPremiumPass
-          ? "💎 **PREMIUM BATTLE PASS**"
+          ? `${ui.getEmoji("naura_shard") || "💎"} **PREMIUM BATTLE PASS**`
           : "🆓 **FREE PASS**";
         const pBar = generateProgressBar(progress.xp, s.xpPerTier);
 
@@ -77,7 +77,7 @@ module.exports = {
           `Hai **${displayName}**! Selamat datang di **${s.name}**!\n\n` +
           `Status Pass: ${passType}\n` +
           `🏅 **Tier Saat Ini:** \`Level ${progress.level} / ${s.maxTier}\`\n` +
-          `✨ **Progress EXP:** \`${progress.xp} / ${s.xpPerTier} XP\`\n` +
+          `${ui.getEmoji("ai_sparkle") || "✨"} **Progress EXP:** \`${progress.xp} / ${s.xpPerTier} XP\`\n` +
           `\`${pBar}\`\n\n` +
           `**🎁 Milestone Hadiah Utama Musim Ini:**\n` +
           `• **Tier 5:** 📦 Mystery Lootbox *(Free)* | 🎴 SR Card Pack *(Premium)*\n` +
@@ -105,7 +105,7 @@ module.exports = {
               : ButtonStyle.Primary,
           )
           .setDisabled(progress.isPremiumPass)
-          .setEmoji("💎");
+          .setEmoji(ui.getEmoji("naura_shard") || "💎");
 
         const row = new ActionRowBuilder().addComponents(btnClaim, btnUpgrade);
 
@@ -183,7 +183,7 @@ module.exports = {
         const upgradePayload = buildContainerV2({
           accentColorHex: result.success ? "#FFD700" : "#FF6B6B",
           title: result.success
-            ? "💎 Premium Battle Pass Aktif!"
+            ? `${ui.getEmoji("naura_shard") || "💎"} Premium Battle Pass Aktif!`
             : "❌ Gagal Upgrade",
           description: result.message,
           expression: result.success ? "cheers" : "sad",

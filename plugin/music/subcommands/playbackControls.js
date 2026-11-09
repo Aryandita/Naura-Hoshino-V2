@@ -53,7 +53,7 @@ module.exports = {
     player.pause(true);
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("warning") || "#f59e0b",
-      title: "⏸️ Transmisi Dijeda",
+      title: `${ui.getEmoji("music_pause") || "⏸️"} Transmisi Dijeda`,
       description: `Sesi audio ditahan sementara.\n${divider}`,
       footerText: ui.getFooter("music"),
     });
@@ -84,7 +84,7 @@ module.exports = {
     player.pause(false);
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("success") || "#22c55e",
-      title: "▶️ Transmisi Dilanjutkan",
+      title: `${ui.getEmoji("music_play") || "▶️"} Transmisi Dilanjutkan`,
       description: `Melanjutkan pemutaran audio.\n${divider}`,
       footerText: ui.getFooter("music"),
     });
@@ -486,7 +486,7 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: "#10B981",
-        title: "⏭️ Voting Skip Berhasil!",
+        title: `${ui.getEmoji("music_skip") || "⏭️"} Voting Skip Berhasil!`,
         description: `Batas kuorum voting tercapai (**${currentVotes.size}/${requiredVotes}** suara). Lagu berhasil dilewati!`,
         footerText: ui.getFooter("music"),
       });
@@ -496,7 +496,7 @@ module.exports = {
     const voteRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`btn_vote_skip_${guild.id}`)
-        .setLabel(`⏭️ Vote Skip (${currentVotes.size}/${requiredVotes})`)
+        .setLabel(`${ui.getEmoji("music_skip") || "⏭️"} Vote Skip (${currentVotes.size}/${requiredVotes})`)
         .setStyle(ButtonStyle.Primary),
     );
 

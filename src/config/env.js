@@ -231,6 +231,12 @@ const env = {
   // bawaan npm; isi hanya kalau host menyediakan binary FFmpeg sendiri.
   FFMPEG_PATH: cleanEnv(process.env.FFMPEG_PATH),
   OMDB_API_KEY: cleanEnv(process.env.OMDB_API_KEY),
+  TMDB_API_KEY: cleanEnv(process.env.TMDB_API_KEY),
+  TMDB_BASE_URL: cleanEnv(process.env.TMDB_BASE_URL) || "https://api.themoviedb.org/3",
+  COBALT_API_URL: cleanEnv(process.env.COBALT_API_URL),
+  YTDLP_PINNED_VERSION: cleanEnv(process.env.YTDLP_PINNED_VERSION) || "2026.01.01",
+  YTDLP_CHECKSUM_SHA256: cleanEnv(process.env.YTDLP_CHECKSUM_SHA256),
+  RCON_CIPHER: cleanEnv(process.env.RCON_CIPHER) || "aes-256-gcm",
   MUSIXMATCH_API_KEY: cleanEnv(process.env.MUSIXMATCH_API_KEY),
   YOUTUBE_COOKIE_PATH:
     cleanEnv(process.env.YOUTUBE_COOKIE_PATH) || "cookies.txt",
@@ -328,6 +334,7 @@ function validateEnv({ fatal = false } = {}) {
       "[CONFIG] VERBA_API_KEY tidak ditemukan di .env. Fallback ke Gemini akan digunakan.",
     );
   }
+  if (env.NODE_ENV === "production" && !env.MINECRAFT_WEBHOOK_SECRET) { console.warn("[CONFIG] MINECRAFT_WEBHOOK_SECRET wajib di production untuk endpoint /api/minecraft/verify."); }
   if (!env.SESSION_SECRET) {
     console.warn(
       "[CONFIG] SESSION_SECRET tidak ditemukan di .env. Sesi Web Dashboard sebaiknya tidak memakai secret bawaan.",

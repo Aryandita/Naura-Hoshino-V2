@@ -465,7 +465,7 @@ module.exports = {
 
       const bonusNote =
         sellable[0].multiplier > 1
-          ? `\n✨ **Sarung Tangan Midas aktif!** Harga jualmu naik **${Math.round((sellable[0].multiplier - 1) * 100)}%**.`
+          ? `\n${e("ai_sparkle", "✨")} **Sarung Tangan Midas aktif!** Harga jualmu naik **${Math.round((sellable[0].multiplier - 1) * 100)}%**.`
           : "";
 
       const sellSelectMenu = new ActionRowBuilder().addComponents(

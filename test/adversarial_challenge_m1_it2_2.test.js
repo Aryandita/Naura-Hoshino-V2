@@ -317,7 +317,7 @@ test.describe("Adversarial Challenge 2 - World, Roam, and Story Region Invariant
 // CHALLENGE SUITE 5: Strict 508-Key Parity and Zero Em-Dash Invariants
 // ═══════════════════════════════════════════════════════════════════════════
 test.describe("Adversarial Challenge 2 - Strict 508-Key Parity & Em-Dash Invariants", () => {
-  test("AC2.15: id.json and en.json have exact 508 keys with zero discrepancy", () => {
+  test("AC2.15: id.json and en.json have exact 566 keys with zero discrepancy", () => {
     const idPath = path.join(ROOT_DIR, "assets", "language", "id.json");
     const enPath = path.join(ROOT_DIR, "assets", "language", "en.json");
 
@@ -327,8 +327,8 @@ test.describe("Adversarial Challenge 2 - Strict 508-Key Parity & Em-Dash Invaria
     const idKeys = flatten(idJson);
     const enKeys = flatten(enJson);
 
-    assert.equal(idKeys.length, 508, `id.json must have 508 keys, got: ${idKeys.length}`);
-    assert.equal(enKeys.length, 508, `en.json must have 508 keys, got: ${enKeys.length}`);
+    assert.equal(idKeys.length, 566, `id.json must have 566 keys, got: ${idKeys.length}`);
+    assert.equal(enKeys.length, 566, `en.json must have 566 keys, got: ${enKeys.length}`);
 
     const idSet = new Set(idKeys);
     const enSet = new Set(enKeys);

@@ -162,7 +162,7 @@ module.exports = async function questBoard(interaction, user, survivalData) {
 
   const userName = ui.ux.resolveUserName(interaction);
   const parts = [
-    `Halo Kak **${userName}**! Ini papan misimu hari ini. Selesaikan pelan-pelan ya, hadiahnya Naura kirimkan otomatis begitu tuntas! ✨`,
+    `Halo Kak **${userName}**! Ini papan misimu hari ini. Selesaikan pelan-pelan ya, hadiahnya Naura kirimkan otomatis begitu tuntas! ${e("ai_sparkle", "✨")}`,
     "",
     `**${e("read", "\uD83D\uDCC5")} Misi Harian • ${today}**`,
     dailyText,

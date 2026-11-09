@@ -1,4 +1,6 @@
 // Definisi subcommand group 'life' dan 'profile' untuk /survival.
+// Dirampingkan agar payload JSON berada aman di bawah batas ketat Discord API.
+// Detail opsi dialihkan ke Discord Components V2 (Hub, Select Menu, dan Modal).
 
 function addLifeGroup(builder) {
   return builder.addSubcommandGroup((group) =>
@@ -8,7 +10,7 @@ function addLifeGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("consume")
-          .setDescription("Mengonsumsi makanan/minuman untuk energi"),
+          .setDescription("Konsumsi makanan/minuman untuk energi"),
       )
       .addSubcommand((sub) =>
         sub
@@ -18,203 +20,75 @@ function addLifeGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("enchant")
-          .setDescription("💎 Sematkan Permata Kosmik ke peralatanmu"),
+          .setDescription("Sematkan Permata Kosmik ke peralatan"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("date")
-          .setDescription("Ajak NPC kencan ke taman hiburan (Hanya di Park)"),
+          .setDescription("Ajak NPC kencan ke taman hiburan (Park)"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("house")
-          .setDescription(
-            "Kelola dekorasi dan perabotan properti rumahmu (Hanya di Properti)",
-          ),
+          .setDescription("Kelola dekorasi & perabotan rumah (Properti)"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("npc")
-          .setDescription("Sapa & Ngobrol dengan penduduk lokal"),
+          .setDescription("Sapa & ngobrol dengan penduduk lokal"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("town")
-          .setDescription(
-            "🏛️ Kunjungi Alun-Alun Kota (Town Square) & Kehidupan Penduduk Lokal",
-          ),
+          .setDescription("Kunjungi Alun-Alun Kota (Town Square)"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("pet")
-          .setDescription("Berinteraksi dengan hewan peliharaanmu")
-          .addStringOption((opt) =>
-            opt
-              .setName("aksi")
-              .setDescription("Apa yang ingin dilakukan?")
-              .setRequired(true)
-              .addChoices(
-                { name: "Lihat Status Pet", value: "view" },
-                { name: "Jinakkan Hewan Liar", value: "tame" },
-                { name: "Beri Makan", value: "feed" },
-                { name: "🏡 Kunjungi Pet Habitat", value: "habitat" },
-                { name: "⚡ Cosmic Ascension Fusion", value: "fuse" },
-                { name: "🧬 Perkawinan Silang (Breed)", value: "breed" },
-              ),
-          )
+          .setDescription("Interaksi hewan peliharaan")
           .addStringOption((opt) =>
             opt
               .setName("nama_pet")
-              .setDescription("Pilih pet spesifik (Autocomplete)")
+              .setDescription("Pilih pet spesifik")
               .setRequired(false)
               .setAutocomplete(true),
-          )
-          .addIntegerOption((opt) =>
-            opt
-              .setName("target_pet_id")
-              .setDescription("ID Pet bahan untuk Cosmic Fusion / Pasangan Breed")
-              .setRequired(false),
           ),
       )
       .addSubcommand((sub) =>
         sub
           .setName("family")
-          .setDescription("Asuh anak dan kelola magang keluarga")
-          .addStringOption((opt) =>
-            opt
-              .setName("aksi")
-              .setDescription("Aksi pengasuhan")
-              .setRequired(false)
-              .addChoices(
-                { name: "Lihat Status Anak", value: "status" },
-                { name: "Beri Makan (Feed)", value: "feed" },
-                { name: "Ajari & Bimbing (Teach)", value: "teach" },
-                { name: "Bakat Magang Ibu (Apprentice)", value: "apprentice" },
-              ),
-          ),
+          .setDescription("Asuh anak dan keluarga"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("rest")
-          .setDescription("Tidur di kasur untuk memulihkan stamina & nyawa"),
+          .setDescription("Tidur untuk pulihkan stamina & HP"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("expedition")
-          .setDescription(
-            "Kirim Pet aktif dalam ekspedisi idle dungeon untuk mencari hadiah langka",
-          )
+          .setDescription("Kirim Pet dalam ekspedisi idle dungeon")
           .addIntegerOption((opt) =>
             opt
               .setName("durasi")
-              .setDescription("Durasi ekspedisi pet")
+              .setDescription("Durasi jam")
               .addChoices(
-                { name: "1 Jam (Cepat)", value: 1 },
-                { name: "4 Jam (Menengah)", value: 4 },
-                { name: "8 Jam (Panjang & Hadiah Terbesar)", value: 8 },
+                { name: "1 Jam", value: 1 },
+                { name: "4 Jam", value: 4 },
+                { name: "8 Jam", value: 8 },
               )
-              .setRequired(true),
+              .setRequired(false),
           ),
       )
       .addSubcommand((sub) =>
         sub
           .setName("cafe")
-          .setDescription(
-            "☕ Kelola Cozy Cyber-Cafe, masak hidangan, dan layani pelanggan!",
-          )
-          .addStringOption((opt) =>
-            opt
-              .setName("aksi")
-              .setDescription("Aksi kafe yang ingin dilakukan")
-              .addChoices(
-                { name: "Lihat Status Kafe", value: "status" },
-                { name: "Masak Menu (Cook)", value: "cook" },
-                { name: "Layani Tamu NPC (Serve)", value: "serve" },
-                { name: "Klaim Pendapatan Pasif (Collect)", value: "collect" },
-                { name: "Beli Menu Kafe Pemain Lain (Order)", value: "order" },
-              )
-              .setRequired(false),
-          )
-          .addStringOption((opt) =>
-            opt
-              .setName("resep")
-              .setDescription(
-                "ID Resep untuk dimasak / dipesan (misal: sakura_latte, cyber_ramen)",
-              )
-              .setRequired(false),
-          )
-          .addUserOption((opt) =>
-            opt
-              .setName("target_user")
-              .setDescription(
-                "Pemain yang kafenya ingin kamu kunjungi (untuk aksi order)",
-              )
-              .setRequired(false),
-          ),
+          .setDescription("Kelola Cyber-Cafe, masak & layani tamu"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("farm")
-          .setDescription(
-            "🌿 Kelola Lahan Hidroponik Greenhouse, tanam benih, dan panen bahan kafe!",
-          )
-          .addStringOption((opt) =>
-            opt
-              .setName("aksi")
-              .setDescription("Aksi greenhouse yang ingin dilakukan")
-              .addChoices(
-                { name: "Lihat Status Greenhouse", value: "status" },
-                { name: "Toko Benih Kosmik (Shop)", value: "shop" },
-                { name: "Tanam Benih (Plant)", value: "plant" },
-                { name: "Siram Pod Tanaman (Water)", value: "water" },
-                {
-                  name: "Beri Pupuk Bio-Elektrolit (Fertilize)",
-                  value: "fertilize",
-                },
-                { name: "Panen Tanaman Matang (Harvest)", value: "harvest" },
-                {
-                  name: "Tingkatkan Kapasitas Grid (Upgrade)",
-                  value: "upgrade",
-                },
-                {
-                  name: "Persilangan Benih Hibrida (Cross-Breed)",
-                  value: "breed",
-                },
-                {
-                  name: "Webhook Notifikasi Panen (Webhook)",
-                  value: "webhook",
-                },
-              )
-              .setRequired(false),
-          )
-          .addStringOption((opt) =>
-            opt
-              .setName("benih")
-              .setDescription("Pilih jenis benih kosmik yang ingin ditanam")
-              .addChoices(
-                {
-                  name: "🍓 Astral Strawberry (60m)",
-                  value: "astral_strawberry",
-                },
-                { name: "🌿 Cyber Mint (120m)", value: "cyber_mint" },
-                { name: "☕ Void Coffee Bean (240m)", value: "void_coffee" },
-                { name: "🍈 Neon Melon (360m)", value: "neon_melon" },
-                { name: "🌾 Sakura Grain (720m)", value: "sakura_grain" },
-              )
-              .setRequired(false),
-          )
-          .addIntegerOption((opt) =>
-            opt
-              .setName("slot")
-              .setDescription("Nomor Pod Lahan (1 s/d 6)")
-              .setRequired(false),
-          )
-          .addStringOption((opt) =>
-            opt
-              .setName("url")
-              .setDescription("URL Webhook Discord/Pribadi untuk notifikasi panen")
-              .setRequired(false),
-          ),
+          .setDescription("Kelola Greenhouse, tanam benih & panen"),
       ),
   );
 }
@@ -227,45 +101,37 @@ function addProfileGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("info")
-          .setDescription("Lihat profil survival, status, dan statistikmu"),
+          .setDescription("Lihat profil survival & status"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("inventory")
-          .setDescription(
-            "🎒 Buka ransel petualang dan lihat semua barang bawaanmu",
-          ),
+          .setDescription("Buka ransel petualang & barang"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("achievements")
-          .setDescription("Lihat daftar pencapaian dan atur gelar aktifmu"),
+          .setDescription("Daftar pencapaian & gelar"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("gallery")
-          .setDescription(
-            "Lihat kembali memori dan cutscene yang sudah kamu buka",
-          ),
+          .setDescription("Memori & cutscene petualangan"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("story")
-          .setDescription("Lanjutkan cerita utama dunia sihir ini"),
+          .setDescription("Lanjutkan cerita utama dunia sihir"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("guide")
-          .setDescription(
-            "📖 Panduan lengkap cara bermain dan bertahan hidup di Naura Wilds",
-          ),
+          .setDescription("Panduan bermain Naura Wilds"),
       )
       .addSubcommand((sub) =>
         sub
           .setName("pass")
-          .setDescription(
-            "⭐ Buka Seasonal Battle Pass dan klaim hadiah starlight musiman",
-          ),
+          .setDescription("Battle Pass & klaim hadiah musiman"),
       ),
   );
 }

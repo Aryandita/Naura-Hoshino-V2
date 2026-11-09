@@ -24,9 +24,15 @@ const VIDEO_EXTS = ["mp4", "webm", "mov", "avi", "mkv"];
 const mb = (bytes) => (bytes / (1024 * 1024)).toFixed(1);
 
 /** Unduh tautan ke berkas sementara, lalu pulangkan path dan ekstensinya. */
+const MAX_FILE_BYTES = 100 * 1024 * 1024;
 const streamToTempFile = async (link, platform, fallbackExt) => {
+  const _ss = await require("./downloaderCore").assertSsrSafeUrl(link).catch(()=>({ok:false}));
+  if(!_ss.ok) throw new Error("Blocked SSRF target");
   const response = await axios.get(link, {
     responseType: "stream",
+    maxRedirects: 5,
+    maxContentLength: MAX_FILE_BYTES,
+    maxBodyLength: MAX_FILE_BYTES,
     timeout: STREAM_TIMEOUT_MS,
     httpsAgent: core.httpsAgent,
     headers: core.getMediaDownloadHeaders(platform),
@@ -40,7 +46,7 @@ const streamToTempFile = async (link, platform, fallbackExt) => {
   );
   const writer = fs.createWriteStream(finalPath);
 
-  response.data.pipe(writer);
+  let _bytes=0; response.data.on("data",(c)=>{_bytes+=c.length; if(_bytes>MAX_FILE_BYTES){writer.destroy(); throw new Error("File exceeds 100MB");}}); response.data.pipe(writer);
 
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -241,6 +247,7 @@ const prepareSingleMedia = async ({
 };
 
 module.exports = {
+  MAX_FILE_BYTES,
   prepareSingleMedia,
   streamToTempFile,
   extFromUrl,

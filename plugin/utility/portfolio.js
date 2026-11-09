@@ -177,7 +177,7 @@ module.exports = {
         const p = buildContainerV2({
           title: portfolio.isPublic
             ? "🌐 Portfolio Dipublikasikan!"
-            : "🔒 Portfolio Disembunyikan",
+            : `${ui.getEmoji("mod_lock") || "🔒"} Portfolio Disembunyikan`,
           description: portfolio.isPublic
             ? `Portfolio kamu sekarang bisa dilihat siapa pun!\n🔗 [${dashUrl}](${dashUrl})`
             : `Portfolio kamu sekarang hanya bisa kamu lihat sendiri.`,
@@ -240,7 +240,7 @@ module.exports = {
           const profile = await cacheManager.getUserProfile(userId);
           if (!profile || !profile.isPremium) {
             const p = buildContainerV2({
-              title: "💎 Fitur Premium",
+              title: `${ui.getEmoji("naura_shard") || "💎"} Fitur Premium`,
               description: `Tema **${tema}** hanya tersedia untuk pengguna Premium.\n\nUpgrade ke Premium untuk membuka semua tema eksklusif, warna aksen kustom, dan lainnya!`,
               color: 0xffd700,
               footerText: ui.getFooter("premium"),

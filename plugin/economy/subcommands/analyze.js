@@ -180,7 +180,7 @@ module.exports = {
                 ? "📈"
                 : data.healthStatus === "deflated"
                   ? "📉"
-                  : "⚠️";
+                  : ui.getEmoji("mod_warn") || "⚠️";
           return `${statusEmoji} **${currency}**: ${data.totalSupply.toLocaleString("id-ID")} (Supply/Player: ${data.supplyPerPlayer.toLocaleString("id-ID")}) - ${data.healthStatus.toUpperCase()}`;
         })
         .join("\n");

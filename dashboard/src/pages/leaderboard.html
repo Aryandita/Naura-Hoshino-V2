@@ -1,986 +1,451 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leaderboard | Naura OS</title>
-    <meta name="description" content="Hall of Fame, papan peringkat server untuk kekayaan, level chat, survival, dan trivia." />
+    <meta name="description" content="Leaderboard global: NC, Level, Survival, Arcade, Clan, dan lebih banyak." />
+    <meta property="og:title" content="Naura OS" />
+    <meta property="og:description" content="Leaderboard global: NC, Level, Survival, Arcade, Clan, dan lebih banyak." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0b0c10" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
-    <style>
-      /* Podium Card Rich Grand Stage Background */
-      #podiumSection {
-        position: relative;
-        margin-bottom: 24px;
-        overflow: hidden;
-        border-radius: var(--r-2xl);
-        background-color: #070914;
-        background-image:
-          radial-gradient(ellipse 70% 60% at 50% -5%, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.04) 50%, transparent 80%),
-          radial-gradient(ellipse 45% 55% at 20% 45%, rgba(34, 211, 238, 0.08) 0%, transparent 65%),
-          radial-gradient(ellipse 45% 55% at 80% 45%, rgba(168, 85, 247, 0.08) 0%, transparent 65%);
-        border: 1px solid rgba(245, 158, 11, 0.25);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(245, 158, 11, 0.2);
-      }
-
-      .podium-stage-svg {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1;
-      }
-
-      .podium-header-bar {
-        position: relative;
-        z-index: 2;
-        padding: 20px 24px 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      .podium-wrapper {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        gap: 20px;
-        padding: 20px 0 0;
-      }
-
-      .podium-place {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        width: 120px;
-      }
-
-      .podium-avatar-wrap {
-        position: relative;
-      }
-
-      .podium-avatar {
-        border-radius: 50%;
-        object-fit: cover;
-      }
-
-      .podium-rank-badge {
-        position: absolute;
-        bottom: -6px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 18px;
-      }
-
-      .podium-name {
-        font-family: var(--font-heading);
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--text-primary);
-        text-align: center;
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .podium-coins {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 700;
-        text-align: center;
-      }
-
-      .podium-bar {
-        width: 80px;
-        border-radius: var(--r-lg) var(--r-lg) 0 0;
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        padding-top: 10px;
-        font-family: var(--font-heading);
-        font-size: 18px;
-        font-weight: 900;
-      }
-
-      .podium-1 .podium-bar {
-        height: 100px;
-        background: linear-gradient(to bottom, rgba(245,158,11,0.35), rgba(245,158,11,0.1));
-        border: 1px solid var(--border-amber);
-        box-shadow: 0 -8px 30px var(--amber-glow);
-        color: var(--accent-amber);
-      }
-
-      .podium-2 .podium-bar {
-        height: 75px;
-        background: linear-gradient(to bottom, rgba(34,211,238,0.25), rgba(34,211,238,0.06));
-        border: 1px solid rgba(34,211,238,0.3);
-        box-shadow: 0 -4px 20px rgba(34,211,238,0.15);
-        color: var(--accent-cyan);
-      }
-
-      .podium-3 .podium-bar {
-        height: 55px;
-        background: linear-gradient(to bottom, rgba(168,85,247,0.25), rgba(168,85,247,0.06));
-        border: 1px solid rgba(168,85,247,0.3);
-        box-shadow: 0 -4px 20px rgba(168,85,247,0.15);
-        color: var(--accent-violet);
-      }
-
-      /* Rank table rows */
-      .lb-row {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 12px 16px;
-        border-radius: var(--r-xl);
-        border: 1px solid transparent;
-        transition: all var(--t-base);
-        cursor: default;
-      }
-
-      .lb-row:hover {
-        background: var(--bg-surface-hv);
-        border-color: var(--border-subtle);
-        transform: translateX(4px);
-      }
-
-      .lb-row:nth-child(even) {
-        background: var(--bg-surface);
-      }
-
-      .lb-rank-num {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 700;
-        width: 32px;
-        text-align: center;
-        flex-shrink: 0;
-      }
-
-      .lb-avatar {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-subtle);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 14px;
-        flex-shrink: 0;
-        color: var(--text-secondary);
-        overflow: hidden;
-      }
-
-      .lb-row:hover .lb-avatar {
-        border-color: var(--border-primary);
-        box-shadow: 0 0 8px var(--primary-glow);
-      }
-
-      .lb-info {
-        flex: 1;
-        min-width: 0;
-      }
-
-      .lb-username {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-primary);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
-      }
-
-      .lb-sub {
-        font-size: 11px;
-        color: var(--text-muted);
-        margin-top: 2px;
-      }
-
-      .lb-value {
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 700;
-        text-align: right;
-        flex-shrink: 0;
-      }
-
-      .lb-value-sub {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: var(--text-muted);
-        text-align: right;
-        margin-top: 2px;
-      }
-
-      /* XP bar */
-      .xp-bar-mini {
-        height: 3px;
-        background: var(--bg-elevated);
-        border-radius: var(--r-full);
-        overflow: hidden;
-        margin-top: 4px;
-      }
-
-      .xp-bar-fill {
-        height: 100%;
-        border-radius: var(--r-full);
-        background: linear-gradient(90deg, var(--primary), var(--accent-violet));
-        box-shadow: 0 0 6px var(--primary-glow);
-      }
-    </style>
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
+    <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
     <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
 
     <div class="app-shell">
-      <!-- Mobile Sidebar Overlay -->
-      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-      <!-- SIDEBAR -->
-      <aside class="sidebar " id="sidebar">
-        <div class="sidebar-brand">
-          <div class="sidebar-logo-icon">
-            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" />
+      <aside class="sidebar" id="sidebar" aria-label="Navigasi utama" role="navigation">
+        <div class="sidebar-header">
+          <div class="header-brand">
+            <div class="header-brand-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-10 10c0 6.5 10 14 10 14s10-7.5 10-14a10 10 0 0 0-10-10z"/><path d="M12 6v4"/><path d="M12 14h.01"/></svg>
+            </div>
+            <span class="header-brand-text">Naura Hoshino</span>
           </div>
-          <div class="sidebar-brand-text">
-            <div class="sidebar-brand-name">Naura Hoshino</div>
-            <div class="sidebar-brand-sub">v2.5.0 · Online</div>
-          </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
-            <i class="fa-solid fa-xmark"></i>
+          <button type="button" class="btn btn-icon-only btn-ghost" id="sidebarCollapseBtn" aria-label="Toggle sidebar compact" title="Ciutkan Sidebar (Ctrl+B)">
+            <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
-        <nav class="sidebar-nav" role="navigation">
 
+        <div class="pillar-indicator" id="pillarIndicator">
+          <span class="pillar-indicator-label">Studio Kontrol OSIS</span>
+        </div>
+
+        <nav class="sidebar-nav" role="navigation" aria-label="Menu utama">
           <!-- Overview -->
-          <div class="nav-group">
-            <div class="nav-group-label">Overview</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Overview</span>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
-              <span>Dashboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-item-label">Dashboard</span>
+            </a>
+            <a href="/lounge" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--ui-primary);"></i></span>
+              <span class="nav-item-label">3D AI Lounge</span>
+              <span class="nav-item-badge">31 Anim</span>
             </a>
             <a href="/status" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
-              <span>Live Status</span>
-              <span class="nav-badge">Live</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
+              <span class="nav-item-label">Live Status</span>
+              <span class="nav-item-badge">Live</span>
             </a>
             <a href="/feed" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
-              <span>Activity Feed</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-rss"></i></span>
+              <span class="nav-item-label">Activity Feed</span>
             </a>
           </div>
 
           <!-- Community -->
-          <div class="nav-group">
-            <div class="nav-group-label">Community</div>
-            <a href="/leaderboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
-              <span>Leaderboard</span>
+          <div class="nav-section">
+            <span class="nav-section-title">Community</span>
+            <a href="/leaderboard" class="nav-item active" aria-current="page">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label">Leaderboard</span>
             </a>
             <a href="/economy" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
-              <span>Economy</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-coins"></i></span>
+              <span class="nav-item-label">Economy</span>
+            </a>
+            <a href="/clan" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-users-rays"></i></span>
+              <span class="nav-item-label">Sindikat & Klan</span>
+            </a>
+            <a href="/marketplace" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-shop"></i></span>
+              <span class="nav-item-label">Pasar Galaksi</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
-              <span>Guild Topology</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-item-label">Guild Topology</span>
             </a>
           </div>
 
           <!-- Media & Audio -->
-          <div class="nav-group">
-            <div class="nav-group-label">Media & Audio</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Media & Audio</span>
             <a href="/music" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
-              <span>Music Hub</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+              <span class="nav-item-label">Music Hub</span>
             </a>
             <a href="/soundboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
-              <span>Soundboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
+              <span class="nav-item-label">Soundboard</span>
             </a>
             <a href="/jam" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
-              <span>Jam Session</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-guitar"></i></span>
+              <span class="nav-item-label">Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
-              <span>Karaoke</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-item-label">Karaoke</span>
             </a>
           </div>
 
           <!-- Naura Wilds RPG -->
-          <div class="nav-group">
-            <div class="nav-group-label">Naura Wilds RPG</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Naura Wilds RPG</span>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
-              <span>World Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-item-label">World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
-              <span>Survival Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-map"></i></span>
+              <span class="nav-item-label">Survival Map</span>
+            </a>
+            <a href="/inventory" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-backpack"></i></span>
+              <span class="nav-item-label">Tas & Ransel</span>
+            </a>
+            <a href="/arcade" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
+              <span class="nav-item-label">Retro Arcade</span>
             </a>
             <a href="/activity" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
-              <span>Activity Hub</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+              <span class="nav-item-label">Activity Hub</span>
             </a>
           </div>
 
           <!-- Configuration -->
-          <div class="nav-group">
-            <div class="nav-group-label">Configuration</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Configuration</span>
             <a href="/settings" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
-              <span>Settings</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+              <span class="nav-item-label">Settings</span>
             </a>
             <a href="/welcomer" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
-              <span>Welcomer Card</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-palette"></i></span>
+              <span class="nav-item-label">Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-              <span>Embed Builder</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-item-label">Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
-              <span>Automations</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
+              <span class="nav-item-label">Automations</span>
             </a>
             <a href="/tickets" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
-              <span>Tickets</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-ticket"></i></span>
+              <span class="nav-item-label">Tickets</span>
+            </a>
+            <a href="/admin" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <span class="nav-item-label">Admin God Mode</span>
             </a>
           </div>
 
           <!-- More -->
-          <div class="nav-group">
-            <div class="nav-group-label">More</div>
-            <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+          <div class="nav-section">
+            <span class="nav-section-title">More</span>
+            <a href="/profile" class="nav-item" style="color: var(--ui-primary);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--ui-primary);"><i class="fa-solid fa-id-card"></i></span>
+              <span class="nav-item-label" style="color: var(--ui-primary);">Profil Petualang</span>
+            </a>
+            <a href="/achievements" class="nav-item" style="color: var(--color-warning);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-warning);"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label" style="color: var(--color-warning);">Ruang Trofi</span>
+            </a>
+            <a href="/portfolio" class="nav-item" style="color: var(--color-success);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-success);"><i class="fa-solid fa-id-badge"></i></span>
+              <span class="nav-item-label" style="color: var(--color-success);">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
+
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+          <div class="sidebar-user" id="sidebarUser" role="button" tabindex="0" aria-label="Buka profil" onclick="window.location.href='/profile'">
+            <img src="/assets/core/avatar.png" alt="" class="sidebar-user-avatar" id="sidebarAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
             <div class="sidebar-user-info">
-              <div class="sidebar-user-name">Guest</div>
-              <div class="sidebar-user-role">Klik untuk login</div>
+              <div class="sidebar-user-name" id="sidebarUserName">Guest</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">Klik untuk login</div>
             </div>
+            <a href="/login?redirect=/profile" title="Login Akun" class="sidebar-login-link" id="sidebarLoginBtn" aria-label="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+            </a>
           </div>
         </div>
       </aside>
 
-      <!-- MAIN -->
-      <div class="main-content">
-        <header class="top-header">
+      <main class="main-content" role="main">
+        <header class="app-header" role="banner">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <button type="button" class="btn btn-icon-only btn-ghost" id="hamburgerBtn" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="sidebar">
+              <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
             <div>
-              <div class="page-title">Hall of Fame</div>
-              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Leaderboard</span></div>
+              <h1 class="page-title" id="pageTitle">Leaderboard</h1>
+              <nav class="breadcrumb" aria-label="Breadcrumb">
+                <span>Naura OS</span>
+                <span class="breadcrumb-sep" aria-hidden="true">/</span>
+                <span>Studio Kontrol OSIS</span>
+              </nav>
             </div>
           </div>
+
           <div class="header-right">
-            <div style="display:flex;gap:8px;">
-              <button id="langToggle" class="btn btn-ghost btn-sm" title="Bahasa / Language">
-                <i class="fa-solid fa-language"></i> <span id="langLabel">ID</span>
-              </button>
-              <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="themeToggle" data-tooltip="Ganti Tema (T)" aria-label="Ganti Tema">
+              <i class="fa-solid fa-palette" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="densityToggle" data-tooltip="Ganti Densitas" aria-label="Ganti Densitas">
+              <i class="fa-solid fa-grip-lines" aria-hidden="true"></i>
+            </button>
+            <div class="wallet-badge" id="headerWallet" title="Naura Coins" role="status" aria-live="polite">
+              <i class="fa-solid fa-coins" aria-hidden="true"></i>
+              <span id="walletAmount">0</span>
             </div>
+            <a href="/auth/discord" class="btn btn-primary btn-sm" id="headerAuthBtn" title="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+              <span id="headerAuthLabel">Login</span>
+            </a>
+            <img src="/assets/core/avatar.png" alt="" class="header-avatar" id="headerAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
           </div>
         </header>
 
-        <main class="page-content" id="mainContent">
-
-          <div class="page-header-bar animate-in">
+        <div class="page" id="mainContent">
+          <div class="page-header-bar animate-slide-up">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--amber-dim);border:1px solid var(--border-amber);">
-                  <i class="fa-solid fa-trophy" style="color:var(--accent-amber);"></i>
+                <span class="page-heading-icon" style="background: var(--ui-primary-glow); border: 1px solid var(--hairline-brand);">
+                  <i class="fa-solid fa-trophy" style="color: var(--ui-primary);"></i>
                 </span>
-                Hall of Fame
+                Leaderboard Global
               </h1>
-              <p class="page-sub">Papan peringkat server · Diperbarui real-time</p>
+              <p class="page-sub">Peringkat NC, Level, Survival, Arcade, Clan, dan Klan</p>
             </div>
-
-            <!-- Category Tabs -->
-            <div class="tab-group" id="lbTabGroup">
-              <button class="tab-btn active" data-cat="wealth" id="btnTabWealth" onclick="switchLbTab('wealth')">
-                <i class="fa-solid fa-vault" style="color:var(--accent-amber);"></i> Terkaya
-              </button>
-              <button class="tab-btn" data-cat="chat_level" id="btnTabChatLevel" onclick="switchLbTab('chat_level')">
-                <i class="fa-solid fa-comments" style="color:var(--accent-cyan);"></i> Level Chat
-              </button>
-              <button class="tab-btn" data-cat="rpg_level" id="btnTabRpgLevel" onclick="switchLbTab('rpg_level')">
-                <i class="fa-solid fa-shield-halved" style="color:var(--accent-violet);"></i> Survival
-              </button>
-              <button class="tab-btn" data-cat="trivia" id="btnTabTrivia" onclick="switchLbTab('trivia')">
-                <i class="fa-solid fa-gamepad" style="color:var(--accent-green);"></i> Trivia
-              </button>
+            <div style="display:flex; align-items:center; gap:var(--space-3); flex-shrink:0;">
+              <div style="display:flex; gap:var(--space-2);">
+                <select id="lbCategorySelect" class="form-select" style="min-width:200px;" aria-label="Kategori leaderboard">
+                  <option value="nc">Naura Coins (NC)</option>
+                  <option value="level">Level & XP</option>
+                  <option value="survival">Survival Score</option>
+                  <option value="arcade">Arcade MP</option>
+                  <option value="clan">Clan Power</option>
+                  <option value="vp">Vote Points</option>
+                  <option value="bp">Battle Points</option>
+                  <option value="weekly">Minggu Ini</option>
+                </select>
+                <select id="lbGuildSelect" class="form-select" style="min-width:180px;" aria-label="Filter server">
+                  <option value="">Semua Server</option>
+                </select>
+              </div>
+              <div style="width:36px; height:36px; border-radius:var(--radius-full); background:var(--ui-primary-glow); border:1px solid var(--hairline-brand); display:flex; align-items:center; justify-content:center;">
+                <span style="width:10px; height:10px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 10px var(--ui-primary-glow); animation:badge-pulse 2s var(--ease-in-out) infinite;"></span>
+              </div>
             </div>
           </div>
 
-          <!-- Server selector -->
-          <div class="card card-p-sm animate-in delay-1" style="margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <span style="font-size:12px;color:var(--text-muted);font-weight:600;font-family:var(--font-heading);">Server:</span>
-            <select class="input" id="guildSelector" style="max-width:280px;cursor:pointer;">
-              <option value="">- Pilih Server -</option>
-            </select>
-            <span class="badge badge-muted" id="lbTotalCount">0 pemain</span>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-              <input type="text" class="input" id="lbSearch" placeholder="Cari pemain..." style="max-width:200px;" />
-            </div>
-          </div>
-
-          <!-- Podium -->
-          <div class="card animate-in delay-1" id="podiumSection">
-            <!-- Atmospheric Stage Background SVG -->
-            <svg class="podium-stage-svg" viewBox="0 0 900 320" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="stadiumBeam" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.32" />
-                  <stop offset="45%" stop-color="#f59e0b" stop-opacity="0.10" />
-                  <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
-                </linearGradient>
-                <linearGradient id="podiumHorizonGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#22d3ee" stop-opacity="0" />
-                  <stop offset="25%" stop-color="#22d3ee" stop-opacity="0.45" />
-                  <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.85" />
-                  <stop offset="75%" stop-color="#a855f7" stop-opacity="0.45" />
-                  <stop offset="100%" stop-color="#a855f7" stop-opacity="0" />
-                </linearGradient>
-                <radialGradient id="goldAura" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.25" />
-                  <stop offset="70%" stop-color="#f59e0b" stop-opacity="0.05" />
-                  <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
-                </radialGradient>
-              </defs>
-
-              <!-- Central Grand Stadium Spotlight Cone -->
-              <polygon points="450,-10 240,320 660,320" fill="url(#stadiumBeam)" />
-              
-              <!-- Ambient Side Spotlights -->
-              <polygon points="200,-20 80,320 320,320" fill="#22d3ee" opacity="0.05" />
-              <polygon points="700,-20 580,320 820,320" fill="#a855f7" opacity="0.05" />
-
-              <!-- Cyber Arena Floor Horizon Baseline with Glow -->
-              <line x1="40" y1="265" x2="860" y2="265" stroke="url(#podiumHorizonGrad)" stroke-width="2" />
-              <line x1="160" y1="265" x2="740" y2="265" stroke="#f59e0b" stroke-width="3.5" opacity="0.4" />
-
-              <!-- Concentric Arena Target Rings behind 1st Place -->
-              <circle cx="450" cy="120" r="85" stroke="rgba(245,158,11,0.22)" stroke-width="1.5" stroke-dasharray="4 6" fill="url(#goldAura)" />
-              <circle cx="450" cy="120" r="125" stroke="rgba(245,158,11,0.12)" stroke-width="1" stroke-dasharray="8 8" fill="none" />
-              
-              <!-- Halo Rings behind 2nd and 3rd Place -->
-              <circle cx="310" cy="140" r="55" stroke="rgba(34,211,238,0.18)" stroke-width="1" stroke-dasharray="3 5" fill="none" />
-              <circle cx="590" cy="155" r="50" stroke="rgba(168,85,247,0.18)" stroke-width="1" stroke-dasharray="3 5" fill="none" />
-
-              <!-- Championship Laurel Watermark (Subtle Golden Crest) -->
-              <g transform="translate(450, 75)" opacity="0.15" stroke="#f59e0b" fill="none" stroke-width="2">
-                <path d="M-60,40 C-80,0 -60,-40 0,-50 C60,-40 80,0 60,40" />
-                <path d="M-45,35 C-60,5 -45,-25 0,-35 C45,-25 60,5 45,35" />
-                <circle cx="0" cy="-60" r="5" fill="#f59e0b" />
-              </g>
-
-              <!-- Floating Celebration Starbursts & Shimmer Particles -->
-              <text x="365" y="65" fill="rgba(245,158,11,0.7)" font-size="15">✦</text>
-              <text x="530" y="75" fill="rgba(245,158,11,0.7)" font-size="14">✦</text>
-              <text x="210" y="115" fill="rgba(34,211,238,0.6)" font-size="13">✦</text>
-              <text x="690" y="125" fill="rgba(168,85,247,0.6)" font-size="13">✦</text>
-              <text x="415" y="35" fill="rgba(245,158,11,0.4)" font-size="10">★</text>
-              <text x="485" y="42" fill="rgba(245,158,11,0.4)" font-size="10">★</text>
-              <text x="140" y="180" fill="rgba(34,211,238,0.35)" font-size="9">✦</text>
-              <text x="760" y="190" fill="rgba(168,85,247,0.35)" font-size="9">✦</text>
-
-              <!-- Stage Base Pedestal Ellipse Underglows -->
-              <ellipse cx="450" cy="270" rx="70" ry="14" fill="rgba(245,158,11,0.3)" />
-              <ellipse cx="310" cy="270" rx="55" ry="11" fill="rgba(34,211,238,0.2)" />
-              <ellipse cx="590" cy="270" rx="52" ry="10" fill="rgba(168,85,247,0.2)" />
-            </svg>
-
-            <div class="podium-header-bar">
-              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-cyan);opacity:0.85;">
-                <i class="fa-solid fa-trophy" style="margin-right:6px;"></i> SEASON 02 // ARENA
-              </span>
-              <div style="font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-amber);font-family:var(--font-heading);text-shadow:0 0 12px var(--amber-glow);">
-                🏆 Top 3 Champions
+          <!-- Top 3 Podium -->
+          <section aria-labelledby="podiumTitle" class="animate-slide-up stagger-1" style="margin-top:var(--space-6);">
+            <div class="card" style="background:linear-gradient(135deg, var(--bg-layer) 0%, var(--bg-elevated) 100%); border-color:var(--hairline-brand);">
+              <div class="card-header">
+                <div class="card-title" style="color:var(--ui-primary); display:flex; align-items:center; gap:var(--space-2);">
+                  <i class="fa-solid fa-crown" aria-hidden="true"></i> Top 3 Pemenang
+                </div>
               </div>
-              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-violet);opacity:0.85;">
-                GLOBAL TIER: ELITE <i class="fa-solid fa-crown" style="margin-left:6px;"></i>
-              </span>
-            </div>
+              <div class="card-body" style="padding-top:0; padding:var(--space-6);">
+                <div style="display:flex; justify-content:center; align-items:flex-end; gap:var(--space-6); flex-wrap:wrap; min-height:280px;">
+                  <!-- 2nd Place -->
+                  <article class="stat-card" style="flex:1; max-width:220px; min-width:180px; transform:translateY(20px); border-color:rgba(192,192,192,0.3); background:linear-gradient(135deg, var(--bg-layer) 0%, rgba(192,192,192,0.05) 100%);">
+                    <div class="stat-top">
+                      <div class="stat-meta">
+                        <span class="stat-label">#2</span>
+                        <span class="stat-trend neutral">
+                          <i class="fa-solid fa-medal" style="color:#c0c0c0;" aria-hidden="true"></i>
+                        </span>
+                      </div>
+                      <div class="stat-icon" style="background:rgba(192,192,192,0.15); color:#c0c0c0;" aria-hidden="true">
+                        <i class="fa-solid fa-user-tie"></i>
+                      </div>
+                    </div>
+                    <div class="stat-value" id="lbPos2Name">-</div>
+                    <div class="stat-delta" id="lbPos2Value">0</div>
+                  </article>
 
-            <div class="podium-wrapper" id="podiumWrapper">
-              <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 32px 0;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 8px; display: block; color: var(--accent-amber);"></i>
-                Menghubungkan peringkat juara...
+                  <!-- 1st Place -->
+                  <article class="stat-card" style="flex:1; max-width:260px; min-width:200px; border-color:rgba(255,215,0,0.4); background:linear-gradient(135deg, var(--bg-layer) 0%, rgba(255,215,0,0.08) 100%); box-shadow:var(--glass-specular), 0 0 32px rgba(255,215,0,0.15);">
+                    <div class="stat-top">
+                      <div class="stat-meta">
+                        <span class="stat-label">#1</span>
+                        <span class="stat-trend positive">
+                          <i class="fa-solid fa-crown" style="color:#ffd700;" aria-hidden="true"></i>
+                        </span>
+                      </div>
+                      <div class="stat-icon" style="background:rgba(255,215,0,0.2); color:#ffd700; box-shadow:0 0 16px rgba(255,215,0,0.3);" aria-hidden="true">
+                        <i class="fa-solid fa-trophy" style="font-size:1.5rem;"></i>
+                      </div>
+                    </div>
+                    <div class="stat-value" id="lbPos1Name" style="color:#ffd700;">-</div>
+                    <div class="stat-delta" id="lbPos1Value" style="color:var(--color-warning);">0</div>
+                  </article>
+
+                  <!-- 3rd Place -->
+                  <article class="stat-card" style="flex:1; max-width:220px; min-width:180px; transform:translateY(20px); border-color:rgba(205,127,50,0.3); background:linear-gradient(135deg, var(--bg-layer) 0%, rgba(205,127,50,0.05) 100%);">
+                    <div class="stat-top">
+                      <div class="stat-meta">
+                        <span class="stat-label">#3</span>
+                        <span class="stat-trend neutral">
+                          <i class="fa-solid fa-medal" style="color:#cd7f32;" aria-hidden="true"></i>
+                        </span>
+                      </div>
+                      <div class="stat-icon" style="background:rgba(205,127,50,0.15); color:#cd7f32;" aria-hidden="true">
+                        <i class="fa-solid fa-user"></i>
+                      </div>
+                    </div>
+                    <div class="stat-value" id="lbPos3Name">-</div>
+                    <div class="stat-delta" id="lbPos3Value">0</div>
+                  </article>
+                </div>
               </div>
             </div>
-            <!-- Podium base -->
-            <div style="height:24px;background:linear-gradient(to bottom, rgba(8,11,24,0.4), rgba(5,8,20,0.9));margin-top:-1px;border-top:1px solid rgba(245,158,11,0.2);"></div>
-          </div>
+          </section>
 
-          <!-- Rankings List -->
-          <div class="card card-p animate-in delay-2">
-            <div class="card-header">
-              <div class="card-title" id="lbCategoryLabel" style="color:var(--accent-amber);">
-                <i class="fa-solid fa-vault"></i> Peringkat Kekayaan (NC)
+          <!-- Leaderboard Table -->
+          <section aria-labelledby="lbTableTitle" class="animate-slide-up stagger-2" style="margin-top:var(--space-6);">
+            <header style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-4); flex-wrap:wrap; gap:var(--space-3);">
+              <h2 id="lbTableTitle" style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                <i class="fa-solid fa-list-ol" style="color:var(--accent-cyan);"></i> Peringkat Lengkap
+              </h2>
+              <div style="display:flex; gap:var(--space-2);">
+                <input type="text" id="lbSearch" placeholder="Cari pemain&hellip;" class="form-input" style="width:220px; padding:var(--space-1) var(--space-3); font-size:var(--text-xs);" aria-label="Cari pemain">
+                <select id="lbPageSize" class="form-select" style="width:auto; min-width:140px;" aria-label="Item per halaman">
+                  <option value="25">25 per halaman</option>
+                  <option value="50">50 per halaman</option>
+                  <option value="100">100 per halaman</option>
+                </select>
               </div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">Last sync: just now</span>
-                <button id="btnRefreshLb" class="btn btn-ghost btn-sm" title="Refresh">
-                  <i class="fa-solid fa-rotate"></i>
-                </button>
+            </header>
+            <div class="card" style="overflow:hidden;">
+              <div style="overflow-x:auto;">
+                <table class="data-table" style="width:100%; min-width:800px;">
+                  <thead>
+                    <tr>
+                      <th scope="col" style="width:60px;">#</th>
+                      <th scope="col">Pemain</th>
+                      <th scope="col" style="width:140px;">Server</th>
+                      <th scope="col" style="width:160px;">Nilai</th>
+                      <th scope="col" style="width:140px;">Perubahan</th>
+                      <th scope="col" style="width:120px;">Level</th>
+                      <th scope="col" style="width:100px;">Winrate</th>
+                      <th scope="col" style="width:100px;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lbTableBody">
+                    <tr>
+                      <td colspan="8" style="text-align:center; padding:var(--space-8); color:var(--text-muted);">Memuat leaderboard&hellip;</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="card-footer" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-3);">
+                <div style="font-size:var(--text-sm); color:var(--text-muted);" id="lbPaginationInfo">Menampilkan 0-0 dari 0</div>
+                <div style="display:flex; gap:var(--space-2);" id="lbPagination">
+                  <button type="button" class="btn btn-ghost btn-sm" disabled aria-label="Halaman sebelumnya">
+                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="btn btn-ghost btn-sm" disabled aria-label="Halaman berikutnya">
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                  </button>
+                </div>
               </div>
             </div>
+          </section>
 
-            <div id="leaderboardList" style="display:flex;flex-direction:column;gap:6px;">
-              <div style="text-align:center;color:var(--text-muted);padding:40px 0;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;margin-bottom:8px;display:block;color:var(--accent-amber);"></i>
-                Memuat data peringkat server...
+          <!-- Category Stats -->
+          <section aria-labelledby="lbStatsTitle" class="animate-slide-up stagger-3" style="margin-top:var(--space-6);">
+            <header style="margin-bottom:var(--space-4);">
+              <h2 id="lbStatsTitle" style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                <i class="fa-solid fa-chart-bar" style="color:var(--color-success);"></i> Statistik Kategori
+              </h2>
+            </header>
+            <div class="bento-grid" id="lbStatsGrid">
+              <!-- Stats injected by JS -->
+            </div>
+          </section>
+
+          <!-- Your Rank -->
+          <section aria-labelledby="lbYourRankTitle" class="animate-slide-up stagger-4" style="margin-top:var(--space-6);">
+            <article class="card" style="border-color:var(--hairline-brand);">
+              <div class="card-header">
+                <div class="card-title" style="color:var(--ui-primary); display:flex; align-items:center; gap:var(--space-2);">
+                  <i class="fa-solid fa-user" aria-hidden="true"></i> Peringkat Anda
+                </div>
               </div>
-            </div>
+              <div class="card-body" style="padding-top:0;">
+                <div id="lbYourRankCard" class="empty-state" style="padding:var(--space-6); border:none; background:transparent; text-align:left;">
+                  <div style="display:flex; align-items:center; gap:var(--space-4);">
+                    <div class="empty-state-icon" style="background:var(--ui-primary-glow); border-color:var(--hairline-brand); color:var(--ui-primary); width:64px; height:64px; font-size:1.5rem;">
+                      <i class="fa-solid fa-user-circle" aria-hidden="true"></i>
+                    </div>
+                    <div style="flex:1;">
+                      <h3 class="empty-state-title" style="margin-bottom:var(--space-1);">Login untuk melihat peringkat</h3>
+                      <p class="empty-state-body" style="margin-bottom:var(--space-3);">Hubungkan akun Discord untuk melihat posisi Anda di leaderboard global.</p>
+                      <a href="/auth/discord" class="btn btn-primary">
+                        <i class="fa-brands fa-discord" aria-hidden="true"></i> Login Discord
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+        </div>
+      </main>
 
-            <!-- Load more -->
-            <div style="text-align:center;margin-top:16px;">
-              <button class="btn btn-ghost" id="btnLoadMore">Muat Lebih Banyak <i class="fa-solid fa-chevron-down"></i></button>
-            </div>
-          </div>
-
-        </main>
-      </div>
+      <nav class="mobile-nav" aria-label="Navigasi mobile">
+        <a href="/" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/lounge" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-cube"></i></span>
+          <span>3D Lounge</span>
+        </a>
+        <a href="/music" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+          <span>Music</span>
+        </a>
+        <a href="/world" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+          <span>Wilds</span>
+        </a>
+        <a href="/settings" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+          <span>Settings</span>
+        </a>
+      </nav>
     </div>
 
-    <!-- Mobile Nav -->
-    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
-      <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
-      </div>
-    </nav>
-
-    <script src="/src/js/sharedNav.js"></script>
-    <script>
-      const lbCategoryLabels = {
-        wealth:    { icon: 'fa-vault',        color: 'var(--accent-amber)',  label: 'Peringkat Kekayaan (NC)' },
-        chat_level:{ icon: 'fa-comments',     color: 'var(--accent-cyan)',   label: 'Peringkat Level Chat' },
-        rpg_level: { icon: 'fa-shield-halved',color: 'var(--accent-violet)', label: 'Peringkat Level Survival' },
-        trivia:    { icon: 'fa-gamepad',      color: 'var(--accent-green)',  label: 'Peringkat Trivia Score' },
-      };
-
-      let lbData = { economy: [], leveling: [], survival: [] };
-      // Total pemain per tab, diisi dari server lewat json.totals.
-      let lbTotals = {};
-      let currentTab = 'wealth';
-      let lbOffset = 0;
-      const LB_PAGE_SIZE = 10;
-      let lbRequestInFlight = false;
-
-      // Fetch real data from API
-      async function fetchLeaderboard(append = false) {
-        // Cegah dua request bertumpuk. Polling 30 detik dan klik tombol
-        // "Muat Lebih Banyak" bisa memicu request bersamaan yang menulis
-        // DOM dengan data berbeda.
-        if (lbRequestInFlight) return;
-        lbRequestInFlight = true;
-
-        try {
-          const offset = append ? lbOffset : 0;
-          if (!append && window.showSkeleton) {
-            window.showSkeleton('#leaderboardList', { count: 7, type: 'table' });
-          }
-          // guildId ikut dikirim sebagai penanda scope. Datanya tetap global
-          // karena tabel UserProfile tidak punya kolom guildId.
-          const scope = document.getElementById('guildSelector')?.value || '';
-          const params = new URLSearchParams({
-            limit: String(LB_PAGE_SIZE),
-            offset: String(offset),
-          });
-          if (scope) params.set('guildId', scope);
-
-          const res = await fetch(
-            `/api/realtime/leaderboard?${params.toString()}`,
-          );
-          const json = await res.json();
-          if (json.success) {
-            if (append) {
-              // Gabungkan halaman baru di belakang halaman lama.
-              for (const key of Object.keys(lbData)) {
-                if (Array.isArray(json.data?.[key])) {
-                  lbData[key] = [...lbData[key], ...json.data[key]];
-                }
-              }
-            } else {
-              lbData = json.data;
-            }
-            if (json.totals) lbTotals = json.totals;
-            renderLeaderboard(currentTab);
-            updateLoadMoreState();
-          } else {
-            if (window.renderErrorState) {
-              window.renderErrorState('#leaderboardList', {
-                title: 'Peringkat Belum Tersedia',
-                message: 'Data leaderboard belum berhasil disinkronkan dari server database.',
-                onRetry: fetchLeaderboard
-              });
-            }
-          }
-        } catch(e) {
-          console.warn('Leaderboard fetch error:', e);
-          if (window.renderErrorState) {
-            window.renderErrorState('#leaderboardList', {
-              title: 'Gagal Menghubungi Server',
-              message: 'Terjadi kegagalan jaringan saat mengambil data peringkat: ' + (e.message || 'Timeout'),
-              onRetry: fetchLeaderboard
-            });
-          }
-        } finally {
-          // Dilepas di finally supaya request yang gagal tidak mengunci
-          // semua pemanggilan berikutnya, termasuk tombol muat lebih banyak.
-          lbRequestInFlight = false;
-        }
-      }
-
-      // Tombol "Muat Lebih Banyak" disembunyikan saat semua baris sudah
-      // diambil. Sebelumnya tombolnya tampil terus tetapi tidak punya
-      // event listener sama sekali sehingga selalu tidak berpengaruh apa pun.
-      function updateLoadMoreState() {
-        const btn = document.getElementById('btnLoadMore');
-        if (!btn) return;
-
-        const rows = currentTab === 'rpg_level'
-          ? (lbData.survival || [])
-          : (currentTab === 'chat_level' || currentTab === 'trivia')
-            ? (lbData.leveling || [])
-            : (lbData.economy || []);
-        const total = lbTotals[currentTab] ?? rows.length;
-
-        // Offset berikutnya mengikuti jumlah baris yang sudah tampil, bukan
-        // selalu mulai dari nol.
-        lbOffset = rows.length;
-
-        if (rows.length >= total) {
-          btn.style.display = 'none';
-        } else {
-          btn.style.display = '';
-          btn.textContent = `Muat Lebih Banyak (${rows.length}/${total})`;
-          btn.disabled = false;
-        }
-      }
-
-
-      function getRankColor(rank) {
-        if (rank === 1) return '#f59e0b';
-        if (rank === 2) return '#94a3b8';
-        if (rank === 3) return '#b4783c';
-        return 'var(--text-muted)';
-      }
-      function getRankEmoji(rank) {
-        if (rank === 1) return '🥇';
-        if (rank === 2) return '🥈';
-        if (rank === 3) return '🥉';
-        return rank;
-      }
-
-      let searchQuery = '';
-
-      // Peta lokasi survival. Nilai di kolom currentLocation adalah kunci
-      // mentah huruf kecil, bukan teks siap tampil. Lihat
-      // src/survival/engines/currency.js LOCATION_CURRENCY untuk nilai
-      // yang sah. Kunci tak dikenal ditampilkan apa adanya agar data
-      // baru tidak ikut hilang.
-      const LOCATION_LABELS = {
-        jalan: 'Jalanan',
-        desa: 'Desa',
-        village: 'Desa',
-        hutan: 'Hutan',
-        tambang: 'Tambang',
-        laut: 'Laut',
-        pantai: 'Pantai',
-        sawah: 'Sawah',
-        gunung: 'Gunung',
-        kota: 'Kota',
-        city: 'Kota',
-        academy: 'Akademi',
-        prison: 'Penjara',
-      };
-      function formatLocation(key) {
-        if (!key) return 'Jalanan';
-        const norm = String(key).trim().toLowerCase();
-        return LOCATION_LABELS[norm] || String(key);
-      }
-
-      function renderLeaderboard(tab) {
-        currentTab = tab;
-        let rows = [];
-        let valueKey = '', valueLabel = '', subFn = null;
-
-        if (tab === 'wealth') {
-          rows = lbData.economy || [];
-          valueKey = 'total';
-          valueLabel = '🪙';
-          subFn = r => `Level ${r.level} · ${r.xp || 0} XP`;
-        } else if (tab === 'chat_level') {
-          rows = lbData.leveling || [];
-          valueKey = 'xp';
-          valueLabel = '✨';
-          subFn = r => `Level ${r.level} · ${r.messageCount || 0} pesan`;
-        } else if (tab === 'rpg_level') {
-          rows = lbData.survival || [];
-          // Server mengurutkan tab ini berdasarkan survival_level, jadi bar dan
-          // angka yang ditampilkan WAJIB memakai kunci yang sama. Sebelumnya
-          // memakai starFragments sehingga bar terlihat tidak urut.
-          valueKey = 'survivalLevel';
-          valueLabel = '🛡️';
-          // Lokasi disimpan sebagai kunci mentah ("desa", "jalan", "kota").
-          // 'Town Square' tidak pernah menjadi nilai kolom dan hanya
-          // muncul sebagai teks Inggris yang menyesatkan.
-          subFn = r => `Lv.${r.survivalLevel || 1} Survival · ${formatLocation(r.currentLocation)}`;
-        } else if (tab === 'trivia') {
-          rows = lbData.leveling || [];
-          valueKey = 'voiceMinutes';
-          valueLabel = '🎤';
-          subFn = r => `${r.voiceMinutes || 0} mnt suara · ${r.messageCount || 0} pesan`;
-        }
-
-        // Jumlah pemain memakai nilai total dari server, bukan panjang baris
-        // yang kebetulan terambil oleh pagination.
-        const totalEl = document.getElementById('lbTotalCount');
-        if (totalEl) {
-          const total = lbTotals[tab] ?? rows.length;
-          totalEl.textContent = `${total} pemain`;
-        }
-
-        // Apply real-time search query
-        let displayRows = rows;
-        if (searchQuery) {
-          displayRows = rows.filter(r =>
-            (r.name || '').toLowerCase().includes(searchQuery) ||
-            String(r.rank) === searchQuery
-          );
-        }
-
-        const container = document.getElementById('leaderboardList') || document.getElementById('lbList');
-        if (!container) return;
-        if (displayRows.length === 0) {
-          container.innerHTML = searchQuery
-            ? `<div style="text-align:center;color:var(--text-muted);padding:48px 0;"><i class="fa-solid fa-magnifying-glass" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.4;"></i>Tidak ditemukan pemain dengan nama "<strong>${searchQuery}</strong>".</div>`
-            : '<div style="text-align:center;color:var(--text-muted);padding:48px 0;"><i class="fa-solid fa-ghost" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.4;"></i>Belum ada data di server ini.</div>';
-          if (!searchQuery) updatePodium([], valueKey);
-          return;
-        }
-
-        container.innerHTML = displayRows.map((r, i) => {
-          const maxVal = rows[0]?.[valueKey] || 1;
-          const pct = Math.min(100, Math.round(((r[valueKey] || 0) / maxVal) * 100));
-          const barColor = r.rank === 1 ? 'linear-gradient(90deg,#f59e0b,#fde68a)' :
-                           r.rank === 2 ? 'linear-gradient(90deg,#94a3b8,#e2e8f0)' :
-                           r.rank === 3 ? 'linear-gradient(90deg,#b4783c,#d4a574)' :
-                           'linear-gradient(90deg,var(--accent-cyan),#67e8f9)';
-          const deltaHtml = r.delta > 0
-            ? `<span style="color:var(--accent-green);font-size:10px;margin-left:6px;"><i class="fa-solid fa-caret-up"></i> +${r.delta}</span>`
-            : r.delta < 0
-              ? `<span style="color:#f87171;font-size:10px;margin-left:6px;"><i class="fa-solid fa-caret-down"></i> ${r.delta}</span>`
-              : `<span style="color:var(--text-muted);font-size:10px;margin-left:6px;">•</span>`;
-
-          return `
-          <div class="lb-row" id="lb-row-${r.rank}" style="animation-delay:${i * 0.05}s">
-            <div class="lb-rank-num" style="color:${getRankColor(r.rank)};font-size:${r.rank <= 3 ? '22px':'14px'};">${getRankEmoji(r.rank)}</div>
-            <img class="lb-avatar" src="${r.avatar || '/assets/core/avatar.png'}" alt="${r.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${getRankColor(r.rank)}30;" onerror="this.src='/assets/core/avatar.png'">
-            <div class="lb-info">
-              <div class="lb-username">${r.name} ${deltaHtml}</div>
-              <div class="lb-sub">${subFn(r)}</div>
-              <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
-            </div>
-            <div>
-              <div class="lb-value" style="color:var(--accent-amber);">${valueLabel} ${(r[valueKey] || 0).toLocaleString('id-ID')}</div>
-              <div class="lb-value-sub">${r.isPremium ? '⭐ Premium' : 'Member'}</div>
-            </div>
-          </div>`;
-        }).join('');
-
-        if (!searchQuery) {
-          updatePodium(rows.slice(0, 3), valueKey);
-        }
-      }
-
-      // Nilai yang tampil di podium harus memakai kunci yang sama dengan tab
-      // aktif. Versi lama memakai rantai `total || xp || starFragments`,
-      // sehingga tab Survival selalu menampilkan NSF padahal tabelnya
-      // menghitung level, dan tab Trivia tidak punya salah satu dari ketiganya
-      // sehingga selalu jatuh ke 0.
-      function podiumValue(row, key) {
-        const v = row ? row[key] : 0;
-        return Number.isFinite(Number(v)) ? Number(v) : 0;
-      }
-
-      function updatePodium(top3, key) {
-        const podiumWrapper = document.getElementById('podiumWrapper');
-        if (!podiumWrapper) return;
-
-        if (!top3 || top3.length === 0) {
-          podiumWrapper.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 32px 0;">
-              <i class="fa-solid fa-crown" style="font-size: 32px; opacity: 0.3; margin-bottom: 8px; display: block;"></i>
-              Belum ada data juara di server ini.
-            </div>`;
-          return;
-        }
-
-        const p1 = top3[0];
-        const p2 = top3[1];
-        const p3 = top3[2];
-
-        let html = '';
-
-        // 2nd Place (Kiri)
-        if (p2) {
-          html += `
-            <div class="podium-place podium-2">
-              <div class="podium-avatar-wrap">
-                <img src="${p2.avatar || '/assets/core/avatar.png'}" class="podium-avatar" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--border-cyan);box-shadow:0 0 16px rgba(34,211,238,0.3);" onerror="this.src='/assets/core/avatar.png'" alt="${p2.name}">
-                <span class="podium-rank-badge">🥈</span>
-              </div>
-              <div class="podium-name">${p2.name}</div>
-              <div class="podium-coins" style="color:var(--accent-amber);">#2 · ${podiumValue(p2, key).toLocaleString('id-ID')}</div>
-              <div class="podium-bar">2</div>
-            </div>`;
-        } else {
-          html += '<div class="podium-place podium-2" style="visibility:hidden;"></div>';
-        }
-
-        // 1st Place (Tengah)
-        if (p1) {
-          html += `
-            <div class="podium-place podium-1" style="margin-bottom:-16px;">
-              <div class="podium-avatar-wrap animate-float">
-                <img src="${p1.avatar || '/assets/core/avatar.png'}" class="podium-avatar" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border-amber);box-shadow:0 0 28px var(--amber-glow);" onerror="this.src='/assets/core/avatar.png'" alt="${p1.name}">
-                <span class="podium-rank-badge" style="font-size:22px;">👑</span>
-              </div>
-              <div class="podium-name" style="font-size:14px;">${p1.name}</div>
-              <div class="podium-coins" style="color:var(--accent-amber);font-size:13px;">#1 · ${podiumValue(p1, key).toLocaleString('id-ID')}</div>
-              <div class="podium-bar">1</div>
-            </div>`;
-        }
-
-        // 3rd Place (Kanan)
-        if (p3) {
-          html += `
-            <div class="podium-place podium-3">
-              <div class="podium-avatar-wrap">
-                <img src="${p3.avatar || '/assets/core/avatar.png'}" class="podium-avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border-violet);box-shadow:0 0 16px rgba(168,85,247,0.3);" onerror="this.src='/assets/core/avatar.png'" alt="${p3.name}">
-                <span class="podium-rank-badge" style="font-size:16px;">🥉</span>
-              </div>
-              <div class="podium-name">${p3.name}</div>
-              <div class="podium-coins" style="color:var(--accent-amber);">#3 · ${podiumValue(p3, key).toLocaleString('id-ID')}</div>
-              <div class="podium-bar">3</div>
-            </div>`;
-        } else {
-          html += '<div class="podium-place podium-3" style="visibility:hidden;"></div>';
-        }
-
-        podiumWrapper.innerHTML = html;
-      }
-
-      function switchLbTab(cat) {
-        // Paginasi dimulai ulang saat pindah tab.
-        lbOffset = 0;
-        document.querySelectorAll('#lbTabGroup .tab-btn').forEach(btn => btn.classList.remove('active'));
-        const btnId = `btnTab${cat.split('_').map(w => w.charAt(0).toUpperCase()+w.slice(1)).join('')}`;
-        const btnEl = document.getElementById(btnId);
-        if (btnEl) btnEl.classList.add('active');
-        const meta = lbCategoryLabels[cat] || lbCategoryLabels.wealth;
-        const lbl = document.getElementById('lbCategoryLabel');
-        if (lbl) {
-          lbl.style.color = meta.color;
-          lbl.innerHTML = `<i class="fa-solid ${meta.icon}"></i> ${meta.label}`;
-        }
-        renderLeaderboard(cat);
-      }
-
-      // Search input listener
-      const searchInput = document.getElementById('lbSearch');
-      if (searchInput) {
-        searchInput.addEventListener('input', function() {
-          searchQuery = this.value.trim().toLowerCase();
-          renderLeaderboard(currentTab);
-        });
-      }
-
-      // Populate server selector
-      // Endpoint yang dipanggil sebelumnya "/api/guilds" tidak pernah ada,
-      // sehingga request selalu 404 dan dropdown tetap kosong. Rute yang
-      // benar adalah "/api/guilds/manageable" (dashboard/routes/guild.js).
-      async function loadGuilds() {
-        const sel = document.getElementById('guildSelector');
-        if (!sel) return;
-        try {
-          const res = await fetch('/api/guilds/manageable');
-          if (!res.ok) return;
-          const data = await res.json();
-          if (data.success && Array.isArray(data.guilds)) {
-            sel.innerHTML = '<option value="">- Semua Server -</option>';
-            data.guilds.forEach(g => {
-              const opt = document.createElement('option');
-              opt.value = g.id;
-              opt.textContent = g.name;
-              sel.appendChild(opt);
-            });
-          }
-        } catch (_) {}
-      }
-
-      // Memilih server memicu pemuatan ulang leaderboard. Sebelumnya dropdown
-      // hanya mengisi daftar tanpa pernah memengaruhi apa pun.
-      document.getElementById('guildSelector')?.addEventListener('change', function() {
-        lbOffset = 0;
-        fetchLeaderboard();
-      });
-
-      // Refresh button
-      document.getElementById('btnRefreshLb')?.addEventListener('click', function() {
-        const icon = this.querySelector('i');
-        if (icon) icon.style.animation = 'spin 0.6s linear';
-        fetchLeaderboard().finally(() => {
-          setTimeout(() => { if (icon) icon.style.animation = ''; }, 700);
-        });
-      });
-
-      // Tombol "Muat Lebih Banyak". Sebelumnya tombol ini tidak punya event
-      // listener sama sekali, jadi diklik tidak pernah terjadi apa pun.
-      document.getElementById('btnLoadMore')?.addEventListener('click', function() {
-        this.disabled = true;
-        fetchLeaderboard(true).finally(() => { this.disabled = false; });
-      });
-
-      // Initial load
-      loadGuilds();
-      fetchLeaderboard();
-      // Auto-refresh every 30 seconds.
-      // Callback dibungkus agar argumen timer (angka) tidak salah dibaca
-      // sebagai parameter `append` oleh fetchLeaderboard.
-      setInterval(() => {
-        lbOffset = 0;
-        fetchLeaderboard();
-      }, 30000);
-
-    </script>
+    <script src="/src/js/naura-os.js"></script>
+    <script src="/src/js/pages/leaderboard.js"></script>
   </body>
 </html>

@@ -6,6 +6,7 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const aiManager = require("../../src/managers/aiManager");
+const ui = require("../../src/config/ui");
 const { DomainError } = require("../../src/errors/DomainError");
 
 module.exports = {
@@ -96,7 +97,7 @@ module.exports = {
       }
 
       const container = buildContainerV2({
-        title: `👁️ Cyber-Eye: ${modeBadge}`,
+        title: `${ui.getEmoji("ai_vision") || "👁️"} Cyber-Eye: ${modeBadge}`,
         authorName: `Diajukan oleh: ${displayName}`,
         description:
           (userPrompt ? `**Pertanyaan:** *"${userPrompt}"*\n\n` : "") +

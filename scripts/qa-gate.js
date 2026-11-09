@@ -143,6 +143,7 @@ async function run() {
     await runStep("9/9 Automated Unit Test Suite", "node", [
       "--test",
       "--test-timeout=30000",
+      "--test-concurrency=true",
       "src/**/*.test.js",
       "dashboard/**/*.test.js",
       "plugin/**/*.test.js",

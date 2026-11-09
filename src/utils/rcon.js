@@ -1,4 +1,6 @@
 ﻿const net = require("net");
+const { getOrCreateBreaker } = require("./circuitBreaker");
+const rconBreakerShared = getOrCreateBreaker("minecraft-rcon-shared", { failureThreshold: 5, resetTimeout: 60000, halfOpenMaxAttempts: 3 });
 const { ExternalAPIError } = require("../errors/DomainError");
 
 class Rcon {
@@ -150,13 +152,11 @@ class Rcon {
  * @returns {Promise<string>}
  */
 async function sendRconCommand(host, port, password, command, timeout = 5000) {
-  const rcon = new Rcon(host, port, password, timeout);
-  try {
-    await rcon.connect();
-    return await rcon.execute(command);
-  } finally {
-    rcon.disconnect();
-  }
+  const _cmd = String(command||"").slice(0, 1024);
+  return rconBreakerShared.execute(async () => {
+    const rcon = new Rcon(host, port, password, timeout);
+    try { await rcon.connect(); return await rcon.execute(_cmd); } finally { rcon.disconnect(); }
+  });
 }
 
 Rcon.Rcon = Rcon;

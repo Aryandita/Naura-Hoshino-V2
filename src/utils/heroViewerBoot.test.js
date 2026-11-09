@@ -42,6 +42,19 @@ const HERO_CONTROLLER = path.join(
   "heroController.js",
 );
 
+// Pasca migrasi MPA, boot hero 3D halaman utama pindah dari script inline
+// index.html ke modul eksternal ini. Penjaga boot membaca modul tersebut.
+const HERO_BOOT_MODULE = path.join(
+  __dirname,
+  "..",
+  "..",
+  "dashboard",
+  "src",
+  "js",
+  "three",
+  "nauraHero3D.js",
+);
+
 const AUTH_MANAGER = path.join(
   __dirname,
   "..",
@@ -59,12 +72,12 @@ function read(file) {
 test("index.html menginisialisasi hero viewer", () => {
   const source = read(INDEX_HTML);
   assert.ok(
-    /initHeroViewer\s*\(/.test(source),
-    "index.html harus memanggil initHeroViewer(), kalau tidak canvas tidak pernah hidup",
+    /nauraHero3D/.test(source),
+    "index.html harus memuat modul boot hero nauraHero3D, kalau tidak canvas tidak pernah hidup",
   );
   assert.ok(
-    /NauraHeroViewer|heroController/.test(source),
-    "index.html harus mengimpor modul NauraHeroViewer",
+    /type="module"[^>]*nauraHero3D|nauraHero3D[^>]*type="module"|src="[^"]*nauraHero3D/.test(source),
+    "modul hero harus dimuat sebagai script module",
   );
 });
 
@@ -127,59 +140,40 @@ test("tombol model memakai path ter-encode", () => {
 });
 
 test("initHeroViewer dijalankan setelah DOM siap", () => {
-  const source = read(INDEX_HTML);
+  const source = read(HERO_BOOT_MODULE);
+  // Boot harus menunggu DOM siap supaya canvas sudah ada saat viewer dibangun.
   assert.ok(
-    /type="module"[\s\S]{0,3000}initHeroViewer\s*\(/.test(source),
-    "initHeroViewer harus dipanggil dari script module",
-  );
-
-  // Pola yang benar: deklarasi fungsi terpisah, lalu pemanggilan dari
-  // DOMContentLoaded atau langsung bila readyState sudah di luar "loading".
-  // Memanggilnya di script paling atas sebelum DOM selesai akan mendapat null
-  // karena canvas belum ada.
-  assert.ok(
-    /DOMContentLoaded/.test(source),
-    "halaman harus memasang listener DOMContentLoaded",
+    /addEventListener\(\s*["']DOMContentLoaded["']/.test(source),
+    "modul hero harus memasang listener DOMContentLoaded",
   );
   assert.ok(
-    /readyState\s*===\s*['"]loading['"]/.test(source),
-    "pemeriksaan readyState memastikan startHero tidak jalan sebelum DOM siap",
-  );
-  assert.ok(
-    /startHero\s*\(\s*\)/.test(source),
-    "startHero harus benar-benar dipanggil",
+    /DOMContentLoaded["'][\s\S]{0,200}?new NauraHero3D\(/.test(source),
+    "viewer harus dibangun dari listener DOM-ready, bukan sebelum DOM ada",
   );
 });
 
 test("pesan gagal hero 3D bisa ditindaklanjuti user", () => {
   // Anti-slop: pesan error tidak boleh menyuruh user mendebug di konsol.
-  // Modelnya dilayani dari server yang sama dengan halaman, jadi penyebab
-  // yang mungkin adalah WebGL nonaktif atau diblokir ekstensi. Menyebut itu
-  // jauh lebih berguna daripada "periksa konsol browser".
+  // Pasca migrasi, pesan gagal ada di elemen #naura3d-error pada index.html
+  // dan ditampilkan oleh showError() modul boot. Harus memberi langkah
+  // pemulihan yang nyata (mis. buka studio 3D lengkap), bukan istilah internal.
   const source = read(INDEX_HTML);
-  const failures = [...source.matchAll(/showFailure\(\s*["`]([^"`]+)["`]/g)].map((m) => m[1]);
+  const idx = source.indexOf('id="naura3d-error"');
+  assert.ok(idx > -1, "harus ada elemen error hero yang bisa ditampilkan");
+  const block = source.slice(idx, idx + 700);
 
-  assert.ok(failures.length >= 3, `harus ada beberapa pesan kegagalan, dapat ${failures.length}`);
-
-  for (const msg of failures) {
-    assert.ok(
-      !/periksa konsol|konsol browser|stack trace/i.test(msg),
-      `pesan "${msg}" menyuruh user melakukan debugging`,
-    );
-    assert.ok(
-      !/\bcanvas\b/i.test(msg),
-      `pesan "${msg}" membocorkan istilah internal "canvas"`,
-    );
-    assert.ok(
-      !/berhasil/i.test(msg),
-      `pesan "${msg}" memakai kata "berhasil" yang tidak informatif`,
-    );
-  }
-
-  // Setidaknya satu pesan harus menyebut penyebab yang bisa ditindaklanjuti.
   assert.ok(
-    failures.some((m) => /grafis|WebGL|ekstensi|muat ulang/i.test(m)),
-    "minimal satu pesan harus menyebut penyebab dan langkah pemulihannya",
+    !/periksa konsol|konsol browser|stack trace/i.test(block),
+    "pesan error tidak boleh menyuruh user melakukan debugging",
+  );
+  assert.ok(
+    !/\bcanvas\b/i.test(block),
+    "pesan error tidak boleh membocorkan istilah internal 'canvas'",
+  );
+  // Minimal satu langkah pemulihan yang bisa diklik user.
+  assert.ok(
+    /href="\/lounge"|muat ulang|coba lagi|Studio 3D/i.test(block),
+    "pesan gagal harus menyertakan langkah pemulihan yang bisa ditindaklanjuti",
   );
 });
 
@@ -217,37 +211,21 @@ test("pesan profil gagal menyertakan langkah pemulihannya", () => {
   );
 });
 
-test("semua script inline di index.html bebas syntax error", () => {
-  // Regresi nyata: ada penutup "});" berlebih di blok EventSource SSE yang
-  // membuat seluruh script inline halaman mati. Akibatnya modul hero 3D ikut
-  // gagal karena dipanggil dari script yang tidak pernah dieksekusi, dan
-  // overlay "Memuat Model 3D VRM..." tampil tanpa henti.
-  //
-  // Pemeriksaan memakai parser JavaScript sungguhan lewat esbuild, bukan
-  // sekadar menghitung kurung kurawal, karena kurung yang seimbang pun bisa
-  // membentuk blok yang salah.
+test("script boot hero bebas syntax error", () => {
+  // Regresi nyata: penutup "});" berlebih pernah membuat script boot mati
+  // sehingga overlay "Memuat Model 3D VRM..." tampil tanpa henti. Pasca
+  // migrasi, boot pindah ke modul eksternal nauraHero3D.js; parser JavaScript
+  // sungguhan (esbuild) memastikan modul itu tetap valid secara sintaks.
   const esbuild = require("esbuild");
-
-  const re = /<script(?![^>]*\ssrc=)(?![^>]*\stype=)[^>]*>([\s\S]*?)<\/script>/g;
-  const failures = [];
-  let m;
-  let n = 0;
-
-  while ((m = re.exec(read(INDEX_HTML)))) {
-    n += 1;
-    try {
-      esbuild.transformSync(m[1], { loader: "js" });
-    } catch (err) {
-      failures.push(`script #${n}: ${String(err.message).split("\n")[0]}`);
-    }
+  const source = read(HERO_BOOT_MODULE);
+  assert.ok(source.trim().length > 0, "modul boot hero harus ada isinya");
+  let error = null;
+  try {
+    esbuild.transformSync(source, { loader: "js" });
+  } catch (err) {
+    error = String(err.message).split("\n")[0];
   }
-
-  assert.ok(n > 0, "harus ada script inline untuk diperiksa");
-  assert.deepStrictEqual(
-    failures,
-    [],
-    `script inline punya syntax error sehingga tidak pernah jalan:\n${failures.join("\n")}`,
-  );
+  assert.equal(error, null, `modul boot hero punya syntax error: ${error}`);
 });
 
 test("heroController mengekspos handle error agar loading tidak menggantung", () => {
@@ -288,31 +266,26 @@ test("initHeroViewer dijaga agar tidak membangun viewer ganda", () => {
 });
 
 test("watchdog hero punya jalur keluar dan tidak menggantung", () => {
-  const source = read(INDEX_HTML);
-  const idx = source.indexOf("startHero");
-  const body = source.slice(idx, idx + 2600);
+  // Pasca migrasi, jalur keluar memakai try/catch pada loadModel yang memanggil
+  // showError(), bukan interval watchdog. Invarian tetap: kegagalan wajib
+  // menyembunyikan overlay loading dan menampilkan kotak error, sehingga
+  // spinner tidak menggantung selamanya.
+  const source = read(HERO_BOOT_MODULE);
 
-  // Setiap interval harus punya clearInterval, kalau tidak timer berjalan
-  // sepanjang halaman hidup even setelah overlay tertutup.
-  const intervals = (body.match(/setInterval\(/g) || []).length;
-  const clears = (body.match(/clearInterval\(/g) || []).length;
   assert.ok(
-    intervals > 0,
-    "harus ada watchdog berbasis interval untuk menutup overlay",
-  );
-  assert.ok(
-    clears >= intervals,
-    `tiap setInterval harus punya clearInterval (interval=${intervals}, clear=${clears})`,
+    /catch\s*\([^)]*\)\s*\{[\s\S]{0,200}?this\.showError\(\)/.test(source),
+    "loadModel harus punya catch yang memanggil showError agar loading tidak menggantung",
   );
 
-  // Kegagalan harus selalu menyembunyikan overlay, bukan hanya mengubah teks.
+  const idx = source.indexOf("showError() {");
+  const body = source.slice(idx, idx + 300);
   assert.ok(
-    /showFailure\s*=\s*\([^)]*\)\s*=>[\s\S]{0,400}?display\s*=\s*['"]none['"]/.test(body),
-    "showFailure wajib menyembunyikan overlay loading",
+    /errorEl[\s\S]{0,120}?display\s*=\s*["']flex["']/.test(body),
+    "showError wajib menampilkan kotak error",
   );
   assert.ok(
-    /showFailure[\s\S]{0,600}?errorBox[\s\S]{0,200}?display\s*=\s*['"]flex['"]/.test(body),
-    "kegagalan harus menampilkan kotak error, bukan spinner yang menggantung",
+    /loadingEl[\s\S]{0,120}?display\s*=\s*["']none["']/.test(body),
+    "showError wajib menyembunyikan overlay loading",
   );
 });
 

@@ -32,6 +32,10 @@ const wttrInBreaker = getOrCreateBreaker("weather-wttrin", {
   halfOpenMaxAttempts: 3,
 });
 
+function truncateLocation(str){const t=String(str||"").trim();if(t.length<=50)return t;return t.slice(0,47)+"...";}
+const weatherLocale={id:{today:"Hari Ini",tomorrow:"Besok",day_after:"Lusa",day_3:"Hari ke-3",today_forecast:"Hari Ini (Prakiraan)"},en:{today:"Today",tomorrow:"Tomorrow",day_after:"Day After",day_3:"Day 3",today_forecast:"Today (Forecast)"}};
+function langFor(interaction){const l=(interaction&&interaction.localeLang)||(interaction&&interaction.guild&&interaction.guild.preferredLocale)||(interaction&&interaction.locale)||"id";return String(l).toLowerCase().startsWith("en")?"en":"id";}
+function weatherLocaleFor(interaction){return weatherLocale[langFor(interaction)]||weatherLocale.id;}
 const weatherCache = new ApiResponseCache({ ttl: 600000, maxSize: 100 });
 const geoCache = new ApiResponseCache({ ttl: 86400000, maxSize: 200 });
 
@@ -223,7 +227,7 @@ async function fetchFromWttrIn(city) {
   return wttrInBreaker.execute(async () => {
     const res = await axios.get(
       `https://wttr.in/${encodeURIComponent(city)}?format=j1`,
-      { timeout: 5000 },
+      { timeout: 5000, headers: { "User-Agent": "NauraHoshinoBot/2.5 (Discord Utility Bot; weather)" } },
     );
 
     const data = res.data;
@@ -381,26 +385,26 @@ module.exports = {
         profile.premiumUntil &&
         new Date(profile.premiumUntil) > new Date();
 
-      const buildButtonsRow = (activeDay, disabledAll = false) => {
+      const _wLocale=weatherLocaleFor(interaction); const buildButtonsRow = (activeDay, disabledAll = false) => {
         return new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId("weather_current")
-            .setLabel("Hari Ini")
+            .setLabel(_wLocale.today)
             .setStyle(ButtonStyle.Success)
             .setDisabled(disabledAll || activeDay === -1),
           new ButtonBuilder()
             .setCustomId("weather_day_1")
-            .setLabel("Besok")
+            .setLabel(_wLocale.tomorrow)
             .setStyle(ButtonStyle.Primary)
             .setDisabled(disabledAll || activeDay === 1),
           new ButtonBuilder()
             .setCustomId("weather_day_2")
-            .setLabel("Lusa")
+            .setLabel(_wLocale.day_after)
             .setStyle(ButtonStyle.Primary)
             .setDisabled(disabledAll || activeDay === 2),
           new ButtonBuilder()
             .setCustomId("weather_day_3")
-            .setLabel("Hari ke-3")
+            .setLabel(_wLocale.day_3)
             .setStyle(ButtonStyle.Primary)
             .setDisabled(disabledAll || activeDay === 3),
         );
@@ -410,21 +414,21 @@ module.exports = {
       try {
         const forecastItems = [
           {
-            dayName: "Besok",
+            dayName: _wLocale.tomorrow,
             minTemp: daily.tempMin?.[1] ?? current.temp - 2,
             maxTemp: daily.tempMax?.[1] ?? current.temp + 2,
             code: daily.codes?.[1] ?? current.code,
             rainProb: daily.precipProbMax?.[1] ?? 25,
           },
           {
-            dayName: "Lusa",
+            dayName: _wLocale.day_after,
             minTemp: daily.tempMin?.[2] ?? current.temp - 3,
             maxTemp: daily.tempMax?.[2] ?? current.temp + 1,
             code: daily.codes?.[2] ?? current.code,
             rainProb: daily.precipProbMax?.[2] ?? 35,
           },
           {
-            dayName: "Hari ke-3",
+            dayName: _wLocale.day_3,
             minTemp: daily.tempMin?.[3] ?? current.temp - 1,
             maxTemp: daily.tempMax?.[3] ?? current.temp + 3,
             code: daily.codes?.[3] ?? current.code,
@@ -432,8 +436,9 @@ module.exports = {
           },
         ];
 
+        const _truncCity=truncateLocation(cityName);
         const cardBuffer = await canvasWorkerPool.execute("renderWeatherCard", {
-          cityName,
+          cityName: _truncCity,
           stateName,
           countryName,
           lat,
@@ -552,10 +557,10 @@ module.exports = {
           const info = getWeatherInfo(wCode);
           accentColorHex = info.color;
 
-          let titlePrefix = "Besok";
-          if (dayIndex === 0) titlePrefix = "Hari Ini (Prakiraan)";
-          else if (dayIndex === 2) titlePrefix = "Lusa";
-          else if (dayIndex === 3) titlePrefix = "Hari ke-3";
+          let titlePrefix = _wLocale.tomorrow;
+          if (dayIndex === 0) titlePrefix = _wLocale.today_forecast;
+          else if (dayIndex === 2) titlePrefix = _wLocale.day_after;
+          else if (dayIndex === 3) titlePrefix = _wLocale.day_3;
 
           title = `${info.emoji} Prakiraan ${titlePrefix} - ${cityName}`;
           description = `Tanggal: **${formatDate(dateStr)}**\nKondisi: **${info.name}**\n\n> ${ui.getEmoji("naura_read") || "📖"} *Rencana aktivitasmu besok? Cek prakiraan ini dulu, ya!*`;

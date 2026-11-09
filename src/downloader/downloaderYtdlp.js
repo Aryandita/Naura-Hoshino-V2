@@ -13,6 +13,7 @@ const { logger } = require("../managers/logger");
 const { ExternalAPIError } = require("../errors/DomainError");
 
 const EXEC_TIMEOUT_MS = 60000;
+const YTDLP_MAX_BYTES = 100 * 1024 * 1024;
 
 let ytDlpInstance = null;
 let ytDlpReady = false;
@@ -39,10 +40,12 @@ const ensureYtDlp = async () => {
     const binaryPath = path.join(binaryDir, binaryName);
 
     if (!fs.existsSync(binaryPath)) {
-      logger.info(
-        "[Downloader] Mengunduh binary yt-dlp dari GitHub (pertama kali)...",
-      );
-      await YTDlpWrap.downloadFromGithub(binaryPath);
+      logger.info("[Downloader] Mengunduh binary yt-dlp (pinned) dari GitHub...");
+      const _env = require("../config/env");
+      const _ver = _env.YTDLP_PINNED_VERSION || "2026.01.01";
+      const _sum = _env.YTDLP_CHECKSUM_SHA256;
+      try { await YTDlpWrap.downloadFromGithub(binaryPath, _ver); } catch { await YTDlpWrap.downloadFromGithub(binaryPath); }
+      if(_sum){ const crypto=require("crypto"); const data=fs.readFileSync(binaryPath); const hash=crypto.createHash("sha256").update(data).digest("hex"); if(hash.toLowerCase()!==String(_sum).toLowerCase()){ try{fs.unlinkSync(binaryPath);}catch{} throw new Error("yt-dlp checksum mismatch"); } }
       logger.info("[Downloader] Binary yt-dlp berhasil diunduh.");
     }
 
@@ -101,6 +104,8 @@ const resolveCookiePath = () => {
  */
 const buildYtdlpArgs = (url, tempOutput, cookiePath = resolveCookiePath()) => {
   const args = [
+    "--no-playlist",
+    "--",
     url,
     "-f",
     "b[ext=mp4]/best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
@@ -108,10 +113,9 @@ const buildYtdlpArgs = (url, tempOutput, cookiePath = resolveCookiePath()) => {
     "mp4",
     "-o",
     tempOutput,
-    "--no-playlist",
     "--no-warnings",
     "--max-filesize",
-    "500M",
+    "100M",
     "--socket-timeout",
     "15",
   ];
@@ -138,6 +142,7 @@ const _setYtDlpInstanceForTesting = (instance) => {
  * @returns {Promise<{status: string, url: string, isLocalFile: boolean}|null>}
  */
 const tryYtdlp = async (url, cleanup) => {
+  try{ const _c=require("./downloaderCore"); const _u=new URL(url); if(_u.protocol!=="https:"&&_u.protocol!=="http:") return null; const _chk=await _c.assertSsrSafeUrl(url).catch(()=>({ok:false})); if(!_chk.ok) return null; }catch{ return null; }
   let timeoutHandle = null;
 
   try {
@@ -191,6 +196,7 @@ const tryYtdlp = async (url, cleanup) => {
 };
 
 module.exports = {
+  YTDLP_MAX_BYTES,
   ensureYtDlp,
   tryYtdlp,
   resolveCookiePath,

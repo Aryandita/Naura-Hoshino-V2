@@ -208,7 +208,7 @@ export class AnimationController {
 
     _initDefaultClips() {
         const idleClip = this.clips.find((c) => /idle|stand|breath/i.test(c.name));
-        if (idleClip && !this.vrm) {
+        if (idleClip) {
             this.currentAction = this.mixer.clipAction(idleClip);
             this.currentAction.play();
         }
@@ -373,6 +373,36 @@ export class AnimationController {
     playClip(name, options = {}) {
         const { loop, onFinish = null } = options;
 
+        // Klip baked dari model (VRM/GLB) diputar langsung di mixer agar
+        // animasi skeletal asli bergerak. Resolve ke kunci clip yang
+        // benar-benar ada, bukan procedural path.
+        const bakedClip = (this.clips || []).find(
+            (c) => (c.name || "").toLowerCase() === (name || "").toLowerCase()
+        );
+        if (bakedClip) {
+            const fadeDuration = options.fadeDuration || 0.45;
+            if (this.currentAction) this.currentAction.fadeOut(0.3);
+            this.currentAction = this.mixer.clipAction(bakedClip);
+            this.currentAction.reset().fadeIn(fadeDuration).play();
+            if (loop !== undefined) {
+                this.currentAction.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
+            }
+            this.activeAnim = bakedClip.name;
+            this.isWaving = bakedClip.name.toLowerCase() === "wave";
+            if (onFinish) this.currentAction.clampWhenFinished = true;
+            return {
+                name: bakedClip.name,
+                isProcedural: false,
+                mixer: this.mixer,
+                stop: () => {
+                    if (this.currentAction) this.currentAction.fadeOut(0.3);
+                    this.activeAnim = "Idle";
+                    this.isWaving = false;
+                },
+            };
+        }
+
+        // Procedural path (fallback untuk nama tanpa klip baked).
         const matchedKey = Object.keys(ANIMATION_DEFINITIONS).find(
             (k) => k.toLowerCase() === (name || "").toLowerCase()
         ) || "Idle";

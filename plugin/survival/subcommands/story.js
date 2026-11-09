@@ -268,7 +268,7 @@ async function handleBackstory(interaction, userId, lang) {
   }
 
   const lines = backstories.map((b) => {
-    const status = b.isUnlocked ? "✅" : "🔒";
+    const status = b.isUnlocked ? "✅" : ui.getEmoji("mod_lock") || "🔒";
     return `${status} **Level ${b.level}:** ${b.title}`;
   });
 
@@ -316,7 +316,7 @@ async function handleBackstory(interaction, userId, lang) {
         const readerPayload = buildContainerV2({
           accentColorHex: survivalUI.getColor("moss"),
           authorName: `Backstory • ${npcId.toUpperCase()}`,
-          title: `📖 ${storyItem.title}`,
+          title: `${ui.getEmoji("edu_word") || "📖"} ${storyItem.title}`,
           description: storyItem.content,
           buttonsRow: [survivalUI.buildSurvivalActionRow('town', userId)],
           footerText: ui.getFooter("survival"),

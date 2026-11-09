@@ -41,13 +41,13 @@ const QUICK_INFO_PREFIX = "survival_quick_info";
 const QUICK_STATUS_PREFIX = "survival_quick_status";
 
 const ACTION_CATEGORIES = [
-  { label: "Kumpul Bahan", description: "Tebang pohon, tambang batu, atau mancing ikan", value: "gathering", emoji: "⛏️" },
+  { label: "Kumpul Bahan", description: "Tebang pohon, tambang batu, atau mancing ikan", value: "gathering", emoji: e("mc_pickaxe", "⛏️") },
   { label: "Perawatan Diri", description: "Makan, minum, istirahat, pulihkan HP/stamina", value: "vitals", emoji: "❤️" },
   { label: "Petualangan", description: "Masuk dungeon, duel, atau zona bahaya", value: "combat", emoji: "🗡️" },
   { label: "Ekonomi", description: "Toko desa, bank, dompet, cari nafkah", value: "economy", emoji: "🛒" },
   { label: "Inventaris", description: "Buka ransel, craft item, perbaiki alat", value: "inventory", emoji: "📦" },
   { label: "Desa Sukamaju", description: "Kafe, bank, sapa warga, peta wilayah", value: "town", emoji: "🏘️" },
-  { label: "Premium Naura", description: "Lihat manfaat tier VIP, beli upgrade", value: "premium", emoji: "💎" },
+  { label: "Premium Naura", description: "Lihat manfaat tier VIP, beli upgrade", value: "premium", emoji: e("naura_shard", "💎") },
 ];
 
 // ============================================================================
@@ -100,13 +100,13 @@ module.exports = {
         description:
           "Pilih aksi yang ingin kamu lakukan dari menu di bawah. Naura akan membantu kamu langsung melanjutkan petualangan tanpa harus mengetik command panjang!\n\n" +
           "**Aksi Tersedia:**\n" +
-          "• ⛏️ **Kumpul Bahan** – Tebang, tambang, atau mancing\n" +
+          `• ${e("mc_pickaxe", "⛏️")} **Kumpul Bahan** – Tebang, tambang, atau mancing\n` +
           "• ❤️ **Perawatan Diri** – Makan, minum, istirahat, pulihkan HP\n" +
           "• 🗡️ **Petualangan** – Masuk dungeon, duel, atau zona bahaya\n" +
           "• 🛒 **Ekonomi** – Toko, bank, dompet, transaksi\n" +
           "• 📦 **Inventaris** – Buka ransel, craft, perbaiki alat\n" +
           "• 🏘️ **Desa** – Kunjungi kafe, bank, sapa warga, peta wilayah\n" +
-          "• 💎 **Premium** – Lihat manfaat tier VIP, beli upgrade\n",
+          `• ${e("naura_shard", "💎")} **Premium** – Lihat manfaat tier VIP, beli upgrade\n`,
         buttonsRow: [
           new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder()
@@ -119,7 +119,7 @@ module.exports = {
               .setCustomId(`${QUICK_INFO_PREFIX}:${userId}`)
               .setLabel("Panduan Lengkap")
               .setStyle(ButtonStyle.Secondary)
-              .setEmoji("📖"),
+              .setEmoji(e("edu_word", "📖")),
             new ButtonBuilder()
               .setCustomId(`${QUICK_STATUS_PREFIX}:${userId}`)
               .setLabel("Cek Status Diri")

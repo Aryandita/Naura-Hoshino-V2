@@ -14,6 +14,8 @@ const { ExternalAPIError } = require("../errors/DomainError");
 const INSTANCE_CACHE_TTL = 10 * 60 * 1000;
 const instanceCache = { instances: [], lastFetch: 0 };
 
+const env = require("../config/env");
+const PINNED_INSTANCE = env.COBALT_API_URL ? String(env.COBALT_API_URL).trim() : null;
 const STATIC_INSTANCES = [
   "https://api.cobalt.tools",
   "https://co.wuk.sh",
@@ -25,6 +27,7 @@ const STATIC_INSTANCES = [
  * @returns {Promise<string[]>}
  */
 const fetchCobaltInstances = async () => {
+  if(PINNED_INSTANCE){ try{ const u=new URL(PINNED_INSTANCE); if(u.protocol==="https:") return [PINNED_INSTANCE]; }catch{} return STATIC_INSTANCES; }
   const now = Date.now();
   if (
     instanceCache.instances.length > 0 &&
@@ -46,7 +49,7 @@ const fetchCobaltInstances = async () => {
         .filter((srv) => (srv.trust || 0) > 0 || (srv.score || 0) > 0)
         .sort((a, b) => (b.score || 0) - (a.score || 0))
         .map((srv) => srv.api || srv.url)
-        .filter((u) => typeof u === "string" && u.startsWith("http"));
+        .filter((u) => typeof u === "string" && u.startsWith("https://"));
 
       if (dynamicServers.length > 0) {
         logger.info(
@@ -132,6 +135,7 @@ const tryCobalt = async (url) => {
 };
 
 module.exports = {
+  PINNED_INSTANCE,
   STATIC_INSTANCES,
   fetchCobaltInstances,
   tryOneCobaltInstance,

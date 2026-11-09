@@ -170,7 +170,7 @@ module.exports = {
     // Send trivia prompt
     const payload = buildContainerV2({
       accentColorHex: "#ff1493",
-      title: "🎵 Music Trivia!",
+      title: `${ui.getEmoji("naura_chirping") || "🎵"} Music Trivia!`,
       description:
         "Dengarkan cuplikan lagu ini dan ketik **judul lagunya** di chat secepat mungkin!\nKamu punya waktu **15 detik**.",
       footerText: ui.getFooter("music"),

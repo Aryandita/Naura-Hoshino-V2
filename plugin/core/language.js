@@ -15,6 +15,8 @@ module.exports = {
         .addChoices(
           { name: "🇮🇩 Indonesia", value: "id" },
           { name: "🇬🇧 English", value: "en" },
+          { name: "🇯🇵 日本語", value: "ja" },
+          { name: "🇪🇸 Español", value: "es" },
           { name: "⚙️ Ikuti Server (Default)", value: "default" },
         ),
     ),
@@ -53,12 +55,16 @@ module.exports = {
       const descId = "Bahasa kamu berhasil diubah menjadi **Indonesia**.";
       const descEn =
         "Your language has been successfully changed to **English**.";
+      const descJa = "言語が**日本語**に更新されました。";
+      const descEs = "Tu idioma se ha cambiado correctamente a **Español**.";
       const descDefault =
         "Bahasa kamu sekarang mengikuti pengaturan bawaan server ini.";
 
       let desc = "";
       if (pilihan === "id") desc = descId;
       else if (pilihan === "en") desc = descEn;
+      else if (pilihan === "ja") desc = descJa;
+      else if (pilihan === "es") desc = descEs;
       else desc = descDefault;
 
       const payload = buildContainerV2({

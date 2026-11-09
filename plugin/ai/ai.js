@@ -28,6 +28,7 @@
 
 const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
 const cacheManager = require("../../src/managers/cacheManager");
+const ui = require("../../src/config/ui");
 const chat = require("./subcommands/chat");
 
 // ============================================================================
@@ -107,7 +108,7 @@ module.exports = {
       title: "🤖 Naura Artificial Intelligence Suite",
       authorName: "Naura Intelligent Core",
       description: [
-        "Hai! Aku **Naura Hoshino**, asisten AI pribadimu di Discord! ✨",
+        `Hai! Aku **Naura Hoshino**, asisten AI pribadimu di Discord! ${ui.getEmoji("ai_sparkle") || "✨"}`,
         "Pilih fitur kecerdasan buatan yang ingin kamu gunakan:",
         "Ngobrol santai, bertualang di Story Mode RPG, berbincang di Voice Channel, atau minta bantuan belajar bersama Naura Sensei!",
         "",
@@ -116,14 +117,14 @@ module.exports = {
       accentColorHex: "#38BDF8",
       quickButtons: [
         { id: "chat", label: "Ngobrol AI", emoji: "💬", style: ButtonStyle.Primary },
-        { id: "story", label: "Story Mode RPG", emoji: "📖", style: ButtonStyle.Success },
-        { id: "voice", label: "Voice Companion", emoji: "🎙️", style: ButtonStyle.Secondary },
+        { id: "story", label: "Story Mode RPG", emoji: ui.getEmoji("edu_word") || "📖", style: ButtonStyle.Success },
+        { id: "voice", label: "Voice Companion", emoji: ui.getEmoji("ai_voice") || "🎙️", style: ButtonStyle.Secondary },
       ],
       selectOptions: [
         { value: "chat", label: "Dialog Percakapan AI", emoji: "💬", description: "Tanya jawab cerdas, diskusi santai, dan bantuan kreatif" },
-        { value: "story", label: "Story Mode RPG", emoji: "📖", description: "Petualangan RPG naratif interaktif bersama AI Dungeon Master" },
-        { value: "voice", label: "Voice Companion dan DJ", emoji: "🎙️", description: "Bercakap dengan suara asli Naura di Voice Channel" },
-        { value: "vision", label: "Analisis Gambar Multimodal", emoji: "👁️", description: "Pahami konteks foto, screenshot, dan diagram visual" },
+        { value: "story", label: "Story Mode RPG", emoji: ui.getEmoji("edu_word") || "📖", description: "Petualangan RPG naratif interaktif bersama AI Dungeon Master" },
+        { value: "voice", label: "Voice Companion dan DJ", emoji: ui.getEmoji("ai_voice") || "🎙️", description: "Bercakap dengan suara asli Naura di Voice Channel" },
+        { value: "vision", label: "Analisis Gambar Multimodal", emoji: ui.getEmoji("ai_vision") || "👁️", description: "Pahami konteks foto, screenshot, dan diagram visual" },
         { value: "sensei", label: "Naura Sensei", emoji: "🎓", description: "Tutor dan pemandu sistem bot serta pembelajaran" },
         { value: "mystery", label: "Detektif Misteri AI", emoji: "🕵️", description: "Game deduksi sosial dan pemecahan kasus pembunuhan" },
         { value: "persona", label: "Pengaturan Persona", emoji: "🎭", description: "Kustomisasi gaya bicara dan sifat unik Naura AI" },

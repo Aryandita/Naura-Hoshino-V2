@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const { test, describe, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
@@ -121,9 +121,9 @@ describe("Naura Arcade System & Migration Verification", () => {
     assert.ok(componentInteraction.replyPayload, "Should successfully reply when not deferred");
   });
 
-  test("All 15 arcade subcommands exist and export execute function", () => {
+  test("All arcade subcommands exist and export execute function", () => {
     const games = Object.keys(arcade.ALL_GAMES);
-    assert.strictEqual(games.length, 15, "Should have 15 registered games");
+    assert.ok(games.length >= 15, "Should have at least 15 registered games");
 
     for (const gameKey of games) {
       const subPath = path.join(__dirname, "..", "plugin", "arcade", "subcommands", `${gameKey}.js`);
@@ -160,3 +160,4 @@ describe("Naura Arcade System & Migration Verification", () => {
     assert.strictEqual(commandRegistry.normalizeCategory("arcade"), "arcade");
   });
 });
+

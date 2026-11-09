@@ -61,7 +61,7 @@ module.exports = {
           log.status === "SUCCESS"
             ? "✅"
             : log.status === "COOLDOWN"
-              ? "⏳"
+              ? e("naura_uptime", "⏳")
               : "❌";
 
         const cmd = log.commandName || "command";
@@ -89,7 +89,7 @@ module.exports = {
           "",
           logLines.join("\n"),
           "",
-          "-# 🔒 *Semua transaksi dan perintah dicatat permanen demi keamanan dan transparansi.*",
+          `-# ${e("mod_lock", "🔒")} *Semua transaksi dan perintah dicatat permanen demi keamanan dan transparansi.*`,
         ].join("\n"),
         footerText: ui.getFooter("core"),
       });

@@ -263,7 +263,7 @@ async function handleList(interaction, currentSettings) {
 
   const fields = [
     {
-      name: "✨ Soundboard Resmi (Official)",
+      name: `${ui.getEmoji("ai_sparkle") || "✨"} Soundboard Resmi (Official)`,
       value: officialList
         .map((name) => `• \`/soundboard play ${name}\` - *${OFFICIAL_SOUNDBOARDS[name].title}*`)
         .join("\n"),
@@ -272,14 +272,14 @@ async function handleList(interaction, currentSettings) {
 
   if (customList.length > 0) {
     fields.push({
-      name: "🎙️ Soundboard Kustom Server",
+      name: `${ui.getEmoji("ai_voice") || "🎙️"} Soundboard Kustom Server`,
       value: customList.map((name) => `• **${name}**`).join("\n"),
     });
   }
 
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("primary") || "#FFB6C1",
-    title: "🎙️ Daftar Efek Suara Soundboard",
+    title: `${ui.getEmoji("ai_voice") || "🎙️"} Daftar Efek Suara Soundboard`,
     description: "Mainkan efek suara langsung di Voice Channel tanpa menghentikan antrean musik utama!",
     fields,
     footerText: "Gunakan /soundboard play <nama> untuk memutar",
@@ -315,8 +315,8 @@ async function handlePlay(interaction, guildId, currentSettings) {
     if (played) {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: "🎙️ Naura Official Soundboard",
-        description: `✨ Memutar efek suara resmi: **${official.title}** di <#${voiceChannel.id}>!`,
+        title: `${ui.getEmoji("ai_voice") || "🎙️"} Naura Official Soundboard`,
+        description: `${ui.getEmoji("ai_sparkle") || "✨"} Memutar efek suara resmi: **${official.title}** di <#${voiceChannel.id}>!`,
         footerText: ui.getFooter("music"),
       });
       return interaction.editReply(payload);
@@ -384,16 +384,16 @@ async function playCustomSoundboard(interaction, guildId, voiceChannel, nama, ur
       mainTrack.info.resumePosition = player.position;
       player.queue.unshift(mainTrack);
       await player.play(sbTrack);
-      desc = `🎙️ Memutar efek suara **${nama}**... (Lagu utama dijeda sementara)`;
+      desc = `${ui.getEmoji("ai_voice") || "🎙️"} Memutar efek suara **${nama}**... (Lagu utama dijeda sementara)`;
     } else {
       player.queue.unshift(sbTrack);
       if (!player.isPlaying && !player.isPaused) player.play();
-      desc = `🎙️ Memutar efek suara **${nama}**...`;
+      desc = `${ui.getEmoji("ai_voice") || "🎙️"} Memutar efek suara **${nama}**...`;
     }
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#00FFFF",
-      title: "🎙️ Soundboard FX",
+      title: `${ui.getEmoji("ai_voice") || "🎙️"} Soundboard FX`,
       description: desc,
       footerText: ui.getFooter("music"),
     });

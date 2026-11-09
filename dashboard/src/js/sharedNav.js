@@ -160,6 +160,7 @@
             primaryRoute: '/profile',
             color: '#f472b6',
             pages: [
+                { path: '/chat', label: 'Neural Chat & AI Companion', icon: 'fa-solid fa-comments', desc: 'Chat AI Naura, terhubung dari Lounge' },
                 { path: '/profile', label: 'Profil Petualang', icon: 'fa-solid fa-id-card', desc: 'Identitas Discord, statistik RPG & 34 trofi' },
                 { path: '/achievements', label: 'Ruang Trofi', icon: 'fa-solid fa-trophy', desc: '34 pencapaian eksklusif & gelar petualang' },
                 { path: '/feed', label: 'Mading Komunitas', icon: 'fa-solid fa-rss', desc: 'Log aktivitas realtime & interaksi pengguna' },

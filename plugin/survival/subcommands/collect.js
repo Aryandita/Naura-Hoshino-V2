@@ -172,7 +172,7 @@ module.exports = {
           `Pilih lokasi alam yang ingin kamu kunjungi untuk mengumpulkan bahan baku petualangan:`,
           "",
           `🌲 **Pohon (Hutan)** : Kayu, Serat, Apel liar, Batu`,
-          `⛏️ **Batu (Tambang)** : Bebatuan alam, Bijih Besi, Perak, Berlian`,
+          `${e("mc_pickaxe", "⛏️")} **Batu (Tambang)** : Bebatuan alam, Bijih Besi, Perak, Berlian`,
           `🌊 **Air (Laut)** : Ikan Salmon, Ikan Emas, Umpan pancing`,
           `🌿 **Rerumputan (Desa)** : Dedaunan, Serat herbal, Air mineral`,
           "",

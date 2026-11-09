@@ -45,8 +45,8 @@ const LOCATION_EMOJIS = {
   balai_desa: "🏛️",
   cafe: "☕",
   klinik: "🏥",
-  pasar_kota: "🏪",
-  perpustakaan: "📚",
+  pasar_kota: ui.getEmoji("eco_shop") || "🏪",
+  perpustakaan: ui.getEmoji("naura_read") || "📚",
   taman_kota: "🌳",
   pondok_herbal: "🌿",
   hutan_belantara: "🌲",
@@ -222,7 +222,7 @@ async function handleExplore(interaction, userId, areaId, areaData, survival, la
   const payload = buildContainerV2({
     accentColorHex: survivalUI.getColor("emerald"),
     authorName: `Naura Wilds · ${areaData.name}`,
-    title: "🗺️ Mau pergi ke mana?",
+    title: `${ui.getEmoji("edu_map") || "🗺️"} Mau pergi ke mana?`,
     description: [
       `Kamu sedang berada di **${areaData.name}**.`,
       `*${areaData.description}*`,
@@ -302,7 +302,7 @@ async function handleExplore(interaction, userId, areaId, areaData, survival, la
           const eventPayload = buildContainerV2({
             accentColorHex: survivalUI.getColor("amber"),
             authorName: `Naura Wilds · ${areaData.name}`,
-            title: `✨ ${ev?.title || "Peristiwa Menarik"}`,
+            title: `${ui.getEmoji("ai_sparkle") || "✨"} ${ev?.title || "Peristiwa Menarik"}`,
             description: [
               `${locEmoji} **${result.location.name}**`,
               "",
@@ -342,7 +342,7 @@ async function handleExplore(interaction, userId, areaId, areaData, survival, la
             new ButtonBuilder()
               .setCustomId(`roam_work_${locationId}`)
               .setLabel("Bekerja di sini")
-              .setEmoji("💼")
+              .setEmoji(ui.getEmoji("eco_work") || "💼")
               .setStyle(ButtonStyle.Primary),
           );
         }
@@ -351,7 +351,7 @@ async function handleExplore(interaction, userId, areaId, areaData, survival, la
           new ButtonBuilder()
             .setCustomId("roam_explore_again")
             .setLabel("Jelajah Lagi")
-            .setEmoji("🗺️")
+            .setEmoji(ui.getEmoji("edu_map") || "🗺️")
             .setStyle(ButtonStyle.Secondary),
         );
 
@@ -460,7 +460,7 @@ async function handleExplore(interaction, userId, areaId, areaData, survival, la
               const workSuccessPayload = buildContainerV2({
                 accentColorHex: survivalUI.getColor("emerald"),
                 authorName: "Naura Wilds • Tempat Kerja",
-                title: "💼 Selesai Bekerja!",
+                title: `${ui.getEmoji("eco_work") || "💼"} Selesai Bekerja!`,
                 description: [
                   "Pekerjaanmu selesai dengan baik.",
                   `💰 Upah: **${workResult.reward.amount}** ${currencyEmoji}`,
@@ -512,7 +512,7 @@ async function handleWork(interaction, userId, areaId, locationId, survival, lan
   }
 
   const currencyEmoji = currency.emojiOf(result.reward.currency);
-  const locEmoji = LOCATION_EMOJIS[locationId] || "💼";
+  const locEmoji = LOCATION_EMOJIS[locationId] || ui.getEmoji("eco_work") || "💼";
   const areaData = roamEngine.getAreaData(areaId);
 
   const payload = buildContainerV2({

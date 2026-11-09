@@ -75,7 +75,7 @@ module.exports = {
 
       if (execResult.error) {
         fields.push({
-          name: "⚠️ Pesan Error",
+          name: `${ui.getEmoji("mod_warn") || "⚠️"} Pesan Error`,
           value: `\`\`\`text\n${execResult.error.substring(0, 900)}\n\`\`\``,
           inline: false,
         });
@@ -95,7 +95,7 @@ module.exports = {
 
       const responsePayload = buildContainerV2({
         accentColorHex: accentColor,
-        title: execResult.success ? "⚡ Eksekusi Sandbox Berhasil" : "⚠️ Eksekusi Sandbox Mengalami Masalah",
+        title: execResult.success ? "⚡ Eksekusi Sandbox Berhasil" : `${ui.getEmoji("mod_warn") || "⚠️"} Eksekusi Sandbox Mengalami Masalah`,
         description: execResult.success
           ? "Skrip Anda telah selesai dieksekusi di dalam lingkungan terisolasi Node.js VM."
           : "Skrip Anda dieksekusi tetapi mengembalikan error atau melebihi batas sumber daya yang diizinkan.",

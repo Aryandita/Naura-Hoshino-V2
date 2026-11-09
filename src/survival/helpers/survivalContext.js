@@ -73,6 +73,7 @@ function scheduleAutoDelete(messageId, deleteFn, delayMs = AUTO_DELETE_MS) {
       logger.debug("[survivalContext:scheduleAutoDelete] Galat pada rutinitas aplikasi: " + (err?.message || err));
     }
   }, delayMs);
+  timer.unref?.();
   autoDeleteTimers.set(messageId, timer);
 }
 

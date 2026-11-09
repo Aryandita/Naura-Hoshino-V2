@@ -302,7 +302,7 @@ module.exports = {
       const wantedList = await outlawBountyEngine.getWantedBoard();
       const topWanted = wantedList.slice(0, 3);
       const wantedLines = topWanted.length > 0
-        ? topWanted.map((b, i) => `> ${i + 1}. 🎯 <@${b.targetUserId}> : ${nsfEmoji} **${(b.rewardNsf || 0).toLocaleString("id-ID")} SC** (*${b.reason || "Dicari"}*)`).join("\n")
+        ? topWanted.map((b, i) => `> ${i + 1}. ${e("arcade_target", "🎯")} <@${b.targetUserId}> : ${nsfEmoji} **${(b.rewardNsf || 0).toLocaleString("id-ID")} SC** (*${b.reason || "Dicari"}*)`).join("\n")
         : "> *Belum ada buronan aktif saat ini.*";
 
       const {
@@ -332,7 +332,7 @@ module.exports = {
         `**${e("read", "📋")} Misi Kerja Sama Mingguan Klan**`,
         ...questLines,
         "",
-        `**🎯 Sayembara Buronan Liar (Outlaw Bounties)**`,
+        `**${e("arcade_target", "🎯")} Sayembara Buronan Liar (Outlaw Bounties)**`,
         wantedLines,
       ];
 
@@ -345,7 +345,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#38BDF8",
         authorName: "📜 PAPAN SAYEMBARA & MISI MINGGUAN KLAN",
-        title: `⚔️ Papan Progres Klan ${userClan.name}`,
+        title: `${e("arcade_duel", "⚔️")} Papan Progres Klan ${userClan.name}`,
         iconURL: interaction.user.displayAvatarURL(),
         description: description.join("\n"),
         buttonsRow: actionRow,
@@ -394,7 +394,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#F472B6",
         authorName: "🏰 2.5D Guild Hall & Lounge",
-        title: `✨ Ruang Santai Klan ${userClan.name}`,
+        title: `${e("ai_sparkle", "✨")} Ruang Santai Klan ${userClan.name}`,
         description: [
           `Selamat datang di 2.5D Guild Hall milik klan **${userClan.name}**!`,
           ``,
@@ -915,13 +915,13 @@ module.exports = {
       const expTs = Math.floor(new Date(blessing.expiresAt).getTime() / 1000);
       return card(interaction, {
         color: "#FFD700",
-        title: "✨ Server-Wide Blessing Sedang Aktif!",
+        title: `${e("ai_sparkle", "✨")} Server-Wide Blessing Sedang Aktif!`,
         description: [
           `🏆 **Pemenang Clan War:** Klan ID \`#${blessing.clanId}\``,
           ``,
           `⚡ **2x XP Boost:** Berjalan untuk seluruh pemain di server ini!`,
           `🍃 **2x Stamina Regeneration:** Pulih 2x lebih cepat!`,
-          `⏳ **Masa Berlaku:** Berakhir <t:${expTs}:R>`,
+          `${e("naura_uptime", "⏳")} **Masa Berlaku:** Berakhir <t:${expTs}:R>`,
         ].join("\n"),
       });
     }

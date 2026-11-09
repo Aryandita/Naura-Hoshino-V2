@@ -18,6 +18,7 @@ const {
 
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
+const ui = require("../../../src/config/ui");
 
 // ============================================================================
 // CONSTANTS
@@ -47,10 +48,10 @@ const CHAPTERS = {
   },
   gather: {
     label: "Pengumpulan & Perakitan Alat",
-    emoji: "⛏️",
+    emoji: ui.getEmoji("mc_pickaxe") || "⛏️",
     description: "Menebang, menambang, memancing, dan merakit perlengkapan",
     content: [
-      "### ⛏️ Bab 2: Pengumpulan Sumber Daya & Crafting",
+      `### ${ui.getEmoji("mc_pickaxe") || "⛏️"} Bab 2: Pengumpulan Sumber Daya & Crafting`,
       "",
       "**1. Ekstraksi Bahan Alam:**",
       "• **/survival gather chop:** Menebang pohon di Hutan untuk mendapatkan berbagai jenis kayu.",
@@ -89,10 +90,10 @@ const CHAPTERS = {
   },
   combat: {
     label: "Dungeon & Celestial Abyss Raid",
-    emoji: "⚔️",
+    emoji: ui.getEmoji("arcade_duel") || "⚔️",
     description: "Pertarungan monster, dungeon prosedural, dan drop pool",
     content: [
-      "### ⚔️ Bab 4: Pertempuran, Dungeon, & Celestial Abyss",
+      `### ${ui.getEmoji("arcade_duel") || "⚔️"} Bab 4: Pertempuran, Dungeon, & Celestial Abyss`,
       "",
       "**1. Ekspedisi Dungeon Standar:**",
       "• Masuk ke dungeon melalui `/survival dungeon` untuk menguji kekuatan tempurmu melawan monster gua.",
@@ -156,7 +157,7 @@ module.exports = {
     const payload = buildContainerV2({
       accentColorHex: survivalUI.getColor("moss"),
       authorName: "Naura Hoshino \u2022 Survival Academy",
-      title: "📖 Panduan Lengkap Naura Wilds RPG",
+      title: `${ui.getEmoji("edu_word") || "📖"} Panduan Lengkap Naura Wilds RPG`,
       iconURL: user.displayAvatarURL(),
       description: CHAPTERS.intro.content,
       buttonsRow: row,
@@ -179,7 +180,7 @@ module.exports = {
         const updatedPayload = buildContainerV2({
           accentColorHex: survivalUI.getColor("moss"),
           authorName: "Naura Hoshino \u2022 Survival Academy",
-          title: `📖 Panduan Naura Wilds: ${chapter.label}`,
+          title: `${ui.getEmoji("edu_word") || "📖"} Panduan Naura Wilds: ${chapter.label}`,
           iconURL: user.displayAvatarURL(),
           description: chapter.content,
           buttonsRow: row,

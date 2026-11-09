@@ -1,1011 +1,878 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="midnight" data-pillar="dashboard">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Settings | Naura OS</title>
+    <meta name="description" content="Pengaturan bot: prefix, modul, automod, welcomer, log channel, dan konfigurasi lanjutan." />
+    <meta property="og:title" content="Naura OS" />
+    <meta property="og:description" content="Pengaturan bot: prefix, modul, automod, welcomer, log channel, dan konfigurasi lanjutan." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0b0c10" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <link rel="stylesheet" href="/src/css/stellar.css" />
-    <style>
-      .settings-section { margin-bottom: 28px; }
-      .settings-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 18px;
-        border-bottom: 1px solid var(--border-subtle);
-        gap: 16px;
-        transition: background var(--t-fast);
-      }
-      .settings-item:last-child { border-bottom: none; }
-      .settings-item:hover { background: var(--bg-surface-hv); }
-      .settings-item-left { display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1; }
-      .settings-item-icon {
-        width: 36px; height: 36px; border-radius: var(--r-lg); display: flex;
-        align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
-      }
-      .settings-item-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-      .settings-item-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
-      .settings-item-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-
-      .color-dot {
-        width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
-        border: 2px solid transparent; transition: all var(--t-fast); flex-shrink: 0;
-      }
-      .color-dot:hover, .color-dot.selected { border-color: var(--text-primary); transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
-
-      .range-input {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 120px;
-        height: 4px;
-        border-radius: var(--r-full);
-        background: linear-gradient(to right, var(--primary) 0%, var(--primary) 70%, var(--bg-elevated) 70%, var(--bg-elevated) 100%);
-        outline: none;
-        cursor: pointer;
-      }
-      .range-input::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 14px; height: 14px; border-radius: 50%;
-        background: var(--primary); box-shadow: 0 0 6px var(--primary-glow); cursor: pointer;
-      }
-
-      .select-input {
-        background-color: #0b1120;
-        border: 1px solid var(--border-medium);
-        border-radius: var(--r-md);
-        padding: 6px 12px;
-        font-size: 12px;
-        font-family: var(--font-body);
-        color: #f8fafc;
-        outline: none;
-        cursor: pointer;
-        color-scheme: dark;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      }
-      .select-input:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.25);
-      }
-      .select-input option {
-        background-color: #0b1120 !important;
-        color: #f8fafc !important;
-        padding: 8px 12px;
-      }
-      .select-input option:hover,
-      .select-input option:focus,
-      .select-input option:checked {
-        background-color: #1e293b !important;
-        color: #38bdf8 !important;
-      }
-
-      /* Server Configurator Module Cards */
-      .module-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
-      }
-      .module-card {
-        background: rgba(15, 23, 42, 0.75);
-        border: 1px solid var(--border-medium);
-        border-radius: var(--r-xl);
-        padding: 20px;
-        backdrop-filter: blur(16px);
-        transition: transform var(--t-fast), border-color var(--t-fast);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-      .module-card:hover {
-        border-color: var(--border-primary);
-        transform: translateY(-2px);
-      }
-      .module-card-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 14px;
-      }
-      .module-card-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 15px;
-        flex-shrink: 0;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid var(--border-medium);
-        transition: transform var(--t-fast), box-shadow var(--t-fast);
-      }
-      .module-card:hover .module-card-icon {
-        transform: scale(1.08);
-      }
-      .module-card-title {
-        font-family: var(--font-heading);
-        font-size: 15px;
-        font-weight: 700;
-        color: var(--text-primary);
-      }
-      .module-card-desc {
-        font-size: 11px;
-        color: var(--text-muted);
-        line-height: 1.5;
-        margin-top: 3px;
-      }
-      .module-card-body {
-        border-top: 1px solid var(--border-subtle);
-        padding-top: 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .module-field {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        font-size: 12px;
-      }
-      .module-field-label {
-        color: var(--text-secondary);
-        font-size: 12px;
-        font-weight: 500;
-      }
-      .text-input-field {
-        background: rgba(0, 0, 0, 0.4);
-        border: 1px solid var(--border-medium);
-        border-radius: var(--r-md);
-        padding: 6px 10px;
-        font-size: 12px;
-        color: var(--text-primary);
-        font-family: var(--font-body);
-        outline: none;
-        width: 100%;
-        box-sizing: border-box;
-      }
-      .text-input-field:focus {
-        border-color: var(--primary);
-      }
-    </style>
+    <link rel="stylesheet" href="/src/css/naura-os.css" />
+    <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
-    
-    <div class="app-shell">
-      <!-- Mobile Sidebar Overlay -->
-      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
 
-      <!-- SIDEBAR -->
-      <aside class="sidebar " id="sidebar">
-        <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
-          <div class="sidebar-brand-text">
-            <div class="sidebar-brand-name">Naura Hoshino</div>
-            <div class="sidebar-brand-sub">v2.5.0 · Online</div>
+    <div class="app-shell">
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+      <aside class="sidebar" id="sidebar" aria-label="Navigasi utama" role="navigation">
+        <div class="sidebar-header">
+          <div class="header-brand">
+            <div class="header-brand-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 0-10 10c0 6.5 10 14 10 14s10-7.5 10-14a10 10 0 0 0-10-10z"/><path d="M12 6v4"/><path d="M12 14h.01"/></svg>
+            </div>
+            <span class="header-brand-text">Naura Hoshino</span>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
-            <i class="fa-solid fa-xmark"></i>
+          <button type="button" class="btn btn-icon-only btn-ghost" id="sidebarCollapseBtn" aria-label="Toggle sidebar compact" title="Ciutkan Sidebar (Ctrl+B)">
+            <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
-        <nav class="sidebar-nav" role="navigation">
 
+        <div class="pillar-indicator" id="pillarIndicator">
+          <span class="pillar-indicator-label">Studio Kontrol OSIS</span>
+        </div>
+
+        <nav class="sidebar-nav" role="navigation" aria-label="Menu utama">
           <!-- Overview -->
-          <div class="nav-group">
-            <div class="nav-group-label">Overview</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Overview</span>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
-              <span>Dashboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-item-label">Dashboard</span>
+            </a>
+            <a href="/lounge" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--ui-primary);"></i></span>
+              <span class="nav-item-label">3D AI Lounge</span>
+              <span class="nav-item-badge">31 Anim</span>
             </a>
             <a href="/status" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
-              <span>Live Status</span>
-              <span class="nav-badge">Live</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
+              <span class="nav-item-label">Live Status</span>
+              <span class="nav-item-badge">Live</span>
             </a>
             <a href="/feed" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
-              <span>Activity Feed</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-rss"></i></span>
+              <span class="nav-item-label">Activity Feed</span>
             </a>
           </div>
 
           <!-- Community -->
-          <div class="nav-group">
-            <div class="nav-group-label">Community</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Community</span>
             <a href="/leaderboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
-              <span>Leaderboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label">Leaderboard</span>
             </a>
             <a href="/economy" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
-              <span>Economy</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-coins"></i></span>
+              <span class="nav-item-label">Economy</span>
+            </a>
+            <a href="/clan" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-users-rays"></i></span>
+              <span class="nav-item-label">Sindikat & Klan</span>
+            </a>
+            <a href="/marketplace" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-shop"></i></span>
+              <span class="nav-item-label">Pasar Galaksi</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
-              <span>Guild Topology</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-item-label">Guild Topology</span>
             </a>
           </div>
 
           <!-- Media & Audio -->
-          <div class="nav-group">
-            <div class="nav-group-label">Media & Audio</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Media & Audio</span>
             <a href="/music" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
-              <span>Music Hub</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+              <span class="nav-item-label">Music Hub</span>
             </a>
             <a href="/soundboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
-              <span>Soundboard</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
+              <span class="nav-item-label">Soundboard</span>
             </a>
             <a href="/jam" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
-              <span>Jam Session</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-guitar"></i></span>
+              <span class="nav-item-label">Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
-              <span>Karaoke</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-item-label">Karaoke</span>
             </a>
           </div>
 
           <!-- Naura Wilds RPG -->
-          <div class="nav-group">
-            <div class="nav-group-label">Naura Wilds RPG</div>
+          <div class="nav-section">
+            <span class="nav-section-title">Naura Wilds RPG</span>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
-              <span>World Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-item-label">World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
-              <span>Survival Map</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-map"></i></span>
+              <span class="nav-item-label">Survival Map</span>
+            </a>
+            <a href="/inventory" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-backpack"></i></span>
+              <span class="nav-item-label">Tas & Ransel</span>
+            </a>
+            <a href="/arcade" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gamepad"></i></span>
+              <span class="nav-item-label">Retro Arcade</span>
             </a>
             <a href="/activity" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
-              <span>Activity Hub</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+              <span class="nav-item-label">Activity Hub</span>
             </a>
           </div>
 
           <!-- Configuration -->
-          <div class="nav-group">
-            <div class="nav-group-label">Configuration</div>
-            <a href="/settings" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
-              <span>Settings</span>
+          <div class="nav-section">
+            <span class="nav-section-title">Configuration</span>
+            <a href="/settings" class="nav-item active" aria-current="page">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+              <span class="nav-item-label">Settings</span>
             </a>
             <a href="/welcomer" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
-              <span>Welcomer Card</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-palette"></i></span>
+              <span class="nav-item-label">Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-              <span>Embed Builder</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-item-label">Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
-              <span>Automations</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-robot"></i></span>
+              <span class="nav-item-label">Automations</span>
             </a>
             <a href="/tickets" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
-              <span>Tickets</span>
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-ticket"></i></span>
+              <span class="nav-item-label">Tickets</span>
+            </a>
+            <a href="/admin" class="nav-item">
+              <span class="nav-item-icon" aria-hidden="true"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <span class="nav-item-label">Admin God Mode</span>
             </a>
           </div>
 
           <!-- More -->
-          <div class="nav-group">
-            <div class="nav-group-label">More</div>
-            <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+          <div class="nav-section">
+            <span class="nav-section-title">More</span>
+            <a href="/profile" class="nav-item" style="color: var(--ui-primary);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--ui-primary);"><i class="fa-solid fa-id-card"></i></span>
+              <span class="nav-item-label" style="color: var(--ui-primary);">Profil Petualang</span>
+            </a>
+            <a href="/achievements" class="nav-item" style="color: var(--color-warning);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-warning);"><i class="fa-solid fa-trophy"></i></span>
+              <span class="nav-item-label" style="color: var(--color-warning);">Ruang Trofi</span>
+            </a>
+            <a href="/portfolio" class="nav-item" style="color: var(--color-success);">
+              <span class="nav-item-icon" aria-hidden="true" style="color: var(--color-success);"><i class="fa-solid fa-id-badge"></i></span>
+              <span class="nav-item-label" style="color: var(--color-success);">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
+
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+          <div class="sidebar-user" id="sidebarUser" role="button" tabindex="0" aria-label="Buka profil" onclick="window.location.href='/profile'">
+            <img src="/assets/core/avatar.png" alt="" class="sidebar-user-avatar" id="sidebarAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
             <div class="sidebar-user-info">
-              <div class="sidebar-user-name">Guest</div>
-              <div class="sidebar-user-role">Klik untuk login</div>
+              <div class="sidebar-user-name" id="sidebarUserName">Guest</div>
+              <div class="sidebar-user-role" id="sidebarUserRole">Klik untuk login</div>
             </div>
+            <a href="/login?redirect=/profile" title="Login Akun" class="sidebar-login-link" id="sidebarLoginBtn" aria-label="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+            </a>
           </div>
         </div>
       </aside>
 
-      <!-- MAIN -->
-      <div class="main-content">
-        <header class="top-header">
+      <main class="main-content" role="main">
+        <header class="app-header" role="banner">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <button type="button" class="btn btn-icon-only btn-ghost" id="hamburgerBtn" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="sidebar">
+              <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
             <div>
-              <div class="page-title">System Settings</div>
-              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Settings</span></div>
+              <h1 class="page-title" id="pageTitle">Settings</h1>
+              <nav class="breadcrumb" aria-label="Breadcrumb">
+                <span>Naura OS</span>
+                <span class="breadcrumb-sep" aria-hidden="true">/</span>
+                <span>Studio Kontrol OSIS</span>
+              </nav>
             </div>
           </div>
+
           <div class="header-right">
-            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="themeToggle" data-tooltip="Ganti Tema (T)" aria-label="Ganti Tema">
+              <i class="fa-solid fa-palette" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn-icon-only btn-ghost tooltip" id="densityToggle" data-tooltip="Ganti Densitas" aria-label="Ganti Densitas">
+              <i class="fa-solid fa-grip-lines" aria-hidden="true"></i>
+            </button>
+            <div class="wallet-badge" id="headerWallet" title="Naura Coins" role="status" aria-live="polite">
+              <i class="fa-solid fa-coins" aria-hidden="true"></i>
+              <span id="walletAmount">0</span>
+            </div>
+            <a href="/auth/discord" class="btn btn-primary btn-sm" id="headerAuthBtn" title="Login dengan Discord">
+              <i class="fa-brands fa-discord" aria-hidden="true"></i>
+              <span id="headerAuthLabel">Login</span>
+            </a>
+            <img src="/assets/core/avatar.png" alt="" class="header-avatar" id="headerAvatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
           </div>
         </header>
 
-        <main class="page-content" data-user-data-page="true">
-
-          <div class="page-header-bar animate-in">
+        <div class="page" id="mainContent">
+          <div class="page-header-bar animate-slide-up">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--cyan-dim);border:1px solid var(--border-cyan);">
-                  <i class="fa-solid fa-gears" style="color:var(--accent-cyan);"></i>
+                <span class="page-heading-icon" style="background: var(--ui-primary-glow); border: 1px solid var(--hairline-brand);">
+                  <i class="fa-solid fa-gears" style="color: var(--ui-primary);"></i>
                 </span>
-                System Settings
+                Pengaturan Bot
               </h1>
-              <p class="page-sub">Konfigurasi tampilan, audio, notifikasi, dan preferensi sistem</p>
+              <p class="page-sub">Prefix, modul, automod, welcomer, log channel, dan konfigurasi lanjutan</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--space-3); flex-shrink:0;">
+              <div id="settingsGuildSelect" style="min-width:200px;">
+                <select class="form-select" id="settingsGuildDropdown" aria-label="Pilih server" style="width:100%;">
+                  <option value="">Memuat server&hellip;</option>
+                </select>
+              </div>
+              <div style="width:36px; height:36px; border-radius:var(--radius-full); background:var(--ui-primary-glow); border:1px solid var(--hairline-brand); display:flex; align-items:center; justify-content:center;">
+                <span style="width:10px; height:10px; border-radius:var(--radius-full); background:var(--ui-primary); box-shadow:0 0 10px var(--ui-primary-glow); animation:badge-pulse 2s var(--ease-in-out) infinite;"></span>
+              </div>
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:start;" id="settingsLayout" class="animate-in delay-1">
-
-            <!-- Settings nav panel -->
-            <div class="card card-p-sm settings-nav-card" id="settingsNavPanel">
-              <div style="display:flex;flex-direction:column;gap:2px;" id="settingsSideNav">
-                <button class="nav-item active" onclick="switchSettingsTab('server')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-server" style="color:var(--accent-cyan);"></i></span><span>Server & Bot</span>
-                </button>
-                <button class="nav-item" onclick="switchSettingsTab('appearance')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-palette"></i></span><span>Tampilan</span>
-                </button>
-                <button class="nav-item" onclick="switchSettingsTab('audio')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-volume-high"></i></span><span>Audio</span>
-                </button>
-                <button class="nav-item" onclick="switchSettingsTab('notifications')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-bell"></i></span><span>Notifikasi</span>
-                </button>
-                <button class="nav-item" onclick="switchSettingsTab('language')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-language"></i></span><span>Bahasa</span>
-                </button>
-                <button class="nav-item" onclick="switchSettingsTab('advanced')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span><span>Advanced</span>
-                </button>
-              </div>
+          <!-- Settings Tabs -->
+          <div class="card animate-slide-up stagger-1" style="overflow:hidden;">
+            <div style="display:flex; border-bottom:1px solid var(--hairline); overflow-x:auto; scrollbar-width:thin;" role="tablist" aria-label="Kategori pengaturan">
+              <button type="button" role="tab" aria-selected="true" class="btn btn-ghost settings-tab-btn active" data-tab="general" style="padding:var(--space-3) var(--space-5); border-radius:0; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; font-size:var(--text-sm); font-weight:500; color:var(--text-secondary); transition:all var(--spring-gentle);">
+                <i class="fa-solid fa-house" aria-hidden="true" style="margin-right:var(--space-2);"></i> Umum
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost settings-tab-btn" data-tab="modules" style="padding:var(--space-3) var(--space-5); border-radius:0; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; font-size:var(--text-sm); font-weight:500; color:var(--text-secondary); transition:all var(--spring-gentle);">
+                <i class="fa-solid fa-puzzle-piece" aria-hidden="true" style="margin-right:var(--space-2);"></i> Modul
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost settings-tab-btn" data-tab="automod" style="padding:var(--space-3) var(--space-5); border-radius:0; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; font-size:var(--text-sm); font-weight:500; color:var(--text-secondary); transition:all var(--spring-gentle);">
+                <i class="fa-solid fa-shield" aria-hidden="true" style="margin-right:var(--space-2);"></i> Automod
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost settings-tab-btn" data-tab="welcomer" style="padding:var(--space-3) var(--space-5); border-radius:0; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; font-size:var(--text-sm); font-weight:500; color:var(--text-secondary); transition:all var(--spring-gentle);">
+                <i class="fa-solid fa-user-plus" aria-hidden="true" style="margin-right:var(--space-2);"></i> Welcomer
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost settings-tab-btn" data-tab="logs" style="padding:var(--space-3) var(--space-5); border-radius:0; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; font-size:var(--text-sm); font-weight:500; color:var(--text-secondary); transition:all var(--spring-gentle);">
+                <i class="fa-solid fa-book" aria-hidden="true" style="margin-right:var(--space-2);"></i> Log Channel
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost settings-tab-btn" data-tab="economy" style="padding:var(--space-3) var(--space-5); border-radius:0; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; font-size:var(--text-sm); font-weight:500; color:var(--text-secondary); transition:all var(--spring-gentle);">
+                <i class="fa-solid fa-coins" aria-hidden="true" style="margin-right:var(--space-2);"></i> Ekonomi
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost settings-tab-btn" data-tab="music" style="padding:var(--space-3) var(--space-5); border-radius:0; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; font-size:var(--text-sm); font-weight:500; color:var(--text-secondary); transition:all var(--spring-gentle);">
+                <i class="fa-solid fa-music" aria-hidden="true" style="margin-right:var(--space-2);"></i> Musik
+              </button>
+              <button type="button" role="tab" aria-selected="false" class="btn btn-ghost settings-tab-btn" data-tab="advanced" style="padding:var(--space-3) var(--space-5); border-radius:0; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; font-size:var(--text-sm); font-weight:500; color:var(--text-secondary); transition:all var(--spring-gentle);">
+                <i class="fa-solid fa-cog" aria-hidden="true" style="margin-right:var(--space-2);"></i> Lanjutan
+              </button>
             </div>
 
-            <!-- Settings content -->
-            <div id="settingsContent">
+            <!-- Tab Panels -->
+            <div class="card-body" style="padding:var(--space-6);">
 
-              <!-- Server & Bot Modules Tab (Star Feature) -->
-              <div id="tabServer" data-auth-required="true" data-auth-title="Pengaturan Modul Server" data-auth-message="Kamu perlu masuk dengan akun Discord yang memiliki hak kelola server untuk mengatur modul bot Naura.">
-                <!-- Server Selector & Mode Header Card -->
-                <div class="card card-p-md" style="margin-bottom:20px;background:linear-gradient(135deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%);border:1px solid var(--border-medium);">
-                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
-                    <div style="display:flex;align-items:center;gap:16px;">
-                      <!-- Dynamic Discord Server Photo / GIF Avatar -->
-                      <div style="position:relative;width:52px;height:52px;flex-shrink:0;">
-                        <img id="selectedGuildAvatar" src="/assets/core/avatar.png" alt="Server Icon" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);box-shadow:0 0 14px var(--primary-glow);display:block;transition:all 0.3s ease;" onerror="handleGuildAvatarError()" />
-                        <div id="selectedGuildAcronym" style="display:none;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg, #6366f1 0%, #a855f7 100%);color:#ffffff;font-family:var(--font-heading);font-weight:700;font-size:17px;letter-spacing:1px;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.25);box-shadow:0 0 14px rgba(168,85,247,0.4);">AHC</div>
-                        <div style="position:absolute;bottom:-1px;right:-1px;width:15px;height:15px;border-radius:50%;background:#34d399;border:2px solid #0b1120;box-shadow:0 0 6px #34d399;" title="Status: Online & Terhubung"></div>
+              <!-- General Tab -->
+              <div role="tabpanel" id="tab-general" class="settings-tab-panel" style="display:block; animation:fade-in var(--spring-gentle);">
+                <section style="margin-bottom:var(--space-8);">
+                  <header style="margin-bottom:var(--space-4);">
+                    <h3 style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                      <i class="fa-solid fa-sliders" style="color:var(--ui-primary);"></i> Pengaturan Umum
+                    </h3>
+                  </header>
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:var(--space-6);">
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="form-group">
+                          <label class="form-label" for="setPrefix">Prefix Bot</label>
+                          <input type="text" id="setPrefix" class="form-input" value="n!" maxlength="5" placeholder="n!" aria-label="Prefix bot">
+                          <p class="form-hint">Prefix untuk perintah teks (maks 5 karakter)</p>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="setLang">Bahasa Default</label>
+                          <select id="setLang" class="form-select">
+                            <option value="id">Indonesia</option>
+                            <option value="en">English</option>
+                            <option value="ja">日本語</option>
+                            <option value="es">Español</option>
+                          </select>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="setTimezone">Zona Waktu</label>
+                          <select id="setTimezone" class="form-select">
+                            <option value="Asia/Jakarta">WIB (UTC+7)</option>
+                            <option value="Asia/Makassar">WITA (UTC+8)</option>
+                            <option value="Asia/Jayapura">WIT (UTC+9)</option>
+                            <option value="UTC">UTC</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="form-group">
+                          <label class="form-label">Opsi Tampilan</label>
+                          <div style="display:flex; flex-direction:column; gap:var(--space-3);">
+                            <div class="toggle">
+                              <input type="checkbox" id="setCompactMode" class="toggle-input">
+                              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                              <span class="toggle-label">Mode Compact (Sidebar ciut default)</span>
+                            </div>
+                            <div class="toggle">
+                              <input type="checkbox" id="setShowBotStats" class="toggle-input" checked>
+                              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                              <span class="toggle-label">Tampilkan statistik bot di embed</span>
+                            </div>
+                            <div class="toggle">
+                              <input type="checkbox" id="setAutoDeleteCmd" class="toggle-input">
+                              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                              <span class="toggle-label">Hapus otomatis perintah user setelah dieksekusi</span>
+                            </div>
+                            <div class="toggle">
+                              <input type="checkbox" id="setDmFallback" class="toggle-input" checked>
+                              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                              <span class="toggle-label">Fallback ke DM jika gagal kirim di channel</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <header style="margin-bottom:var(--space-4);">
+                    <h3 style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                      <i class="fa-solid fa-bell" style="color:var(--color-warning);"></i> Notifikasi & Alert
+                    </h3>
+                  </header>
+                  <div class="card">
+                    <div class="card-body">
+                      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-4);">
+                        <div class="toggle">
+                          <input type="checkbox" id="setNotifDowntime" class="toggle-input" checked>
+                          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                          <span class="toggle-label">Notifikasi downtime bot</span>
+                        </div>
+                        <div class="toggle">
+                          <input type="checkbox" id="setNotifNewVersion" class="toggle-input" checked>
+                          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                          <span class="toggle-label">Notifikasi versi baru</span>
+                        </div>
+                        <div class="toggle">
+                          <input type="checkbox" id="setNotifEconomyAlert" class="toggle-input">
+                          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                          <span class="toggle-label">Alert ekonomi (inflasi, crash pasar)</span>
+                        </div>
+                        <div class="toggle">
+                          <input type="checkbox" id="setNotifSecurityAlert" class="toggle-input" checked>
+                          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                          <span class="toggle-label">Alert keamanan (raid, spam, nuker)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <!-- Modules Tab -->
+              <div role="tabpanel" id="tab-modules" class="settings-tab-panel" style="display:none; animation:fade-in var(--spring-gentle);">
+                <header style="margin-bottom:var(--space-4);">
+                  <h3 style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                    <i class="fa-solid fa-puzzle-piece" style="color:var(--ui-primary);"></i> Manajemen Modul
+                  </h3>
+                  <p style="font-size:var(--text-sm); color:var(--text-secondary); margin-top:var(--space-1);">Aktifkan/nonaktifkan modul per server. Modul inti tidak dapat dinonaktifkan.</p>
+                </header>
+                <div class="card">
+                  <div class="card-body" style="padding-top:0; max-height:500px; overflow-y:auto;">
+                    <div id="modulesList" style="display:flex; flex-direction:column; gap:var(--space-2);">
+                      <!-- Modules injected by JS -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Automod Tab -->
+              <div role="tabpanel" id="tab-automod" class="settings-tab-panel" style="display:none; animation:fade-in var(--spring-gentle);">
+                <header style="margin-bottom:var(--space-4);">
+                  <h3 style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                    <i class="fa-solid fa-shield" style="color:var(--color-success);"></i> Automod Studio
+                  </h3>
+                  <p style="font-size:var(--text-sm); color:var(--text-secondary); margin-top:var(--space-1);">Konfigurasi aturan automod visual: filter kata, anti-spam, anti-raid, link filter, dll.</p>
+                </header>
+                <div class="card">
+                  <div class="card-body">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:var(--space-4);">
+                      <div>
+                        <label class="form-label">Status Automod</label>
+                        <div class="toggle">
+                          <input type="checkbox" id="automodEnabled" class="toggle-input">
+                          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                          <span class="toggle-label">Aktifkan Automod</span>
+                        </div>
                       </div>
                       <div>
-                        <div style="display:flex;align-items:center;gap:10px;">
-                          <span style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);">Pilih Server Kelolaan</span>
-                          <span id="guildModeBadge" class="badge badge-amber"><i class="fa-solid fa-flask"></i> SANDBOX DEMO</span>
-                        </div>
-                        <div style="font-size:12px;color:var(--text-muted);margin-top:3px;" id="guildSyncStatus">
-                          <i class="fa-solid fa-database" style="color:var(--accent-cyan);margin-right:4px;"></i> Siap sinkron ke PostgreSQL & Redis Cache
-                        </div>
-                      </div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                      <select class="select-input" id="guildSelector" onchange="onSelectGuild(this.value)" style="min-width:280px;font-weight:600;padding:8px 14px;">
-                        <option value="sandbox" selected>🏰 Aethelgard High Citadel (Sandbox Demo)</option>
-                      </select>
-                      <button class="btn btn-ghost btn-sm" onclick="loadManageableGuilds()" title="Muat Ulang Server"><i class="fa-solid fa-rotate"></i></button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 6 Bot Module Cards Grid -->
-                <div class="module-grid">
-
-                  <!-- Module 1: Music & DJ System -->
-                  <div class="module-card">
-                    <div>
-                      <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(244,114,182,0.4);color:#f472b6;box-shadow:0 0 10px rgba(244,114,182,0.15);">
-                            <i class="fa-solid fa-compact-disc"></i>
-                          </div>
-                          <div>
-                            <div class="module-card-title">Music & DJ Cluster</div>
-                            <div class="module-card-desc">Poru Lavalink audio & pemutaran suara</div>
-                          </div>
-                        </div>
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleModuleMusic" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                      <div class="module-card-body">
-                        <div class="module-field">
-                          <span class="module-field-label">Default Volume</span>
-                          <div style="display:flex;align-items:center;gap:8px;">
-                            <input type="range" class="range-input" id="rangeDefaultVolume" min="0" max="100" value="85" oninput="document.getElementById('defaultVolLabel').textContent=this.value+'%'" />
-                            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:32px;" id="defaultVolLabel">85%</span>
-                          </div>
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">24/7 Voice Channel Mode</span>
-                          <label class="toggle">
-                            <input type="checkbox" id="toggleTwentyFourSeven" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                          </label>
-                        </div>
-                        <div class="module-field" style="flex-direction:column;align-items:flex-start;gap:6px;">
-                          <span class="module-field-label">Khusus Role DJ (Role ID)</span>
-                          <input type="text" class="text-input-field" id="inputDjRole" placeholder="Role ID atau kosongkan" value="109283746592837465" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Module 2: Economy & Market -->
-                  <div class="module-card">
-                    <div>
-                      <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(245,158,11,0.4);color:#f59e0b;box-shadow:0 0 10px rgba(245,158,11,0.15);">
-                            <i class="fa-solid fa-coins"></i>
-                          </div>
-                          <div>
-                            <div class="module-card-title">Economy & Markets</div>
-                            <div class="module-card-desc">Sirkulasi Naura Coins (NC) & perbankan</div>
-                          </div>
-                        </div>
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleModuleEconomy" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                      <div class="module-card-body">
-                        <div class="module-field">
-                          <span class="module-field-label">Pajak Transaksi Pasar (%)</span>
-                          <input type="number" class="text-input-field" id="inputTaxPercent" step="0.1" min="0" max="10" value="0.5" style="width:80px;text-align:right;" />
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">Bursa Saham & Crypto Mini</span>
-                          <label class="toggle">
-                            <input type="checkbox" id="toggleStockMarket" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                          </label>
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">Kupon Hadir Harian</span>
-                          <span style="color:#34d399;font-weight:600;font-size:11px;">+1 Kupon / Hari</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Module 3: Naura Wilds Survival -->
-                  <div class="module-card">
-                    <div>
-                      <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(52,211,153,0.4);color:#34d399;box-shadow:0 0 10px rgba(52,211,153,0.15);">
-                            <i class="fa-solid fa-tree"></i>
-                          </div>
-                          <div>
-                            <div class="module-card-title">Naura Wilds Survival</div>
-                            <div class="module-card-desc">RPG survival, vitals, & petualangan</div>
-                          </div>
-                        </div>
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleModuleSurvival" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                      <div class="module-card-body">
-                        <div class="module-field">
-                          <span class="module-field-label">Laju Drain Vital</span>
-                          <select class="select-input" id="selectVitalDrain">
-                            <option value="casual">Santai (Casual)</option>
-                            <option value="normal" selected>Normal (Standard)</option>
-                            <option value="hardcore">Ketat (Hardcore)</option>
-                          </select>
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">Wilderness Open PvP</span>
-                          <label class="toggle">
-                            <input type="checkbox" id="toggleWildernessPvp" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                          </label>
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">Drop Item Saat Kalah</span>
-                          <span style="color:var(--text-muted);font-size:11px;">Hanya Durability (-10%)</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Module 4: Living AI Companion -->
-                  <div class="module-card">
-                    <div>
-                      <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;box-shadow:0 0 10px rgba(167,139,250,0.15);">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                          </div>
-                          <div>
-                            <div class="module-card-title">Living AI Companion</div>
-                            <div class="module-card-desc">Ensemble cerdas & respon interaktif</div>
-                          </div>
-                        </div>
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleModuleAi" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                      <div class="module-card-body">
-                        <div class="module-field">
-                          <span class="module-field-label">AI Engine Provider</span>
-                          <select class="select-input" id="selectAiModel">
-                            <option value="gemini" selected>Gemini 2.5 Flash</option>
-                            <option value="groq">Groq LLaMA 3.3</option>
-                          </select>
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">Auto-Reply Mention</span>
-                          <label class="toggle">
-                            <input type="checkbox" id="toggleAiAutoReply" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                          </label>
-                        </div>
-                        <div class="module-field" style="flex-direction:column;align-items:flex-start;gap:6px;">
-                          <span class="module-field-label">Sifat Persona Kustom Server</span>
-                          <textarea class="text-input-field" id="textCustomPersona" rows="2" placeholder="Persona Naura di server ini...">Naura adalah asisten pintar, ceria, dan ramah yang siap menemani seluruh petualang server.</textarea>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Module 5: Leveling & XP Engine -->
-                  <div class="module-card">
-                    <div>
-                      <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(34,211,238,0.4);color:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,0.15);">
-                            <i class="fa-solid fa-arrow-trend-up"></i>
-                          </div>
-                          <div>
-                            <div class="module-card-title">Leveling & Chat XP</div>
-                            <div class="module-card-desc">Tingkat keaktifan & reward peran</div>
-                          </div>
-                        </div>
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleModuleLeveling" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                      <div class="module-card-body">
-                        <div class="module-field">
-                          <span class="module-field-label">XP Multiplier Rate</span>
-                          <select class="select-input" id="selectXpMultiplier">
-                            <option value="1.0">1.0x (Standard)</option>
-                            <option value="1.5" selected>1.5x (Boost)</option>
-                            <option value="2.0">2.0x (Double XP)</option>
-                          </select>
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">Pemberitahuan Naik Level</span>
-                          <select class="select-input" id="selectNotifyMode">
-                            <option value="channel" selected>Di Kanal Aktif</option>
-                            <option value="dm">Kirim Lewat DM</option>
-                            <option value="none">Heningkan (Tanpa Ping)</option>
-                          </select>
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">Anti-Spam XP Cooldown</span>
-                          <span style="color:#22d3ee;font-family:var(--font-mono);font-size:11px;">60 Detik / Pesan</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Module 6: Automod Sentinel -->
-                  <div class="module-card">
-                    <div>
-                      <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(239,68,68,0.4);color:#ef4444;box-shadow:0 0 10px rgba(239,68,68,0.15);">
-                            <i class="fa-solid fa-shield-halved"></i>
-                          </div>
-                          <div>
-                            <div class="module-card-title">Automod Sentinel Guard</div>
-                            <div class="module-card-desc">Proteksi keamanan & anti-abuse server</div>
-                          </div>
-                        </div>
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleModuleAutomod" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                      <div class="module-card-body">
-                        <div class="module-field">
-                          <span class="module-field-label">Blokir Tautan Undangan Luar</span>
-                          <label class="toggle">
-                            <input type="checkbox" id="toggleAntiInvite" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                          </label>
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">Filter Anti-Spam Cepat</span>
-                          <label class="toggle">
-                            <input type="checkbox" id="toggleAntiSpam" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                          </label>
-                        </div>
-                        <div class="module-field">
-                          <span class="module-field-label">Batas Mention Massal</span>
-                          <div style="display:flex;align-items:center;gap:8px;">
-                            <input type="range" class="range-input" id="rangeMassMention" min="3" max="15" value="5" oninput="document.getElementById('massMentionLabel').textContent=this.value+' user'" />
-                            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:45px;" id="massMentionLabel">5 user</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                <!-- Sticky Action Bar -->
-                <div class="card card-p-md" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;background:rgba(15,23,42,0.9);border:1px solid var(--border-primary);margin-bottom:28px;">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <span id="saveStatusFeedback" style="font-size:12px;color:#34d399;display:none;">
-                      <i class="fa-solid fa-circle-check"></i> Konfigurasi berhasil disimpan!
-                    </span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <button class="btn btn-ghost btn-sm" id="btnResetServerConfig" onclick="resetCurrentGuildConfig()">
-                      <i class="fa-solid fa-rotate-left"></i> Reset ke Bawaan
-                    </button>
-                    <button class="btn btn-primary" id="btnSaveServerConfig" onclick="saveCurrentGuildConfig()">
-                      <i class="fa-solid fa-floppy-disk"></i> Simpan Konfigurasi
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-
-              <!-- Appearance Tab -->
-              <div id="tabAppearance" style="display:none;">
-                <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-image" style="color:var(--primary);"></i> Tema & Latar</div>
-                  <div class="card" style="overflow:hidden;">
-
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">🎨</div>
-                        <div>
-                          <div class="settings-item-title">Warna Aksen</div>
-                          <div class="settings-item-desc">Warna utama interface dashboard</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <div class="color-dot selected" style="background:#f472b6;" title="Rose Pink" onclick="selectColor(this,'#f472b6')"></div>
-                        <div class="color-dot" style="background:#22d3ee;" title="Cyan" onclick="selectColor(this,'#22d3ee')"></div>
-                        <div class="color-dot" style="background:#a78bfa;" title="Violet" onclick="selectColor(this,'#a78bfa')"></div>
-                        <div class="color-dot" style="background:#f59e0b;" title="Amber" onclick="selectColor(this,'#f59e0b')"></div>
-                        <div class="color-dot" style="background:#34d399;" title="Emerald" onclick="selectColor(this,'#34d399')"></div>
-                      </div>
-                    </div>
-
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">🌌</div>
-                        <div>
-                          <div class="settings-item-title">Wallpaper Latar</div>
-                          <div class="settings-item-desc">Gambar latar dashboard (upload atau pilih dari galeri)</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <select class="select-input" id="selectTheme">
-                          <option value="midnight">Midnight Stellar (Bawaan)</option>
-                          <option value="sakura">Sakura Blossom Pink</option>
-                          <option value="oled">OLED Pitch Black</option>
+                        <label class="form-label">Log Channel</label>
+                        <select id="automodLogChannel" class="form-select">
+                          <option value="">Pilih channel&hellip;</option>
                         </select>
                       </div>
                     </div>
-
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">✨</div>
-                        <div>
-                          <div class="settings-item-title">Animasi & Efek Partikel</div>
-                          <div class="settings-item-desc">Aktifkan efek visual floating particles</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleParticles" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">🔲</div>
-                        <div>
-                          <div class="settings-item-title">Grid Pattern Overlay</div>
-                          <div class="settings-item-desc">Tampilkan pola grid di latar belakang</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleGrid" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">💫</div>
-                        <div>
-                          <div class="settings-item-title">Sidebar Compact Mode</div>
-                          <div class="settings-item-desc">Sidebar hanya menampilkan ikon (icon-only)</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleCompact" />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-
-              <!-- Audio Tab -->
-              <div id="tabAudio" style="display:none;">
-                <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-volume-high" style="color:var(--accent-cyan);"></i> Audio BGM</div>
-                  <div class="card" style="overflow:hidden;">
-
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🎵</div>
-                        <div>
-                          <div class="settings-item-title">Background Music (BGM)</div>
-                          <div class="settings-item-desc">Putar musik latar saat menggunakan dashboard</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleBgm" />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🔊</div>
-                        <div>
-                          <div class="settings-item-title">Volume BGM</div>
-                          <div class="settings-item-desc">Atur volume musik latar</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right" style="gap:10px;">
-                        <input type="range" class="range-input" id="rangeBgmVol" min="0" max="100" value="40" />
-                        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:32px;" id="bgmVolLabel">40%</span>
-                      </div>
-                    </div>
-
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🎭</div>
-                        <div>
-                          <div class="settings-item-title">Playlist BGM</div>
-                          <div class="settings-item-desc">Pilih tema musik latar</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <select class="select-input" id="selectBgmPlaylist">
-                          <option value="auto" selected>✨ Auto-Adaptive (Sesuai Halaman Aktif)</option>
-                          <option value="dashboard">Cyber Lo-Fi Pulse (Dashboard Theme)</option>
-                          <option value="map">Aetheria Frontier RPG (World Map Theme)</option>
-                          <option value="config">Cyber Synth Atelier (Config & Studio)</option>
-                          <option value="system">Kawaii Neon Beats (Music & DJ Hub)</option>
-                          <option value="settings">Midnight Velvet Lounge (Settings Lounge)</option>
-                          <option value="original">Naura Master OST (Original File)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🔔</div>
-                        <div>
-                          <div class="settings-item-title">Sound Effects (SFX)</div>
-                          <div class="settings-item-desc">Suara saat hover, klik, dan notifikasi</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <label class="toggle">
-                          <input type="checkbox" id="toggleSfx" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                        </label>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-
-              <!-- Notifications Tab -->
-              <div id="tabNotifications" style="display:none;">
-                <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-bell" style="color:var(--accent-amber);"></i> Notifikasi</div>
-                  <div class="card" style="overflow:hidden;">
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--amber-dim);">💬</div>
-                        <div>
-                          <div class="settings-item-title">Notifikasi Level Up</div>
-                          <div class="settings-item-desc">Notifikasi saat naik level chat atau survival</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
-                      </div>
-                    </div>
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--amber-dim);">🎁</div>
-                        <div>
-                          <div class="settings-item-title">Reminder Daily Reward</div>
-                          <div class="settings-item-desc">Pengingat claim hadiah harian</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
-                      </div>
-                    </div>
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--amber-dim);">💰</div>
-                        <div>
-                          <div class="settings-item-title">Notifikasi Transaksi</div>
-                          <div class="settings-item-desc">Notifikasi masuk/keluarnya koin dan fragment</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
-                      </div>
-                    </div>
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--amber-dim);">⚔️</div>
-                        <div>
-                          <div class="settings-item-title">Alert Survival Vitals</div>
-                          <div class="settings-item-desc">Peringatan saat HP, hydration, atau energy kritis</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
-                      </div>
-                    </div>
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--amber-dim);">🔔</div>
-                        <div>
-                          <div class="settings-item-title">Web Push Alerts (PWA)</div>
-                          <div class="settings-item-desc">Notifikasi browser untuk spawn World Boss & reset harian</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <button type="button" class="btn btn-sm btn-primary" id="btnToggleWebPush" onclick="handleToggleWebPush()">
-                          <i class="fa-solid fa-bell"></i> <span id="labelToggleWebPush">Aktifkan</span>
-                        </button>
+                    <div style="margin-top:var(--space-6);">
+                      <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-3);">Aturan</h4>
+                      <div id="automodRules" style="display:flex; flex-direction:column; gap:var(--space-3);">
+                        <!-- Rules injected by JS -->
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Language Tab -->
-              <div id="tabLanguage" style="display:none;">
-                <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-language" style="color:var(--accent-green);"></i> Bahasa</div>
-                  <div class="card" style="overflow:hidden;">
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--green-dim);">🌐</div>
-                        <div>
-                          <div class="settings-item-title">Bahasa Interface</div>
-                          <div class="settings-item-desc">Pilih bahasa untuk seluruh teks dashboard</div>
+              <!-- Welcomer Tab -->
+              <div role="tabpanel" id="tab-welcomer" class="settings-tab-panel" style="display:none; animation:fade-in var(--spring-gentle);">
+                <header style="margin-bottom:var(--space-4);">
+                  <h3 style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                    <i class="fa-solid fa-user-plus" style="color:var(--color-warning);"></i> Welcomer Card
+                  </h3>
+                </header>
+                <div class="card">
+                  <div class="card-body">
+                    <div style="display:grid; grid-template-columns:1fr 350px; gap:var(--space-6); align-items:start;">
+                      <div>
+                        <div class="form-group">
+                          <label class="form-label">Channel Welcomer</label>
+                          <select id="welcomerChannel" class="form-select">
+                            <option value="">Pilih channel&hellip;</option>
+                          </select>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label">Pesan Selamat Datang</label>
+                          <textarea id="welcomerMessage" class="form-textarea" rows="4" placeholder="Selamat datang {user}! 🎉&#10;Kamu adalah member ke-{count} di {server}.&#10;Baca {rules} ya!"></textarea>
+                          <p class="form-hint">Variabel: {user}, {server}, {count}, {rules}, {mention}</p>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label">Channel Rules</label>
+                          <select id="welcomerRulesChannel" class="form-select">
+                            <option value="">Pilih channel&hellip;</option>
+                          </select>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label">Role Otomatis</label>
+                          <select id="welcomerAutoRole" class="form-select" multiple style="min-height:100px;">
+                            <option value="">Pilih role&hellip;</option>
+                          </select>
+                        </div>
+                        <div style="margin-top:var(--space-6); display:flex; gap:var(--space-3);">
+                          <button type="button" class="btn btn-primary" id="welcomerBtnSave">
+                            <i class="fa-solid fa-save" aria-hidden="true"></i> Simpan
+                          </button>
+                          <button type="button" class="btn btn-ghost" id="welcomerBtnPreview">
+                            <i class="fa-solid fa-eye" aria-hidden="true"></i> Pratinjau
+                          </button>
+                          <button type="button" class="btn btn-ghost" id="welcomerBtnTest">
+                            <i class="fa-solid fa-flask-vial" aria-hidden="true"></i> Test Kirim
+                          </button>
                         </div>
                       </div>
-                      <div class="settings-item-right">
-                        <select class="select-input" id="selectLang">
-                          <option value="id">🇮🇩 Bahasa Indonesia</option>
-                          <option value="en">🇬🇧 English</option>
-                          <option value="ja">🇯🇵 日本語</option>
-                          <option value="es">🇪🇸 Español</option>
-                        </select>
+                      <div>
+                        <div class="card" style="height:100%; min-height:300px;">
+                          <div class="card-header">
+                            <div class="card-title" style="color:var(--ui-primary);">Pratinjau Welcomer</div>
+                          </div>
+                          <div class="card-body" style="padding-top:0; display:flex; align-items:center; justify-content:center; min-height:240px;">
+                            <div id="welcomerPreview" style="width:100%; aspect-ratio:16/9; border-radius:var(--radius-xl); background:var(--bg-deep); border:1px solid var(--hairline); display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:var(--text-sm);">
+                              Pratinjau akan muncul di sini
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--green-dim);">🕐</div>
-                        <div>
-                          <div class="settings-item-title">Format Waktu</div>
-                          <div class="settings-item-desc">Format jam yang ditampilkan di dashboard</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Logs Tab -->
+              <div role="tabpanel" id="tab-logs" class="settings-tab-panel" style="display:none; animation:fade-in var(--spring-gentle);">
+                <header style="margin-bottom:var(--space-4);">
+                  <h3 style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                    <i class="fa-solid fa-book" style="color:var(--accent-cyan);"></i> Log Channel
+                  </h3>
+                </header>
+                <div class="card">
+                  <div class="card-body">
+                    <div id="logChannelsList" style="display:flex; flex-direction:column; gap:var(--space-3);">
+                      <!-- Log channels injected by JS -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Economy Tab -->
+              <div role="tabpanel" id="tab-economy" class="settings-tab-panel" style="display:none; animation:fade-in var(--spring-gentle);">
+                <header style="margin-bottom:var(--space-4);">
+                  <h3 style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                    <i class="fa-solid fa-coins" style="color:var(--color-warning);"></i> Pengaturan Ekonomi
+                  </h3>
+                </header>
+                <div class="card">
+                  <div class="card-body">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-6);">
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-coins" style="color:var(--color-warning);"></i> Daily & Work
+                        </h4>
+                        <div class="form-group">
+                          <label class="form-label" for="econDailyMin">Daily Min (NC)</label>
+                          <input type="number" id="econDailyMin" class="form-input" value="100" min="1" aria-label="Daily minimum">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="econDailyMax">Daily Max (NC)</label>
+                          <input type="number" id="econDailyMax" class="form-input" value="500" min="1" aria-label="Daily maximum">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="econWorkMin">Work Min (NC)</label>
+                          <input type="number" id="econWorkMin" class="form-input" value="50" min="1" aria-label="Work minimum">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="econWorkMax">Work Max (NC)</label>
+                          <input type="number" id="econWorkMax" class="form-input" value="300" min="1" aria-label="Work maximum">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="econWorkCooldown">Work Cooldown (menit)</label>
+                          <input type="number" id="econWorkCooldown" class="form-input" value="30" min="1" aria-label="Work cooldown">
                         </div>
                       </div>
-                      <div class="settings-item-right">
-                        <select class="select-input">
-                          <option>24 Jam (WIB)</option>
-                          <option>12 Jam (AM/PM)</option>
-                        </select>
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-piggy-bank" style="color:var(--color-success);"></i> Bank & Bunga
+                        </h4>
+                        <div class="form-group">
+                          <label class="form-label" for="econBankInterest">Bunga Harian (%)</label>
+                          <input type="number" id="econBankInterest" class="form-input" value="0.5" min="0" max="10" step="0.1" aria-label="Bank interest rate">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="econBankMax">Max Deposit (NC)</label>
+                          <input type="number" id="econBankMax" class="form-input" value="10000000" min="1000" aria-label="Max bank deposit">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="econTransferFee">Biaya Transfer (%)</label>
+                          <input type="number" id="econTransferFee" class="form-input" value="1" min="0" max="10" step="0.1" aria-label="Transfer fee">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="econMinTransfer">Min Transfer (NC)</label>
+                          <input type="number" id="econMinTransfer" class="form-input" value="10" min="1" aria-label="Minimum transfer">
+                        </div>
                       </div>
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-gavel" style="color:var(--color-maintenance);"></i> Pajak & Sink
+                        </h4>
+                        <div class="form-group">
+                          <label class="form-label" for="econTaxRate">Pajak Transaksi (%)</label>
+                          <input type="number" id="econTaxRate" class="form-input" value="2" min="0" max="20" step="0.1" aria-label="Tax rate">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label">Distribusi Sink</label>
+                          <div style="display:flex; flex-direction:column; gap:var(--space-2); font-size:var(--text-sm);">
+                            <div class="toggle">
+                              <input type="checkbox" id="econSinkInfra" class="toggle-input" checked>
+                              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                              <span class="toggle-label">Infrastruktur (40%)</span>
+                            </div>
+                            <div class="toggle">
+                              <input type="checkbox" id="econSinkLottery" class="toggle-input" checked>
+                              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                              <span class="toggle-label">Lotre & Hadiah (25%)</span>
+                            </div>
+                            <div class="toggle">
+                              <input type="checkbox" id="econSinkSubsidy" class="toggle-input" checked>
+                              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                              <span class="toggle-label">Subsidi Harga (20%)</span>
+                            </div>
+                            <div class="toggle">
+                              <input type="checkbox" id="econSinkMerchant" class="toggle-input" checked>
+                              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                              <span class="toggle-label">Insentif Merchant (15%)</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="margin-top:var(--space-6); display:flex; gap:var(--space-3); justify-content:flex-end;">
+                      <button type="button" class="btn btn-ghost" id="econSettingsBtnReset">
+                        <i class="fa-solid fa-rotate" aria-hidden="true"></i> Reset Default
+                      </button>
+                      <button type="button" class="btn btn-primary" id="econSettingsBtnSave">
+                        <i class="fa-solid fa-save" aria-hidden="true"></i> Simpan Perubahan
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Music Tab -->
+              <div role="tabpanel" id="tab-music" class="settings-tab-panel" style="display:none; animation:fade-in var(--spring-gentle);">
+                <header style="margin-bottom:var(--space-4);">
+                  <h3 style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                    <i class="fa-solid fa-music" style="color:var(--ui-primary);"></i> Pengaturan Musik
+                  </h3>
+                </header>
+                <div class="card">
+                  <div class="card-body">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-6);">
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-volume-high" style="color:var(--ui-primary);"></i> Audio
+                        </h4>
+                        <div class="form-group">
+                          <label class="form-label" for="musicDefaultVolume">Volume Default (%)</label>
+                          <input type="range" id="musicDefaultVolume" class="slider" min="0" max="100" value="80" aria-label="Default volume">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label">Kualitas Default</label>
+                          <select id="musicDefaultQuality" class="form-select">
+                            <option value="high">Tinggi (320kbps)</option>
+                            <option value="medium" selected>Sedang (128kbps)</option>
+                            <option value="low">Rendah (64kbps)</option>
+                          </select>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <div class="toggle">
+                            <input type="checkbox" id="musicNormalize" class="toggle-input" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Normalisasi Volume</span>
+                          </div>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <div class="toggle">
+                            <input type="checkbox" id="musicAutoplay" class="toggle-input" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Auto-play queue</span>
+                          </div>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <div class="toggle">
+                            <input type="checkbox" id="musicCrossfadeEnabled" class="toggle-input">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Crossfade antar lagu</span>
+                          </div>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="musicCrossfadeDuration">Crossfade Duration (detik)</label>
+                          <input type="number" id="musicCrossfadeDuration" class="form-input" value="3" min="0" max="15" aria-label="Crossfade duration">
+                        </div>
+                      </div>
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-robot" style="color:var(--color-maintenance);"></i> AI DJ
+                        </h4>
+                        <div class="form-group">
+                          <div class="toggle">
+                            <input type="checkbox" id="musicDJEnabled" class="toggle-input">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Aktifkan Fish Audio AI DJ</span>
+                          </div>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="musicDJDefaultMode">Mode Default</label>
+                          <select id="musicDJDefaultMode" class="form-select">
+                            <option value="smart">Smart Mix</option>
+                            <option value="radio">Radio Mode</option>
+                            <option value="mood">Mood Based</option>
+                          </select>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="musicDJCooldown">Cooldown Perintah DJ (menit)</label>
+                          <input type="number" id="musicDJCooldown" class="form-input" value="5" min="1" aria-label="DJ cooldown">
+                        </div>
+                      </div>
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-list" style="color:var(--accent-cyan);"></i> Antrian & DJ
+                        </h4>
+                        <div class="form-group">
+                          <div class="toggle">
+                            <input type="checkbox" id="musicAllowDJ" class="toggle-input" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Izinkan perintah DJ (skip, shuffle, loop)</span>
+                          </div>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <div class="toggle">
+                            <input type="checkbox" id="musicDJRoleOnly" class="toggle-input">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Hanya role DJ yang bisa kontrol antrian</span>
+                          </div>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="musicDJRole">Role DJ</label>
+                          <select id="musicDJRole" class="form-select">
+                            <option value="">Pilih role&hellip;</option>
+                          </select>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="musicMaxQueue">Max Antrian</label>
+                          <input type="number" id="musicMaxQueue" class="form-input" value="100" min="10" max="500" aria-label="Max queue size">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="musicMaxSongDuration">Max Durasi Lagu (menit)</label>
+                          <input type="number" id="musicMaxSongDuration" class="form-input" value="60" min="1" max="600" aria-label="Max song duration">
+                        </div>
+                      </div>
+                    </div>
+                    <div style="margin-top:var(--space-6); display:flex; gap:var(--space-3); justify-content:flex-end;">
+                      <button type="button" class="btn btn-primary" id="musicSettingsBtnSave">
+                        <i class="fa-solid fa-save" aria-hidden="true"></i> Simpan Perubahan
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
 
               <!-- Advanced Tab -->
-              <div id="tabAdvanced" style="display:none;">
-                <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-sliders" style="color:var(--accent-violet);"></i> Advanced</div>
-                  <div class="card" style="overflow:hidden;">
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--violet-dim);">⚡</div>
-                        <div>
-                          <div class="settings-item-title">Reduced Motion</div>
-                          <div class="settings-item-desc">Matikan animasi untuk performa lebih baik</div>
+              <div role="tabpanel" id="tab-advanced" class="settings-tab-panel" style="display:none; animation:fade-in var(--spring-gentle);">
+                <header style="margin-bottom:var(--space-4);">
+                  <h3 style="font-family:var(--font-heading); font-size:var(--text-h3); font-weight:600; color:var(--ink); display:flex; align-items:center; gap:var(--space-2);">
+                    <i class="fa-solid fa-cog" style="color:var(--color-maintenance);"></i> Pengaturan Lanjutan
+                  </h3>
+                  <p style="font-size:var(--text-sm); color:var(--text-secondary); margin-top:var(--space-1);">⚠️ Hati-hati: perubahan di sini dapat memengaruhi stabilitas bot.</p>
+                </header>
+                <div class="card">
+                  <div class="card-body">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:var(--space-6);">
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-server" style="color:var(--accent-cyan);"></i> Lavalink & Poru
+                        </h4>
+                        <div class="form-group">
+                          <label class="form-label" for="advLavalinkHost">Host Lavalink</label>
+                          <input type="text" id="advLavalinkHost" class="form-input" value="localhost" aria-label="Lavalink host">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="advLavalinkPort">Port</label>
+                          <input type="number" id="advLavalinkPort" class="form-input" value="2333" min="1" max="65535" aria-label="Lavalink port">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="advLavalinkPassword">Password</label>
+                          <input type="password" id="advLavalinkPassword" class="form-input" placeholder="••••••••" aria-label="Lavalink password">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="advPoruNodes">Node Poru (JSON)</label>
+                          <textarea id="advPoruNodes" class="form-textarea" rows="6" placeholder='[{"name":"main","host":"localhost","port":2333,"password":"youshallnotpass","secure":false}]'></textarea>
                         </div>
                       </div>
-                      <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-database" style="color:var(--color-success);"></i> Database
+                        </h4>
+                        <div class="form-group">
+                          <label class="form-label" for="advPostgresUrl">PostgreSQL URL</label>
+                          <input type="text" id="advPostgresUrl" class="form-input" placeholder="postgresql://user:pass@host:5432/db" aria-label="PostgreSQL URL">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="advMongoUrl">MongoDB URL</label>
+                          <input type="text" id="advMongoUrl" class="form-input" placeholder="mongodb://user:pass@host:27017/db" aria-label="MongoDB URL">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="advRedisUrl">Redis URL</label>
+                          <input type="text" id="advRedisUrl" class="form-input" placeholder="redis://user:pass@host:6379" aria-label="Redis URL">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <div class="toggle">
+                            <input type="checkbox" id="advDbSsl" class="toggle-input" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Gunakan SSL untuk koneksi database</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-brain" style="color:var(--color-maintenance);"></i> AI Ensemble
+                        </h4>
+                        <div class="form-group">
+                          <label class="form-label" for="advAiPrimary">Provider Utama</label>
+                          <select id="advAiPrimary" class="form-select">
+                            <option value="gemini">Gemini 2.5 Flash</option>
+                            <option value="groq">Groq LLaMA 3.3</option>
+                            <option value="ollama">Ollama Local</option>
+                          </select>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="advAiTimeout">Timeout (detik)</label>
+                          <input type="number" id="advAiTimeout" class="form-input" value="30" min="5" max="120" aria-label="AI timeout">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="advAiMaxTokens">Max Tokens</label>
+                          <input type="number" id="advAiMaxTokens" class="form-input" value="4096" min="512" max="32768" aria-label="Max tokens">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <div class="toggle">
+                            <input type="checkbox" id="advAiCircuitBreaker" class="toggle-input" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Aktifkan Circuit Breaker per-model</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 style="font-family:var(--font-heading); font-size:var(--text-sm); font-weight:600; color:var(--text-primary); margin-bottom:var(--space-4); display:flex; align-items:center; gap:var(--space-2);">
+                          <i class="fa-solid fa-shield" style="color:var(--color-error);"></i> Keamanan & Rate Limit
+                        </h4>
+                        <div class="form-group">
+                          <label class="form-label" for="advRateLimitGlobal">Global Rate Limit (req/menit)</label>
+                          <input type="number" id="advRateLimitGlobal" class="form-input" value="60" min="10" max="1000" aria-label="Global rate limit">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <label class="form-label" for="advRateLimitPerUser">Per User Rate Limit (req/menit)</label>
+                          <input type="number" id="advRateLimitPerUser" class="form-input" value="20" min="5" max="500" aria-label="Per user rate limit">
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <div class="toggle">
+                            <input type="checkbox" id="advAntiRaid" class="toggle-input" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Anti-raid protection</span>
+                          </div>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <div class="toggle">
+                            <input type="checkbox" id="advAntiSpam" class="toggle-input" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Anti-spam (pesan berulang)</span>
+                          </div>
+                        </div>
+                        <div class="form-group" style="margin-top:var(--space-4);">
+                          <div class="toggle">
+                            <input type="checkbox" id="advLinkFilter" class="toggle-input" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Filter link mencurigakan</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--violet-dim);">🔄</div>
-                        <div>
-                          <div class="settings-item-title">Auto-Refresh Interval</div>
-                          <div class="settings-item-desc">Interval auto-refresh data telemetry</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <select class="select-input">
-                          <option>5 detik</option>
-                          <option selected>10 detik</option>
-                          <option>30 detik</option>
-                          <option>1 menit</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="settings-item">
-                      <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:rgba(248,113,113,0.1);">🗑️</div>
-                        <div>
-                          <div class="settings-item-title" style="color:#f87171;">Reset Preferensi</div>
-                          <div class="settings-item-desc">Kembalikan semua pengaturan ke default</div>
-                        </div>
-                      </div>
-                      <div class="settings-item-right">
-                        <button class="btn btn-sm" style="background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3);color:#f87171;">
-                          <i class="fa-solid fa-rotate-left"></i> Reset
-                        </button>
-                      </div>
+                    <div style="margin-top:var(--space-6); padding-top:var(--space-6); border-top:1px solid var(--hairline); display:flex; gap:var(--space-3); justify-content:flex-end;">
+                      <button type="button" class="btn btn-ghost" id="advBtnExportConfig">
+                        <i class="fa-solid fa-download" aria-hidden="true"></i> Ekspor Config
+                      </button>
+                      <button type="button" class="btn btn-ghost" id="advBtnImportConfig">
+                        <i class="fa-solid fa-upload" aria-hidden="true"></i> Impor Config
+                      </button>
+                      <button type="button" class="btn btn-primary" id="advBtnSaveAll">
+                        <i class="fa-solid fa-save" aria-hidden="true"></i> Simpan Semua
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1013,364 +880,34 @@
 
             </div>
           </div>
+        </div>
+      </main>
 
-        </main>
-      </div>
+      <nav class="mobile-nav" aria-label="Navigasi mobile">
+        <a href="/" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gauge-high"></i></span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/lounge" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-cube"></i></span>
+          <span>3D Lounge</span>
+        </a>
+        <a href="/music" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
+          <span>Music</span>
+        </a>
+        <a href="/world" class="mobile-nav-item">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-earth-asia"></i></span>
+          <span>Wilds</span>
+        </a>
+        <a href="/settings" class="mobile-nav-item active" aria-current="page">
+          <span class="mobile-nav-item-icon" aria-hidden="true"><i class="fa-solid fa-gears"></i></span>
+          <span>Settings</span>
+        </a>
+      </nav>
     </div>
 
-    <!-- Mobile Nav -->
-    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
-      <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
-      </div>
-    </nav>
-
-    <script src="/src/js/sharedNav.js"></script>
-    <script>
-      const settingsTabs = ['Server', 'Appearance', 'Audio', 'Notifications', 'Language', 'Advanced'];
-
-      function switchSettingsTab(tab) {
-        settingsTabs.forEach(t => {
-          const el = document.getElementById(`tab${t}`);
-          if (el) el.style.display = 'none';
-        });
-        const target = document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`);
-        if (target) target.style.display = 'block';
-        
-        const tabKeys = ['server', 'appearance', 'audio', 'notifications', 'language', 'advanced'];
-        document.querySelectorAll('#settingsSideNav .nav-item').forEach((btn, i) => {
-          btn.classList.toggle('active', tabKeys[i] === tab);
-        });
-      }
-
-      async function handleToggleWebPush() {
-        const btn = document.getElementById('btnToggleWebPush');
-        const label = document.getElementById('labelToggleWebPush');
-        if (btn) btn.disabled = true;
-        if (label) label.textContent = 'Memproses...';
-
-        if (typeof window.subscribeWebPush === 'function') {
-          const res = await window.subscribeWebPush();
-          if (res && res.success) {
-            if (label) label.textContent = 'Aktif';
-            if (btn) {
-              btn.className = 'btn btn-sm btn-ghost';
-              btn.disabled = true;
-            }
-          } else {
-            if (label) label.textContent = 'Gagal (Coba Lagi)';
-            if (btn) btn.disabled = false;
-            if (res && res.error) {
-              alert(res.error);
-            }
-          }
-        }
-      }
-
-      function selectColor(dot, color) {
-        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
-        dot.classList.add('selected');
-        document.documentElement.style.setProperty('--primary', color);
-        document.documentElement.style.setProperty('--primary-glow', color + '55');
-        document.documentElement.style.setProperty('--border-primary', color + '55');
-      }
-
-      const rangeBgmEl = document.getElementById('rangeBgmVol');
-      if (rangeBgmEl) {
-        rangeBgmEl.addEventListener('input', function() {
-          document.getElementById('bgmVolLabel').textContent = this.value + '%';
-        });
-      }
-
-      const selectTheme = document.getElementById('selectTheme');
-      if (selectTheme) {
-        selectTheme.value = localStorage.getItem('naura_theme') || 'midnight';
-        selectTheme.addEventListener('change', () => {
-          if (typeof window.setDashboardTheme === 'function') {
-            window.setDashboardTheme(selectTheme.value);
-            if (typeof window.showToast === 'function') {
-              window.showToast({
-                type: 'info',
-                title: 'Tema Dashboard',
-                message: `Tema dialihkan ke ${selectTheme.options[selectTheme.selectedIndex].text}`
-              });
-            }
-          }
-        });
-      }
-
-      // Mobile: stack settings layout
-      function adjustSettingsLayout() {
-        const layout = document.getElementById('settingsLayout');
-        if (!layout) return;
-        layout.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '200px 1fr';
-      }
-      window.addEventListener('resize', adjustSettingsLayout);
-      adjustSettingsLayout();
-
-      // ================================================================
-      // SERVER CONFIGURATOR & BOT MODULES MANAGER (Hybrid Mode)
-      // ================================================================
-      let currentSelectedGuildId = 'sandbox';
-      let manageableGuildsList = [];
-
-      async function loadManageableGuilds() {
-        try {
-          const res = await fetch('/api/guilds/manageable');
-          const data = await res.json();
-          if (data && data.guilds) {
-            manageableGuildsList = data.guilds;
-            renderGuildSelector(data.guilds);
-            const initial = data.guilds.find(g => g.id === currentSelectedGuildId) || data.guilds[0];
-            updateGuildAvatarDisplay(initial);
-          }
-        } catch (e) {
-          console.warn('[Configurator] Gagal memuat daftar guild, fallback ke sandbox:', e);
-        }
-        await loadGuildConfig(currentSelectedGuildId);
-      }
-
-      function updateGuildAvatarDisplay(selected) {
-        const avatarImg = document.getElementById('selectedGuildAvatar');
-        const acronymDiv = document.getElementById('selectedGuildAcronym');
-        if (!avatarImg || !acronymDiv) return;
-
-        if (selected && selected.icon) {
-          avatarImg.src = selected.icon;
-          avatarImg.style.display = 'block';
-          acronymDiv.style.display = 'none';
-        } else {
-          avatarImg.style.display = 'none';
-          acronymDiv.textContent = selected?.acronym || 'DC';
-          acronymDiv.style.display = 'flex';
-        }
-      }
-
-      function handleGuildAvatarError() {
-        const avatarImg = document.getElementById('selectedGuildAvatar');
-        const acronymDiv = document.getElementById('selectedGuildAcronym');
-        if (avatarImg && acronymDiv) {
-          avatarImg.style.display = 'none';
-          acronymDiv.style.display = 'flex';
-        }
-      }
-
-      function renderGuildSelector(guilds) {
-        const select = document.getElementById('guildSelector');
-        if (!select) return;
-        select.innerHTML = '';
-        guilds.forEach(g => {
-          const opt = document.createElement('option');
-          opt.value = g.id;
-          opt.textContent = g.isSandbox
-            ? '🏰 ' + g.name
-            : '🌐 ' + g.name + (g.memberCount ? ` (${g.memberCount} members)` : '');
-          if (g.id === currentSelectedGuildId) opt.selected = true;
-          select.appendChild(opt);
-        });
-      }
-
-      function onSelectGuild(guildId) {
-        currentSelectedGuildId = guildId;
-        const selected = manageableGuildsList.find(g => g.id === guildId);
-        updateGuildAvatarDisplay(selected);
-
-        const badge = document.getElementById('guildModeBadge');
-        const syncStatus = document.getElementById('guildSyncStatus');
-        if (badge && syncStatus) {
-          if (guildId === 'sandbox' || selected?.isSandbox) {
-            badge.className = 'badge badge-amber';
-            badge.innerHTML = '<i class="fa-solid fa-flask"></i> SANDBOX DEMO';
-            syncStatus.innerHTML = '<i class="fa-solid fa-database" style="color:var(--accent-cyan);margin-right:4px;"></i> Mode Sandbox: Uji coba aman tanpa mengubah database live';
-          } else {
-            badge.className = 'badge badge-success';
-            badge.innerHTML = '<i class="fa-solid fa-check"></i> LIVE DISCORD GUILD';
-            syncStatus.innerHTML = '<i class="fa-solid fa-database" style="color:#34d399;margin-right:4px;"></i> Terhubung langsung ke PostgreSQL (GuildSettings) & Redis Invalidator';
-          }
-        }
-        loadGuildConfig(guildId);
-      }
-
-      async function loadGuildConfig(guildId) {
-        try {
-          const res = await fetch(`/api/guilds/${guildId}/config`);
-          const data = await res.json();
-          if (data && data.config) {
-            applyConfigToUI(data.config);
-          }
-        } catch (e) {
-          console.error('[Configurator] Gagal membaca konfigurasi:', e);
-        }
-      }
-
-      function applyConfigToUI(c) {
-        if (!c) return;
-        const feat = c.features || {};
-        const mus = c.music || {};
-        const eco = c.economy || {};
-        const surv = c.survival || {};
-        const ai = c.aiPersona || {};
-        const lev = c.leveling || {};
-        const auto = c.automod || {};
-
-        const setChecked = (id, val) => {
-          const el = document.getElementById(id);
-          if (el) el.checked = val;
-        };
-        const setVal = (id, val) => {
-          const el = document.getElementById(id);
-          if (el) el.value = val;
-        };
-
-        setChecked('toggleModuleMusic', feat.music !== false);
-        setChecked('toggleModuleEconomy', feat.economy !== false);
-        setChecked('toggleModuleSurvival', feat.survival !== false);
-        setChecked('toggleModuleAi', feat.aiPersona !== false);
-        setChecked('toggleModuleLeveling', feat.leveling !== false);
-        setChecked('toggleModuleAutomod', feat.automod !== false);
-
-        setVal('rangeDefaultVolume', mus.defaultVolume || 85);
-        const volLabel = document.getElementById('defaultVolLabel');
-        if (volLabel) volLabel.textContent = (mus.defaultVolume || 85) + '%';
-        setChecked('toggleTwentyFourSeven', !!mus.twentyFourSeven);
-        setVal('inputDjRole', mus.djRoleId || '');
-
-        setVal('inputTaxPercent', eco.taxPercent ?? 0.5);
-        setChecked('toggleStockMarket', eco.allowStockMarket !== false);
-
-        setVal('selectVitalDrain', surv.vitalDrainRate || 'normal');
-        setChecked('toggleWildernessPvp', surv.wildernessPvp !== false);
-
-        setVal('selectAiModel', ai.provider || 'gemini');
-        setChecked('toggleAiAutoReply', ai.autoReply !== false);
-        setVal('textCustomPersona', ai.customPersona || '');
-
-        setVal('selectXpMultiplier', String(lev.xpMultiplier || '1.5'));
-        setVal('selectNotifyMode', lev.notifyMode || 'channel');
-
-        setChecked('toggleAntiInvite', auto.antiInvite !== false);
-        setChecked('toggleAntiSpam', auto.antiSpam !== false);
-        setVal('rangeMassMention', auto.massMention || 5);
-        const mmLabel = document.getElementById('massMentionLabel');
-        if (mmLabel) mmLabel.textContent = (auto.massMention || 5) + ' user';
-      }
-
-      async function saveCurrentGuildConfig() {
-        const btn = document.getElementById('btnSaveServerConfig');
-        const feedback = document.getElementById('saveStatusFeedback');
-        const origText = btn ? btn.innerHTML : '';
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
-        }
-
-        const payload = {
-          features: {
-            music: document.getElementById('toggleModuleMusic').checked,
-            economy: document.getElementById('toggleModuleEconomy').checked,
-            survival: document.getElementById('toggleModuleSurvival').checked,
-            aiPersona: document.getElementById('toggleModuleAi').checked,
-            leveling: document.getElementById('toggleModuleLeveling').checked,
-            automod: document.getElementById('toggleModuleAutomod').checked,
-          },
-          music: {
-            defaultVolume: parseInt(document.getElementById('rangeDefaultVolume').value, 10),
-            twentyFourSeven: document.getElementById('toggleTwentyFourSeven').checked,
-            djRoleId: document.getElementById('inputDjRole').value.trim(),
-          },
-          economy: {
-            taxPercent: parseFloat(document.getElementById('inputTaxPercent').value),
-            allowStockMarket: document.getElementById('toggleStockMarket').checked,
-          },
-          survival: {
-            vitalDrainRate: document.getElementById('selectVitalDrain').value,
-            wildernessPvp: document.getElementById('toggleWildernessPvp').checked,
-          },
-          aiPersona: {
-            provider: document.getElementById('selectAiModel').value,
-            autoReply: document.getElementById('toggleAiAutoReply').checked,
-            customPersona: document.getElementById('textCustomPersona').value.trim(),
-          },
-          leveling: {
-            xpMultiplier: parseFloat(document.getElementById('selectXpMultiplier').value),
-            notifyMode: document.getElementById('selectNotifyMode').value,
-          },
-          automod: {
-            antiInvite: document.getElementById('toggleAntiInvite').checked,
-            antiSpam: document.getElementById('toggleAntiSpam').checked,
-            massMention: parseInt(document.getElementById('rangeMassMention').value, 10),
-          },
-        };
-
-        try {
-          const res = await fetch(`/api/guilds/${currentSelectedGuildId}/config`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json();
-          if (data && data.success) {
-            if (feedback) {
-              feedback.style.display = 'inline-flex';
-              feedback.style.color = '#34d399';
-              feedback.innerHTML = `<i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> ${data.message || 'Konfigurasi tersimpan!'}`;
-            }
-            if (typeof window.showToast === 'function') window.showToast(data.message, 'success');
-          } else {
-            if (feedback) {
-              feedback.style.display = 'inline-flex';
-              feedback.style.color = '#ef4444';
-              feedback.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="margin-right:4px;"></i> ${data?.error || 'Gagal menyimpan.'}`;
-            }
-            if (typeof window.showToast === 'function') window.showToast(data?.error || 'Gagal menyimpan', 'error');
-          }
-        } catch (e) {
-          if (feedback) {
-            feedback.style.display = 'inline-flex';
-            feedback.style.color = '#ef4444';
-            feedback.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="margin-right:4px;"></i> Terjadi kendala jaringan.';
-          }
-        } finally {
-          if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = origText;
-          }
-          if (feedback) {
-            setTimeout(() => { feedback.style.display = 'none'; }, 4500);
-          }
-        }
-      }
-
-      async function resetCurrentGuildConfig() {
-        if (!confirm('Kembalikan konfigurasi modul server ini ke pengaturan standar bawaan pabrik?')) return;
-        try {
-          const res = await fetch(`/api/guilds/${currentSelectedGuildId}/reset`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-          });
-          const data = await res.json();
-          if (data && data.success) {
-            if (data.config) applyConfigToUI(data.config);
-            else await loadGuildConfig(currentSelectedGuildId);
-            if (typeof window.showToast === 'function') window.showToast('Pengaturan direset ke standar pabrik.', 'info');
-          }
-        } catch (e) {
-          console.error('[Configurator] Gagal mereset:', e);
-        }
-      }
-
-      // Inisialisasi konfigurator
-      document.addEventListener('DOMContentLoaded', () => {
-        loadManageableGuilds();
-      });
-      // Fallback eksekusi langsung bila event DOMContentLoaded telah lewat
-      if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        loadManageableGuilds();
-      }
-    </script>
+    <script src="/src/js/naura-os.js"></script>
+    <script src="/src/js/pages/settings.js"></script>
   </body>
 </html>

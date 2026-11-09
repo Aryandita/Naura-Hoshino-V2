@@ -159,7 +159,7 @@ function checkVersionParity() {
     assert("dashboard/src/pages/*.html", false, err.message);
   }
 
-  // 6. Dashboard Components & Mobile Tokens
+  // 6. Dashboard Components & Tokens
   try {
     const viewerIdx = readFileSafe("dashboard/src/components/NauraViewer/index.js");
     assert(
@@ -168,11 +168,11 @@ function checkVersionParity() {
       `Harus memuat badge v${expectedVer} 3D AI`,
     );
 
-    const mobileTokens = readFileSafe("dashboard/mobile/src/css/tokens.css");
+    const mainTokens = readFileSafe("dashboard/src/css/tokens.css");
     assert(
-      "dashboard/mobile/src/css/tokens.css (DESIGN.md header version)",
-      mobileTokens.includes(`versi ${expectedVer}-naura-os`),
-      `Harus memuat: versi ${expectedVer}-naura-os`,
+      "dashboard/src/css/tokens.css (DESIGN.md header version)",
+      mainTokens.includes(`v${expectedVer}`),
+      `Harus memuat: v${expectedVer}`,
     );
   } catch (err) {
     assert("Dashboard Components", false, err.message);

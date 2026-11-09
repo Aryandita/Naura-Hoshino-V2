@@ -46,7 +46,7 @@ module.exports = {
     const scanPayload = buildContainerV2({
       accentColorHex: stColor,
       title: "Radio Stasiun",
-      description: "⏳ Memindai frekuensi stasiun **" + subcommand.toUpperCase() + "**...",
+      description: `${ui.getEmoji("naura_uptime") || "⏳"} Memindai frekuensi stasiun **` + subcommand.toUpperCase() + "**...",
       footerText: ui.getFooter("music"),
     });
     await sendReply(scanPayload, false);
@@ -190,7 +190,7 @@ module.exports = {
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
       title: "Mencari Audio",
       description: isDjActive
-        ? "🔍 Menganalisis gelombang suara untuk: **" + query + "**...\n🎙️ Menyiapkan suara Naura..."
+        ? "🔍 Menganalisis gelombang suara untuk: **" + query + `**...\n${ui.getEmoji("ai_voice") || "🎙️"} Menyiapkan suara Naura...`
         : "🔍 Menganalisis gelombang suara untuk: **" + query + "**...",
       footerText: ui.getFooter("music"),
     });
@@ -320,7 +320,7 @@ module.exports = {
         title: brandEmoji + " Playlist Dimuat",
         iconURL: trackToPlay.info.image || client.user.displayAvatarURL(),
         description:
-          (ui.getEmoji("musicArtist") || "👤") + " **Total:** `" + finalRes.tracks.length + " Lagu`\n⏳ Memasukkan ke antrean.",
+          (ui.getEmoji("musicArtist") || "👤") + " **Total:** `" + finalRes.tracks.length + ` Lagu\`\n${ui.getEmoji("naura_uptime") || "⏳"} Memasukkan ke antrean.`,
         footerText: ui.getFooter("music"),
       });
       sendReply(playlistPayload, true);
@@ -338,7 +338,7 @@ module.exports = {
       const dupPayload = buildContainerV2({
         accentColorHex: ui.getColor("warning") || "#f59e0b",
         authorName: "HOSHINO MUSIC • SMART QUEUE",
-        title: "⚠️ Lagu Terdeteksi Duplikat",
+        title: `${ui.getEmoji("mod_warn") || "⚠️"} Lagu Terdeteksi Duplikat`,
         iconURL: track.info.image || client.user.displayAvatarURL(),
         description:
           "Lagu **" + track.info.title + "** oleh **" + track.info.author + "** sudah diputar baru-baru ini dalam 5 lagu terakhir di server ini!\n\n" +
@@ -444,7 +444,7 @@ module.exports = {
       title: brandEmoji + " " + track.info.title,
       iconURL: track.info.image || client.user.displayAvatarURL(),
       description:
-        (ui.getEmoji("musicArtist") || "👤") + " **Artis:** `" + track.info.author + "`\n⏳ **Durasi:** `" + formatDuration(track.info.length) + "`",
+        (ui.getEmoji("musicArtist") || "👤") + " **Artis:** `" + track.info.author + `\`\n${ui.getEmoji("naura_uptime") || "⏳"} **Durasi:** \`` + formatDuration(track.info.length) + "`",
       footerText: ui.getFooter("music"),
     });
 

@@ -329,7 +329,7 @@ async function handleList(interaction) {
     if (auc.buyoutPrice) {
       desc += `⚡ Beli Instan (Buyout): **${auc.buyoutPrice}** ${currencyEmoji}\n`;
     }
-    desc += `⏳ Berakhir: <t:${expiresTimestamp}:R>\n\n`;
+    desc += `${getEmoji("naura_uptime", "⏳")} Berakhir: <t:${expiresTimestamp}:R>\n\n`;
   }
 
   return interaction.editReply(

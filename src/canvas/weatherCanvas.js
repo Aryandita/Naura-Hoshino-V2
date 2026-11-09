@@ -285,9 +285,9 @@ async function renderWeatherCard(payload) {
     const forecastGap = 20;
 
     const defaultForecast = [
-      { dayName: "Besok", minTemp: tempNum - 2, maxTemp: tempNum + 2, code: code, rainProb: 30 },
-      { dayName: "Lusa", minTemp: tempNum - 3, maxTemp: tempNum + 1, code: code, rainProb: 45 },
-      { dayName: "Hari ke-3", minTemp: tempNum - 1, maxTemp: tempNum + 3, code: code, rainProb: 20 },
+      { dayName: "Tomorrow", minTemp: tempNum - 2, maxTemp: tempNum + 2, code: code, rainProb: 30 },
+      { dayName: "Day After", minTemp: tempNum - 3, maxTemp: tempNum + 1, code: code, rainProb: 45 },
+      { dayName: "Day 3", minTemp: tempNum - 1, maxTemp: tempNum + 3, code: code, rainProb: 20 },
     ];
 
     const displayForecast = forecast && forecast.length >= 3 ? forecast.slice(0, 3) : defaultForecast;

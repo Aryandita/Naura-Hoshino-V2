@@ -175,9 +175,9 @@ module.exports = {
 
     let storyText = "";
     if (locationStoryEvent && locationStoryEvent.type === "location_event") {
-      storyText = `\n\n📖 **${locationStoryEvent.scene.speakerName || "Story Event"}**\n${locationStoryEvent.scene.dialogText}`;
+      storyText = `\n\n${e("edu_word", "📖")} **${locationStoryEvent.scene.speakerName || "Story Event"}**\n${locationStoryEvent.scene.dialogText}`;
     } else if (firstVisitTrigger && firstVisitTrigger.type === "exploration_note") {
-      storyText = `\n\n✨ ${firstVisitTrigger.message}`;
+      storyText = `\n\n${e("ai_sparkle", "✨")} ${firstVisitTrigger.message}`;
     }
 
     let encounterText = "";

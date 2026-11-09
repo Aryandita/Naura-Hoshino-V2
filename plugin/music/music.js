@@ -772,7 +772,7 @@ module.exports = {
     const loadingPayload = buildContainerV2({
       accentColorHex: ui.getColor("dark") || "#0b0c10",
       title: "Audio Processor",
-      description: "⏳ | `Memproses sistem audio...`",
+      description: `${ui.getEmoji("naura_uptime") || "⏳"} | \`Memproses sistem audio...\``,
       footerText: ui.getFooter("music"),
     });
 

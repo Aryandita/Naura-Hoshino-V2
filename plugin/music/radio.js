@@ -136,7 +136,7 @@ async function handleStatus(interaction, displayName, guildId) {
   const payload = buildContainerV2({
     authorName: "NAURA VIRTUAL RADIO 2.1",
     title: "📻 Stasiun Radio Naura Hoshino Mengudara!",
-    description: `Halo, **${displayName}**! Stasiun Radio Naura siap menemani sesi mengobrol dan belajar di Voice Channel dengan host AI yang ramah.\n\n🎙️ **Antrean Titipan Salam Radio:**\n${msgLines}\n\n🎧 **Preset Soundscape Santai:**\n${presetLines}\n\n> *Gunakan \`/radio message\` untuk mengirimkan salam atau curhatmu ke siaran live!*`,
+    description: `Halo, **${displayName}**! Stasiun Radio Naura siap menemani sesi mengobrol dan belajar di Voice Channel dengan host AI yang ramah.\n\n${ui.getEmoji("ai_voice") || "🎙️"} **Antrean Titipan Salam Radio:**\n${msgLines}\n\n🎧 **Preset Soundscape Santai:**\n${presetLines}\n\n> *Gunakan \`/radio message\` untuk mengirimkan salam atau curhatmu ke siaran live!*`,
     footerText: ui.getFooter("music"),
   });
 
