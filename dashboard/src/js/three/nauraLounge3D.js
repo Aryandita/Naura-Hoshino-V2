@@ -421,12 +421,17 @@ class NauraLounge3D {
         loadedModel = await loader.loadAsync(url);
         this.model = loadedModel.scene;
         this.model.userData.isVRM = true;
+        this.vrm = loadedModel.userData.vrm || null;
+        if (this.vrm && this.vrm.humanoid) {
+          this.vrm.humanoid.resetNormalizedPose();
+        }
       } else {
         const loader = new GLTFLoader();
         const gltf = await loader.loadAsync(url);
         this.model = gltf.scene;
         this.model.userData.isVRM = false;
         this.model.userData.gltf = gltf;
+        this.vrm = null;
       }
 
       this.setupModel();
@@ -470,6 +475,16 @@ class NauraLounge3D {
 
     this.scene.add(this.model);
     this.frameModel();
+
+    // Simpan rest-pose kepala agar tracking memakai rotasi relatif, bukan
+    // lookAt absolut yang mematahkan orientasi bone (kepala tertekuk).
+    this.headBone =
+      this.model.getObjectByName("Head") ||
+      this.model.getObjectByName("head") ||
+      null;
+    this.headRestQuat = this.headBone
+      ? this.headBone.quaternion.clone()
+      : null;
 
     // Animation mixer: clip glTF ada di scene (GLB) atau di model (VRM).
     this.mixer = new THREE.AnimationMixer(this.model);
@@ -821,6 +836,12 @@ class NauraLounge3D {
     const delta = this.clock.getDelta();
 
     if (this.mixer) this.mixer.update(delta);
+    if (this.vrm) {
+      if (this.eyeTracking?.checked && this.eyeTarget && this.vrm.lookAt) {
+        this.vrm.lookAt.lookAt(this.eyeTarget);
+      }
+      this.vrm.update(delta);
+    }
     if (this.controls) this.controls.update();
     if (this.haloMesh && (this.haloEnabled?.checked ?? true)) {
       this.haloMesh.rotation.z += 0.0006;
@@ -828,28 +849,16 @@ class NauraLounge3D {
     if (this.model) {
       this.model.rotation.y += 0.00015;
 
-      // Eye tracking
-      if (this.eyeTracking?.checked && this.eyeTarget) {
-        const head =
-          this.model.getObjectByName("Head") ||
-          this.model.getObjectByName("head");
-        if (head) {
-          head.lookAt(this.eyeTarget);
-        }
-      }
-
-      // Head tracking
-      if (this.headTracking?.checked) {
-        const head =
-          this.model.getObjectByName("Head") ||
-          this.model.getObjectByName("head");
-        if (head) {
-          head.rotation.y = THREE.MathUtils.lerp(
-            head.rotation.y,
-            this.mouse.x * 0.3,
-            0.05,
-          );
-        }
+      // Tracking kepala non-VRM: rotasi relatif terhadap rest-pose, bukan
+      // lookAt absolut yang mematahkan orientasi bone.
+      if (!this.vrm && this.headBone && this.headRestQuat) {
+        const yaw = this.headTracking?.checked ? this.mouse.x * 0.3 : 0;
+        const pitch = this.eyeTracking?.checked ? -this.mouse.y * 0.2 : 0;
+        this._headEuler = this._headEuler || new THREE.Euler();
+        this._headQuat = this._headQuat || new THREE.Quaternion();
+        this._headEuler.set(pitch, yaw, 0, "YXZ");
+        this._headQuat.setFromEuler(this._headEuler);
+        this.headBone.quaternion.copy(this.headRestQuat).multiply(this._headQuat);
       }
     }
 

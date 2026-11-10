@@ -104,24 +104,25 @@ class LeaderboardPage {
 
     // Podium top 3 (global, bukan halaman aktif)
     const top3 = (globalEntries || entries).slice(0, 3);
-    if (top3[0])
-      document.getElementById("lbPos1Name").textContent = top3[0].username;
-    if (top3[0])
-      document.getElementById("lbPos1Value").textContent = this.formatValue(
-        top3[0].value,
-      );
-    if (top3[1])
-      document.getElementById("lbPos2Name").textContent = top3[1].username;
-    if (top3[1])
-      document.getElementById("lbPos2Value").textContent = this.formatValue(
-        top3[1].value,
-      );
-    if (top3[2])
-      document.getElementById("lbPos3Name").textContent = top3[2].username;
-    if (top3[2])
-      document.getElementById("lbPos3Value").textContent = this.formatValue(
-        top3[2].value,
-      );
+    const setPodium = (pos, entry) => {
+      const nameEl = document.getElementById(`lbPos${pos}Name`);
+      const valEl = document.getElementById(`lbPos${pos}Value`);
+      const avEl = document.getElementById(`lbPos${pos}Avatar`);
+      if (!entry) return;
+      if (nameEl) {
+        nameEl.textContent = entry.username || entry.displayName || "-";
+        nameEl.title = nameEl.textContent;
+      }
+      if (valEl) valEl.textContent = this.formatValue(entry.value);
+      if (avEl) {
+        avEl.src = entry.avatar || "";
+        avEl.alt = `Foto profil ${nameEl ? nameEl.textContent : ""}`;
+        avEl.style.visibility = entry.avatar ? "visible" : "hidden";
+      }
+    };
+    setPodium(1, top3[0]);
+    setPodium(2, top3[1]);
+    setPodium(3, top3[2]);
 
     if (!entries.length) {
       tbody.innerHTML =
@@ -142,7 +143,7 @@ class LeaderboardPage {
         return `
         <tr style="transition:background var(--duration-fast) var(--ease-out); ${rank <= 3 ? "background:var(--ui-primary-glow);" : ""}">
           <td style="font-family:var(--font-mono); font-size:var(--text-xs); font-weight:700; color:${rank === 1 ? "#ffd700" : rank === 2 ? "#c0c0c0" : rank === 3 ? "#cd7f32" : "var(--text-primary)"};">${rank}</td>
-          <td style="font-weight:600; color:var(--ink);">${this.escapeHtml(entry.username)}</td>
+          <td style="font-weight:600; color:var(--ink);"><span style="display:inline-flex; align-items:center; gap:var(--space-2); max-width:220px;">${entry.avatar ? `<img src="${this.escapeHtml(entry.avatar)}" alt="" loading="lazy" style="width:24px; height:24px; border-radius:var(--radius-full); object-fit:cover; flex-shrink:0; border:1px solid var(--hairline-brand);" />` : ""}<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${this.escapeHtml(entry.username)}</span></span></td>
           <td style="font-size:var(--text-xs); color:var(--text-muted); max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${this.escapeHtml(entry.guildName || "-")}</td>
           <td style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-warning); font-weight:700;">${this.formatValue(entry.value)}</td>
           <td>

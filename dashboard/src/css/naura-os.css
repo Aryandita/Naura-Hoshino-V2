@@ -1829,6 +1829,37 @@ pre {
   color: var(--text-muted);
 }
 
+/* Podium leaderboard: foto profil + nama kecil agar tidak tumpang tindih. */
+.podium-avatar {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: var(--space-2) auto var(--space-2);
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 2px solid var(--hairline-brand);
+  background: var(--bg-elevated);
+}
+
+.podium-avatar-gold {
+  width: 76px;
+  height: 76px;
+  border-color: rgba(255, 215, 0, 0.55);
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.25);
+}
+
+.podium-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Badge System */
 .badge {
   display: inline-flex;
