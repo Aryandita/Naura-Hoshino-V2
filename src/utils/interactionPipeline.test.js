@@ -184,3 +184,21 @@ test("interactionPipeline - createManagedCollector supports componentType: null"
   assert.equal("componentType" in capturedOptions, false);
   activeCollectors.delete("msg-all-components");
 });
+
+test("kolektor lama yang berakhir terlambat tidak menghapus kolektor baru", async () => {
+  const { EventEmitter } = require("node:events");
+  const instances = [];
+  const message = { id: "collector-race", createMessageComponentCollector() {
+    const collector = new EventEmitter();
+    collector.stop = (reason) => { collector.stopReason = reason; };
+    instances.push(collector);
+    return collector;
+  } };
+  const first = createManagedCollector(message, null, {});
+  const second = createManagedCollector(message, null, {});
+  assert.equal(first.stopReason, "navigated");
+  first.emit("end", [], "navigated");
+  assert.equal(activeCollectors.get(message.id), second);
+  second.emit("end", [], "navigated");
+  assert.equal(activeCollectors.has(message.id), false);
+});

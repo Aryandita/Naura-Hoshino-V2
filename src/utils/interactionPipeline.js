@@ -132,7 +132,8 @@ function createManagedCollector(message, user, options = {}) {
   });
 
   collector.on("end", async (collected, reason) => {
-    activeCollectors.delete(message.id);
+    // Kolektor lama dapat berhenti setelah kolektor baru terdaftar pada pesan yang sama.
+    if (activeCollectors.get(message.id) === collector) activeCollectors.delete(message.id);
 
     if (deleteOnEnd || (reason === "time" && deleteOnTimeout)) {
       try {

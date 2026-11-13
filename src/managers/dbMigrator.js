@@ -311,9 +311,11 @@ const MIGRATIONS = [
   },
   {
     id: "v46_add_premium_tier_to_user_profiles",
-    description: "Tambah kolom premium_tier ke user_profiles untuk multi-rail VIP tiers",
+    description:
+      "Tambah kolom premium_tier ke user_profiles untuk multi-rail VIP tiers",
     sql: "ALTER TABLE user_profiles ADD COLUMN premium_tier VARCHAR(32) DEFAULT 'none';",
-    pgSql: 'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "premium_tier" VARCHAR(32) DEFAULT \'none\';',
+    pgSql:
+      'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "premium_tier" VARCHAR(32) DEFAULT \'none\';',
   },
   {
     id: "v47_rename_currencies_to_slice_of_life",
@@ -325,15 +327,19 @@ const MIGRATIONS = [
   },
   {
     id: "v48_add_adisha_diamonds",
-    description: "Tambah kolom adishaDiamonds ke UserSurvivals untuk mata uang premium Adisha Diamond",
+    description:
+      "Tambah kolom adishaDiamonds ke UserSurvivals untuk mata uang premium Adisha Diamond",
     sql: "ALTER TABLE UserSurvivals ADD COLUMN adishaDiamonds INT DEFAULT 0;",
-    pgSql: 'ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "adishaDiamonds" INTEGER DEFAULT 0;',
+    pgSql:
+      'ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "adishaDiamonds" INTEGER DEFAULT 0;',
   },
   {
     id: "v49_add_medali_permainan",
-    description: "Tambah kolom medaliPermainan ke user_profiles untuk Medali Permainan (MP)",
+    description:
+      "Tambah kolom medaliPermainan ke user_profiles untuk Medali Permainan (MP)",
     sql: "ALTER TABLE user_profiles ADD COLUMN medaliPermainan INT DEFAULT 100;",
-    pgSql: 'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "medaliPermainan" INTEGER DEFAULT 100;',
+    pgSql:
+      'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "medaliPermainan" INTEGER DEFAULT 100;',
   },
   {
     id: "v50_create_story_progress_and_user_npcs",
@@ -342,6 +348,40 @@ const MIGRATIONS = [
     sql: "CREATE TABLE IF NOT EXISTS user_npcs (userId VARCHAR(191) NOT NULL, npcId VARCHAR(191) NOT NULL, affection INT DEFAULT 0, relationshipLevel INT DEFAULT 0, lastInteraction DATETIME DEFAULT NULL, dailyGifts INT DEFAULT 0, PRIMARY KEY (userId, npcId)); CREATE TABLE IF NOT EXISTS story_progress (userId VARCHAR(191) NOT NULL PRIMARY KEY, currentArc INT DEFAULT 1, currentChapter INT DEFAULT 1, alignment VARCHAR(32) DEFAULT 'neutral', unlockedLore JSON DEFAULT NULL, completedScenes JSON DEFAULT NULL, flags JSON DEFAULT NULL, choices JSON DEFAULT NULL, unlockedBackstories JSON DEFAULT NULL, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP); ALTER TABLE UserSurvivals ADD COLUMN storyProgress JSON DEFAULT NULL; ALTER TABLE UserSurvivals ADD COLUMN roamStats JSON DEFAULT NULL;",
     pgSql:
       'CREATE TABLE IF NOT EXISTS "user_npcs" ("userId" VARCHAR(191) NOT NULL, "npcId" VARCHAR(191) NOT NULL, "affection" INTEGER DEFAULT 0, "relationshipLevel" INTEGER DEFAULT 0, "lastInteraction" TIMESTAMPTZ DEFAULT NULL, "dailyGifts" INTEGER DEFAULT 0, PRIMARY KEY ("userId", "npcId")); CREATE TABLE IF NOT EXISTS "story_progress" ("userId" VARCHAR(191) NOT NULL PRIMARY KEY, "currentArc" INTEGER DEFAULT 1, "currentChapter" INTEGER DEFAULT 1, "alignment" VARCHAR(32) DEFAULT \'neutral\', "unlockedLore" JSON DEFAULT NULL, "completedScenes" JSON DEFAULT NULL, "flags" JSON DEFAULT NULL, "choices" JSON DEFAULT NULL, "unlockedBackstories" JSON DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP); ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "storyProgress" JSON DEFAULT NULL; ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "roamStats" JSON DEFAULT NULL;',
+  },
+  {
+    id: "v51_create_cache_write_journal",
+    description: "Buat jurnal penulisan cache yang tahan proses berhenti",
+    sql: "CREATE TABLE IF NOT EXISTS cache_write_journal (sequence BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, operationId VARCHAR(64) NOT NULL UNIQUE, userId VARCHAR(191) NOT NULL, modelKey VARCHAR(32) NOT NULL, payload JSON NOT NULL, applied BOOLEAN NOT NULL DEFAULT FALSE, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX cache_write_journal_pending (modelKey, userId, applied, sequence), INDEX cache_write_journal_recovery (applied, sequence));",
+    pgSql:
+      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "cache_write_journal" ("sequence" BIGSERIAL PRIMARY KEY, "operationId" VARCHAR(64) NOT NULL UNIQUE, "userId" VARCHAR(191) NOT NULL, "modelKey" VARCHAR(32) NOT NULL, "payload" JSON NOT NULL, "applied" BOOLEAN NOT NULL DEFAULT FALSE, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "cache_write_journal" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "cache_write_journal" FROM PUBLIC; CREATE INDEX IF NOT EXISTS "cache_write_journal_pending" ON "cache_write_journal" ("modelKey", "userId", "applied", "sequence"); CREATE INDEX IF NOT EXISTS "cache_write_journal_recovery" ON "cache_write_journal" ("applied", "sequence"); END $$;',
+  },
+  {
+    id: "v52_create_business_operations",
+    description: "Buat ledger hasil transaksi untuk idempotensi operasi bisnis",
+    sql: "CREATE TABLE IF NOT EXISTS business_operations (operationId VARCHAR(64) NOT NULL PRIMARY KEY, fingerprint VARCHAR(64) NOT NULL, result JSON NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL);",
+    pgSql:
+      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "business_operations" ("operationId" VARCHAR(64) PRIMARY KEY, "fingerprint" VARCHAR(64) NOT NULL, "result" JSON NOT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "business_operations" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "business_operations" FROM PUBLIC; END $$;',
+  },
+  {
+    id: "v53_create_economy_transfer_taxes",
+    description: "Catat pajak transfer Pratama Dollar secara terpisah",
+    sql: "CREATE TABLE IF NOT EXISTS economy_transfer_taxes (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, amount INT NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL);",
+    pgSql:
+      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "economy_transfer_taxes" ("id" BIGSERIAL PRIMARY KEY, "amount" INTEGER NOT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "economy_transfer_taxes" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "economy_transfer_taxes" FROM PUBLIC; END $$;',
+  },
+  {
+    id: "v54_create_economy_event_outbox",
+    description: "Buat antrean event transfer yang tersimpan bersama transaksi",
+    sql: "CREATE TABLE IF NOT EXISTS economy_event_outbox (eventId VARCHAR(64) NOT NULL PRIMARY KEY, payload JSON NOT NULL, dispatchedAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX economy_event_outbox_pending (dispatchedAt, createdAt));",
+    pgSql:
+      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "economy_event_outbox" ("eventId" VARCHAR(64) PRIMARY KEY, "payload" JSON NOT NULL, "dispatchedAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "economy_event_outbox" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "economy_event_outbox" FROM PUBLIC; CREATE INDEX IF NOT EXISTS "economy_event_outbox_pending" ON "economy_event_outbox" ("dispatchedAt", "createdAt"); END $$;',
+  },
+  {
+    id: "v55_create_slice_of_life_progress_v1",
+    description: "Buat penyimpanan terpisah progres cerita slice of life",
+    sql: "CREATE TABLE IF NOT EXISTS slice_of_life_progress_v1 (userId VARCHAR(25) NOT NULL PRIMARY KEY, scene VARCHAR(100) NOT NULL, completed BOOLEAN NOT NULL DEFAULT FALSE, choices JSON NOT NULL, revision INT NOT NULL DEFAULT 0);",
+    pgSql: 'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "slice_of_life_progress_v1" ("userId" VARCHAR(25) PRIMARY KEY, "scene" VARCHAR(100) NOT NULL, "completed" BOOLEAN NOT NULL DEFAULT FALSE, "choices" JSON NOT NULL, "revision" INTEGER NOT NULL DEFAULT 0); ALTER TABLE "slice_of_life_progress_v1" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "slice_of_life_progress_v1" FROM PUBLIC; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'anon\') THEN REVOKE ALL ON TABLE "slice_of_life_progress_v1" FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'authenticated\') THEN REVOKE ALL ON TABLE "slice_of_life_progress_v1" FROM authenticated; END IF; END $$;',
   },
 ];
 
@@ -437,7 +477,7 @@ const PG_SQL_OVERRIDES = {
     'ALTER TABLE "user_cards" ADD COLUMN IF NOT EXISTS "isAwakened" BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS "awakeningLevel" INTEGER DEFAULT 0, ADD COLUMN IF NOT EXISTS "inscription" VARCHAR(128) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "originalMinterId" VARCHAR(191) DEFAULT NULL;',
   v32_upgrade_territories_and_pets:
     'ALTER TABLE "clan_territories" ADD COLUMN IF NOT EXISTS "clanName" VARCHAR(128) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "defenseLevel" INTEGER NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS "maxControlPoints" INTEGER NOT NULL DEFAULT 1000, ADD COLUMN IF NOT EXISTS "lastTaxClaimedAt" TIMESTAMPTZ DEFAULT NULL, ADD COLUMN IF NOT EXISTS "contributingClanIds" JSON DEFAULT NULL; ALTER TABLE "UserPets" ADD COLUMN IF NOT EXISTS "fusionCount" INTEGER NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS "cosmicAura" BOOLEAN NOT NULL DEFAULT FALSE, ADD COLUMN IF NOT EXISTS "habitatRoom" JSON DEFAULT NULL;',
-v33_create_sprint20_milestone_tables:
+  v33_create_sprint20_milestone_tables:
     'ALTER TABLE "GuildClans" ADD COLUMN IF NOT EXISTS "hallLayout" JSON DEFAULT NULL; CREATE TABLE IF NOT EXISTS "coliseum_teams" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL UNIQUE, "teamName" VARCHAR(128) NOT NULL DEFAULT \'Vanguard Squad\', "formation" JSON NOT NULL, "eloRating" INTEGER NOT NULL DEFAULT 1200, "divisionTier" VARCHAR(32) NOT NULL DEFAULT \'BRONZE\', "wins" INTEGER NOT NULL DEFAULT 0, "losses" INTEGER NOT NULL DEFAULT 0, "lastFoughtAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "guild_personas" ("id" SERIAL PRIMARY KEY, "personaId" VARCHAR(64) NOT NULL UNIQUE, "guildId" VARCHAR(64) NOT NULL, "channelId" VARCHAR(64) DEFAULT NULL, "name" VARCHAR(128) NOT NULL, "systemPrompt" TEXT NOT NULL, "voiceTone" VARCHAR(64) NOT NULL DEFAULT \'TSUNDERE\', "avatarUrl" VARCHAR(255) DEFAULT NULL, "isActive" BOOLEAN NOT NULL DEFAULT TRUE, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "server_stocks" ("ticker" VARCHAR(32) PRIMARY KEY, "name" VARCHAR(128) NOT NULL, "guildId" VARCHAR(64) DEFAULT NULL, "clanId" INTEGER DEFAULT NULL, "currentPrice" DOUBLE PRECISION NOT NULL DEFAULT 100.0, "previousPrice" DOUBLE PRECISION NOT NULL DEFAULT 100.0, "totalShares" INTEGER NOT NULL DEFAULT 10000, "availableShares" INTEGER NOT NULL DEFAULT 10000, "dividendYield" DOUBLE PRECISION NOT NULL DEFAULT 0.05, "history24h" JSON NOT NULL, "isHighRisk" BOOLEAN NOT NULL DEFAULT FALSE, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "user_stock_holdings" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL, "ticker" VARCHAR(32) NOT NULL, "sharesOwned" INTEGER NOT NULL DEFAULT 0, "avgBuyPrice" DOUBLE PRECISION NOT NULL DEFAULT 0.0, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL, CONSTRAINT "uk_user_ticker" UNIQUE ("userId", "ticker"));',
   v48_add_adisha_diamonds:
     'ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "adishaDiamonds" INTEGER DEFAULT 0;',
@@ -486,12 +526,70 @@ function splitStatements(sql) {
   const statements = [];
   let current = "";
   let quoteChar = null;
+  let dollarQuote = null;
+  let lineComment = false;
+  let blockCommentDepth = 0;
+  const input = String(sql || "");
 
-  for (const char of String(sql || "")) {
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    const next = input[i + 1];
+    if (lineComment) {
+      current += char;
+      if (char === "\n") lineComment = false;
+      continue;
+    }
+    if (blockCommentDepth) {
+      current += char;
+      if (char === "/" && next === "*") {
+        current += next;
+        i++;
+        blockCommentDepth++;
+      } else if (char === "*" && next === "/") {
+        current += next;
+        i++;
+        blockCommentDepth--;
+      }
+      continue;
+    }
+    if (dollarQuote) {
+      if (input.startsWith(dollarQuote, i)) {
+        current += dollarQuote;
+        i += dollarQuote.length - 1;
+        dollarQuote = null;
+      } else current += char;
+      continue;
+    }
     if (quoteChar) {
       current += char;
-      if (char === quoteChar) quoteChar = null;
+      if (char === quoteChar && next === quoteChar) {
+        current += next;
+        i++;
+      } else if (char === quoteChar) quoteChar = null;
       continue;
+    }
+    if (char === "-" && next === "-") {
+      current += "--";
+      i++;
+      lineComment = true;
+      continue;
+    }
+    if (char === "/" && next === "*") {
+      current += "/*";
+      i++;
+      blockCommentDepth = 1;
+      continue;
+    }
+    if (char === "$" && (i === 0 || !/[A-Za-z0-9_$]/.test(input[i - 1]))) {
+      const delimiter = input
+        .slice(i)
+        .match(/^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$/)?.[0];
+      if (delimiter) {
+        dollarQuote = delimiter;
+        current += delimiter;
+        i += delimiter.length - 1;
+        continue;
+      }
     }
     if (char === "'" || char === '"') {
       quoteChar = char;
@@ -553,6 +651,207 @@ async function recordMigration(sequelize, id) {
         replacements: [id],
       },
     );
+  }
+}
+
+/** Jangan mencatat migrasi jurnal bila tabel yang sudah ada tidak lengkap. */
+async function verifyJournalSchema(sequelize) {
+  const queryInterface = sequelize.getQueryInterface();
+  const columns = await queryInterface.describeTable("cache_write_journal");
+  const required = [
+    "sequence",
+    "operationId",
+    "userId",
+    "modelKey",
+    "payload",
+    "applied",
+    "createdAt",
+    "updatedAt",
+  ];
+  if (required.some((name) => !columns[name]) || !columns.sequence.primaryKey)
+    throw new Error("Skema cache_write_journal tidak lengkap");
+  const sequenceType = String(columns.sequence.type || "");
+  if (!/\b(?:BIGINT|INTEGER|INT)\b/i.test(sequenceType))
+    throw new Error("Tipe sequence jurnal tidak sesuai");
+  if (
+    sequelize.options.dialect === "sqlite" &&
+    sequenceType.toUpperCase() !== "INTEGER"
+  )
+    throw new Error("Sequence SQLite harus INTEGER PRIMARY KEY");
+  if (sequelize.options.dialect === "mysql" && !columns.sequence.autoIncrement)
+    throw new Error("Sequence MySQL harus auto increment");
+  if (
+    required
+      .slice(1)
+      .some(
+        (name) => columns[name].allowNull !== false || columns[name].primaryKey,
+      )
+  )
+    throw new Error("Batasan kolom jurnal tidak sesuai");
+  if (
+    !/json/i.test(String(columns.payload.type || "")) ||
+    !/(bool|tinyint|integer)/i.test(String(columns.applied.type || ""))
+  )
+    throw new Error("Tipe kolom jurnal tidak sesuai");
+  const indexes = await queryInterface.showIndex("cache_write_journal");
+  const matches = (index, fields) => {
+    const names = (index.fields || []).map(
+      (field) => field.attribute || field.name,
+    );
+    return (
+      names.length === fields.length &&
+      names.every((name, i) => name === fields[i])
+    );
+  };
+  if (
+    !indexes.some(
+      (index) =>
+        index.unique &&
+        !index.where &&
+        !/\bWHERE\b/i.test(index.definition || "") &&
+        matches(index, ["operationId"]),
+    )
+  )
+    throw new Error("Kunci unik operationId jurnal tidak ada");
+  if (
+    !indexes.some((index) =>
+      matches(index, ["modelKey", "userId", "applied", "sequence"]),
+    ) ||
+    !indexes.some((index) => matches(index, ["applied", "sequence"]))
+  )
+    throw new Error("Indeks pemulihan jurnal tidak lengkap");
+  if (sequelize.options.dialect === "postgres") {
+    const [rows] = await sequelize.query(
+      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT') AND has_table_privilege(c.oid, 'UPDATE')) AS table_access, has_sequence_privilege(pg_get_serial_sequence(c.oid::regclass::text, 'sequence'), 'USAGE') AS sequence_access FROM pg_class c WHERE c.oid = to_regclass('cache_write_journal')",
+    );
+    if (
+      !rows?.[0]?.enabled ||
+      rows[0].active ||
+      rows[0].has_policy ||
+      !rows[0].table_access ||
+      !rows[0].sequence_access
+    )
+      throw new Error("RLS atau peran database jurnal tidak sesuai");
+  }
+}
+
+/** Verifikasi ledger sebelum migrasi dicatat selesai. */
+async function verifyBusinessOperationSchema(sequelize) {
+  const columns = await sequelize
+    .getQueryInterface()
+    .describeTable("business_operations");
+  const names = [
+    "operationId",
+    "fingerprint",
+    "result",
+    "createdAt",
+    "updatedAt",
+  ];
+  if (names.some((name) => !columns[name]) || !columns.operationId.primaryKey)
+    throw new Error("Skema business_operations tidak lengkap");
+  if (
+    names
+      .slice(1)
+      .some(
+        (name) => columns[name].allowNull !== false || columns[name].primaryKey,
+      ) ||
+    !/json/i.test(String(columns.result.type || ""))
+  )
+    throw new Error("Batasan business_operations tidak sesuai");
+  if (sequelize.options.dialect === "postgres") {
+    const [rows] = await sequelize.query(
+      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT')) AS table_access FROM pg_class c WHERE c.oid = to_regclass('business_operations')",
+    );
+    if (
+      !rows?.[0]?.enabled ||
+      rows[0].active ||
+      rows[0].has_policy ||
+      !rows[0].table_access
+    )
+      throw new Error(
+        "RLS atau peran database business_operations tidak sesuai",
+      );
+  }
+}
+
+/** Verifikasi bentuk dan akses backend sebelum mencatat migrasi cerita. */
+async function verifySliceOfLifeSchema(sequelize) {
+  const columns = await sequelize.getQueryInterface().describeTable("slice_of_life_progress_v1");
+  if (!["userId", "scene", "completed", "choices", "revision"].every((name) => columns[name]) ||
+      !columns.userId.primaryKey || ["scene", "completed", "choices", "revision"].some((name) => columns[name].allowNull !== false)) {
+    throw new Error("Skema slice_of_life_progress_v1 tidak sesuai");
+  }
+  if (sequelize.options.dialect === "postgres") {
+    const [rows] = await sequelize.query("SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT') AND has_table_privilege(c.oid, 'UPDATE')) AS table_access, EXISTS (SELECT 1 FROM aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner))) a WHERE a.grantee = 0 AND a.privilege_type IN ('SELECT','INSERT','UPDATE','DELETE')) AS public_access, EXISTS (SELECT 1 FROM pg_roles r WHERE r.rolname IN ('anon','authenticated') AND (has_table_privilege(r.oid, c.oid, 'SELECT') OR has_table_privilege(r.oid, c.oid, 'INSERT') OR has_table_privilege(r.oid, c.oid, 'UPDATE') OR has_table_privilege(r.oid, c.oid, 'DELETE'))) AS exposed_access FROM pg_class c WHERE c.oid = to_regclass('slice_of_life_progress_v1')");
+    if (!rows?.[0]?.enabled || rows[0].active || rows[0].has_policy || !rows[0].table_access || rows[0].public_access || rows[0].exposed_access) throw new Error("RLS atau peran database slice_of_life_progress_v1 tidak sesuai");
+  }
+}
+/** Pastikan ledger pajak dan akses peran migrasi tersedia sebelum dicatat. */
+async function verifyTransferTaxSchema(sequelize) {
+  const columns = await sequelize
+    .getQueryInterface()
+    .describeTable("economy_transfer_taxes");
+  if (
+    !["id", "amount", "createdAt", "updatedAt"].every(
+      (name) => columns[name],
+    ) ||
+    !columns.id.primaryKey ||
+    columns.amount.allowNull !== false ||
+    !/\b(?:INTEGER|INT)\b/i.test(String(columns.amount.type || ""))
+  )
+    throw new Error("Skema economy_transfer_taxes tidak sesuai");
+  if (sequelize.options.dialect === "postgres") {
+    const [rows] = await sequelize.query(
+      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, has_table_privilege(c.oid, 'INSERT') AS table_access, has_sequence_privilege(pg_get_serial_sequence(c.oid::regclass::text, 'id'), 'USAGE') AS sequence_access FROM pg_class c WHERE c.oid = to_regclass('economy_transfer_taxes')",
+    );
+    if (
+      !rows?.[0]?.enabled ||
+      rows[0].active ||
+      rows[0].has_policy ||
+      !rows[0].table_access ||
+      !rows[0].sequence_access
+    )
+      throw new Error(
+        "RLS atau peran database economy_transfer_taxes tidak sesuai",
+      );
+  }
+}
+
+async function verifyEconomyOutboxSchema(sequelize) {
+  const queryInterface = sequelize.getQueryInterface();
+  const columns = await queryInterface.describeTable("economy_event_outbox");
+  if (
+    !["eventId", "payload", "dispatchedAt", "createdAt", "updatedAt"].every(
+      (name) => columns[name],
+    ) ||
+    !columns.eventId.primaryKey ||
+    columns.payload.allowNull !== false ||
+    !/json/i.test(String(columns.payload.type || ""))
+  )
+    throw new Error("Skema economy_event_outbox tidak sesuai");
+  const indexes = await queryInterface.showIndex("economy_event_outbox");
+  if (
+    !indexes.some(
+      (index) =>
+        (index.fields || [])
+          .map((field) => field.attribute || field.name)
+          .join(",") === "dispatchedAt,createdAt",
+    )
+  )
+    throw new Error("Indeks economy_event_outbox tidak sesuai");
+  if (sequelize.options.dialect === "postgres") {
+    const [rows] = await sequelize.query(
+      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT') AND has_table_privilege(c.oid, 'UPDATE')) AS table_access FROM pg_class c WHERE c.oid = to_regclass('economy_event_outbox')",
+    );
+    if (
+      !rows?.[0]?.enabled ||
+      rows[0].active ||
+      rows[0].has_policy ||
+      !rows[0].table_access
+    )
+      throw new Error(
+        "RLS atau peran database economy_event_outbox tidak sesuai",
+      );
   }
 }
 
@@ -623,6 +922,15 @@ async function runMigrations(sequelize) {
           await sequelize.query(statement);
         }
       }
+      if (migration.id === "v51_create_cache_write_journal")
+        await verifyJournalSchema(sequelize);
+      if (migration.id === "v52_create_business_operations")
+        await verifyBusinessOperationSchema(sequelize);
+      if (migration.id === "v53_create_economy_transfer_taxes")
+        await verifyTransferTaxSchema(sequelize);
+      if (migration.id === "v55_create_slice_of_life_progress_v1") await verifySliceOfLifeSchema(sequelize);
+      if (migration.id === "v54_create_economy_event_outbox")
+        await verifyEconomyOutboxSchema(sequelize);
       await recordMigration(sequelize, migration.id);
       applied.push(migration.id);
       logger.db(
@@ -701,7 +1009,13 @@ function readFallbackTable(database, tableName) {
  */
 async function syncFallbackToMySQL(targetSequelize) {
   if (!fs.existsSync(FALLBACK_FILE)) {
-    return { ok: true, moved: 0, failedTables: [], skipped: [], reason: "no_file" };
+    return {
+      ok: true,
+      moved: 0,
+      failedTables: [],
+      skipped: [],
+      reason: "no_file",
+    };
   }
 
   logger.info(
@@ -816,6 +1130,11 @@ async function syncFallbackToMySQL(targetSequelize) {
 
 module.exports = {
   runMigrations,
+  verifyJournalSchema,
+  verifyBusinessOperationSchema,
+  verifyTransferTaxSchema,
+  verifyEconomyOutboxSchema,
+  verifySliceOfLifeSchema,
   syncFallbackToMySQL,
   getPendingMigrations,
   MIGRATIONS,

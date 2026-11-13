@@ -100,12 +100,18 @@ class StoryEngine {
    * Update progres cerita
    */
   async updateUserStoryProgress(userId, updates) {
-    const progress = await this.getUserStoryProgress(userId);
-    const newProgress = { ...progress, ...updates };
-
-    await cacheManager.updateUserSurvival(userId, {
-      storyProgress: newProgress,
+    const fallback = await this.getUserStoryProgress(userId);
+    const result = await cacheManager.mutateUserSurvivalJson(userId, "storyProgress", (raw) => {
+      let current = raw;
+      if (typeof current === "string") {
+        try { current = JSON.parse(current); } catch { return null; }
+      }
+      if (current == null) current = fallback;
+      if (typeof current !== "object" || Array.isArray(current)) return null;
+      return { ...fallback, ...current, ...updates };
     });
+    if (!result?.ok) throw new Error("Gagal menyimpan progres cerita");
+    const newProgress = result.value;
 
     // Sinkronisasi ke model StoryProgress
     try {

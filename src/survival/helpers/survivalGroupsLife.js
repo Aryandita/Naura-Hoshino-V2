@@ -121,7 +121,7 @@ function addProfileGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("story")
-          .setDescription("Lanjutkan cerita utama dunia sihir"),
+          .setDescription("Mulai atau lanjutkan cerita kehidupan di Sukamaju"),
       )
       .addSubcommand((sub) =>
         sub

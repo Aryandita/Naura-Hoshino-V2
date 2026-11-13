@@ -59,7 +59,7 @@ class VisualNovelRenderer {
     if (backgroundId) {
       const bgPath = this.getBackground(backgroundId);
       if (bgPath && fs.existsSync(bgPath)) {
-        bgFileName = `vn_bg_${backgroundId}${path.extname(bgPath)}`;
+        bgFileName = `vn_bg_${backgroundId.replace(/\//g, "_")}${path.extname(bgPath)}`;
         bgAttachment = new AttachmentBuilder(bgPath, { name: bgFileName });
         files.push(bgAttachment);
       }
@@ -135,6 +135,12 @@ class VisualNovelRenderer {
 
     const candidates = [];
 
+    // Aset roam tersimpan sebagai npcs/<id>/<id>_<emotion>.png.
+    if (!/^[a-z0-9_-]+$/i.test(characterId) || !/^[a-z0-9_-]+$/i.test(emotion)) return null;
+    for (const dir of dirs) {
+      candidates.push(path.join(dir, characterId, `${characterId}_${emotion}.png`));
+      candidates.push(path.join(dir, characterId, `${characterId}_${emotion}.webp`));
+    }
     // Format: characterId/emotion.png
     for (const dir of dirs) {
       candidates.push(path.join(dir, characterId, `${emotion}.png`));
@@ -147,6 +153,10 @@ class VisualNovelRenderer {
       candidates.push(path.join(dir, `${characterId}_${emotion}.webp`));
     }
 
+    for (const dir of dirs) {
+      candidates.push(path.join(dir, characterId, `${characterId}_neutral.png`));
+      candidates.push(path.join(dir, characterId, `${characterId}_neutral.webp`));
+    }
     // Fallback to neutral/default
     for (const dir of dirs) {
       candidates.push(path.join(dir, characterId, "neutral.png"));
@@ -180,6 +190,7 @@ class VisualNovelRenderer {
       path.join(__dirname, "..", "..", "..", "assets", "survival", "background"),
     ];
 
+    if (typeof backgroundId !== "string" || !/^[a-z0-9_-]+(?:\/[a-z0-9_-]+)?$/i.test(backgroundId)) return null;
     const extensions = [".png", ".webp", ".jpeg", ".jpg"];
 
     for (const dir of dirs) {
