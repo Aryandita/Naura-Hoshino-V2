@@ -2,6 +2,7 @@
 
 const { Sequelize } = require("sequelize");
 const env = require("./env");
+const { postgresSslOptions, validatePostgresUrl } = require("./postgresTls");
 const { logger } = require("../managers/logger");
 
 const isSupabaseConfig = Boolean(
@@ -79,14 +80,7 @@ const getDialectOptions = () => {
       connectTimeout: 120000,
       keepAlive: true,
       statement_timeout: 30000,
-      ...(needsSsl
-        ? {
-            ssl: {
-              require: true,
-              rejectUnauthorized: false,
-            },
-          }
-        : {}),
+      ssl: postgresSslOptions(needsSsl, env.DB_SSL_CA_PATH),
     };
   }
 
@@ -129,6 +123,7 @@ const createSequelizeInstance = () => {
 
   let instance;
   if (env.DATABASE_URL) {
+    validatePostgresUrl(env.DATABASE_URL, dialect);
     instance = new Sequelize(env.DATABASE_URL, {
       dialect,
       logging: false,
@@ -198,3 +193,4 @@ module.exports = {
   POOL_MAX,
   getPoolMetrics,
 };
+

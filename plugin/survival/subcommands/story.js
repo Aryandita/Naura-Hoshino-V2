@@ -464,6 +464,6 @@ async function handleSchedule(interaction, userId, lang) {
 async function handleProgress(interaction, userId) {
   const result = await sliceStore.read(userId);
   if (!result.ok) return interaction.editReply(buildErrorContainerV2({ title: "Progres belum tersedia", description: "Progres cerita belum dapat dibaca. Coba lagi nanti.", footerText: ui.getFooter("survival") }));
-  const description = result.progress.completed ? "Prolog sudah selesai." : "Prolog sedang berjalan. Gunakan `/survival story start` untuk melanjutkan.";
+  const description = result.progress.completed ? "Prolog sudah selesai." : "Prolog sedang berjalan. Gunakan `/survival profile story` untuk melanjutkan.";
   return interaction.editReply(buildContainerV2({ title: "Progres Cerita", description, footerText: ui.getFooter("survival") }));
 }

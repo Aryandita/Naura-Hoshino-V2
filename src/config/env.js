@@ -137,6 +137,7 @@ const env = {
       process.env.MYSQL_DATABASE ||
       "postgres",
   ),
+  DB_SSL_CA_PATH: cleanEnv(process.env.DB_SSL_CA_PATH) || "",
   DB_SSL:
     cleanEnv(process.env.DB_SSL) === "false" ||
     cleanEnv(process.env.DB_SSL) === "0"
