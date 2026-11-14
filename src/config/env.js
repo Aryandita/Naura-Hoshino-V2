@@ -54,6 +54,15 @@ const env = {
   NODE_ENV: cleanEnv(process.env.NODE_ENV) || "development",
   DEBUG: process.env.DEBUG === "true",
   SKIP_DB_MIGRATE: cleanEnv(process.env.SKIP_DB_MIGRATE) || "",
+  PROLOGUE_STAGING_MODE:
+    process.env.PROLOGUE_STAGING_MODE === "true" ||
+    process.env.STORY_STAGING_MODE === "true",
+  STORY_STAGING_PROJECT_ID:
+    cleanEnv(process.env.STORY_STAGING_PROJECT_ID) || "pzwuextkmfqphxzckvfz",
+  DEPLOY_GUILD_ONLY:
+    process.env.DEPLOY_GUILD_ONLY === "true" ||
+    process.env.PROLOGUE_STAGING_MODE === "true" ||
+    process.env.STORY_STAGING_MODE === "true",
 
   // SHARDING
   // SHARD_ID sengaja dibiarkan undefined saat proses dijalankan mandiri
@@ -70,12 +79,13 @@ const env = {
   GUILD_ID: cleanEnv(process.env.GUILD_ID),
   SENTRY_DSN: cleanEnv(process.env.SENTRY_DSN),
   DISCORD_PUBLIC_KEY: cleanEnv(process.env.DISCORD_PUBLIC_KEY),
-  OWNER_IDS: (process.env.OWNER_IDS || process.env.OWNER_ID)
-    ? (process.env.OWNER_IDS || process.env.OWNER_ID)
-        .split(",")
-        .map((id) => cleanEnv(id))
-        .filter(Boolean)
-    : [],
+  OWNER_IDS:
+    process.env.OWNER_IDS || process.env.OWNER_ID
+      ? (process.env.OWNER_IDS || process.env.OWNER_ID)
+          .split(",")
+          .map((id) => cleanEnv(id))
+          .filter(Boolean)
+      : [],
 
   // VERSION & PARTNERSHIP CONFIG (Single Source of Truth: package.json)
   BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || BASE_VERSION,
@@ -157,7 +167,6 @@ const env = {
   DB_POOL_BUDGET: parseInt(process.env.DB_POOL_BUDGET) || 80,
   DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX) || 0,
 
-
   // LAVALINK & AUDIO
   LAVA_NODES:
     cleanEnv(process.env.LAVA_NODES) || cleanEnv(process.env.LAVALINK_NODES),
@@ -196,7 +205,8 @@ const env = {
   // OPENROUTER (Free Tier Gateway & Multi-Model Cascade)
   OPENROUTER_API_KEY: cleanEnv(process.env.OPENROUTER_API_KEY),
   OPENROUTER_MODEL: cleanEnv(process.env.OPENROUTER_MODEL) || "openrouter/free",
-  OPENROUTER_BASE_URL: cleanEnv(process.env.OPENROUTER_BASE_URL) || "https://openrouter.ai/api/v1",
+  OPENROUTER_BASE_URL:
+    cleanEnv(process.env.OPENROUTER_BASE_URL) || "https://openrouter.ai/api/v1",
 
   // VERBA API
   VERBA_API_KEY: cleanEnv(process.env.VERBA_API_KEY),
@@ -210,6 +220,12 @@ const env = {
 
   // MONGODB
   MONGODB_URI: cleanEnv(process.env.MONGODB_URI || process.env.MONGO_URI),
+
+  // BACKUP & PORTABLE RECOVERY
+  BACKUP_OUTPUT_DIR: cleanEnv(process.env.BACKUP_OUTPUT_DIR),
+  BACKUP_PASSPHRASE: cleanEnv(
+    process.env.BACKUP_PASSPHRASE || process.env.BACKUP_ENCRYPTION_KEY,
+  ),
 
   // OLLAMA (Local AI Fallback - Dinonaktifkan default untuk lingkungan Web Hosting)
   OLLAMA_ENABLED: cleanEnv(process.env.OLLAMA_ENABLED) === "true",
@@ -233,9 +249,11 @@ const env = {
   FFMPEG_PATH: cleanEnv(process.env.FFMPEG_PATH),
   OMDB_API_KEY: cleanEnv(process.env.OMDB_API_KEY),
   TMDB_API_KEY: cleanEnv(process.env.TMDB_API_KEY),
-  TMDB_BASE_URL: cleanEnv(process.env.TMDB_BASE_URL) || "https://api.themoviedb.org/3",
+  TMDB_BASE_URL:
+    cleanEnv(process.env.TMDB_BASE_URL) || "https://api.themoviedb.org/3",
   COBALT_API_URL: cleanEnv(process.env.COBALT_API_URL),
-  YTDLP_PINNED_VERSION: cleanEnv(process.env.YTDLP_PINNED_VERSION) || "2026.01.01",
+  YTDLP_PINNED_VERSION:
+    cleanEnv(process.env.YTDLP_PINNED_VERSION) || "2026.01.01",
   YTDLP_CHECKSUM_SHA256: cleanEnv(process.env.YTDLP_CHECKSUM_SHA256),
   RCON_CIPHER: cleanEnv(process.env.RCON_CIPHER) || "aes-256-gcm",
   MUSIXMATCH_API_KEY: cleanEnv(process.env.MUSIXMATCH_API_KEY),
@@ -335,7 +353,11 @@ function validateEnv({ fatal = false } = {}) {
       "[CONFIG] VERBA_API_KEY tidak ditemukan di .env. Fallback ke Gemini akan digunakan.",
     );
   }
-  if (env.NODE_ENV === "production" && !env.MINECRAFT_WEBHOOK_SECRET) { console.warn("[CONFIG] MINECRAFT_WEBHOOK_SECRET wajib di production untuk endpoint /api/minecraft/verify."); }
+  if (env.NODE_ENV === "production" && !env.MINECRAFT_WEBHOOK_SECRET) {
+    console.warn(
+      "[CONFIG] MINECRAFT_WEBHOOK_SECRET wajib di production untuk endpoint /api/minecraft/verify.",
+    );
+  }
   if (!env.SESSION_SECRET) {
     console.warn(
       "[CONFIG] SESSION_SECRET tidak ditemukan di .env. Sesi Web Dashboard sebaiknya tidak memakai secret bawaan.",

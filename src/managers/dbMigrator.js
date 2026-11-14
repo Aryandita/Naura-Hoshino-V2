@@ -354,28 +354,28 @@ const MIGRATIONS = [
     description: "Buat jurnal penulisan cache yang tahan proses berhenti",
     sql: "CREATE TABLE IF NOT EXISTS cache_write_journal (sequence BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, operationId VARCHAR(64) NOT NULL UNIQUE, userId VARCHAR(191) NOT NULL, modelKey VARCHAR(32) NOT NULL, payload JSON NOT NULL, applied BOOLEAN NOT NULL DEFAULT FALSE, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX cache_write_journal_pending (modelKey, userId, applied, sequence), INDEX cache_write_journal_recovery (applied, sequence));",
     pgSql:
-      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "cache_write_journal" ("sequence" BIGSERIAL PRIMARY KEY, "operationId" VARCHAR(64) NOT NULL UNIQUE, "userId" VARCHAR(191) NOT NULL, "modelKey" VARCHAR(32) NOT NULL, "payload" JSON NOT NULL, "applied" BOOLEAN NOT NULL DEFAULT FALSE, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "cache_write_journal" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "cache_write_journal" FROM PUBLIC; CREATE INDEX IF NOT EXISTS "cache_write_journal_pending" ON "cache_write_journal" ("modelKey", "userId", "applied", "sequence"); CREATE INDEX IF NOT EXISTS "cache_write_journal_recovery" ON "cache_write_journal" ("applied", "sequence"); END $$;',
+      'DO $$ DECLARE seq_name text; BEGIN CREATE TABLE IF NOT EXISTS "cache_write_journal" ("sequence" BIGSERIAL PRIMARY KEY, "operationId" VARCHAR(64) NOT NULL UNIQUE, "userId" VARCHAR(191) NOT NULL, "modelKey" VARCHAR(32) NOT NULL, "payload" JSON NOT NULL, "applied" BOOLEAN NOT NULL DEFAULT FALSE, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "cache_write_journal" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "cache_write_journal" FROM PUBLIC; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'anon\') THEN REVOKE ALL ON TABLE "cache_write_journal" FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'authenticated\') THEN REVOKE ALL ON TABLE "cache_write_journal" FROM authenticated; END IF; seq_name := pg_get_serial_sequence(\'cache_write_journal\', \'sequence\'); IF seq_name IS NOT NULL THEN EXECUTE format(\'REVOKE ALL ON SEQUENCE %s FROM PUBLIC\', seq_name); IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'anon\') THEN EXECUTE format(\'REVOKE ALL ON SEQUENCE %s FROM anon\', seq_name); END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'authenticated\') THEN EXECUTE format(\'REVOKE ALL ON SEQUENCE %s FROM authenticated\', seq_name); END IF; END IF; CREATE INDEX IF NOT EXISTS "cache_write_journal_pending" ON "cache_write_journal" ("modelKey", "userId", "applied", "sequence"); CREATE INDEX IF NOT EXISTS "cache_write_journal_recovery" ON "cache_write_journal" ("applied", "sequence"); END $$;',
   },
   {
     id: "v52_create_business_operations",
     description: "Buat ledger hasil transaksi untuk idempotensi operasi bisnis",
     sql: "CREATE TABLE IF NOT EXISTS business_operations (operationId VARCHAR(64) NOT NULL PRIMARY KEY, fingerprint VARCHAR(64) NOT NULL, result JSON NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL);",
     pgSql:
-      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "business_operations" ("operationId" VARCHAR(64) PRIMARY KEY, "fingerprint" VARCHAR(64) NOT NULL, "result" JSON NOT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "business_operations" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "business_operations" FROM PUBLIC; END $$;',
+      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "business_operations" ("operationId" VARCHAR(64) PRIMARY KEY, "fingerprint" VARCHAR(64) NOT NULL, "result" JSON NOT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "business_operations" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "business_operations" FROM PUBLIC; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'anon\') THEN REVOKE ALL ON TABLE "business_operations" FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'authenticated\') THEN REVOKE ALL ON TABLE "business_operations" FROM authenticated; END IF; END $$;',
   },
   {
     id: "v53_create_economy_transfer_taxes",
     description: "Catat pajak transfer Pratama Dollar secara terpisah",
     sql: "CREATE TABLE IF NOT EXISTS economy_transfer_taxes (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, amount INT NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL);",
     pgSql:
-      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "economy_transfer_taxes" ("id" BIGSERIAL PRIMARY KEY, "amount" INTEGER NOT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "economy_transfer_taxes" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "economy_transfer_taxes" FROM PUBLIC; END $$;',
+      'DO $$ DECLARE seq_name text; BEGIN CREATE TABLE IF NOT EXISTS "economy_transfer_taxes" ("id" BIGSERIAL PRIMARY KEY, "amount" INTEGER NOT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "economy_transfer_taxes" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "economy_transfer_taxes" FROM PUBLIC; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'anon\') THEN REVOKE ALL ON TABLE "economy_transfer_taxes" FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'authenticated\') THEN REVOKE ALL ON TABLE "economy_transfer_taxes" FROM authenticated; END IF; seq_name := pg_get_serial_sequence(\'economy_transfer_taxes\', \'id\'); IF seq_name IS NOT NULL THEN EXECUTE format(\'REVOKE ALL ON SEQUENCE %s FROM PUBLIC\', seq_name); IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'anon\') THEN EXECUTE format(\'REVOKE ALL ON SEQUENCE %s FROM anon\', seq_name); END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'authenticated\') THEN EXECUTE format(\'REVOKE ALL ON SEQUENCE %s FROM authenticated\', seq_name); END IF; END IF; END $$;',
   },
   {
     id: "v54_create_economy_event_outbox",
     description: "Buat antrean event transfer yang tersimpan bersama transaksi",
     sql: "CREATE TABLE IF NOT EXISTS economy_event_outbox (eventId VARCHAR(64) NOT NULL PRIMARY KEY, payload JSON NOT NULL, dispatchedAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX economy_event_outbox_pending (dispatchedAt, createdAt));",
     pgSql:
-      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "economy_event_outbox" ("eventId" VARCHAR(64) PRIMARY KEY, "payload" JSON NOT NULL, "dispatchedAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "economy_event_outbox" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "economy_event_outbox" FROM PUBLIC; CREATE INDEX IF NOT EXISTS "economy_event_outbox_pending" ON "economy_event_outbox" ("dispatchedAt", "createdAt"); END $$;',
+      'DO $$ BEGIN CREATE TABLE IF NOT EXISTS "economy_event_outbox" ("eventId" VARCHAR(64) PRIMARY KEY, "payload" JSON NOT NULL, "dispatchedAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "economy_event_outbox" ENABLE ROW LEVEL SECURITY; REVOKE ALL ON TABLE "economy_event_outbox" FROM PUBLIC; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'anon\') THEN REVOKE ALL ON TABLE "economy_event_outbox" FROM anon; END IF; IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = \'authenticated\') THEN REVOKE ALL ON TABLE "economy_event_outbox" FROM authenticated; END IF; CREATE INDEX IF NOT EXISTS "economy_event_outbox_pending" ON "economy_event_outbox" ("dispatchedAt", "createdAt"); END $$;',
   },
   {
     id: "v55_create_slice_of_life_progress_v1",
@@ -722,14 +722,17 @@ async function verifyJournalSchema(sequelize) {
     throw new Error("Indeks pemulihan jurnal tidak lengkap");
   if (sequelize.options.dialect === "postgres") {
     const [rows] = await sequelize.query(
-      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT') AND has_table_privilege(c.oid, 'UPDATE')) AS table_access, has_sequence_privilege(pg_get_serial_sequence(c.oid::regclass::text, 'sequence'), 'USAGE') AS sequence_access FROM pg_class c WHERE c.oid = to_regclass('cache_write_journal')",
+      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT') AND has_table_privilege(c.oid, 'UPDATE')) AS table_access, has_sequence_privilege(pg_get_serial_sequence(c.oid::regclass::text, 'sequence'), 'USAGE') AS sequence_access, EXISTS (SELECT 1 FROM aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner))) a WHERE a.grantee = 0 AND a.privilege_type IN ('SELECT','INSERT','UPDATE','DELETE')) AS public_access, EXISTS (SELECT 1 FROM pg_roles r WHERE r.rolname IN ('anon','authenticated') AND (has_table_privilege(r.oid, c.oid, 'SELECT') OR has_table_privilege(r.oid, c.oid, 'INSERT') OR has_table_privilege(r.oid, c.oid, 'UPDATE') OR has_table_privilege(r.oid, c.oid, 'DELETE'))) AS exposed_access, EXISTS (SELECT 1 FROM pg_class sc, pg_roles r WHERE sc.oid = to_regclass(pg_get_serial_sequence(c.oid::regclass::text, 'sequence')) AND r.rolname IN ('anon','authenticated') AND has_sequence_privilege(r.oid, sc.oid, 'USAGE')) AS exposed_seq_access FROM pg_class c WHERE c.oid = to_regclass('cache_write_journal')",
     );
     if (
       !rows?.[0]?.enabled ||
       rows[0].active ||
       rows[0].has_policy ||
       !rows[0].table_access ||
-      !rows[0].sequence_access
+      !rows[0].sequence_access ||
+      rows[0].public_access ||
+      rows[0].exposed_access ||
+      rows[0].exposed_seq_access
     )
       throw new Error("RLS atau peran database jurnal tidak sesuai");
   }
@@ -760,13 +763,15 @@ async function verifyBusinessOperationSchema(sequelize) {
     throw new Error("Batasan business_operations tidak sesuai");
   if (sequelize.options.dialect === "postgres") {
     const [rows] = await sequelize.query(
-      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT')) AS table_access FROM pg_class c WHERE c.oid = to_regclass('business_operations')",
+      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT')) AS table_access, EXISTS (SELECT 1 FROM aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner))) a WHERE a.grantee = 0 AND a.privilege_type IN ('SELECT','INSERT','UPDATE','DELETE')) AS public_access, EXISTS (SELECT 1 FROM pg_roles r WHERE r.rolname IN ('anon','authenticated') AND (has_table_privilege(r.oid, c.oid, 'SELECT') OR has_table_privilege(r.oid, c.oid, 'INSERT') OR has_table_privilege(r.oid, c.oid, 'UPDATE') OR has_table_privilege(r.oid, c.oid, 'DELETE'))) AS exposed_access FROM pg_class c WHERE c.oid = to_regclass('business_operations')",
     );
     if (
       !rows?.[0]?.enabled ||
       rows[0].active ||
       rows[0].has_policy ||
-      !rows[0].table_access
+      !rows[0].table_access ||
+      rows[0].public_access ||
+      rows[0].exposed_access
     )
       throw new Error(
         "RLS atau peran database business_operations tidak sesuai",
@@ -802,14 +807,17 @@ async function verifyTransferTaxSchema(sequelize) {
     throw new Error("Skema economy_transfer_taxes tidak sesuai");
   if (sequelize.options.dialect === "postgres") {
     const [rows] = await sequelize.query(
-      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, has_table_privilege(c.oid, 'INSERT') AS table_access, has_sequence_privilege(pg_get_serial_sequence(c.oid::regclass::text, 'id'), 'USAGE') AS sequence_access FROM pg_class c WHERE c.oid = to_regclass('economy_transfer_taxes')",
+      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, has_table_privilege(c.oid, 'INSERT') AS table_access, has_sequence_privilege(pg_get_serial_sequence(c.oid::regclass::text, 'id'), 'USAGE') AS sequence_access, EXISTS (SELECT 1 FROM aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner))) a WHERE a.grantee = 0 AND a.privilege_type IN ('SELECT','INSERT','UPDATE','DELETE')) AS public_access, EXISTS (SELECT 1 FROM pg_roles r WHERE r.rolname IN ('anon','authenticated') AND (has_table_privilege(r.oid, c.oid, 'SELECT') OR has_table_privilege(r.oid, c.oid, 'INSERT') OR has_table_privilege(r.oid, c.oid, 'UPDATE') OR has_table_privilege(r.oid, c.oid, 'DELETE'))) AS exposed_access, EXISTS (SELECT 1 FROM pg_class sc, pg_roles r WHERE sc.oid = to_regclass(pg_get_serial_sequence(c.oid::regclass::text, 'id')) AND r.rolname IN ('anon','authenticated') AND has_sequence_privilege(r.oid, sc.oid, 'USAGE')) AS exposed_seq_access FROM pg_class c WHERE c.oid = to_regclass('economy_transfer_taxes')",
     );
     if (
       !rows?.[0]?.enabled ||
       rows[0].active ||
       rows[0].has_policy ||
       !rows[0].table_access ||
-      !rows[0].sequence_access
+      !rows[0].sequence_access ||
+      rows[0].public_access ||
+      rows[0].exposed_access ||
+      rows[0].exposed_seq_access
     )
       throw new Error(
         "RLS atau peran database economy_transfer_taxes tidak sesuai",
@@ -841,13 +849,15 @@ async function verifyEconomyOutboxSchema(sequelize) {
     throw new Error("Indeks economy_event_outbox tidak sesuai");
   if (sequelize.options.dialect === "postgres") {
     const [rows] = await sequelize.query(
-      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT') AND has_table_privilege(c.oid, 'UPDATE')) AS table_access FROM pg_class c WHERE c.oid = to_regclass('economy_event_outbox')",
+      "SELECT c.relrowsecurity AS enabled, row_security_active(c.oid) AS active, EXISTS (SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid) AS has_policy, (has_table_privilege(c.oid, 'SELECT') AND has_table_privilege(c.oid, 'INSERT') AND has_table_privilege(c.oid, 'UPDATE')) AS table_access, EXISTS (SELECT 1 FROM aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner))) a WHERE a.grantee = 0 AND a.privilege_type IN ('SELECT','INSERT','UPDATE','DELETE')) AS public_access, EXISTS (SELECT 1 FROM pg_roles r WHERE r.rolname IN ('anon','authenticated') AND (has_table_privilege(r.oid, c.oid, 'SELECT') OR has_table_privilege(r.oid, c.oid, 'INSERT') OR has_table_privilege(r.oid, c.oid, 'UPDATE') OR has_table_privilege(r.oid, c.oid, 'DELETE'))) AS exposed_access FROM pg_class c WHERE c.oid = to_regclass('economy_event_outbox')",
     );
     if (
       !rows?.[0]?.enabled ||
       rows[0].active ||
       rows[0].has_policy ||
-      !rows[0].table_access
+      !rows[0].table_access ||
+      rows[0].public_access ||
+      rows[0].exposed_access
     )
       throw new Error(
         "RLS atau peran database economy_event_outbox tidak sesuai",
@@ -884,7 +894,7 @@ async function getPendingMigrations(sequelize) {
  * @param {import('sequelize').Sequelize} sequelize - Instance Sequelize yang sudah terkoneksi
  * @returns {Promise<{ applied: Array<string>, alreadyPresent: Array<string> }>}
  */
-async function runMigrations(sequelize) {
+async function runMigrations(sequelize, options = {}) {
   if (sequelize.options.dialect === "sqlite") {
     logger.info(
       "[DB MIGRATOR] Melewati migrasi, bukan MySQL/PostgreSQL (mode SQLite fallback).",
@@ -892,19 +902,26 @@ async function runMigrations(sequelize) {
     return { applied: [], alreadyPresent: [] };
   }
 
+  const onlyIds = options.onlyIds ? new Set(options.onlyIds) : null;
+  const targetMigrations = onlyIds
+    ? MIGRATIONS.filter((migration) => onlyIds.has(migration.id))
+    : MIGRATIONS;
+
   await ensureLedger(sequelize);
   const done = await loadAppliedIds(sequelize);
-  const pending = MIGRATIONS.filter((migration) => !done.has(migration.id));
+  const pending = targetMigrations.filter(
+    (migration) => !done.has(migration.id),
+  );
 
   if (pending.length === 0) {
     logger.success(
-      `[DB MIGRATOR] Tidak ada migrasi tertunda (${MIGRATIONS.length} sudah tercatat).`,
+      `[DB MIGRATOR] Tidak ada migrasi tertunda (${targetMigrations.length} sudah tercatat).`,
     );
     return { applied: [], alreadyPresent: [] };
   }
 
   logger.info(
-    `[DB MIGRATOR] ${pending.length} migrasi tertunda dari total ${MIGRATIONS.length}.`,
+    `[DB MIGRATOR] ${pending.length} migrasi tertunda dari total ${targetMigrations.length}.`,
   );
 
   const applied = [];
@@ -1128,6 +1145,70 @@ async function syncFallbackToMySQL(targetSequelize) {
   return { ok, moved, failedTables, skipped, error: fatalError };
 }
 
+/**
+ * Cabut hak akses residual PUBLIC, anon, dan authenticated pada tabel/sequence
+ * runtime terisolasi (v51-v55) secara idempoten.
+ *
+ * @param {import('sequelize').Sequelize} sequelize
+ */
+async function remediateStagingTableGrants(sequelize) {
+  if (!sequelize || sequelize.options?.dialect !== "postgres") {
+    return { remediated: false };
+  }
+
+  const sql = `
+    DO $$
+    DECLARE
+      tbl text;
+      seq_name text;
+    BEGIN
+      FOREACH tbl IN ARRAY ARRAY[
+        'cache_write_journal',
+        'business_operations',
+        'economy_transfer_taxes',
+        'economy_event_outbox',
+        'slice_of_life_progress_v1'
+      ] LOOP
+        IF to_regclass(format('public.%I', tbl)) IS NOT NULL THEN
+          EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
+          EXECUTE format('REVOKE ALL ON TABLE public.%I FROM PUBLIC', tbl);
+          IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+            EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon', tbl);
+          END IF;
+          IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+            EXECUTE format('REVOKE ALL ON TABLE public.%I FROM authenticated', tbl);
+          END IF;
+        END IF;
+      END LOOP;
+
+      seq_name := pg_get_serial_sequence('cache_write_journal', 'sequence');
+      IF seq_name IS NOT NULL THEN
+        EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM PUBLIC', seq_name);
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+          EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM anon', seq_name);
+        END IF;
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+          EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM authenticated', seq_name);
+        END IF;
+      END IF;
+
+      seq_name := pg_get_serial_sequence('economy_transfer_taxes', 'id');
+      IF seq_name IS NOT NULL THEN
+        EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM PUBLIC', seq_name);
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+          EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM anon', seq_name);
+        END IF;
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+          EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM authenticated', seq_name);
+        END IF;
+      END IF;
+    END $$;
+  `;
+
+  await sequelize.query(sql);
+  return { remediated: true };
+}
+
 module.exports = {
   runMigrations,
   verifyJournalSchema,
@@ -1135,6 +1216,7 @@ module.exports = {
   verifyTransferTaxSchema,
   verifyEconomyOutboxSchema,
   verifySliceOfLifeSchema,
+  remediateStagingTableGrants,
   syncFallbackToMySQL,
   getPendingMigrations,
   MIGRATIONS,

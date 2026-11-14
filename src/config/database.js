@@ -2,14 +2,20 @@
 
 const { Sequelize } = require("sequelize");
 const env = require("./env");
-const { postgresSslOptions, validatePostgresUrl } = require("./postgresTls");
+const {
+  postgresSslOptions,
+  validatePostgresUrl,
+  isSupabasePostgresHost,
+} = require("./postgresTls");
 const { logger } = require("../managers/logger");
 
+const isSupabaseTarget = Boolean(
+  isSupabasePostgresHost(env.DATABASE_URL) ||
+    isSupabasePostgresHost(env.DB_HOST),
+);
+
 const isSupabaseConfig = Boolean(
-  (env.DB_HOST && env.DB_HOST.includes("supabase")) ||
-    (env.DATABASE_URL && env.DATABASE_URL.includes("supabase")) ||
-    env.SUPABASE_URL ||
-    env.SUPABASE_KEY,
+  isSupabaseTarget || env.SUPABASE_URL || env.SUPABASE_KEY,
 );
 
 const poolMetrics = {
@@ -68,14 +74,28 @@ const determineDialect = () => {
 const dialect = determineDialect();
 
 const getDialectOptions = () => {
-  const isSupabase =
-    isSupabaseConfig ||
-    (env.DB_HOST && env.DB_HOST.includes("supabase")) ||
-    (env.DATABASE_URL && env.DATABASE_URL.includes("supabase"));
-
-  const needsSsl = env.DB_SSL || isSupabase;
-
   if (dialect === "postgres") {
+    if (isSupabaseTarget && env.DB_SSL === false) {
+      throw new Error(
+        "Refusing to disable PostgreSQL TLS (DB_SSL=false) for a Supabase database target.",
+      );
+    }
+
+    const needsSsl = isSupabaseTarget
+      ? true
+      : typeof env.DB_SSL === "boolean"
+        ? env.DB_SSL
+        : isSupabaseConfig;
+
+    if (!env.DATABASE_URL && needsSsl) {
+      const discreteHost = String(env.DB_HOST || "").trim();
+      if (!discreteHost || discreteHost.startsWith("/")) {
+        throw new Error(
+          "PostgreSQL DB_HOST must be a valid hostname when TLS is enabled",
+        );
+      }
+    }
+
     return {
       connectTimeout: 120000,
       keepAlive: true,
@@ -119,11 +139,14 @@ const createSequelizeInstance = () => {
     ],
   };
 
+  if (env.DATABASE_URL) {
+    validatePostgresUrl(env.DATABASE_URL, dialect);
+  }
+
   const dialectOptions = getDialectOptions();
 
   let instance;
   if (env.DATABASE_URL) {
-    validatePostgresUrl(env.DATABASE_URL, dialect);
     instance = new Sequelize(env.DATABASE_URL, {
       dialect,
       logging: false,
@@ -193,4 +216,3 @@ module.exports = {
   POOL_MAX,
   getPoolMetrics,
 };
-
