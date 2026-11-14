@@ -1,6 +1,7 @@
 "use strict";
 
 const env = require("./env");
+const { validatePostgresUrl } = require("./postgresTls");
 
 const PRODUCTION_SUPABASE_PROJECT_ID = "ceqkjzvrxyifxzgxtkig";
 const DEFAULT_STAGING_SUPABASE_PROJECT_ID = "pzwuextkmfqphxzckvfz";
@@ -28,11 +29,40 @@ const ALLOWED_STORY_COMPONENT_PREFIXES = Object.freeze([
 ]);
 
 const SUPABASE_POOLER_USER_REGEX = /\bpostgres\.([a-z0-9]{15,30})\b/gi;
+const SUPABASE_ANY_USER_REF_REGEX = /\b[a-z0-9_]+\.([a-z0-9]{15,30})\b/i;
 const SUPABASE_URL_HOST_REGEX = /\b(?:db\.)?([a-z0-9]{15,30})\.supabase\.co\b/gi;
+const SUPABASE_POOLER_HOST_REGEX = /^[a-z0-9-]+\.pooler\.supabase\.com$/i;
 const PROJECT_REF_ONLY_REGEX = /^[a-z0-9]{15,30}$/i;
 
 function toBoolean(value) {
   return value === true || String(value || "").trim().toLowerCase() === "true";
+}
+
+function isExplicitFalse(value) {
+  if (value === false) return true;
+  const normalized = String(value ?? "").trim().toLowerCase();
+  return normalized === "false" || normalized === "0";
+}
+
+function cleanConfigString(val) {
+  if (val === undefined || val === null) return "";
+  const cleaned = String(val).replace(/^["']|["']$/g, "").trim();
+  if (
+    cleaned.startsWith("YOUR_") ||
+    cleaned.endsWith("_HERE") ||
+    cleaned === "YOUR_DISCORD_BOT_TOKEN_HERE" ||
+    cleaned === "YOUR_CLIENT_ID_HERE"
+  ) {
+    return "";
+  }
+  return cleaned;
+}
+
+function normalizeHost(hostname) {
+  return String(hostname || "")
+    .trim()
+    .replace(/^\[|\]$/g, "")
+    .toLowerCase();
 }
 
 function isPrologueStagingMode(runtimeEnv = env) {
@@ -94,17 +124,34 @@ function extractSupabaseProjectHints(runtimeEnv = env) {
   const databaseRefs = new Set();
   const supabaseRefs = new Set();
   const allStrings = [];
+  const usingGlobalEnv = runtimeEnv === env;
 
-  const dbUrlRaw = String(
-    runtimeEnv.DATABASE_URL || runtimeEnv.SUPABASE_DATABASE_URL || "",
-  ).trim();
-  if (dbUrlRaw) {
+  const urlCandidates = [
+    runtimeEnv.DATABASE_URL,
+    runtimeEnv.SUPABASE_DATABASE_URL,
+    runtimeEnv.SUPABASE_DB_URL,
+    ...(usingGlobalEnv
+      ? [
+          process.env.DATABASE_URL,
+          process.env.SUPABASE_DATABASE_URL,
+          process.env.SUPABASE_DB_URL,
+        ]
+      : []),
+  ];
+
+  for (const rawUrl of urlCandidates) {
+    const dbUrlRaw = cleanConfigString(rawUrl);
+    if (!dbUrlRaw) continue;
     allStrings.push(dbUrlRaw);
     try {
       const parsed = new URL(dbUrlRaw);
       const user = safeDecodeURIComponent(parsed.username);
-      const host = String(parsed.hostname || "").toLowerCase();
+      const host = normalizeHost(parsed.hostname);
       collectRegexMatches(user, SUPABASE_POOLER_USER_REGEX, databaseRefs);
+      const anyUserRef = SUPABASE_ANY_USER_REF_REGEX.exec(user);
+      if (anyUserRef && anyUserRef[1]) {
+        databaseRefs.add(anyUserRef[1].toLowerCase());
+      }
       collectRegexMatches(host, SUPABASE_URL_HOST_REGEX, databaseRefs);
     } catch {
       collectRegexMatches(dbUrlRaw, SUPABASE_POOLER_USER_REGEX, databaseRefs);
@@ -112,27 +159,53 @@ function extractSupabaseProjectHints(runtimeEnv = env) {
     }
   }
 
-  const dbUser = String(runtimeEnv.DB_USER || "").trim();
-  if (dbUser) {
+  const userCandidates = usingGlobalEnv
+    ? [
+        process.env.DB_USER,
+        process.env.SUPABASE_DB_USER,
+        process.env.MYSQL_USER,
+      ]
+    : [
+        runtimeEnv.DB_USER,
+        runtimeEnv.SUPABASE_DB_USER,
+        runtimeEnv.MYSQL_USER,
+      ];
+  for (const rawUser of userCandidates) {
+    const dbUser = cleanConfigString(rawUser);
+    if (!dbUser) continue;
     allStrings.push(dbUser);
     collectRegexMatches(dbUser, SUPABASE_POOLER_USER_REGEX, databaseRefs);
+    const anyUserRef = SUPABASE_ANY_USER_REF_REGEX.exec(dbUser);
+    if (anyUserRef && anyUserRef[1]) {
+      databaseRefs.add(anyUserRef[1].toLowerCase());
+    }
   }
 
-  const dbHost = String(runtimeEnv.DB_HOST || "").trim();
-  if (dbHost) {
+  const hostCandidates = usingGlobalEnv
+    ? [
+        process.env.DB_HOST,
+        process.env.SUPABASE_DB_HOST,
+        process.env.MYSQL_HOST,
+      ]
+    : [
+        runtimeEnv.DB_HOST,
+        runtimeEnv.SUPABASE_DB_HOST,
+        runtimeEnv.MYSQL_HOST,
+      ];
+  for (const rawHost of hostCandidates) {
+    const dbHost = cleanConfigString(rawHost);
+    if (!dbHost) continue;
     allStrings.push(dbHost);
     collectRegexMatches(dbHost, SUPABASE_URL_HOST_REGEX, databaseRefs);
   }
 
-  const supabaseUrl = String(runtimeEnv.SUPABASE_URL || "").trim();
+  const supabaseUrl = cleanConfigString(runtimeEnv.SUPABASE_URL);
   if (supabaseUrl) {
     allStrings.push(supabaseUrl);
     collectRegexMatches(supabaseUrl, SUPABASE_URL_HOST_REGEX, supabaseRefs);
   }
 
-  const supabaseProjectId = String(
-    runtimeEnv.SUPABASE_PROJECT_ID || "",
-  ).trim();
+  const supabaseProjectId = cleanConfigString(runtimeEnv.SUPABASE_PROJECT_ID);
   if (supabaseProjectId) {
     allStrings.push(supabaseProjectId);
     if (PROJECT_REF_ONLY_REGEX.test(supabaseProjectId)) {
@@ -159,48 +232,218 @@ function extractSupabaseProjectHints(runtimeEnv = env) {
   };
 }
 
-function resolvePostgresConnectionHost(runtimeEnv = env) {
-  const dbUrlRaw = String(
-    runtimeEnv.DATABASE_URL || runtimeEnv.SUPABASE_DATABASE_URL || "",
-  ).trim();
+function collectDistinctNormalized(values, normalizer) {
+  const seen = new Set();
+  for (const raw of values) {
+    const cleaned = cleanConfigString(raw);
+    if (!cleaned) continue;
+    seen.add(normalizer ? normalizer(cleaned) : cleaned);
+  }
+  return Array.from(seen);
+}
+
+function resolveEffectivePostgresTarget(runtimeEnv = env) {
+  if (!runtimeEnv || typeof runtimeEnv !== "object") {
+    throw new Error(
+      "PROLOGUE_STAGING_MODE membutuhkan konfigurasi runtime yang valid.",
+    );
+  }
+
+  if (toBoolean(runtimeEnv.USE_SQLITE)) {
+    throw new Error(
+      "PROLOGUE_STAGING_MODE menolak USE_SQLITE=true; wajib menggunakan PostgreSQL staging.",
+    );
+  }
+  if (toBoolean(runtimeEnv.USE_MYSQL)) {
+    throw new Error(
+      "PROLOGUE_STAGING_MODE menolak USE_MYSQL=true; wajib menggunakan PostgreSQL staging.",
+    );
+  }
+
+  const usingGlobalEnv = runtimeEnv === env;
+
+  const urlValues = usingGlobalEnv
+    ? collectDistinctNormalized([
+        process.env.DATABASE_URL,
+        process.env.SUPABASE_DATABASE_URL,
+        process.env.SUPABASE_DB_URL,
+        runtimeEnv.DATABASE_URL,
+      ])
+    : collectDistinctNormalized([
+        runtimeEnv.DATABASE_URL,
+        runtimeEnv.SUPABASE_DATABASE_URL,
+        runtimeEnv.SUPABASE_DB_URL,
+      ]);
+
+  if (urlValues.length > 1) {
+    throw new Error(
+      "[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE menolak nilai URL database yang saling bertentangan antara DATABASE_URL, SUPABASE_DATABASE_URL, dan SUPABASE_DB_URL.",
+    );
+  }
+
+  const explicitHosts = usingGlobalEnv
+    ? collectDistinctNormalized(
+        [
+          process.env.DB_HOST,
+          process.env.SUPABASE_DB_HOST,
+          process.env.MYSQL_HOST,
+        ],
+        normalizeHost,
+      )
+    : collectDistinctNormalized(
+        [
+          runtimeEnv.DB_HOST,
+          runtimeEnv.SUPABASE_DB_HOST,
+          runtimeEnv.MYSQL_HOST,
+        ],
+        normalizeHost,
+      );
+
+  if (explicitHosts.length > 1) {
+    throw new Error(
+      `[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE menolak konfigurasi host diskret yang saling bertentangan: ${explicitHosts.join(", ")}.`,
+    );
+  }
+
+  const explicitUsers = usingGlobalEnv
+    ? collectDistinctNormalized([
+        process.env.DB_USER,
+        process.env.SUPABASE_DB_USER,
+        process.env.MYSQL_USER,
+      ])
+    : collectDistinctNormalized([
+        runtimeEnv.DB_USER,
+        runtimeEnv.SUPABASE_DB_USER,
+        runtimeEnv.MYSQL_USER,
+      ]);
+
+  if (explicitUsers.length > 1) {
+    throw new Error(
+      "[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE menolak konfigurasi user diskret yang saling bertentangan (DB_USER / SUPABASE_DB_USER / MYSQL_USER).",
+    );
+  }
+
+  const dialectRaw = cleanConfigString(runtimeEnv.DB_DIALECT || "postgres").toLowerCase();
+  if (dialectRaw !== "postgres" && dialectRaw !== "postgresql") {
+    throw new Error(
+      `PROLOGUE_STAGING_MODE menolak DB_DIALECT='${dialectRaw}'. Wajib PostgreSQL.`,
+    );
+  }
+
+  const dbUrlRaw = urlValues[0] || "";
   if (dbUrlRaw) {
-    let parsed;
     try {
-      parsed = new URL(dbUrlRaw);
-    } catch {
+      validatePostgresUrl(dbUrlRaw, "postgres");
+    } catch (err) {
       throw new Error(
-        "PROLOGUE_STAGING_MODE gagal memvalidasi DATABASE_URL: format URL tidak valid.",
+        `PROLOGUE_STAGING_MODE menolak URL database: ${err.message}`,
       );
     }
-    const protocol = String(parsed.protocol || "").toLowerCase();
-    if (protocol !== "postgres:" && protocol !== "postgresql:") {
-      throw new Error(
-        `PROLOGUE_STAGING_MODE menolak dialek URL '${protocol}'. Wajib PostgreSQL.`,
-      );
-    }
-    if (!parsed.hostname) {
+
+    const parsed = new URL(dbUrlRaw);
+    const effectiveHost = normalizeHost(parsed.hostname);
+    const effectiveUser = safeDecodeURIComponent(parsed.username).trim();
+    const effectivePort = parsed.port ? Number(parsed.port) : 5432;
+    const effectiveDbName = safeDecodeURIComponent(
+      String(parsed.pathname || "").replace(/^\/+/, ""),
+    ).trim();
+
+    if (!effectiveHost) {
       throw new Error(
         "PROLOGUE_STAGING_MODE mewajibkan hostname PostgreSQL yang eksplisit pada DATABASE_URL.",
       );
     }
-    return parsed.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+    if (!effectiveUser) {
+      throw new Error(
+        "[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE mewajibkan username PostgreSQL eksplisit pada DATABASE_URL.",
+      );
+    }
+    if (!effectiveDbName) {
+      throw new Error(
+        "PROLOGUE_STAGING_MODE mewajibkan nama database eksplisit pada DATABASE_URL.",
+      );
+    }
+
+    if (explicitHosts.length === 1 && explicitHosts[0] !== effectiveHost) {
+      throw new Error(
+        `[MIXED_TARGET_REJECTED] Konfigurasi campuran ditolak: DATABASE_URL menunjuk host '${effectiveHost}', sedangkan DB_HOST menunjuk '${explicitHosts[0]}'.`,
+      );
+    }
+
+    if (explicitUsers.length === 1 && explicitUsers[0] !== effectiveUser) {
+      throw new Error(
+        `[MIXED_TARGET_REJECTED] Konfigurasi campuran ditolak: DATABASE_URL memakai user '${effectiveUser}', sedangkan DB_USER menunjuk '${explicitUsers[0]}'.`,
+      );
+    }
+
+    return {
+      mode: "url",
+      dialect: "postgres",
+      host: effectiveHost,
+      port: Number.isFinite(effectivePort) && effectivePort > 0 ? effectivePort : 5432,
+      user: effectiveUser,
+      database: effectiveDbName,
+      explicitDiscreteHost: explicitHosts[0] || "",
+      explicitDiscreteUser: explicitUsers[0] || "",
+    };
   }
 
-  const dialect = String(runtimeEnv.DB_DIALECT || "postgres")
-    .trim()
-    .toLowerCase();
-  if (dialect !== "postgres" && dialect !== "postgresql") {
+  const discreteHost = explicitHosts[0] || "";
+  if (!discreteHost || discreteHost === "sqlite" || discreteHost.startsWith("/")) {
     throw new Error(
-      `PROLOGUE_STAGING_MODE menolak DB_DIALECT='${dialect}'. Wajib PostgreSQL.`,
+      "PROLOGUE_STAGING_MODE wajib terhubung ke PostgreSQL staging (DB_HOST valid) dan menolak fallback SQLite.",
     );
   }
-  const dbHost = String(runtimeEnv.DB_HOST || "").trim();
-  if (!dbHost) {
+
+  const discreteUser = explicitUsers[0] || "";
+  if (!discreteUser) {
     throw new Error(
-      "PROLOGUE_STAGING_MODE wajib terhubung ke PostgreSQL staging dan menolak fallback SQLite.",
+      "PROLOGUE_STAGING_MODE mewajibkan DB_USER yang eksplisit untuk koneksi diskret PostgreSQL.",
     );
   }
-  return dbHost.toLowerCase();
+
+  const rawDbName = usingGlobalEnv
+    ? cleanConfigString(
+        process.env.DB_NAME ||
+          process.env.SUPABASE_DB_NAME ||
+          process.env.MYSQL_DATABASE ||
+          runtimeEnv.DB_NAME,
+      )
+    : cleanConfigString(
+        runtimeEnv.DB_NAME ||
+          runtimeEnv.SUPABASE_DB_NAME ||
+          runtimeEnv.MYSQL_DATABASE,
+      );
+  if (!rawDbName) {
+    throw new Error(
+      "PROLOGUE_STAGING_MODE mewajibkan DB_NAME yang eksplisit untuk koneksi diskret PostgreSQL.",
+    );
+  }
+
+  const rawPort = usingGlobalEnv
+    ? process.env.DB_PORT ||
+      process.env.SUPABASE_DB_PORT ||
+      process.env.MYSQL_PORT ||
+      runtimeEnv.DB_PORT
+    : runtimeEnv.DB_PORT ||
+      runtimeEnv.SUPABASE_DB_PORT ||
+      runtimeEnv.MYSQL_PORT;
+  const discretePort = Number.parseInt(String(rawPort || "5432"), 10);
+
+  return {
+    mode: "discrete",
+    dialect: "postgres",
+    host: discreteHost,
+    port: Number.isFinite(discretePort) && discretePort > 0 ? discretePort : 5432,
+    user: discreteUser,
+    database: rawDbName,
+    explicitDiscreteHost: discreteHost,
+    explicitDiscreteUser: discreteUser,
+  };
+}
+
+function resolvePostgresConnectionHost(runtimeEnv = env) {
+  return resolveEffectivePostgresTarget(runtimeEnv).host;
 }
 
 function assertPrologueStagingSafety(runtimeEnv = env, options = {}) {
@@ -209,11 +452,9 @@ function assertPrologueStagingSafety(runtimeEnv = env, options = {}) {
     return { staging: false };
   }
 
-  const expectedProjectId = String(
+  const expectedProjectId = cleanConfigString(
     runtimeEnv.STORY_STAGING_PROJECT_ID || DEFAULT_STAGING_SUPABASE_PROJECT_ID,
-  )
-    .trim()
-    .toLowerCase();
+  ).toLowerCase();
 
   if (!PROJECT_REF_ONLY_REGEX.test(expectedProjectId)) {
     throw new Error(
@@ -234,8 +475,20 @@ function assertPrologueStagingSafety(runtimeEnv = env, options = {}) {
     );
   }
 
-  const pgHost = resolvePostgresConnectionHost(runtimeEnv);
-  const loopback = isLoopbackHost(pgHost);
+  if (hints.databaseRefs.some((ref) => ref !== expectedProjectId)) {
+    throw new Error(
+      `[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE menolak referensi database di luar proyek staging (${expectedProjectId}). Ditemukan: ${hints.databaseRefs.join(", ")}`,
+    );
+  }
+
+  if (hints.supabaseRefs.some((ref) => ref !== expectedProjectId)) {
+    throw new Error(
+      `[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE menolak konfigurasi Supabase di luar proyek staging (${expectedProjectId}). Ditemukan: ${hints.supabaseRefs.join(", ")}`,
+    );
+  }
+
+  const target = resolveEffectivePostgresTarget(runtimeEnv);
+  const loopback = isLoopbackHost(target.host);
 
   if (loopback) {
     if (!toBoolean(runtimeEnv.ALLOW_LOCAL_PROLOGUE_STAGING)) {
@@ -243,29 +496,93 @@ function assertPrologueStagingSafety(runtimeEnv = env, options = {}) {
         "PROLOGUE_STAGING_MODE menolak PostgreSQL lokal kecuali ALLOW_LOCAL_PROLOGUE_STAGING=true diset secara eksplisit.",
       );
     }
-  } else {
-    if (hints.databaseRefs.length === 0) {
-      throw new Error(
-        `PROLOGUE_STAGING_MODE gagal memverifikasi project ref PostgreSQL staging (${expectedProjectId}). Pastikan pooler user atau host mencantumkan project ref staging.`,
-      );
-    }
     if (
-      hints.databaseRefs.some((ref) => ref !== expectedProjectId) ||
-      !hints.databaseRefs.includes(expectedProjectId)
+      SUPABASE_ANY_USER_REF_REGEX.test(target.user) ||
+      hints.databaseRefs.length > 0
     ) {
       throw new Error(
-        `PROLOGUE_STAGING_MODE menolak target PostgreSQL di luar proyek staging (${expectedProjectId}). Ditemukan: ${hints.databaseRefs.join(", ")}`,
+        "[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE menolak pencampuran host loopback lokal dengan kredensial/referensi Supabase remote.",
+      );
+    }
+  } else {
+    if (isExplicitFalse(runtimeEnv.DB_SSL)) {
+      throw new Error(
+        "PROLOGUE_STAGING_MODE mewajibkan PostgreSQL TLS aktif (DB_SSL=false ditolak).",
+      );
+    }
+
+    const directStagingHosts = new Set([
+      `db.${expectedProjectId}.supabase.co`,
+      `${expectedProjectId}.supabase.co`,
+    ]);
+    const isDirectStagingHost = directStagingHosts.has(target.host);
+    const isPoolerHost = SUPABASE_POOLER_HOST_REGEX.test(target.host);
+
+    if (isDirectStagingHost) {
+      const userLower = target.user.toLowerCase();
+      const validDirectUser = target.user.includes(".")
+        ? userLower.endsWith(`.${expectedProjectId}`)
+        : target.user === "postgres";
+      if (!validDirectUser) {
+        throw new Error(
+          `[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE menolak kredensial user '${target.user}' untuk host Supabase staging '${target.host}'.`,
+        );
+      }
+    } else if (isPoolerHost) {
+      const poolerMatch = /^([a-z0-9_]+)\.([a-z0-9]{15,30})$/i.exec(
+        target.user,
+      );
+      if (!poolerMatch || poolerMatch[2].toLowerCase() !== expectedProjectId) {
+        throw new Error(
+          `[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE mewajibkan user pooler dengan project ref '${expectedProjectId}' pada host '${target.host}', bukan '${target.user}'.`,
+        );
+      }
+    } else {
+      throw new Error(
+        `[MIXED_TARGET_REJECTED] PROLOGUE_STAGING_MODE menolak host target '${target.host}': bukan endpoint Supabase resmi untuk proyek staging (${expectedProjectId}).`,
       );
     }
   }
 
-  if (hints.supabaseRefs.some((ref) => ref !== expectedProjectId)) {
+  const supabaseUrl = cleanConfigString(runtimeEnv.SUPABASE_URL);
+  if (supabaseUrl) {
+    let parsedSupabaseUrl;
+    try {
+      parsedSupabaseUrl = new URL(supabaseUrl);
+    } catch {
+      throw new Error(
+        "[MIXED_TARGET_REJECTED] SUPABASE_URL pada mode staging tidak valid.",
+      );
+    }
+    const sbHost = normalizeHost(parsedSupabaseUrl.hostname);
+    if (sbHost !== `${expectedProjectId}.supabase.co`) {
+      throw new Error(
+        `[MIXED_TARGET_REJECTED] SUPABASE_URL menunjuk '${sbHost}', bukan proyek staging (${expectedProjectId}.supabase.co).`,
+      );
+    }
+  }
+
+  const supabaseProjectId = cleanConfigString(runtimeEnv.SUPABASE_PROJECT_ID);
+  if (
+    supabaseProjectId &&
+    supabaseProjectId.toLowerCase() !== expectedProjectId
+  ) {
     throw new Error(
-      `PROLOGUE_STAGING_MODE menolak konfigurasi Supabase di luar proyek staging (${expectedProjectId}). Ditemukan: ${hints.supabaseRefs.join(", ")}`,
+      `[MIXED_TARGET_REJECTED] SUPABASE_PROJECT_ID menunjuk '${supabaseProjectId}', bukan proyek staging (${expectedProjectId}).`,
     );
   }
 
-  const guildId = String(runtimeEnv.GUILD_ID || "").trim();
+  const supabaseKey = cleanConfigString(runtimeEnv.SUPABASE_KEY);
+  if (supabaseKey && supabaseKey.startsWith("eyJ")) {
+    const jwtRef = decodeJwtProjectRef(supabaseKey);
+    if (jwtRef !== expectedProjectId) {
+      throw new Error(
+        `[MIXED_TARGET_REJECTED] SUPABASE_KEY (JWT ref=${jwtRef || "unknown"}) tidak cocok dengan proyek staging (${expectedProjectId}).`,
+      );
+    }
+  }
+
+  const guildId = cleanConfigString(runtimeEnv.GUILD_ID);
   if (requireGuildId && !/^\d{17,20}$/.test(guildId)) {
     throw new Error(
       "PROLOGUE_STAGING_MODE mewajibkan GUILD_ID Discord valid (17-20 digit) agar deploy command terbatas pada guild staging.",
@@ -277,7 +594,11 @@ function assertPrologueStagingSafety(runtimeEnv = env, options = {}) {
     projectId: expectedProjectId,
     guildId: /^\d{17,20}$/.test(guildId) ? guildId : null,
     loopback,
-    pgHost,
+    pgHost: target.host,
+    pgPort: target.port,
+    pgUser: target.user,
+    pgDatabase: target.database,
+    connectionMode: target.mode,
   };
 }
 
@@ -296,6 +617,25 @@ async function verifyPrologueStagingDatabase(
     throw new Error(
       `PROLOGUE_STAGING_MODE mewajibkan dialek PostgreSQL, bukan '${sequelize.options.dialect}'.`,
     );
+  }
+
+  if (sequelize.config && typeof sequelize.config === "object") {
+    if (sequelize.config.host) {
+      const actualHost = normalizeHost(sequelize.config.host);
+      if (actualHost !== safety.pgHost) {
+        throw new Error(
+          `[MIXED_TARGET_REJECTED] Instance Sequelize terhubung ke host '${actualHost}', berbeda dari target staging tervalidasi '${safety.pgHost}'.`,
+        );
+      }
+    }
+    if (sequelize.config.username) {
+      const actualUser = safeDecodeURIComponent(sequelize.config.username).trim();
+      if (actualUser !== safety.pgUser) {
+        throw new Error(
+          `[MIXED_TARGET_REJECTED] Instance Sequelize memakai user '${actualUser}', berbeda dari user staging tervalidasi '${safety.pgUser}'.`,
+        );
+      }
+    }
   }
 
   const [rows] = await sequelize.query(
@@ -449,6 +789,7 @@ module.exports = {
   isPrologueStagingMode,
   isLoopbackHost,
   extractSupabaseProjectHints,
+  resolveEffectivePostgresTarget,
   resolvePostgresConnectionHost,
   assertPrologueStagingSafety,
   verifyPrologueStagingDatabase,
